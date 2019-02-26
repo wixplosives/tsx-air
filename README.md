@@ -95,7 +95,9 @@ export const AnotherComp = (props: {names: string[]})=>(
 ```js
 
 export const AnotherComp = (props)=>`<div>
-  ${AComp(props.names)}
+  ${names.map((name)=>(
+      <AComp name={name}/>)
+     )}
  </div>
 `
 AComp.update = {
