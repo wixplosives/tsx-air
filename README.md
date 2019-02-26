@@ -80,7 +80,7 @@ AComp.update = {
 
 
 repeaters can be handled similiarly:
-
+## an example with a simple repeater
 
 ```tsx
 export const AnotherComp = (props: {names: string[]})=>(
@@ -125,5 +125,23 @@ AComp.update_partial = {
         break;
     }
   }
+}
+```
+## a computation in the render function
+
+
+```tsx
+export interface Product{
+  name: string
+  category: string
+}
+export const AnotherComp = (props: {products: Product[], selectedCategory: string})=>{
+  const filteredProducts = props.products.filter((product)==>product.category===props.selectedCategory)
+  return <div>
+    <div>Category: {props.selectedCategory}</div>
+    {filteredProducts.map((name)=>(
+      AComp({name})
+     )}
+  <div>
 }
 ```
