@@ -26,7 +26,7 @@ export const AComp = (props)=>`<div>
 `
 ```
 
-this output is usefull for serverside rendering and initial component rendering. but it fails as a means of update.
+this output is usefull for server-side rendering and initial component rendering. but it fails as a means of update.
 for updating we need some additional code.
 
 
@@ -86,7 +86,7 @@ repeaters can be handled similiarly:
 export const AnotherComp = (props: {names: string[]})=>(
   <div>
     {names.map((name)=>(
-      <AComp name={name}/>)
+      AComp({name})
      )}
   <div>
 )
@@ -96,18 +96,34 @@ export const AnotherComp = (props: {names: string[]})=>(
 
 export const AnotherComp = (props)=>`<div>
   ${names.map((name)=>(
-      <AComp name={name}/>)
+      AComp({name})
      )}
  </div>
 `
 AComp.update = {
-  name1: (root, value)=>{
-    AComp.update.name(root.childNodes[0], value)
-  },
-  
-  name2: (root, value)=>{
-    AComp.update.name(root.childNodes[0], value)
+  names: (root, value)=>{
+    value.map((name, index)=>(
+       AComp.update.name(root.childNodes[index], value)
+    )
   }
 }
 ```
 
+we can also choose to support partial property update:
+```
+AComp.update_partial = {
+  names: (root, patch)=>{
+    switch(patch.kind){
+      case 'update'
+        AComp.update.name(patch.index, patch.value)
+        break;
+       case 'add'
+        root.appendChildAt(patch.index, createElement(AComp({name}))>
+        break;
+       case 'update'
+        root.removeChildAt(patch.index)
+        break;
+    }
+  }
+}
+```
