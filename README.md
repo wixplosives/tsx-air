@@ -110,7 +110,7 @@ AComp.update = {
 ```
 
 we can also choose to support partial property update:
-```
+```js
 AComp.update_partial = {
   names: (root, patch)=>{
     switch(patch.kind){
