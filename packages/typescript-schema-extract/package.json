@@ -1,0 +1,40 @@
+{
+  "name": "@wixc3/typescript-schema-extract",
+  "version": "1.1.0",
+  "author": "Wix.com",
+  "license": "UNLICENSED",
+  "main": "cjs/index.js",
+  "module": "esm/index.js",
+  "types": "esm/index.d.ts",
+  "scripts": {
+    "build": "ts-build ./src --cjs --esm",
+    "clean": "rimraf ./cjs ./esm",
+    "lint:src": "tslint -p src",
+    "lint:test": "tslint -p test",
+    "lint": "run-p lint:src lint:test",
+    "prebuild": "yarn clean",
+    "start": "webpack-dev-server --progress --open",
+    "test": "mocha -r @ts-tools/node/r \"test/**/*.spec.ts?(x)\" --watch-extensions ts,tsx --colors",
+    "prepack": "yarn build"
+  },
+  "peerDependencies": {
+    "typescript": ">=2.8.0"
+  },
+  "dependencies": {
+    "@file-services/memory": "^1.0.6",
+    "@file-services/typescript": "^1.0.4",
+    "@types/json-schema": "^7.0.3",
+    "glob": "^7.1.4"
+  },
+  "files": [
+    "cjs",
+    "esm"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "browser": {
+    "./test-kit/typescript/recipes/react.ts": "./test-kit/typescript/recipes/react-browser.ts",
+    "./test-kit/typescript/recipes/typescript.ts": "./test-kit/typescript/recipes/typescript-browser.ts"
+  }
+}

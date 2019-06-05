@@ -1,0 +1,49 @@
+{
+  "name": "schematic",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "clean": "lerna run clean --stream --parallel",
+    "build": "lerna run build --stream --parallel",
+    "lint": "lerna run lint --stream --parallel",
+    "pretest": "yarn lint",
+    "test": "lerna run test --stream --parallel"
+  },
+  "devDependencies": {
+    "@stylable/cli": "^2.0.0",
+    "@stylable/core": "^2.0.0",
+    "@stylable/webpack-plugin": "^2.0.0",
+    "@ts-tools/build": "^0.1.11",
+    "@ts-tools/node": "^0.9.5",
+    "@ts-tools/webpack-loader": "^0.8.9",
+    "@types/chai": "^4.1.7",
+    "@types/jsdom": "^12.2.3",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "10",
+    "@types/react": "^16.8.17",
+    "@types/react-dom": "^16.8.4",
+    "chai": "^4.2.0",
+    "css-loader": "^2.1.1",
+    "html-webpack-plugin": "next",
+    "jsdom": "^15.0.0",
+    "lerna": "^3.13.4",
+    "mocha": "^6.1.4",
+    "mocha-loader": "^2.0.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^1.17.0",
+    "raw-loader": "^2.0.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "rimraf": "^2.6.3",
+    "style-loader": "^0.23.1",
+    "tslint": "^5.16.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-react": "^4.0.0",
+    "typescript": "~3.4.5",
+    "webpack": "^4.31.0",
+    "webpack-cli": "^3.3.2",
+    "webpack-dev-server": "^3.3.1"
+  }
+}

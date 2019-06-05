@@ -1,0 +1,30 @@
+{
+  "name": "@wixc3/schema-views",
+  "version": "1.2.0",
+  "author": "Wix.com",
+  "license": "UNLICENSED",
+  "main": "cjs/index.js",
+  "module": "esm/index.js",
+  "types": "esm/index.d.ts",
+  "scripts": {
+    "build:stylable": "stc --srcDir src --outDir esm",
+    "build:typescript": "ts-build ./src --cjs --esm",
+    "build": "run-s build:typescript build:stylable",
+    "clean": "rimraf ./cjs ./esm",
+    "lint": "tslint -p src",
+    "prebuild": "yarn clean",
+    "prepack": "yarn build"
+  },
+  "peerDependencies": {
+    "react": "^16.6.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "cjs",
+    "esm",
+    "src",
+    "!src/tsconfig.json"
+  ]
+}

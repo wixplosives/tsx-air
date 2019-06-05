@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$id":"typescript-schema-extract/generics/class",
+    "$ref":"common/module",
+    "definitions":{
+        "MyClass" : {
+            "$ref":"common/class",
+            "generics":[{
+                "name":"T"
+            },{
+                "name":"Q"
+            }],
+            "constructor":{
+                "arguments":[
+                    {
+                        "$ref":"T",
+                        "name":"id"
+                    }
+                ]
+            },
+            "extends":{
+                "$ref":"typescript-schema-extract/test-assets#AClass",
+                "genericsParams":[
+                    {
+                        "type":"string"
+                    },{
+                        "$ref":"T"
+                    }
+                ]
+            },
+            "properties": {
+                "id":{
+                    "$ref":"T"
+                },
+                "a":{
+                    "$ref":"T"
+                },
+                "setTitle":{
+                    "$ref":"common/function",
+                    "arguments":[
+                        {"$ref":"T","name":"newtitle"}
+                    ],
+                    "returns":{
+                        "$ref":"common/undefined"
+                    }
+                }
+            }
+        }
+    },
+    "properties": {
+        "param":{
+            "$ref":"#MyClass"
+        }
+    }
+}
