@@ -1,166 +1,153 @@
 # tsx-air
 thoughts on a new system of rendering
+
 while tsx now compiles into something very similiar to the source other outputs can be thought of.
 
 Consider the following simple tsx stateless component:
 ##### Original:
 ```tsx
-export const BComp = TSXAir((props: { name: string }) => <div>hello {props.name} <div>)
-export const AComp = TSXAir((props: { name: string }) => <div>hello {props.name} <div>)
-export const CComp = TSXAir((props: { name: string }) => (
+export const ChildComp = TSXAir((props: { name: string }) => <div>hello {props.name} <div>)
+export const ParentComp = TSXAir((props: { name: string }) => (
     <div>
       hello {props.name}
-      <BComp name={props.name}/>
+      <ChildComp name={props.name}/>
     <div>
   )
 )
 ```
-##### Transpiled:
-```tsx
-export const AComp = TSXAir({
-  toString: (props) => `<div> hello ${props.name} </div>`
-})
-```
-##### With component
+##### Transpiled
 ```js
-export const CComp = TSXAir({
+export const ParentComp = TSXAir({
   toString: (props) => `<div>
     hello ${props.name}
-    ${AnotherComp.toString({name: props.title})}
+    ${ChildComp.toString({name: props.name})}
   </div>`
 })
 ```
-This transpilation is useful for server-side and initial component rendering but for interactivity we need a little more
+This transpilation is useful for server-side and static rendering but for interactivity we need a little more
 
 ```js
-export const AComp = TSXAir({
+export const ParentComp = TSXAir({
   toString: (props)=>`<div>
-    hello
-    <!-- aComp text1 -->
-    ${props.name}
-    <span style=${props.spanStyle}>hello</span>
+    hello <!-- start text1 -->${props.name}
+    ${ChildComp.toString({name: props.name})}
   </div>`,
-  hidrate: (element) => ({
+  hydrate: (element, instance) => ({
     text1: element.children[1],
-    span1: element.children[2]
+    ChildComp1: hydrate(ChildComp, element.children[2], {name: instance.props.name})
   }),
-  update: [
-    {
-      props: ['name'],
-      update: (props, context) => context.text1.setInnerText(props.name)
-    }, {
-      props: ['spanStyle'],
-      update: (props, context) => context.span1.setAttribute('style', props.spanStyle)
+  update: (props, instance)=>{
+    if(props.name !== instance.props.name){
+      instance.context.text1.setInnerText(props.name);
+      instance.context.ChildComp1.update({'name': props.name});
     }
-  ]
+  },
+  unmount: (instance)=>{
+    instance.context.ChildComp.unmount()
+  }
 })
 
-```
-When working with more complex components we repeat the same strategy:
-```tsx
-export const AnotherComp = TSXAir((props: {name1: string, name2: string}) => (
-  <div>
-    <AComp name={name1} />
-    <AComp name={name2} />
-  <div>
-))
-```
-
-```js
-export const AnotherComp = TSXAir({
-  toString: (props) => `<div>
-    ${AComp.toString({name: props.name1})}
-    ${AComp.toString({name: props.name2})}
-  </div>`,
-  hidrate: (element) => ({
-    AComp1: element.children[0]
-    AComp2: element.children[1]
-  }),
-  update: [{
-    props: ['name1'],
-    update: (props, context) => updateUtil.performUpdate(context.AComp1, AComp, {name: props.name1})
-  }, {
-    props: ['name2'],
-    update: (props, context) => updateUtil.performUpdate(context.AComp2, AComp, {name: props.name2})
-  }]
-})
 ```
 
 A component that handles children:
 ```tsx
-export const AnotherComp = TSXAir((props: {children: TSXAir[]}) => (
+export const BigBrotherComp = TSXAir((props: {children: TSXAirNode[]}) => (
   <div>
-  {props.title ? <span>{props.title}</span> : null}
-  {...children}
+  {children}
   <div>
 ))
+```
+```tsx
+export const ParentComp = TSXAir((props: {name: string}) => (
+  <BigBrotherComp />
+    <span>{props.name}</span>
+  <BigBrotherComp />
+))
 
-export const UsingComp = TSXAir((props: {name: string, children: TSXAir[] }) => (
-  <AnotherComp />
-  {props.name ? <span>{props.name}</span> : null}
-  {...children}
-  <AnotherComp />
+```
+
+
+```js
+const span1Key = 1564456;
+export const ParentComp = TSXAir({
+  toString: (props) => `${BigBrotherComp.toString( `<span>${props.name}</span>`),
+  hydrate:(element)=>{
+    return {
+      BigBrotherComp1: hydrate(BigBrotherComp, element, {children: [{
+        key: span1Key,
+      }])
+    }
+  },
+  update: (props, instance)=>{
+    if(props.name===!instance.props.name){
+      instance.elements.BigBrotherComp1.getByKey(instance.element, span1Key).setInnerHtml(props.name)
+    }
+  }
+});
+
+```
+```js
+export const BigBrotherComp = TSXAir({
+  toString: (props) => `<div>${serializeChildren(props.children)}</div>`),
+  hydrate:(element, instance)=>{
+    return {
+      children: hydrateChildren(element.children, props.children)
+    }
+  },
+  update:(element)=>{
+
+  }
+});
+```
+
+A component that manipulates children:
+```tsx
+export const ChildManipulator = TSXAir((props: {children: TSXAirNode[]}) => (
+  <div>
+  {children.map(item=>tsxAir.clone(item, {style: {background: 'blue'}}))}
+  <div>
 ))
 ```
 
 
 ```js
-export const AnotherComp = TSXAir({
-  toString: (props) => `<div>
-    ${props.title ? AnotherComp.fragment1(props) : '<!-- fragment1 -->'}
-    ${props.children}
-  </div>`,
-  hidrate: (element) => ({
-    fragment1: element.children[0];
-  }),
-  getSlots: (element) => ({
-    children: element.children.slice(1)
-  }),
-  update: [{
-    props: ['title'],
-    update :(props, context) =>
-      props.title ? removeIfExiting(context.span1) : ensureExists('fragment11', props)
-  }],
-  fragments: {
-    fragment1: {
-      toString: (props) => `<span>${props.title}</span>`,
-      update: {
-        props: ['title'],
-        update :(props, element) => element.setInnerHtml(props.title)
-      }
+export const ChildManipulator = TSXAir({
+  toString: (props, computations) => (
+  `<div>
+  ${serializeChildren(computations.children)}
+  <div>`
+  ))
+  hydrate:(element, instance)=>{
+    return {
+      children: hydrateChildren(element.children, computations.mapChildren)
+    }
+  },
+  update: (props, instance)=>{
+    if(props.name===!instance.props.name){
+      instance.elements.BigBrotherComp1.getByKey(instance.element, span1Key).setInnerHtml(props.name)
+    }
+  },
+  computations:(props, instance)=>{
+    return {
+      mapChildren: props.children === instance.props.children ? instance.computations.mapChildren: props.children.map(item=>tsxAir.clone(item, {style: {background: 'blue'}})
     }
   }
-})
 
-export const UsingComp = TSXAir({
-  toString: (props) => `
-    ${AnotherComp.toString({title: props.name})}
-    ${props.name ? <span>{props.name}</span> : '<!-- fragment1 -->'}
-    ${props.children}`
-  }),
-  hidrate: (element) => ({
-    fragment1: AnotherComp.getSlots(element).children[0]
-  }),
-  update: [{
-    props: ['name'],
-    update :(props, context) =>
-      props.title ? removeIfExiting(context.span1) : ensureExists('fragment11', props)
-  }],
-  getSlots: (element) => ({
-    children: AnotherComp.getSlots(element).slice(1)
-  }),
-  fragments: {
-    fragment1: {
-      toString: (props) => `<span>${props.name}</span>`,
-      update: {
-        props: ['name'],
-        update :(props, element) => element.setInnerHtml(props.name)
-      }
-    }
-  }
-})
+});
+
 ```
+```js
+export const BigBrotherComp = TSXAir({
+  toString: (props) => `<div>${serializeChildren(props.children)}</div>`),
+  hydrate:(element)=>{
+    return {
+      div1: element
+      children: element.children
+    }
+  }
+});
 
+```
 # Using computations in the template
 ```tsx
 export const AnotherComp = TSXAir((props: {fName: string, lName: string}) => {
