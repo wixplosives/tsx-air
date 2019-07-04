@@ -1,4 +1,4 @@
-import { TSXAir, CompiledComponent, hydrate, ComponentInstance } from '../framework/runtime';
+import { TSXAir, CompiledComponent, hydrate, ComponentInstance, unchanged } from '../framework/runtime';
 
 
 
@@ -12,8 +12,8 @@ export const ParentComp = TSXAir<CompiledComponent<{ name: string }>>({
         text1: element.childNodes[2],
         ChildComp1: hydrate(ChildComp, element.childNodes[3] as HTMLElement, { name: instance.props.name })
     }),
-    update: (props: { name: string }, _state: any, instance: ComponentInstance<{ name: string }>) => {
-        if (props.name !== instance.props.name) {
+    update: (props, _state: any, instance: ComponentInstance<{ name: string }>) => {
+        if ('name' in props && props.name !== instance.props.name) {
             instance.context.text1.textContent = props.name;
             instance.context.ChildComp1.update({ 'name': props.name });
         }
@@ -30,8 +30,8 @@ export const ChildComp = TSXAir<CompiledComponent<{ name: string }>>({
     hydrate: (element: Element, _instance: ComponentInstance<{ name: string }>) => ({
         text1: element.childNodes[2],
     }),
-    update: (props: { name: string }, _state: any, instance: ComponentInstance<{ name: string }>) => {
-        if (props.name !== instance.props.name) {
+    update: (props, _state: any, instance: ComponentInstance<{ name: string }>) => {
+        if ('name' in props && props.name !== instance.props.name) {
             instance.context.text1.textContent = props.name;
         }
     },

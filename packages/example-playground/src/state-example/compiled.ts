@@ -1,39 +1,42 @@
-import { TSXAir, CompiledComponent, hydrate, ComponentInstance, update } from '../framework/runtime';
+import { TSXAir, CompiledComponent, hydrate, update, unchanged } from '../framework/runtime';
 
-/**import { TSXAir } from '../framework/runtime';
-import React, { useState } from 'react';
-export const ParentComp = TSXAir((props: { initialState: string }) => {
-    const [state, setState] = useState(props.initialState);
-    return <div onClick={() => setState(state + 'a')}>
-        ${state}
-    </div>;
-}
-); */
-
-export const ParentComp = TSXAir<CompiledComponent<{ initialState: string }>>({
+export const ParentComp = TSXAir<CompiledComponent<{ initialState: string }, { state: string, state1: string }>>({
     unique: Symbol('ParentComp'),
     initialState: props => {
         return {
+            state: props.initialState,
             state1: props.initialState
         };
     },
-    toString: (props, state) => `<div>
-      ${state.state1}
+    toString: (_props, state) => `<div>
+        <div>
+            ${state.state}
+        </div>
+        <div>
+            ${state.state1}
+        </div>
     </div>`,
     hydrate: (element, instance) => {
-
         const res = {
-            text1: element.childNodes[0],
+            text1: element.children[0].childNodes[0],
+            text2: element.children[1].childNodes[0],
         };
 
-        element.onclick = () => {
-            update(ParentComp, element, instance.props, { state1: instance.state.state1 + 'a' });
+        (element.children[0] as HTMLElement).onclick = () => {
+            update(ParentComp, element, {}, { state: instance.state.state + 'a' });
+        };
+
+        (element.children[1] as HTMLElement).onclick = () => {
+            update(ParentComp, element, {}, { state1: instance.state.state1 + 'a' });
         };
         return res;
     },
     update: (_props, state, instance) => {
-        if (state.state1 !== instance.state.state1) {
-            instance.context.text1.textContent = state.state1;
+        if ('state' in state && state.state !== instance.state.state) {
+            instance.context.text1.textContent = state.state;
+        }
+        if ('state1' in state && state.state1 !== instance.state.state1) {
+            instance.context.text2.textContent = state.state1;
         }
     },
     unmount: instance => {
