@@ -17,7 +17,7 @@ export interface CompiledComponent<P, S = {}> {
     hydrate: (element: HTMLElement, instance: ComponentInstance<P, S>) => Record<string, ComponentInstance<any, any> | ChildNode>;
     update: (props: Partial<P>, state: Partial<S>, instance: ComponentInstance<P, S>) => void;
     unmount: (instance: ComponentInstance<P, S>) => void;
-    fragments: Record<string, CompiledComponent<any>>;
+    fragments?: Record<string, CompiledComponent<any>>;
 }
 
 export const hydrate = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, element: Element, props: PROPS) => {
