@@ -9,9 +9,6 @@ export interface ComponentInstance<P, S = {}> {
     unmount?: (instance: ComponentInstance<P, S>) => void;
 }
 
-export const unchanged = Symbol('unchanged');
-
-
 
 export interface CompiledComponent<P, S = {}> {
     unique: symbol;
@@ -20,6 +17,7 @@ export interface CompiledComponent<P, S = {}> {
     hydrate: (element: HTMLElement, instance: ComponentInstance<P, S>) => Record<string, ComponentInstance<any, any> | ChildNode>;
     update: (props: Partial<P>, state: Partial<S>, instance: ComponentInstance<P, S>) => void;
     unmount: (instance: ComponentInstance<P, S>) => void;
+    fragments: Record<string, CompiledComponent<any>>;
 }
 
 export const hydrate = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, element: Element, props: PROPS) => {
@@ -44,7 +42,7 @@ export const hydrate = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, ele
 export const update = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, element: Element, props: Partial<PROPS>, state: Partial<STATE>) => {
     const instance = elementMap.get(element)!.get(Comp.unique)!;
     Comp.update(props, state, instance);
-    instance.state = {...instance.state,...state};
-    instance.props = {...instance.props,...props};
+    instance.state = { ...instance.state, ...state };
+    instance.props = { ...instance.props, ...props };
 };
 
