@@ -62,3 +62,162 @@ Simple, full featured template engine with loops, conditionals etc.
 Less flexible than TSX
 Takes some getting used to and has a learning curve: things that are vanilla like in JSX (conditional rendering, iterating) require a proprietary syntax.
 While techniques and approaches differ, *Svelte seems to cover all necessary usecases* **Needs further verification**
+
+## Code transpilation:
+### Hello {world} 
+#### Source:
+```svelte
+<script>
+	export let name;
+</script>
+
+<style>
+	h1 {
+		color: purple;
+	}
+</style>
+
+<h1>Hello {name}!</h1>
+```
+
+#### Output - SSR:
+```js
+import { create_ssr_component, escape } from "svelte/internal";
+
+const css = {
+	code: "h1.svelte-i7qo5m{color:purple}",
+	map: "{\"version\":3,\"file\":null,\"sources\":[null],\"sourcesContent\":[\"<script>\\n\\texport let name;\\n</script>\\n\\n<style>\\n\\th1 {\\n\\t\\tcolor: purple;\\n\\t}\\n</style>\\n\\n<h1>Hello {name}!</h1>\\n\"],\"names\":[],\"mappings\":\"AAKC,EAAE,cAAC,CAAC,AACH,KAAK,CAAE,MAAM,AACd,CAAC\"}"
+};
+
+const Component = create_ssr_component(($$result, $$props, $$bindings, $$slots) => {
+	let { name } = $$props;
+
+	if ($$props.name === void 0 && $$bindings.name && name !== void 0) $$bindings.name(name);
+
+	$$result.css.add(css);
+
+	return `<h1 class="svelte-i7qo5m">Hello ${escape(name)}!</h1>`;
+});
+
+export default Component;
+```
+#### Output: Runtime
+```js
+import {
+	SvelteComponentDev,
+	add_location,
+	append,
+	attr,
+	children,
+	claim_element,
+	claim_text,
+	detach,
+	element,
+	init,
+	insert,
+	noop,
+	safe_not_equal,
+	set_data,
+	text
+} from "svelte/internal";
+
+const file = undefined;
+
+function add_css() {
+	var style = element("style");
+	style.id = 'svelte-i7qo5m-style';
+	style.textContent = "h1.svelte-i7qo5m{color:purple}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjpudWxsLCJzb3VyY2VzIjpbbnVsbF0sInNvdXJjZXNDb250ZW50IjpbIjxzY3JpcHQ+XG5cdGV4cG9ydCBsZXQgbmFtZTtcbjwvc2NyaXB0PlxuXG48c3R5bGU+XG5cdGgxIHtcblx0XHRjb2xvcjogcHVycGxlO1xuXHR9XG48L3N0eWxlPlxuXG48aDE+SGVsbG8ge25hbWV9ITwvaDE+XG4iXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBS0MsRUFBRSxjQUFDLENBQUMsQUFDSCxLQUFLLENBQUUsTUFBTSxBQUNkLENBQUMifQ== */";
+	append(document.head, style);
+}
+
+function create_fragment(ctx) {
+	var h1, t0, t1, t2;
+
+	return {
+		c: function create() {
+			h1 = element("h1");
+			t0 = text("Hello ");
+			t1 = text(ctx.name);
+			t2 = text("!");
+			this.h()
+		},
+
+		l: function claim(nodes) {
+			h1 = claim_element(nodes, "H1", { class: true }, false);
+			var h1_nodes = children(h1);
+
+			t0 = claim_text(h1_nodes, "Hello ");
+			t1 = claim_text(h1_nodes, ctx.name);
+			t2 = claim_text(h1_nodes, "!");
+			h1_nodes.forEach(detach);
+			this.h();
+		},
+
+		h: function hydrate() {
+			attr(h1, "class", "svelte-i7qo5m");
+			add_location(h1, file, 10, 0, 82);
+		},
+
+		m: function mount(target, anchor) {
+			insert(target, h1, anchor);
+			append(h1, t0);
+			append(h1, t1);
+			append(h1, t2);
+		},
+
+		p: function update(changed, ctx) {
+			if (changed.name) {
+				set_data(t1, ctx.name);
+			}
+		},
+
+		i: noop,
+		o: noop,
+
+		d: function destroy(detaching) {
+			if (detaching) {
+				detach(h1);
+			}
+		}
+	};
+}
+
+function instance($$self, $$props, $$invalidate) {
+	let { name } = $$props;
+
+	const writable_props = ['name'];
+	Object.keys($$props).forEach(key => {
+		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<Component> was created with unknown prop '${key}'`);
+	});
+
+	$$self.$set = $$props => {
+		if ('name' in $$props) $$invalidate('name', name = $$props.name);
+	};
+
+	return { name };
+}
+
+class Component extends SvelteComponentDev {
+	constructor(options) {
+		super(options);
+		if (!document.getElementById("svelte-i7qo5m-style")) add_css();
+		init(this, options, instance, create_fragment, safe_not_equal, ["name"]);
+
+		const { ctx } = this.$$;
+		const props = options.props || {};
+		if (ctx.name === undefined && !('name' in props)) {
+			console.warn("<Component> was created without expected prop 'name'");
+		}
+	}
+
+	get name() {
+		throw new Error("<Component>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+	}
+
+	set name(value) {
+		throw new Error("<Component>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+	}
+}
+
+export default Component;
+```
