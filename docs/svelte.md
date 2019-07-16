@@ -41,7 +41,7 @@ It provides a lightweight modular runtime for component lifecycle management as 
 
 ## In depth review
 ### TypeScript Support
-There is a non-trivial gap in TS support. There have been [discussions](https://github.com/sveltejs/svelte/issues/418) and [open issues](https://github.com/sveltejs/svelte/issues/1639) but no real progress. <br />
+There is a non-trivial gap with TS support. There have been [discussions](https://github.com/sveltejs/svelte/issues/418) and [open issues](https://github.com/sveltejs/svelte/issues/1639) but no real progress. <br />
 [This repo is a notable effort](https://github.com/pyoner/svelte-typescript) to include TS support in the script tag, but is not perfect and does not make an attempt to include the HTML template yet.
 #### The TS gap
 - The Svelte compiler offers a preprocessing hook that seems to be a good place to transpile TS => JS, however this approach is lacking some regards, especially in the HTML template.
