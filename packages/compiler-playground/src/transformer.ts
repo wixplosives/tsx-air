@@ -52,6 +52,7 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
 
             const scanned = getJSXElements(expression);
             return ts.createCall(ts.createIdentifier('TSXAir'), [], [ts.createObjectLiteral([
+                ts.createPropertyAssignment('unique', ts.createCall(ts.createIdentifier('Symbol'), undefined, [ts.createStringLiteral((node.parent! as any).name.getText())])),
                 ts.createMethod(undefined, undefined, undefined, 'toString', undefined, undefined, [
                     ts.createParameter(undefined, undefined, undefined, 'props'),
                     ts.createParameter(undefined, undefined, undefined, 'state'),
