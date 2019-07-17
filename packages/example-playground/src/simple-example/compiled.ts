@@ -5,7 +5,7 @@ import { TSXAir, CompiledComponent, hydrate, ComponentInstance } from '../framew
 export const ParentComp = TSXAir<CompiledComponent<{ name: string }>>({
     unique: Symbol('ParentComp'),
     toString: props => `<div>
-      hello <!-- start text1 -->${props.name}
+      hello <!-- start props.name -->${props.name}<!-- end props.name -->xxx
       ${ChildComp.toString({ name: props.name })}
     </div>`,
     hydrate: (element, instance) => ({
@@ -19,7 +19,7 @@ export const ParentComp = TSXAir<CompiledComponent<{ name: string }>>({
         }
     },
     unmount: (instance: ComponentInstance<{ name: string }>) => {
-        instance.context.ChildComp.unmount();
+        instance.context.ChildComp1.unmount();
     }
 });
 
