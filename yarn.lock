@@ -27,15 +27,34 @@
     "@file-services/types" "^1.0.4"
     "@file-services/utils" "^1.0.4"
 
+"@file-services/memory@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@file-services/memory/-/memory-2.0.0.tgz#ab0d4f88d633f5b8f1ec59a918d6dc0b440869d1"
+  integrity sha512-GtTd1/8UMKI7W2bsJGz3gN5C3bvzEKCJFSD1EM9yAiwKYZ4dCGGYu3/A0r6nsYqy+gHkpeM0rUrs4LCtv8o+xQ==
+  dependencies:
+    "@file-services/posix-path" "^1.0.3"
+    "@file-services/types" "^2.0.0"
+    "@file-services/utils" "^2.0.0"
+
 "@file-services/posix-path@^1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@file-services/posix-path/-/posix-path-1.0.2.tgz#3e51102c640245dff4e49df5828389a83633a695"
   integrity sha512-8sJf8lpDk8kTQJLlpNySqqbXd5bK25DL1QP9BsK+6rlR3YYHyP1G2mJPgY/o4Ci9cgcQpykz05kgPYJljiDKXg==
 
+"@file-services/posix-path@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@file-services/posix-path/-/posix-path-1.0.3.tgz#d176afbbb6fe284f055217f06fd51d5a0475bbb8"
+  integrity sha512-m6WuGAyIku8jVXr2DP0TTZnaBXCjAobk1YS+EciVRUQvbjxswPqpV7L3yqmYFfYuExHLNcoA+puKYL556nbW0Q==
+
 "@file-services/types@^1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@file-services/types/-/types-1.0.4.tgz#adb59fd44adb28bd04eae1a225caab18ae860d64"
   integrity sha512-t0u+YU3DRAEZzhIU4cKJetOdvsevrfBwKIStvmxNc3GvR0zoDkuhpAnfgqYrf6aRAvM22G6/CkaU7PKIwacvOw==
+
+"@file-services/types@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@file-services/types/-/types-2.0.0.tgz#396f375f209de5fc800b45ab12998f964471d2aa"
+  integrity sha512-FFGRaV7T2fDKCVVCa3yGOnJK2g9/PT0gvLTQvJkipoXpR41qNvlMaT4BiAKY/fy+iH6A0BQ5tzfvcUPmO+Pazw==
 
 "@file-services/typescript@^1.0.4":
   version "1.0.4"
@@ -44,12 +63,26 @@
   dependencies:
     "@file-services/types" "^1.0.4"
 
+"@file-services/typescript@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@file-services/typescript/-/typescript-2.0.0.tgz#5f12cff2c0b625a24e791afe14a53d56f228e3d0"
+  integrity sha512-8SXYD74HEYLMXJaLLdFNwcImvB71b3vIpspATDGtLDDQc/+6WE9/qptiwTKsEFiBJby0/+xACUjxe1KqC1dD1A==
+  dependencies:
+    "@file-services/types" "^2.0.0"
+
 "@file-services/utils@^1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@file-services/utils/-/utils-1.0.4.tgz#b9dfe61ba4538a13982afe3350487790f3f3cbd0"
   integrity sha512-b2gf6TWcSacw5NuOR7UWqNK8iHpQU1hbhwFT0A+3k0oRMH1JA3vOeXIlxRaqAflCRYi4Qd4OQ5JBtTKDH4bSVA==
   dependencies:
     "@file-services/types" "^1.0.4"
+
+"@file-services/utils@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@file-services/utils/-/utils-2.0.0.tgz#cad3570e272108b1f49da6fc9578295816bda2a9"
+  integrity sha512-7DJ+bWs4mAFQoqy1K19qOvOQs5kX6G64oRWqjQgLY9XJgFTKqZCISzgAxPLLT24e+oIv4h504WiSgexLfAA5dw==
+  dependencies:
+    "@file-services/types" "^2.0.0"
 
 "@lerna/add@3.13.3":
   version "3.13.3"
@@ -6696,7 +6729,7 @@ rollup-plugin-node-resolve@^5.2.0:
     resolve "^1.11.1"
     rollup-pluginutils "^2.8.1"
 
-rollup-plugin-svelte@^5.0.3:
+rollup-plugin-svelte@^5.1.0:
   version "5.1.0"
   resolved "https://registry.yarnpkg.com/rollup-plugin-svelte/-/rollup-plugin-svelte-5.1.0.tgz#6c2d3998db9141a934343a0e7298499994aadd25"
   integrity sha512-4MRZG29dAWDpoxEs5uIHzDnYafQEOLaKIJAuDYUtFIzEm1F1IGSTlFyjd8/qk4wltlHdu6V7YfZY53+CKryhMg==
@@ -6775,6 +6808,11 @@ safe-regex@^1.1.0:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
   integrity sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
+
+sanitize.css@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/sanitize.css/-/sanitize.css-10.0.0.tgz#b5cb2547e96d8629a60947544665243b1dc3657a"
+  integrity sha512-vTxrZz4dX5W86M6oVWVdOVe72ZiPs41Oi7Z6Km4W5Turyz28mrXSJhhEBZoRtzJWIv3833WKVwLSDWWkEfupMg==
 
 sanitize.css@^8.0.0:
   version "8.0.0"
@@ -7408,7 +7446,7 @@ supports-color@^6.1.0:
   dependencies:
     has-flag "^3.0.0"
 
-svelte@^3.0.0:
+svelte@^3.6.7:
   version "3.6.7"
   resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.6.7.tgz#20e814b79aac4009d4bc1ecf0c9287a6bf7e96fb"
   integrity sha512-9HzhPxWNLi+ZBhxL3HJ8jwwu+u+XfHtVF3uEJ2m8/JOdnaTC9D2qiEwOncgI7z/pN+VumgKQtZoHtvYCW6fHqg==
@@ -7597,6 +7635,11 @@ trim-off-newlines@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/trim-off-newlines/-/trim-off-newlines-1.0.1.tgz#9f9ba9d9efa8764c387698bcbfeb2c848f11adb3"
   integrity sha1-n5up2e+odkw4dpi8v+sshI8RrbM=
+
+tslib@^1.10.0:
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.10.0.tgz#c3c19f95973fb0a62973fb09d90d961ee43e5c8a"
+  integrity sha512-qOebF53frne81cf0S9B41ByenJ3/IuH8yJKngAX35CmiZySA0khhkovshKK+jGCaMnVomla7gVlIcc3EvKPbTQ==
 
 tslib@^1.8.0, tslib@^1.8.1, tslib@^1.9.0, tslib@^1.9.3:
   version "1.9.3"
