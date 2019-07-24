@@ -3,6 +3,8 @@ export interface ScannedJSX {
     type: string;
     attributes: Array<{ name: string, value: string | ScannedExpression }>;
     children: ScannedChild[];
+    key: string;
+    path: number[]
 }
 
 

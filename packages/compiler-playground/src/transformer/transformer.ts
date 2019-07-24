@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { ScannedChild, ScannedJSX } from './types';
 import { createToStringMethod } from './toStringGenerator';
+import { createToHydrateMethod } from './hydrateGenerator';
 (window as any).ts = ts;
 
 export function tsxAirTransformer(context: ts.TransformationContext): ts.Transformer<ts.SourceFile> {
@@ -28,10 +29,11 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
                 throw new Error('unhnadled input');
             }
 
-            const scanned = getJSXElements(expression);
+            const scanned = getJSXElements(expression, {}, []);
             return ts.createCall(ts.createIdentifier('TSXAir'), [], [ts.createObjectLiteral([
-                ts.createPropertyAssignment('unique',ts.createCall(ts.createIdentifier('Symbol'), undefined, [ts.createStringLiteral((node.parent! as any).name.getText())])),
-                createToStringMethod(scanned)
+                ts.createPropertyAssignment('unique', ts.createCall(ts.createIdentifier('Symbol'), undefined, [ts.createStringLiteral((node.parent! as any).name.getText())])),
+                createToStringMethod(scanned),
+                createToHydrateMethod(scanned)
             ], true)]);
         }
     };
@@ -53,11 +55,19 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
 
     }
 
-    function getJSXElements(node: ts.JsxElement | ts.JsxSelfClosingElement): ScannedJSX {
+    function getJSXElements(node: ts.JsxElement | ts.JsxSelfClosingElement, counters: Record<string, number>, path: number[]): ScannedJSX {
         const attrNode = ts.isJsxSelfClosingElement(node) ? node : node.openingElement;
+        const elementType = attrNode.tagName.getText();
+        if (!counters[elementType]) {
+            counters[elementType] = 1;
+        } else {
+            counters[elementType]++;
+        }
         return {
             kind: 'jsx',
-            type: attrNode.tagName.getText(),
+            path,
+            key: elementType + counters[elementType],
+            type: elementType,
             attributes: attrNode.attributes.properties.map(child => {
                 if (!ts.isJsxAttribute(child)) {
                     throw new Error('unhandled');
@@ -84,13 +94,13 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
                 };
 
             }),
-            children: ts.isJsxElement(node) && node.children ? node.children.map(handleJSXChild) : []
+            children: ts.isJsxElement(node) && node.children ? node.children.map((item, idx) => handleJSXChild(item, counters, path.concat(idx))) : []
         };
     }
 
-    function handleJSXChild(node: ts.JsxChild): ScannedChild {
+    function handleJSXChild(node: ts.JsxChild, counters: Record<string, number>, path: number[]): ScannedChild {
         if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)) {
-            return getJSXElements(node);
+            return getJSXElements(node, counters, path);
         } else if (ts.isJsxText(node)) {
             return {
                 kind: 'text',
