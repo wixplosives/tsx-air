@@ -8,7 +8,7 @@ import * as Session from './session';
 import 'sanitize.css';
 import 'sanitize.css/typography.css';
 import './playground.css';
-import { tsxAirTransformer } from './transformer';
+import { tsxAirTransformer } from './transformer/transformer';
 
 export interface IPlaygroundProps {
     fs: IFileSystem;
