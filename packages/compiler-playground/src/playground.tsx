@@ -71,7 +71,7 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
         const compilerOptions: ts.CompilerOptions = { target: ts.ScriptTarget.ES2017, jsx: ts.JsxEmit.React };
         const output = ts.transpileModule(content.toString(), { compilerOptions, transformers: { before: [tsxAirTransformer] } }).outputText;
 
-        console.log(output);
+        // console.log(output);
         this.setState({
             output: output.split('\\n').join('\n')
         });

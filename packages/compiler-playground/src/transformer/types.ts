@@ -4,7 +4,7 @@ export interface ScannedJSX {
     attributes: Array<{ name: string, value: string | ScannedExpression }>;
     children: ScannedChild[];
     key: string;
-    path: number[]
+    path: number[];
 }
 
 
