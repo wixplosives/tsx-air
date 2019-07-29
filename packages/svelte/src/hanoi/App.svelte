@@ -1,10 +1,27 @@
 <script>
+    import { tick } from 'svelte';
     import Column from './Column.svelte';
-    import { towers } from './Store.js';
-    import { beforeUpdate, afterUpdate } from 'svelte';
-    import {fly} from 'svelte/transition';
+    import Messages from './Messages.svelte';
+    import Timer from './Timer.svelte';
+    import api from './store';
+    import { fly } from 'svelte/transition';
+    import { tweened } from 'svelte/motion';
 
+    const { towers, timer, messages, selectTower, setSize } = api;
     let size = $towers.size;
+    let removeAlert = true;
+    let levelInput;
+
+    let killAnimation = false;
+    $: alert = $messages.messages.slice(-1)[0] && $messages.messages.slice(-1)[0].type === 'error' && !killAnimation;
+
+    // NOTE: async/await tick() seems to fail as an inline function in template
+    async function removeAnimation() {
+        killAnimation = true;
+        // await DOM update
+        await tick();
+        killAnimation = false;
+    }
 </script>
 
 <style>
@@ -19,8 +36,26 @@
         flex-grow: 1;
     }
 
+    .alert {
+        animation: alert 0.1s ease-out 0s 1;
+    }
+
+    @keyframes alert {
+        from {
+            background-color: darkred;
+        }
+        to {
+            background-color: none;
+        }
+    }
+
     .dash {
-        flex-grow: 0;
+        display: flex;
+        align-items: center;
+        user-select: none;
+    }
+    .dash > * {
+        margin-left: 2em;
     }
 
     .columns {
@@ -37,40 +72,39 @@
             case '1':
             case '2':
             case '3':
-                towers.selectTower(e.key - 1);
+                selectTower(e.key - 1);
                 break;
             case 's':
             case 'S':
-                document.getElementById('level').focus();
+                levelInput.focus();
                 break;
             case 'Escape':
-                towers.selectTower(null);
+                selectTower(null);
                 break;
         }
     }} />
-<div class="container">
+
+<div class="container" class:alert on:animationend={removeAnimation}>
     <div class="dash">
+        <Timer on:click={() => setSize(size)} />
         <label>
             Level:
             <input
-                id="level"
-                type="number"
-                min="3"
+                bind:this={levelInput}
+                type="range"
+                min="2"
                 max="11"
                 step="1"
                 bind:value={size}
                 on:keypress|stopPropagation
-                on:change={() => towers.setSize(size)} />
+                on:change={() => setSize(size)} />
         </label>
     </div>
-
-    {#if $towers.error}
-        <div class="dash" transition:fly={{y: -100}} >{$towers.error}</div>
-    {/if}
+    <Messages />
 
     <div class="columns">
         {#each $towers.towers as data, index (data.id)}
-            <Column {data} on:click={() => towers.selectTower(index)} />
+            <Column {data} specialTiles={$towers.specialTiles} on:click={() => selectTower(index)} win={$towers.win} />
         {/each}
     </div>
 </div>

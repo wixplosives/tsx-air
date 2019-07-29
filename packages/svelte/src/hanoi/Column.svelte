@@ -1,18 +1,21 @@
 <script>
-    import { beforeUpdate, afterUpdate, onMount } from 'svelte';
+    import { afterUpdate } from 'svelte';
     import Block from './Block.svelte';
+
     export let data;
+    export let specialTiles;
+    export let win = false;
 </script>
 
 <style>
     .column {
         display: flex;
-        /* height: 100%; */
         align-items: center;
         justify-content: flex-end;
         flex-direction: column;
         flex: 1;
         position: relative;
+        z-index: 0;
     }
 
     .pole {
@@ -26,11 +29,15 @@
         border-top-left-radius: 0.5vw;
         border-top-right-radius: 0.5vw;
     }
+
+    .pole.target {
+        background-image: linear-gradient(to right, #000, gold, #000);
+    }
 </style>
 
 <div class="column" on:click>
-    <div class="pole" />
+    <div class="pole" class:target={data.id === 2} />
     {#each data.blocks as size, i (size)}
-        <Block {size} selected={i === 0 && data.isSelected} />
+        <Block {size} blocktype={win ? 'bonus' : specialTiles[size]} />
     {/each}
 </div>

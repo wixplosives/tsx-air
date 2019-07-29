@@ -1,8 +1,21 @@
 <script>
     import { fly } from 'svelte/transition';
+    import SimpleBlock from './blocks/SimpleBlock.svelte';
+    import SelectedBlock from './blocks/SelectedBlock.svelte';
+    import PartyBlock from './blocks/PartyBlock.svelte';
     export let size;
-    export let selected;
+    export let blocktype;
+
     let miniblocks = new Array(size);
+    
+    const blockTypes = {
+        'selected': SelectedBlock,
+        'bonus': PartyBlock
+    }
+
+    $: type = blockTypes[blocktype] || SimpleBlock;
+
+
 </script>
 
 <style>
@@ -13,24 +26,10 @@
         flex-wrap: nowrap;
         border-radius: 20%;
     }
-
-    .unit {
-        display: inline-block;
-        width: 2vw;
-        height: 5vh;
-        border: solid black 1px;
-        background-color: red;
-        border-radius: 20%;
-    }
-
-    .unit.selected {
-        background-color: greenyellow;
-    }
 </style>
 
-<div class="block">
-    {#each miniblocks as _}
-        <div class="unit" class:selected transition:fly>
-        </div>
+<div class="block" transition:fly>
+    {#each miniblocks as _,index}
+        <svelte:component this={type} phase={index/size} {index}/>
     {/each}
 </div>
