@@ -1,33 +1,27 @@
 {
-  "name": "@wixc3/tsx-air-examples",
-  "version": "0.4.0",
-  "author": "Wix.com",
-  "license": "UNLICENSED",
-  "private": true,
-  "scripts": {
-    "bundle:prod": "webpack --progress --mode production --devtool false",
-    "clean": "rimraf ./dist",
-    "lint": "tslint -p src",
-    "prebuild": "yarn clean",
-    "start:server": "node server.js",
-    "start": "webpack-dev-server --progress --open",
-    "test": "mocha -r @ts-tools/node/r \"test/**/*.spec.ts?(x)\""
-  },
-  "dependencies": {
-    "@file-services/memory": "^1.0.6",
-    "@file-services/typescript": "^1.0.4",
-    "@stylable/schema-extract": "^2.0.0",
-    "@wixc3/schema-views": "^1.2.0",
-    "@wixc3/typescript-schema-extract": "^1.1.0",
-    "monaco-editor": "^0.17.0",
-    "monaco-editor-webpack-plugin": "^1.7.0",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "sanitize.css": "^8.0.0",
-    "tslib": "^1.9.3"
-  },
-  "browser": {
-    "./src/recipes/react.ts": "./src/recipes/react-browser.ts",
-    "./src/recipes/typescript.ts": "./src/recipes/typescript-browser.ts"
-  }
+    "name": "@wixc3/tsx-air-examples",
+    "version": "0.4.0",
+    "author": "Wix.com",
+    "license": "MIT",
+    "private": true,
+    "scripts": {
+        "build": "webpack --progress --mode production --devtool false",
+        "clean": "rimraf ./dist",
+        "lint": "tslint -p src",
+        "prebuild": "yarn clean",
+        "start:server": "node server.js",
+        "start": "webpack-dev-server --progress --open",
+        "test": "mocha -r @ts-tools/node/r \"test/**/*.spec.ts?(x)\""
+    },
+    "dependencies": {
+        "@file-services/memory": "^2.0.0",
+        "@file-services/typescript": "^2.0.0",
+        "@stylable/schema-extract": "^2.0.0",
+        "monaco-editor": "^0.17.0",
+        "monaco-editor-webpack-plugin": "^1.7.0",
+        "react": "^16.8.6",
+        "react-dom": "^16.8.6",
+        "sanitize.css": "^8.0.0",
+        "tslib": "^1.9.3"
+    }
 }

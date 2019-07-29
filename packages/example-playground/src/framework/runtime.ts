@@ -9,7 +9,6 @@ export interface ComponentInstance<P, S = {}> {
     unmount?: (instance: ComponentInstance<P, S>) => void;
 }
 
-
 export interface CompiledComponent<P, S = {}> {
     unique: symbol;
     initialState?: (props: P) => S;
@@ -50,6 +49,7 @@ export const update = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, elem
     instance.state = { ...instance.state, ...state };
     instance.props = { ...instance.props, ...props };
 };
+
 let factoryElement: HTMLDivElement;
 export const create = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, props: PROPS) => {
     factoryElement = factoryElement || document.createElement('div');

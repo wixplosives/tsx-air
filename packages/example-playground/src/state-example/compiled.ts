@@ -39,7 +39,7 @@ export const ParentComp = TSXAir<CompiledComponent<{ initialState: string }, { s
             instance.context.text2.textContent = state.state1;
         }
     },
-    unmount: instance => {
+    unmount: _instance => {
         //
     }
 });
