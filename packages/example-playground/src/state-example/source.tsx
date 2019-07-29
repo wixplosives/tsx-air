@@ -3,14 +3,17 @@ import React, { useState } from 'react';
 export const ParentComp = TSXAir((props: { initialState: string }) => {
     const [state, setState] = useState(props.initialState);
     const [state1, setState1] = useState(props.initialState);
+    
+    const onClick = () => setState(state + 'a');
+    const onClick1 = () => setState1(state1 + 'a');
+
     return <div>
-        <div onClick={() => setState(state + 'a')}>
+        <div onClick={onClick}>
             ${state}
         </div>
-        <div onClick={() => setState1(state1 + 'a')}>
+        <div onClick={onClick1}>
             ${state1}
         </div>
     </div>;
 
-}
-);
+});

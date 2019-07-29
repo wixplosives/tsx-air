@@ -1,7 +1,5 @@
 import { TSXAir, CompiledComponent, hydrate, ComponentInstance } from '../framework/runtime';
 
-
-
 export const ParentComp = TSXAir<CompiledComponent<{ name: string }>>({
     unique: Symbol('ParentComp'),
     toString: props => `<div>
@@ -23,7 +21,6 @@ export const ParentComp = TSXAir<CompiledComponent<{ name: string }>>({
     }
 });
 
-
 export const ChildComp = TSXAir<CompiledComponent<{ name: string }>>({
     unique: Symbol('ChildComp'),
     toString: (props: { name: string }) => `<div>hello <!-- start text1 -->${props.name} <div>`,
@@ -39,7 +36,6 @@ export const ChildComp = TSXAir<CompiledComponent<{ name: string }>>({
         //
     }
 });
-
 
 export const runExample = (element: HTMLElement) => {
     let name = 'gaga';
