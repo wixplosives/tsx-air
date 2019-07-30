@@ -5,7 +5,11 @@
 
     images.loadMore();
     $: api = images.setApiBaseUrl($menu.selected.animal);
-    $: type = $menu.selected.scroll === 'Infinite' ? Infinite : Paged ;
+    $: type = $menu.selected.scroll === 'Infinite' ? Infinite : Paged;
 
+    const loadMore = () => {
+        images.loadMore().then(images.loadMore);
+    };
 </script>
-<svelte:component this={type} />
+
+<svelte:component this={type} items={$images.data} on:needMoreImages={loadMore} />

@@ -1,28 +1,63 @@
 <script>
-    import Preloader from '../Preloader.svelte';
-    import Thumb from '../Thumb.svelte';
-    import { images, menu } from '../store';
-    import { afterUpdate } from 'svelte';
+    import Thumb from './Thumb.svelte';
+    import Page from './Page.svelte';
+    import PageSelection from './PageSelection.svelte';
+    import { crossfade } from 'svelte/transition';
+    import { createEventDispatcher, onMount, afterUpdate } from 'svelte';
+    const dispatch = createEventDispatcher();
 
-    images.loadMore();
-    $: api = images.setApiBaseUrl($menu.selected.animal);
-    let page = 0;
-    let itemsPerPage = 3 * 4;
-    const getPage = page => {
-        if (page * itemsPerPage < $images.data.length + 10) {
-            images.loadMore().then(() => images.loadMore());
+    export let items = [];
+    export let itemsPerPage = 6;
+    onMount(() => {
+        if (items.length / itemsPerPage < 5) {
+            dispatch('needMoreImages');
         }
-        return $images.data.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+    });
+
+    $: pages = items.reduce((acc, item, index) => {
+        const page = (index / itemsPerPage) | 0;
+        const data = acc[page] || { id: page, items: [] };
+        data.items.push(item);
+        acc[page] = data;
+        return acc;
+    }, []);
+
+    let displayedPage = 0;
+    // handy for animation
+    $: page = pages[displayedPage] ? [pages[displayedPage]] : [];
+
+    const changePage = e => {
+        if (e.type === 'gotoPage') {
+            displayedPage = e.detail >= 0 ? e.detail : pages.length - 1;
+        } else {
+            if (e.target.classList.contains('prev')) {
+                displayedPage--;
+            } else {
+                displayedPage++;
+            }
+        }
+        if (displayedPage >= pages.length - 2) {
+            dispatch('needMoreImages');
+        }
     };
-    $: displayedImages = getPage(page);
+    $: noPrev = displayedPage <= 0;
+    $: noNext = displayedPage >= pages.length;
+    $: count = Math.min(pages && pages.length, 5);
 </script>
 
 <style>
     .gallery {
         display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-evenly;
+        flex-direction: column;
+        justify-content: start;
+    }
+    .header {
+        flex-grow: 0;
+        align-self: center;
+    }
+
+    .page {
+        flex-grow: 1;
     }
 
     button {
@@ -58,13 +93,19 @@
 </style>
 
 <div class="gallery">
-    <button class="prev" class:hidden={page <= 0} on:click={() => page--} />
-    <button
-        on:click={() => {
-            page++;
-            images.loadMore();
-        }} />
-    {#each displayedImages as { url } (url)}
-        <Thumb {url} />
+    <button class="prev" class:hidden={noPrev} on:click={changePage} />
+    <button class="next" class:hidden={noNext} on:click={changePage} />
+    <div class="header">
+        <PageSelection {displayedPage} {count} on:gotoPage={changePage} />
+    </div>
+    {#each page as { id, items } (id)}
+        <!-- NOTE: transition, animation, named slots etc CAN NOT be applied to components -->
+        <div transition:crossfade class="page">
+            <Page>
+                {#each items as { url }}
+                    <Thumb {url} />
+                {/each}
+            </Page>
+        </div>
     {/each}
 </div>

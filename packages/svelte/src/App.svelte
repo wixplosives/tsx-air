@@ -1,6 +1,6 @@
 <script>
 	import Parent from './Parent.svelte';
-	import HelloWorld from './HelloWorld.svelte';
+	import HelloWorld from './Parent.svelte';
 	export let name;
 </script>
 

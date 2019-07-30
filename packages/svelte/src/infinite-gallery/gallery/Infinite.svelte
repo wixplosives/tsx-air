@@ -1,10 +1,22 @@
 <script>
-    import Preloader from '../Preloader.svelte';
-    import Thumb from '../Thumb.svelte';
-    import { images, menu } from '../store';
+    import Thumb from './Thumb.svelte';
+    import { createEventDispatcher, onMount, afterUpdate } from 'svelte';
+    const dispatch = createEventDispatcher();
 
-    images.loadMore();
-    $: api = images.setApiBaseUrl($menu.selected.animal);
+    export let items = [];
+
+    const loadMoreIfNeeded = () => {
+        if (
+            document.body.scrollHeight +
+                document.body.getClientRects()[0].y -
+                document.body.getClientRects()[0].height <
+            20
+        ) {
+            dispatch('needMoreImages');
+        }
+    };
+
+    onMount(loadMoreIfNeeded);
 </script>
 
 <style>
@@ -16,22 +28,11 @@
     }
 </style>
 
-<svelte:window
-    on:scroll={() => {
-        if (document.body.scrollHeight + document.body.getClientRects()[0].y - document.body.getClientRects()[0].height < 20) {
-            images.loadMore();
-        }
-    }} />
+<svelte:window on:scroll={loadMoreIfNeeded} />
 
 <div class="gallery">
-    {#each $images.data as { url }}
+    {#each items as { url } (url)}
         <Thumb {url} />
     {/each}
-    {#await $images.loading}
-        <Thumb url={null} />
-    {:then}
-        <div />
-    {:catch}
-        <div />
-    {/await}
+
 </div>
