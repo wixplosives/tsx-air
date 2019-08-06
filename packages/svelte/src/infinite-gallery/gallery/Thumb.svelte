@@ -1,22 +1,31 @@
 <script>
     import Preloader from '../Preloader.svelte';
-    import { onMount, tick } from 'svelte';
+    import { onMount, tick, onDestroy } from 'svelte';
     import { fade } from 'svelte/transition';
 
     export let url;
     let parent;
     let loaded = false;
+    let img = new Image();
+    
     onMount(() => {
-        const img = new Image();
         img.src = url;
         img.style = `object-fit: cover;
             height: 100%;
             width: 100%;`;
+            img.alt = "a very cute animal"
         img.onload = async () => {
             loaded = true;
             await tick();
-            parent.appendChild(img);
+            parent && parent.appendChild(img);
         };
+    });
+
+    onDestroy(() => {
+        if (img) {
+            img.src = null;
+        }
+        img = null;
     });
 </script>
 
@@ -39,7 +48,7 @@
     }
 </style>
 
-<div class="thumb">
+<div class="thumb" on:click>
     {#if !loaded}
         <Preloader />
     {:else}
