@@ -6,29 +6,27 @@
         y = 10;
 
     const setZoom = e => {
+        if (!imgElm) return;
         const rect = imgElm.getClientRects()[0];
+        const h = limitingAxis === 'h' ? imgElm.clientHeight : imgElm.clientWidth / imageAspectRatio;
+
         let [nx, ny] = [e.pageX - rect.x - width / 2, e.pageY - rect.y - height / 2];
-        
-        console.log(nx, ny,
-        clamp(-1, ratio * imgElm.naturalWidth - width - 1, nx),
-            clamp(-1, ratio * imgElm.naturalHeight - height - 1, ny)
-        );
-        
-        [x, y] = [
-            clamp(-1, ratio * imgElm.naturalWidth - width - 1, nx),
-            clamp(-1, ratio * imgElm.naturalHeight - height - 1, ny)
-        ];
+
+        [x, y] = [clamp(nx, -1, h * imageAspectRatio - width - 1), clamp(ny, -1, h - height - 1)];
     };
     let mainElm, imgElm, zoomedImgElm;
 
-    // $: width = imgElm.naturalWidth;
-    // $: height = imgElm.naturalHeight;
-    $: ratio =
-        (imgElm && Math.max(imgElm.clientWidth / imgElm.naturalWidth, imgElm.clientHeight / imgElm.naturalHeight)) || 1;
-    $: aspectRatio = (mainElm && mainElm.clientWidth / mainElm.clientHeight) || window.innerWidth / window.innerHeight;
+    $: limitingAxis =
+        imgElm && imgElm.clientWidth / imgElm.naturalWidth < imgElm.clientHeight / imgElm.naturalHeight ? 'w' : 'h';
+    $: imageAspectRatio = imgElm && imgElm.naturalWidth / imgElm.naturalHeight;
 
-    $: width = (imgElm && imgElm.clientWidth * ratio) || 0;
-    $: height = width / aspectRatio || 0;
+    $: scaleFactor =
+        (imgElm && Math.max(imgElm.clientWidth / imgElm.naturalWidth, imgElm.clientHeight / imgElm.naturalHeight)) || 1;
+    $: zoomAspectRation =
+        (mainElm && mainElm.clientWidth / mainElm.clientHeight) || window.innerWidth / window.innerHeight;
+
+    $: width = (imgElm && imgElm.clientWidth * scaleFactor) || 0;
+    $: height = width / zoomAspectRation || 0;
 </script>
 
 <style>
@@ -74,8 +72,8 @@
         <img
             src={url}
             alt="Cute animal, up close"
-            bind:this={zoomedImgElm} />
-            <!-- style="left:{-x / ratio}px; top:{-y / ratio}px" /> -->
+            bind:this={zoomedImgElm}
+            style="left:{-x / scaleFactor}px; top:{-y / scaleFactor}px" />
     </div>
 
     <div class="zoomedOut">
