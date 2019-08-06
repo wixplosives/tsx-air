@@ -9,10 +9,16 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-svelte": "^5.1.0",
     "rollup-plugin-terser": "^4.0.4",
-    "svelte": "^3.6.7"
+    "svelte": "^3.7.0"
   },
   "dependencies": {
     "sirv-cli": "^0.4.4"
+  },
+  "workspaces": {
+    "nohoist": [
+      "**/rollup-plugin-svelte",
+      "**/rollup-plugin-svelte/**"
+    ]
   },
   "scripts": {
     "build": "rollup -c",
