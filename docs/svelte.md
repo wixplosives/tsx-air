@@ -38,6 +38,7 @@ It provides a lightweight modular runtime for component lifecycle management as 
 - Proprietary templating syntax (with rich yet limited capabilities)
 - Far from being a standard - at the time of writing, 20k starred on github (Angular: 49k, React: 132K, Vue: 143K)
 - Less mature
+- Tooling is ok, but does not match TSX/JSX (ex in VSCode, autocomplete, renaming etc work sporadically)
 
 ## In depth review
 ### TypeScript Support
@@ -52,16 +53,31 @@ There is a non-trivial gap with TS support. There have been [discussions](https:
 + Svelte offers built in features that react lacks:
     - View binding (making much of the state management code redundant)
     - Reactive and derived values (making the code more compact at the expanse of more framework-dependent code)
-    - Built in stores
+    - Built in stores and context
 + Manipulation of children, reparenting etc is possible but less straightforward than React
 + SSR is well supported as a compile output, a [NextJs](https://nextjs.org/)-like project called [Sapper](https://github.com/sveltejs/sapper) is being developed but is not production ready.
 
-
 ### Syntax
 Simple, full featured template engine with loops, conditionals etc.
-Less flexible than TSX
-Takes some getting used to and has a learning curve: things that are vanilla like in JSX (conditional rendering, iterating) require a proprietary syntax.
-While techniques and approaches differ, *Svelte seems to cover all necessary usecases* **Needs further verification**
+Less flexible than TSX/JSX
+Takes some getting used to and has a learning curve: things that are vanilla-like in JSX (conditional rendering, iterating) require a proprietary syntax.
+While techniques and approaches differ, *Svelte covers all necessary usecases* 
+
+#### Passed children (slot) limitations
+The following common pattern:
+```<Parent>
+	<Child name="1" />
+	<Child name="2" />
+</Parent>```
+Is somewhat limited in Svelte: the mechanism used is the `<slot />` API, 
+which accepts inline children, with no API for manipulation or cloning said children. so:
+```svelte
+/// Parent.svelte
+<slot />
+```
+Parent has no access to the Child instances logic, properties or even determining component type.
+In addition, there is no way to declare (or validate) what children are valid;
+There are work abounds, such as passing a list of child component type & attribute tuples to parent, and have it create the children. Named slots provide another solution to specific usecases (but not to a general/abstract parent).
 
 ## Code transpilation:
 ### Hello {world} 
