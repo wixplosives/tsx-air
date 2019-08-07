@@ -38,14 +38,15 @@ module.exports = (_env, {mode = 'development', devtool = 'source-map'}) => {
       extensions: ['.tsx', '.ts', '.js', '.json']
     },
     plugins: [
-      new StylableWebpackPlugin(),
+      // new StylableWebpackPlugin(),
       new HtmlWebpackPlugin({
-        title: 'Schema Playground'
+        title: 'TSXAir examples Playground',
+        
       }),
-      new MonacoWebpackPlugin({
-        languages: ['css', 'javascript', 'typescript', 'html'],
-        output: 'workers'
-      })
+      // new MonacoWebpackPlugin({
+      //   languages: ['css', 'javascript', 'typescript', 'html'],
+      //   output: 'workers'
+      // })
       // new require('webpack-bundle-analyzer').BundleAnalyzerPlugin()
     ],
     performance: {
