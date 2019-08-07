@@ -9,6 +9,9 @@ import 'sanitize.css';
 import 'sanitize.css/typography.css';
 import './playground.css';
 import { tsxAirTransformer } from './transformer/transformer';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+// @ts-ignore
+import { atomOneLight as style } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 export interface IPlaygroundProps {
     fs: IFileSystem;
@@ -47,8 +50,10 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
                 </div>
 
 
-                <div className="playground-pane view-pane">
-                    <pre>{this.state.output}</pre>
+                <div className="playground-pane view-pane" >
+                    <SyntaxHighlighter language="javascript" style={style}>
+                        {this.state.output}
+                    </SyntaxHighlighter>
                 </div>
             </div>
         );
