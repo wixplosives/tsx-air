@@ -2,11 +2,30 @@
     import { onMount } from 'svelte';
     import clamp from 'lodash/clamp';
     export let url;
-    let x = 10,
-        y = 10;
+    let x = 0,
+        y = 0,
+        loaded = false,
+        limitingAxis,
+        imageAspectRatio,
+        scaleFactor;
 
+    onMount(() => {
+        imgElm.onload = () => {
+            limitingAxis =
+                imgElm && imgElm.width / imgElm.naturalWidth < imgElm.height / imgElm.naturalHeight
+                    ? 'w'
+                    : 'h';
+            imageAspectRatio = imgElm && imgElm.naturalWidth / imgElm.naturalHeight;
+
+            scaleFactor =
+                limitingAxis === 'h'
+                    ? mainElm.clientHeight / imgElm.naturalHeight
+                    : mainElm.clientWidth / imgElm.naturalWidth;
+            loaded = true;
+        };
+    });
     const setZoom = e => {
-        if (!imgElm) return;
+        if (!loaded) return;
         const rect = imgElm.getClientRects()[0];
         const h = limitingAxis === 'h' ? imgElm.clientHeight : imgElm.clientWidth / imageAspectRatio;
 
@@ -14,19 +33,15 @@
 
         [x, y] = [clamp(nx, -1, h * imageAspectRatio - width - 1), clamp(ny, -1, h - height - 1)];
     };
-    let mainElm, imgElm, zoomedImgElm;
 
-    $: limitingAxis =
-        imgElm && imgElm.clientWidth / imgElm.naturalWidth < imgElm.clientHeight / imgElm.naturalHeight ? 'w' : 'h';
-    $: imageAspectRatio = imgElm && imgElm.naturalWidth / imgElm.naturalHeight;
+    let mainElm, imgElm;
 
-    $: scaleFactor =
-        (imgElm && Math.max(imgElm.clientWidth / imgElm.naturalWidth, imgElm.clientHeight / imgElm.naturalHeight)) || 1;
-    $: zoomAspectRation =
+    $: zoomAspectRatio =
         (mainElm && mainElm.clientWidth / mainElm.clientHeight) || window.innerWidth / window.innerHeight;
 
+    $: s=imgElm && width/imgElm.naturalWidth || 1;
     $: width = (imgElm && imgElm.clientWidth * scaleFactor) || 0;
-    $: height = width / zoomAspectRation || 0;
+    $: height = width / zoomAspectRatio || 0;
 </script>
 
 <style>
@@ -72,8 +87,7 @@
         <img
             src={url}
             alt="Cute animal, up close"
-            bind:this={zoomedImgElm}
-            style="left:{-x / scaleFactor}px; top:{-y / scaleFactor}px" />
+            style="left:{(-x) / s}px; top:{(-y) / s }px" />
     </div>
 
     <div class="zoomedOut">
