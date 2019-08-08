@@ -1,5 +1,6 @@
 export const sampleTypescriptFilePath = '/index.tsx';
 export const sampleTypescriptFile = `
+// this is not from an actual file....
 import React from 'react';
 import TSXAir from 'tsx-air';
 

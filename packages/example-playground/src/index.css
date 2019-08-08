@@ -1,0 +1,32 @@
+.selection {
+    position: sticky;
+    top: 0;
+    left: 2em;
+}
+
+.example {
+    display: flex;
+    flex-direction: row;
+    overflow: scroll;
+    flex-wrap: wrap-reverse;
+    align-items: stretch;
+}
+
+.example>* {
+    width: 30%;
+    flex-grow: 1;
+    border: 1px solid greenyellow;
+    margin: 1em;
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+
+.example pre {
+    background: transparent;
+    flex-grow: 1;
+    margin: 0;
+    padding: 0;
+}

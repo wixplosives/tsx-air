@@ -93,3 +93,6 @@ typings/
 
 # DynamoDB Local files
 .dynamodb/
+
+# generated examples index
+packages/example-playground/src/examples/index.ts
