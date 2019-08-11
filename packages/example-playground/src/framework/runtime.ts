@@ -60,3 +60,22 @@ export const create = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, prop
     factoryElement.removeChild(element);
     return mountInstance(Comp, element, props, state);
 };
+
+export const tsxAirNode = <PROPS = any>(Comp: CompiledComponent<PROPS, any>, props: PROPS) => {
+    return {
+        type: Comp,
+        props
+    };
+};
+
+export const elementToString = <PROPS = object>(node: TsxAirNode<PROPS>, overrideProps: Partial<PROPS>) => {
+    const Comp = node.type;
+    const merged = { ...node.props, ...overrideProps };
+    const state = Comp.initialState ? Comp.initialState(merged) : {} as any;
+    return Comp.toString(merged, state);
+};
+
+export interface TsxAirNode<PROPS = object> {
+    type: CompiledComponent<PROPS, any>;
+    props: PROPS;
+}
