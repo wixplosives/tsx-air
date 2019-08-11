@@ -103,7 +103,7 @@
         <div transition:crossfade class="page">
             <Page>
                 {#each items as { url }}
-                    <Thumb {url} />
+                    <Thumb {url} on:click={() => dispatch('imageSelected', url)} />
                 {/each}
             </Page>
         </div>

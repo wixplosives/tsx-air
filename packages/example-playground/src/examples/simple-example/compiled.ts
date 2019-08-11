@@ -1,4 +1,4 @@
-import { TSXAir, CompiledComponent, hydrate, ComponentInstance } from '../framework/runtime';
+import { TSXAir, CompiledComponent, hydrate, ComponentInstance } from '../../framework/runtime';
 
 export const ParentComp = TSXAir<CompiledComponent<{ name: string }>>({
     unique: Symbol('ParentComp'),

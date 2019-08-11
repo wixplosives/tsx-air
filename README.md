@@ -17,7 +17,7 @@ The ideal replacement will have:
 apart from adding a tsConfig compilation transformer the user can use his normal build with no additional build steps
 
 ### Create Imperative and readable code
-impertive code is much faster, but readability matters
+imperative code is much faster, but readability matters
 [We should discuss this]
 
 ### optimize per entry point in the build
@@ -32,7 +32,7 @@ Currently we're looking into the following alternatives:
   + Describe usecases (input and transpiled output)
   + Create a minimal runtime for the suggested output
   + Write a transpiler
-  + Open source transpiler and engage with dev community
+  + Open source transpile and engage with dev community
 - Modify an existing framework to meet the needs described in this document:
   + Look into candidates
   + Analyse gaps ([See analysis of Svelte](docs/svelte.md))

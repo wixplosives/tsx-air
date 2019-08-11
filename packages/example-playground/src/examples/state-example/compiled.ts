@@ -1,4 +1,4 @@
-import { TSXAir, CompiledComponent, hydrate, update } from '../framework/runtime';
+import { TSXAir, CompiledComponent, hydrate, update } from '../../framework/runtime';
 
 export const ParentComp = TSXAir<CompiledComponent<{ initialState: string }, { state: string, state1: string }>>({
     unique: Symbol('ParentComp'),

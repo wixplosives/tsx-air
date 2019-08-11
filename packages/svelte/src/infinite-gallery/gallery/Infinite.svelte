@@ -32,7 +32,6 @@
 
 <div class="gallery">
     {#each items as { url } (url)}
-        <Thumb {url} />
+        <Thumb {url} on:click={() => dispatch('imageSelected', url)} />
     {/each}
-
 </div>

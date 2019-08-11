@@ -10,18 +10,22 @@
         "lint": "tslint -p src",
         "prebuild": "yarn clean",
         "start:server": "node server.js",
-        "start": "webpack-dev-server --progress --open",
+        "start": "ts-node src/utils/watch-examples.ts& webpack-dev-server --progress --open",
         "test": "mocha -r @ts-tools/node/r \"test/**/*.spec.ts?(x)\""
     },
     "dependencies": {
         "@file-services/memory": "^2.0.0",
         "@file-services/typescript": "^2.0.0",
         "@stylable/schema-extract": "^2.0.0",
+        "@types/prismjs": "^1.16.0",
+        "hljs": "^6.2.3",
         "monaco-editor": "^0.17.0",
         "monaco-editor-webpack-plugin": "^1.7.0",
+        "prismjs": "^1.17.1",
         "react": "^16.8.6",
         "react-dom": "^16.8.6",
         "sanitize.css": "^8.0.0",
+        "ts-node": "^8.3.0",
         "tslib": "^1.9.3"
     }
 }
