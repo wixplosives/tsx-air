@@ -3,12 +3,12 @@ import { TSXAir, CompiledComponent, hydrate, ComponentInstance } from '../../fra
 export const ParentComp = TSXAir<CompiledComponent<{ name: string }>>({
     unique: Symbol('ParentComp'),
     toString: props => `<div>
-      hello <!-- start props.name -->${props.name}<!-- end props.name -->xxx
+      Hello <!-- start props.name -->${props.name}<!-- end props.name --> from parent
       ${ChildComp.toString({ name: props.name })}
     </div>`,
     hydrate: (element, instance) => ({
         text1: element.childNodes[2],
-        ChildComp1: hydrate(ChildComp, element.childNodes[3] as HTMLElement, { name: instance.props.name })
+        ChildComp1: hydrate(ChildComp, element.childNodes[5] as HTMLElement, { name: instance.props.name })
     }),
     update: (props, _state: any, instance: ComponentInstance<{ name: string }>) => {
         if ('name' in props && props.name !== instance.props.name) {
@@ -23,7 +23,7 @@ export const ParentComp = TSXAir<CompiledComponent<{ name: string }>>({
 
 export const ChildComp = TSXAir<CompiledComponent<{ name: string }>>({
     unique: Symbol('ChildComp'),
-    toString: (props: { name: string }) => `<div>hello <!-- start text1 -->${props.name} <div>`,
+    toString: (props: { name: string }) => `<div>hello <!-- start props.name -->${props.name}<!-- end props.name --> from child</div>`,
     hydrate: (element: Element, _instance: ComponentInstance<{ name: string }>) => ({
         text1: element.childNodes[2],
     }),
@@ -38,14 +38,13 @@ export const ChildComp = TSXAir<CompiledComponent<{ name: string }>>({
 });
 
 export const runExample = (element: HTMLElement) => {
-    let name = 'gaga';
-    element.innerHTML = ParentComp.toString({ name });
-    const instance = hydrate(ParentComp, element.firstElementChild!, { name });
-
+    let count=0;
+    element.innerHTML = ParentComp.toString({ name: 'Initial name' });
+    const instance = hydrate(ParentComp, element.firstElementChild!, { name: 'Initial name' });
 
 
     const i = setInterval(() => {
-        name += 'gaga';
+        const name = `Sir Gaga the ${count++}`;
         ParentComp.update({ name }, {}, instance);
     }, 50);
     return () => {
