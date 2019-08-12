@@ -44,5 +44,5 @@ export interface Example {
 };
 
 updateIndex().then(() => {
-    watch(examples, { recursive: false, persistent: true }, updateIndex);
+    // watch(examples, { recursive: false, persistent: true }, updateIndex);
 });

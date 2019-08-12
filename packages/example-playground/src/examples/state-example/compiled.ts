@@ -1,6 +1,6 @@
-import { TSXAir, CompiledComponent, hydrate, update } from '../../framework/runtime';
+import { render, CompiledComponent } from '../../framework/runtime';
 
-export const ParentComp = TSXAir<CompiledComponent<{ initialState: string }, { state: string, state1: string }>>({
+export const ParentComp: CompiledComponent<{ initialState: string }, { state: string, state1: string }> = ({
     unique: Symbol('ParentComp'),
     initialState: props => {
         return {
@@ -23,11 +23,11 @@ export const ParentComp = TSXAir<CompiledComponent<{ initialState: string }, { s
         };
 
         (element.children[0] as HTMLElement).onclick = () => {
-            update(ParentComp, element, {}, { state: instance.state.state + 'a' });
+            instance.update({}, { state: instance.state.state + 'a' });
         };
 
         (element.children[1] as HTMLElement).onclick = () => {
-            update(ParentComp, element, {}, { state1: instance.state.state1 + 'a' });
+            instance.update({}, { state1: instance.state.state1 + 'a' });
         };
         return res;
     },
@@ -47,7 +47,5 @@ export const ParentComp = TSXAir<CompiledComponent<{ initialState: string }, { s
 
 export const runExample = (element: HTMLElement) => {
     const initialState = 'gaga';
-    const state = ParentComp.initialState!({ initialState });
-    element.innerHTML = ParentComp.toString({ initialState }, state);
-    hydrate(ParentComp, element.firstElementChild!, { initialState });
+    render(element, ParentComp, { initialState });
 };

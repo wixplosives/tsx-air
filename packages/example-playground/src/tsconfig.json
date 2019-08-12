@@ -1,8 +1,8 @@
 {
-  "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "types": [
-      "node"
-    ]
-  }
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "types": ["node"],
+        "jsx": "react",
+        "jsxFactory": "createElement"
+    }
 }

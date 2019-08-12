@@ -1,5 +1,5 @@
-import { TSXAir } from '../framework/runtime';
-import React, { useState } from 'react';
+import { TSXAir, render, createElement } from '../../framework/runtime';
+import { useState } from 'react';
 export const ParentComp = TSXAir((props: { initialState: string }) => {
     const [state, setState] = useState(props.initialState);
     const [state1, setState1] = useState(props.initialState);
@@ -17,3 +17,8 @@ export const ParentComp = TSXAir((props: { initialState: string }) => {
     </div>;
 
 });
+
+export const runExample = (element: HTMLElement) => {
+    const initialState = 'gaga';
+    render(element, ParentComp, { initialState });
+};
