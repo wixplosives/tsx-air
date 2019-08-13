@@ -1,4 +1,4 @@
-import examples, { Example } from './examples';
+import examples from './examples';
 import Prism from 'prismjs';
 // @ts-ignore
 import 'prismjs/components/prism-jsx.js';
@@ -37,19 +37,26 @@ document.body.innerHTML = `
 </div>
 `;
 
-let selected: Example;
+let stop: () => void;
 const select = document.querySelector('select')!;
 const result = document.getElementById('result')!;
 const source = document.getElementById('source')!;
 const compiled = document.getElementById('compiled')!;
 
-// @ts-ignore
 const selectExample = () => {
-    selected = examples[select.value as unknown as number];
-    source.textContent = selected.source;
-    compiled.textContent = selected.compiled;
-    // tslint:disable-next-line: no-console
-    Prism.highlightAll();
-    selected.run(result);
+    if (stop !== undefined) { stop(); }
+    const selectedIndex = select.value as unknown as number;
+    if (isNaN(selectedIndex)) {
+        source.textContent = '';
+        compiled.textContent = '';
+        result.textContent = '';
+    } else {
+        const selected = examples[select.value as unknown as number];
+        source.textContent = selected.source.trim();
+        compiled.textContent = selected.compiled.trim();
+        Prism.highlightAll();
+        stop = selected.run(result);
+
+    }
 };
 select.addEventListener('change', selectExample);

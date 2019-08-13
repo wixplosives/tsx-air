@@ -1,54 +1,54 @@
+import { IntrinsicElements as IntrinsicElementsImported } from './dom-types';
+import { TsxAirChild, TsxAirNode, CompiledComponent, ComponentInstance, PreInitComponentInstance } from './framework-types';
+export { TsxAirChild, TsxAirNode, CompiledComponent, ComponentInstance } from './framework-types';
+export { CSSProperties } from './dom-types';
 
-export const TSXAir = <T>(t: T) => t;
+
+export const TSXAir = <PROPS extends {}, STATE = any>(t: (props: PROPS) => TsxAirChild) => t as ((props: PROPS) => null | TsxAirNode<any>) & CompiledComponent<PROPS, STATE>;
+
 const elementMap: WeakMap<Element, Map<symbol, ComponentInstance<any, any>>> = new WeakMap();
-export interface ComponentInstance<P, S = {}> {
-    props: P;
-    state: S;
-    context: any;
-    update?: (props: P, instance: ComponentInstance<P, S>) => void;
-    unmount?: (instance: ComponentInstance<P, S>) => void;
-}
-
-export interface CompiledComponent<P, S = {}> {
-    unique: symbol;
-    initialState?: (props: P) => S;
-    toString: (props: P, state?: any) => string;
-    hydrate: (element: HTMLElement, instance: ComponentInstance<P, S>) => Record<string, ComponentInstance<any, any> | ChildNode>;
-    update: (props: Partial<P>, state: Partial<S>, instance: ComponentInstance<P, S>) => void;
-    unmount: (instance: ComponentInstance<P, S>) => void;
-    fragments?: Record<string, CompiledComponent<any>>;
-}
 
 export const mountInstance = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, element: Element, props: PROPS, state: STATE) => {
-    const instance: ComponentInstance<PROPS, STATE> = {
+    const instance: PreInitComponentInstance<PROPS, STATE> = {
         props,
         context: {},
         state
     };
+
+    instance.update = function (p, s) {
+        if (Comp.update) {
+            Comp.update(p, s || {}, this);
+            instance.props = p;
+            if (s) {
+                instance.state = { ...instance.state, ...s };
+            }
+        }
+    };
+    instance.unmount = function () {
+        if (Comp.unmount) {
+            Comp.unmount(this);
+        }
+    };
+    const initedInstance = instance as ComponentInstance<PROPS, STATE>;
+    if (Comp.hydrate) {
+        instance.context = Comp.hydrate(element as HTMLElement, initedInstance);
+    }
     if (!elementMap.has(element)) {
         elementMap.set(element, new Map(
-            [[Comp.unique, instance]]
+            [[Comp.unique, initedInstance]]
         ));
     } else {
-        elementMap.get(element)!.set(Comp.unique, instance);
+        elementMap.get(element)!.set(Comp.unique, initedInstance);
     }
-    instance.context = Comp.hydrate(element as HTMLElement, instance);
-    instance.update = p => { Comp.update(p, instance.state, instance); instance.props = p; };
-    instance.unmount = () => Comp.unmount(instance);
-    return instance;
+    return initedInstance;
 };
+
 
 export const hydrate = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, element: Element, props: PROPS) => {
     const state = Comp.initialState ? Comp.initialState(props) : {} as any;
     return mountInstance(Comp, element, props, state);
 };
 
-export const update = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, element: Element, props: Partial<PROPS>, state: Partial<STATE>) => {
-    const instance = elementMap.get(element)!.get(Comp.unique)!;
-    Comp.update(props, state, instance);
-    instance.state = { ...instance.state, ...state };
-    instance.props = { ...instance.props, ...props };
-};
 
 let factoryElement: HTMLDivElement;
 export const create = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, props: PROPS) => {
@@ -61,10 +61,20 @@ export const create = <PROPS, STATE>(Comp: CompiledComponent<PROPS, STATE>, prop
     return mountInstance(Comp, element, props, state);
 };
 
-export const tsxAirNode = <PROPS = any>(Comp: CompiledComponent<PROPS, any>, props: PROPS) => {
+export const render = <PROPS>(element: HTMLElement, Comp: CompiledComponent<PROPS, any>, props: PROPS) => {
+    const state = Comp.initialState ? Comp.initialState(props) : {} as any;
+    const str = Comp.toString(props, state);
+    element.innerHTML = str;
+    const createdElement = element.firstElementChild! as HTMLElement;
+    return mountInstance(Comp, createdElement, props, state);
+};
+
+
+export const tsxAirNode = <PROPS extends { key?: string }>(Comp: CompiledComponent<PROPS, any>, props: PROPS) => {
     return {
         type: Comp,
-        props
+        props,
+        key: props.key || ''
     };
 };
 
@@ -75,7 +85,40 @@ export const elementToString = <PROPS = object>(node: TsxAirNode<PROPS>, overrid
     return Comp.toString(merged, state);
 };
 
-export interface TsxAirNode<PROPS = object> {
-    type: CompiledComponent<PROPS, any>;
-    props: PROPS;
+export const compToString = <PROPS = object>(Comp: CompiledComponent<PROPS, any>, props: PROPS) => {
+    const state = Comp.initialState ? Comp.initialState(props) : {} as any;
+    return Comp.toString(props, state);
+};
+
+
+
+export const createElement = <PROPS>(el: TsxAirNode<PROPS>) => {
+    return el as TsxAirNode<PROPS>;
+};
+
+export const cloneElement = <PROPS>(el: TsxAirNode<PROPS>, p: Partial<PROPS> & { key: string }) => {
+    return {
+        type: el.type,
+        props: {
+            ...el.props,
+            ...p
+        },
+        key: p.key
+    };
+};
+// tslint:disable-next-line: no-namespace
+export namespace createElement {
+    export namespace JSX {
+        export type Element = TsxAirNode<any>;
+        export interface IntrinsicAttributes {
+            key?: string;
+        }
+        // export type ElementClass = CompiledComponent<any, any>;
+        // export interface ElementAttributesProperty { props: {}; }
+        export interface ElementChildrenAttribute { children: {}; }
+        // export interface IntrinsicClassAttributes<T> { };
+        export type IntrinsicElements = IntrinsicElementsImported;
+
+
+    }
 }

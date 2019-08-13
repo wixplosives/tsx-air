@@ -33,7 +33,7 @@ ${imports.join('\n')}
 export default [${(await Promise.all(exports)).join(',\n\t')}] as Example[];
 
 export interface Example {
-    run: (target:HTMLElement) => void;
+    run: (target:HTMLElement) => () => void;
     name: string;
     source: string;
     compiled: string;
@@ -44,5 +44,5 @@ export interface Example {
 };
 
 updateIndex().then(() => {
-    watch(examples, { recursive: false, persistent: true }, updateIndex);
+    // watch(examples, { recursive: false, persistent: true }, updateIndex);
 });
