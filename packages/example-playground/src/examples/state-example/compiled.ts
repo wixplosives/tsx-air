@@ -1,5 +1,4 @@
-import { render } from '../../framework/runtime';
-import { CompiledComponent } from '../../framework/dom-types';
+import { render, CompiledComponent } from '../../framework/runtime';
 
 export const ParentComp: CompiledComponent<{ initialState: string }, { state: string, state1: string }> = ({
     unique: Symbol('ParentComp'),

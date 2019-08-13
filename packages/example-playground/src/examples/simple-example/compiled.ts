@@ -1,5 +1,4 @@
-import { hydrate, render, compToString } from '../../framework/runtime';
-import { CompiledComponent } from '../../framework/dom-types';
+import { hydrate, render, compToString, CompiledComponent } from '../../framework/runtime';
 
 export const ParentComp: CompiledComponent<{ name: string }> = ({
     unique: Symbol('ParentComp'),

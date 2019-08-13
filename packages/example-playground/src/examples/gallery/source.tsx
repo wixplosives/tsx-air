@@ -1,6 +1,5 @@
-import { TSXAir, createElement } from '../../framework/runtime';
+import { TSXAir, createElement, TsxAirChild } from '../../framework/runtime';
 import { useState, useEffect } from 'react';
-import { TsxAirChild } from '../../framework/dom-types';
 
 type GalleryType = 'infinite' | 'paged';
 type Images = string[];
@@ -97,6 +96,6 @@ export const Gellery = TSXAir<GalleryProps, { zoomed: string }>(
     }
 );
 
-export const runExample = (element: HTMLElement) => {
-
+export const runExample = (_element: HTMLElement) => {
+    //
 }; 

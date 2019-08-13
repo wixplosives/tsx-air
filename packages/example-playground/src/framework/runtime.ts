@@ -1,6 +1,7 @@
-import { IntrinsicElements as IntrinsicElementsImported, CompiledComponent, ComponentInstance, PreInitComponentInstance, TsxAirNode, TsxAirChild } from './dom-types';
-import { checkPropTypes } from 'prop-types';
-
+import { IntrinsicElements as IntrinsicElementsImported } from './dom-types';
+import { TsxAirChild, TsxAirNode, CompiledComponent, ComponentInstance, PreInitComponentInstance } from './framework-types';
+export { TsxAirChild, TsxAirNode, CompiledComponent, ComponentInstance } from './framework-types';
+export { CSSProperties } from './dom-types';
 
 
 export const TSXAir = <PROPS extends {}, STATE = any>(t: (props: PROPS) => TsxAirChild) => t as ((props: PROPS) => null | TsxAirNode<any>) & CompiledComponent<PROPS, STATE>;
