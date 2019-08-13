@@ -23,11 +23,11 @@ export const ParentComp = TSXAir<CompiledComponent<{ initialState: string }, { s
         };
 
         (element.children[0] as HTMLElement).onclick = () => {
-            update(ParentComp, element, {}, { state: instance.state.state + 'a' });
+            update(ParentComp, element, {}, { state: instance.state.state + '!' });
         };
 
         (element.children[1] as HTMLElement).onclick = () => {
-            update(ParentComp, element, {}, { state1: instance.state.state1 + 'a' });
+            update(ParentComp, element, {}, { state1: instance.state.state1 + '*' });
         };
         return res;
     },
@@ -46,7 +46,7 @@ export const ParentComp = TSXAir<CompiledComponent<{ initialState: string }, { s
 
 
 export const runExample = (element: HTMLElement) => {
-    const initialState = 'gaga';
+    const initialState = 'Click me';
     const state = ParentComp.initialState!({ initialState });
     element.innerHTML = ParentComp.toString({ initialState }, state);
     hydrate(ParentComp, element.firstElementChild!, { initialState });
