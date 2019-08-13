@@ -1,5 +1,6 @@
-import { TSXAir } from '../../framework/runtime';
-import React, { useState, useEffect } from 'react';
+import { TSXAir, createElement } from '../../framework/runtime';
+import { useState, useEffect } from 'react';
+import { TsxAirChild } from '../../framework/dom-types';
 
 type GalleryType = 'infinite' | 'paged';
 type Images = string[];
@@ -40,15 +41,15 @@ const Infinite = TSXAir((props: GalleryDisplay) => {
     </div>;
 });
 
-
-const Page = TSXAir((props: {children:Thumb[]}) => {
+// changed to pass CI
+const Page = TSXAir((props: { children: TsxAirChild | TsxAirChild[] }) => {
     return <div>
         {props.children}
     </div>;
 });
 
 const Thumb = TSXAir((props: { url: string }) => <div className="thumb"><img src={props.url} /></div>);
-    
+
 const Paged = TSXAir((props: GalleryDisplay) => {
     const [page, setPage] = useState(0);
     const next = () => {
@@ -80,7 +81,7 @@ export const Gellery = TSXAir<GalleryProps, { zoomed: string }>(
                 zoomed === null
                     ? null
                     : <div className="modal" onClick={exitZoomed} >
-                        <Zoom url={zoomed} />
+                        {/* <Zoom url={zoomed} /> */}
                     </div>
             }
             {
@@ -96,6 +97,6 @@ export const Gellery = TSXAir<GalleryProps, { zoomed: string }>(
     }
 );
 
-export const runExample = (element:HTMLElement) => {
-    
-} 
+export const runExample = (element: HTMLElement) => {
+
+}; 
