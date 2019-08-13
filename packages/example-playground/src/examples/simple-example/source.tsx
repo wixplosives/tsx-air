@@ -3,7 +3,7 @@ import { TSXAir, createElement, render } from '../../framework/runtime';
 //// How do we include TSX without this nonsense?
 const React = {};
 
-export const ChildComp = TSXAir((props: { name: string }) => <div>hello {props.name} from child</div>);
+export const ChildComp = TSXAir((props: { name: string }) => <div>Greetings {props.name} from child</div>);
 export const ParentComp = TSXAir((props: { name: string }) => (
     <div>
         Hello {props.name} from parent

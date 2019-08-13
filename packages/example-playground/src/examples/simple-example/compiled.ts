@@ -3,7 +3,7 @@ import { CompiledComponent, hydrate, render, compToString } from '../../framewor
 export const ParentComp: CompiledComponent<{ name: string }> = ({
     unique: Symbol('ParentComp'),
     toString: props => `<div>
-      hello <!-- start props.name -->${props.name}<!-- end props.name -->xxx
+      Hello <!-- start props.name -->${props.name}<!-- end props.name --> from parent
       ${compToString(ChildComp,{ name: props.name })}
     </div>`,
     hydrate: (element, instance) => ({
@@ -23,7 +23,7 @@ export const ParentComp: CompiledComponent<{ name: string }> = ({
 
 export const ChildComp: CompiledComponent<{ name: string }> = ({
     unique: Symbol('ChildComp'),
-    toString: (props: { name: string }) => `<div>hello <!-- start props.name -->${props.name}<!-- end props.name --> from child</div>`,
+    toString: (props: { name: string }) => `<div>Greetings <!-- start props.name -->${props.name}<!-- end props.name --> from child</div>`,
     hydrate: element => ({
         text1: element.childNodes[2],
     }),
