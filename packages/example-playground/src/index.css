@@ -1,7 +1,7 @@
 .selection {
     position: sticky;
     top: 0;
-    left: 2em;
+    margin-left:1em;
 }
 
 .example {
@@ -22,7 +22,6 @@
     flex-direction: column;
     align-items: stretch;
 }
-
 
 .example pre {
     background: transparent;

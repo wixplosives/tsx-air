@@ -23,7 +23,7 @@ export const ParentComp: CompiledComponent<{ name: string }> = ({
 
 export const ChildComp: CompiledComponent<{ name: string }> = ({
     unique: Symbol('ChildComp'),
-    toString: props => `<div>hello <!-- start text1 -->${props.name} <div>`,
+    toString: (props: { name: string }) => `<div>hello <!-- start props.name -->${props.name}<!-- end props.name --> from child</div>`,
     hydrate: element => ({
         text1: element.childNodes[2],
     }),
@@ -38,12 +38,12 @@ export const ChildComp: CompiledComponent<{ name: string }> = ({
 });
 
 export const runExample = (element: HTMLElement) => {
-    let name = 'gaga';
+    let count = 1;
+    const name = 'Sir Gaga';
     const comp = render(element, ParentComp, { name });
 
     const i = setInterval(() => {
-        name += 'gaga';
-        comp.update({ name });
+        comp.update({ name: `${name} the ${count++}` });
     }, 50);
     return () => {
         clearInterval(i);

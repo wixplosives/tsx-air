@@ -1,10 +1,12 @@
 import { TSXAir, createElement, render } from '../../framework/runtime';
 
-export const ChildComp = TSXAir((props: { name: string }) => <div>hello {props.name} </div>);
+//// How do we include TSX without this nonsense?
+const React = {};
 
+export const ChildComp = TSXAir((props: { name: string }) => <div>hello {props.name} from child</div>);
 export const ParentComp = TSXAir((props: { name: string }) => (
     <div>
-        hello {props.name}xxx
+        Hello {props.name} from parent
         <ChildComp name={props.name} />
     </div>
 )
@@ -12,12 +14,12 @@ export const ParentComp = TSXAir((props: { name: string }) => (
 
 
 export const runExample = (element: HTMLElement) => {
-    let name = 'gaga';
+    let count = 1;
+    const name = 'Sir Gaga';
     const comp = render(element, ParentComp, { name });
 
     const i = setInterval(() => {
-        name += 'gaga';
-        comp.update({ name });
+        comp.update({ name: `${name} the ${count++}` });
     }, 50);
     return () => {
         clearInterval(i);

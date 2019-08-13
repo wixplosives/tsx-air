@@ -23,11 +23,11 @@ export const ParentComp: CompiledComponent<{ initialState: string }, { state: st
         };
 
         (element.children[0] as HTMLElement).onclick = () => {
-            instance.update({}, { state: instance.state.state + 'a' });
+            instance.update({}, { state: instance.state.state + '!' });
         };
 
         (element.children[1] as HTMLElement).onclick = () => {
-            instance.update({}, { state1: instance.state.state1 + 'a' });
+            instance.update({}, { state1: instance.state.state1 + '*' });
         };
         return res;
     },
@@ -46,6 +46,6 @@ export const ParentComp: CompiledComponent<{ initialState: string }, { state: st
 
 
 export const runExample = (element: HTMLElement) => {
-    const initialState = 'gaga';
+    const initialState = 'Click me';
     render(element, ParentComp, { initialState });
 };
