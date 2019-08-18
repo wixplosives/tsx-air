@@ -1,49 +1,78 @@
-import { hydrate, render, compToString, CompiledComponent } from '../../framework/runtime';
+import { StatelessComponentFactory, StatelessInstance } from './../../framework/framework-types';
+import { handlePropsUpdate, noop } from '../../framework/runtime-helpers';
+import runtime from '../../framework/new.runtime';
 
-export const ParentComp: CompiledComponent<{ name: string }> = ({
+interface ParentCompProps { name: string; }
+interface ParentCompCtx {
+    text1: ChildNode;
+    ChildComp1: ChildComp;
+}
+
+export const ParentCompFactory: StatelessComponentFactory<ParentCompCtx, ParentCompProps> = ({
     unique: Symbol('ParentComp'),
     toString: props => `<div>
       Hello <!-- start props.name -->${props.name}<!-- end props.name --> from parent
-      ${compToString(ChildComp,{ name: props.name })}
+      ${runtime}
     </div>`,
-    hydrate: (element, instance) => ({
-        text1: element.childNodes[2],
-        ChildComp1: hydrate(ChildComp, element.children[0], { name: instance.props.name })
-    }),
-    update: (props, _state, instance) => {
-        if ('name' in props && props.name !== instance.props.name) {
-            instance.context.text1.textContent = props.name;
-            instance.context.ChildComp1.update({ 'name': props.name });
-        }
-    },
-    unmount: instance => {
-        instance.context.ChildComp1.unmount();
-    }
+    hydrate: (element, props) => new ParentComp(
+        props,
+        {
+            text1: element.childNodes[2],
+            ChildComp1: ChildCompFactory.hydrate(element.children[0] as HTMLElement, { name: props.name }) as ChildComp
+        })
 });
 
-export const ChildComp: CompiledComponent<{ name: string }> = ({
+class ParentComp implements StatelessInstance<ParentCompCtx, ParentCompProps> {
+    public _beforeUpdate = noop;
+    public _afterMount = noop;
+    public _afterUpdate = noop;
+
+    constructor(public readonly props: ParentCompProps, public readonly context: ParentCompCtx) { }
+    public _updateProps(props: ParentCompProps) {
+        handlePropsUpdate(props, this, {
+            name: value => this.context.text1.textContent = value
+        });
+    }
+
+    public _afterUnmount() {
+        this.context.ChildComp1._afterUnmount();
+    }
+
+}
+
+interface ChildCompProps { name: string; }
+interface ChildCompCtx { text1: Text; }
+
+// tslint:disable-next-line: max-classes-per-file
+class ChildComp implements StatelessInstance<ChildCompCtx, ChildCompProps> {
+    public _beforeUpdate = noop;
+    public _afterMount = noop;
+    public _afterUnmount = noop;
+    public _afterUpdate = noop;
+
+    constructor(public readonly props: ChildCompProps, public readonly context: ChildCompCtx) { }
+    public _updateProps(props: ChildCompProps) {
+        handlePropsUpdate(props, this, {
+            name: value => this.context.text1.textContent = value
+        });
+    }
+}
+
+export const ChildCompFactory: StatelessComponentFactory<ChildCompCtx, ChildCompProps> = ({
     unique: Symbol('ChildComp'),
     toString: (props: { name: string }) => `<div>Greetings <!-- start props.name -->${props.name}<!-- end props.name --> from child</div>`,
-    hydrate: element => ({
-        text1: element.childNodes[2],
-    }),
-    update: (props, _state, instance) => {
-        if ('name' in props && props.name !== instance.props.name) {
-            instance.context.text1.textContent = props.name;
-        }
-    },
-    unmount: _instance => {
-        //
-    }
+    hydrate: (target, props) => new ChildComp(props, {
+        text1: target.childNodes[2] as Text,
+    })
 });
 
 export const runExample = (element: HTMLElement) => {
     let count = 1;
     const name = 'Sir Gaga';
-    const comp = render(element, ParentComp, { name });
+    const comp = runtime.render(element, ParentCompFactory, { name });
 
     const i = setInterval(() => {
-        comp.update({ name: `${name} the ${count++}` });
+        runtime.updateProps(comp, { name: `${name} the ${count++}` });
     }, 50);
     return () => {
         clearInterval(i);

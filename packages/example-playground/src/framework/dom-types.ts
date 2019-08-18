@@ -446,7 +446,7 @@ export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
     unselectable?: 'on' | 'off';
 }
 
-export interface ImgHTMLAttributes<T> extends HTMLAttributes<T> {
+export interface ImgHTMLAttributes<T extends HTMLImageElement> extends HTMLAttributes<T> {
     alt?: string;
     crossOrigin?: 'anonymous' | 'use-credentials' | '';
     decoding?: 'async' | 'auto' | 'sync';

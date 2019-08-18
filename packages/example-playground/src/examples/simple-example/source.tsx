@@ -1,11 +1,11 @@
-import { TSXAir, createElement, render } from '../../framework/runtime';
-
+import runtime from '../../framework/new.runtime';
+import { TSXAir, createElement } from '../../framework/runtime';
 
 export const ChildComp = TSXAir((props: { name: string }) => <div>Greetings {props.name} from child</div>);
 export const ParentComp = TSXAir((props: { name: string }) => (
     <div>
         Hello {props.name} from parent
-        <ChildComp name={props.name}/>
+        <ChildComp name={props.name} />
     </div>
 )
 );
@@ -13,10 +13,10 @@ export const ParentComp = TSXAir((props: { name: string }) => (
 export const runExample = (element: HTMLElement) => {
     let count = 1;
     const name = 'Sir Gaga';
-    const comp = render(element, ParentComp, { name });
+    const comp = runtime.render(element, ParentComp, { name });
 
     const i = setInterval(() => {
-        comp.update({ name: `${name} the ${count++}` });
+        runtime.updateProps(comp, { name: `${name} the ${count++}` });
     }, 50);
     return () => {
         clearInterval(i);

@@ -1,11 +1,12 @@
-import { TSXAir, render, createElement } from '../../framework/runtime';
-import { useState } from 'react';
-export const ParentComp = TSXAir((props: { initialState: string }) => {
-    const [state, setState] = useState(props.initialState);
-    const [state1, setState1] = useState(props.initialState);
-    
-    const onClick = () => setState(state + '!');
-    const onClick1 = () => setState1(state1 + '*');
+import { TSXAir, createElement } from '../../framework/runtime';
+import runtime from '../../framework/new.runtime';
+
+export const StatefulComp = TSXAir((props: { initialState: string }) => {
+    let state = props.initialState;
+    let state1 = props.initialState;
+
+    const onClick = () => state = state + '!';
+    const onClick1 = () => state1 = state1 + '!';
 
     return <div>
         <div onClick={onClick}>
@@ -18,6 +19,6 @@ export const ParentComp = TSXAir((props: { initialState: string }) => {
 });
 
 export const runExample = (element: HTMLElement) => {
-    const initialState = 'gaga';
-    render(element, ParentComp, { initialState });
+    const initialState = 'Click me!';
+    runtime.render(element, StatefulComp, { initialState });
 };
