@@ -1,12 +1,11 @@
-import { TSXAir, createElement } from '../../framework/runtime';
-import runtime from '../../framework/new.runtime';
+import { render, TSXAir } from '../../framework';
 
 export const StatefulComp = TSXAir((props: { initialState: string }) => {
     let state = props.initialState;
     let state1 = props.initialState;
 
     const onClick = () => state = state + '!';
-    const onClick1 = () => state1 = state1 + '!';
+    const onClick1 = () => state1 = state1 + '*';
 
     return <div>
         <div onClick={onClick}>
@@ -20,5 +19,5 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
 
 export const runExample = (element: HTMLElement) => {
     const initialState = 'Click me!';
-    runtime.render(element, StatefulComp, { initialState });
+    render(element, StatefulComp, { initialState });
 };

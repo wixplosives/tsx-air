@@ -1,28 +1,34 @@
-import { StatefulInstance, StatefulComponentFactory } from './../../framework/framework-types';
-import { render, CompiledComponent } from '../../framework/runtime';
-import { handlePropsUpdate, handleStateUpdate, noop, assignTextContent } from '../../framework/runtime-helpers';
+import { Factory } from './../../framework/types/factory';
+import runtime from '../../framework/runtime';
+import {  handleDiff, noop, assignTextContent, Diff } from '../../framework/runtime/utils';
+import { Stateful } from '../../framework/types/component';
 
 
-interface StatefulCompCtx { text1: Text; text2: Text; }
+interface StatefulCompCtx { div1: HTMLDivElement; div2: HTMLDivElement; }
 interface StatefulCompProps { initialState: string; }
 interface StatefulCompState { state: string; state1: string; }
 
-class StatefulComp implements StatefulInstance<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
-    public _beforeUpdate = noop;
-    public _updateProps = noop;
-    public _afterMount = noop;
-    public _afterUnmount = noop;
-    public _afterUpdate = noop;
-    constructor(public readonly context: StatefulCompCtx, public readonly props: StatefulCompProps, public readonly state: StatefulCompState) { }
-    public _updateState(state: Partial<StatefulCompState>) {
-        handleStateUpdate(state, this, {
-            state: assignTextContent(this.context.text1),
-            state1: assignTextContent(this.context.text2)
+class StatefulComp implements Stateful<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
+    public $beforeUpdate = noop;
+    public $updateProps = noop;
+    public $afterMount = noop;
+    public $afterUnmount = noop;
+    public $afterUpdate = noop;
+    constructor(public readonly context: StatefulCompCtx, public readonly props: StatefulCompProps, public readonly state: StatefulCompState) { 
+        context.div1.addEventListener('click', () => {
+            runtime.updateState(this, {state: this.state.state + '!'});
+        });
+        context.div2.addEventListener('click', () => runtime.updateState(this, {state1: this.state.state1 + '*'}));
+    }
+    public $updateState(diff:Diff<StatefulCompState>) {
+        handleDiff(diff, {
+            state: assignTextContent(this.context.div1),
+            state1: assignTextContent(this.context.div2)
         });
     }
 }
 
-export const StatefulCompFactory: StatefulComponentFactory<StatefulCompCtx, StatefulCompProps, StatefulCompState> = {
+export const StatefulCompFactory: Factory<StatefulComp> = {
     unique: Symbol('StatefulCompFactory'),
     initialState: props => ({ state: props.initialState, state1: props.initialState }),
     toString: (_props, state) => `<div>
@@ -35,13 +41,13 @@ export const StatefulCompFactory: StatefulComponentFactory<StatefulCompCtx, Stat
     </div>`,
     hydrate: (element, props, state) => new StatefulComp(
         {
-            text1: element.children[0].childNodes[0] as Text,
-            text2: element.children[1].childNodes[0] as Text,
+            div1: element.children[0].children[0] as HTMLDivElement,
+            div2: element.children[0].children[1] as HTMLDivElement,
         }, props, state
     )
 };
 
 export const runExample = (element: HTMLElement) => {
     const initialState = 'Click me';
-    render(element, StatefulCompFactory, { initialState });
+    runtime.render(element, StatefulCompFactory, { initialState });
 };

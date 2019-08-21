@@ -1,6 +1,6 @@
 import { Properties } from 'csstype';
 import { ChangeEvent } from 'react';
-import { TsxAirChild } from './framework-types';
+import { TsxAirChild } from './factory';
 
 
 export type CSSProperties = Properties<string | number>;

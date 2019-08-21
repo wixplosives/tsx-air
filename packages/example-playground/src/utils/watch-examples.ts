@@ -37,12 +37,12 @@ export interface Example {
     name: string;
     source: string;
     compiled: string;
-}
-`
-
-    );
+}`);
 };
 
 updateIndex().then(() => {
-    // watch(examples, { recursive: false, persistent: true }, updateIndex);
+    const platformsThatWork = new Set(['darwin', 'freebsd', 'linux', 'openbsd', 'sunos']);
+    if (platformsThatWork.has(process.platform)){
+        watch(examples, { recursive: false, persistent: true }, updateIndex);
+    }
 });
