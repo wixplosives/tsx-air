@@ -1,0 +1,29 @@
+.thumb {
+    width: 10em;
+    padding: 1em;
+    border: blue solid 1px;
+}
+
+.thumb img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%
+}
+
+.preloader {
+    height: 10em;
+    width: 10em;
+    background: red;
+    border-radius: 50%;
+    filter: blur(10px);
+}
+
+.gallery {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.gallery>* {
+    margin: 1em;
+}

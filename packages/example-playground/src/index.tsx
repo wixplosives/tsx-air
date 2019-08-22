@@ -79,7 +79,9 @@ const selectExample = () => {
         compiled.textContent = selected.compiled.trim();
         style.textContent = selected.style.trim();
         Prism.highlightAll();
-        resultRoot.innerHTML = `<style>${selected.style}</style><div></div>`;
+        resultRoot.innerHTML = `<style>${selected.style}
+            .result.root { display:flex; }
+            </style><div class="result root"></div>`;
         stop = selected.run(resultRoot.querySelector('div')!);
     }
 };

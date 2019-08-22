@@ -16,7 +16,7 @@ export interface Stateless<Ctx = any, Props = any> extends ComponentInstance<Ctx
 
 export interface Stateful<Ctx = any, Props = any, State = any> extends ComponentInstance<Ctx, Props, State> {
     readonly state: State;
-    $updateState: (diff: Diff<State>) => void;
+    $updateState: (diff: Diff<State>, delta:Partial<State>) => void;
     $beforeUpdate: (props: Props, stateDiff: State) => void;
 }
 

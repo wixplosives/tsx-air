@@ -3,6 +3,6 @@
     "compilerOptions": {
         "types": ["node"],
         "jsx": "react",
-        "jsxFactory": "TSXAir.createElement"
+        "jsxFactory": "TSXAir"
     }
 }

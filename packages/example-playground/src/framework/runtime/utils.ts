@@ -9,7 +9,7 @@ type AllKeyValueTuplesByKey<T> = {
 };
 type ValueOf<T> = T[keyof T];
 type KeyValueTuple<T> = ValueOf<AllKeyValueTuplesByKey<T>>;
-export type Diff<T> = Array<KeyValueTuple<T>>;
+export type Diff<T> = Array<KeyValueTuple<Required<T>>>;
 
 export function diff<Model>(after: Model, before: Model, symmetric: true): Diff<Model>;
 export function diff<Model>(after: Partial<Model>, before: Model, symmetric: false): Diff<Model>;

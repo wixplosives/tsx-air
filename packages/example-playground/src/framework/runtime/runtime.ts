@@ -1,4 +1,4 @@
-import { Stateful, ComponentInstance, isStatefulInstance } from '../types/component';
+import { Stateful, ComponentInstance } from '../types/component';
 import { PropsOf, StateOf, isStatefulFactory, isNonTrivialFactory, Factory, TrivialComponentFactory } from '../types/factory';
 import { diff } from './utils';
 
@@ -43,9 +43,8 @@ export class Runtime {
         if (isNonTrivialFactory<Component>(factory)) {
             const safeState = isStatefulFactory<Component>(factory) ? state || factory.initialState(props) : undefined;
             target.innerHTML = factory.toString(props, safeState);
-            const instance: Component = factory.hydrate(target, props, safeState);
-            (instance as unknown as ComponentInstance<any, PropsOf<Component>, StateOf<Component>>).$afterMount(target);
-            return instance;
+            const compHtml = target.children[0] as HTMLElement;
+            return factory.hydrate(compHtml, props, safeState);
         } else {
             target.innerHTML = (factory as TrivialComponentFactory<Component>).toString();
             return;
@@ -78,33 +77,17 @@ export class Runtime {
                 instance.$beforeUpdate(latestProps.get(instance) || instance.props, accStateDiff.get(instance));
                 if (propsDiff.length > 0) {
                     instance.$updateProps(propsDiff);
+                    // @ts-ignore
+                    instance.props = latestProps.get(instance);
                 }
                 if (stateDiff.length > 0) {
-                    instance.$updateState(stateDiff);
+                    const delta = accStateDiff.get(instance)!;
+                    instance.$updateState(stateDiff, delta);
+                    // @ts-ignore
+                    instance.state = { ...instance.state, ...delta };
                 }
             }
-
         });
-
-        for (const [instance, newProps] of latestProps) {
-            const d = diff(newProps, instance.props, true);
-            if (d.length > 0) {
-                isStatefulInstance(instance)
-                    ? instance.$beforeUpdate(newProps, instance.state)
-                    : instance.$beforeUpdate(newProps);
-
-            }
-        }
-
-        for (const [instance, stateDiff] of accStateDiff) {
-            const d = diff(stateDiff, instance.state, false);
-            if (d.length > 0) {
-                instance.$beforeUpdate(instance.props, stateDiff);
-                instance.$updateState(d);
-                // @ts-ignore
-                instance.state = { ...instance.state, ...stateDiff };
-            }
-        }
         return changed;
     }
 

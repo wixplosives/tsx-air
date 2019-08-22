@@ -12,5 +12,5 @@ export function render<Props>(target: HTMLElement, component: ComponentDef<Props
     return comp && new ComponentApi(comp as ComponentInstance<any, Props, any>, target);
 }
 
-export { TSXAir } from './api/types';
+export { TSXAir, createElement } from './api/types';
 export { lifecycle } from './api/lifecycle';

@@ -20,7 +20,7 @@ const safeRead = async (path: string) => {
     } catch (e) {
         return `'' // not found`;
     }
-}
+};
 const updateIndex = async (_event?: string, filePath?: string) => {
     if (filePath === normalize(`${examples}/index.ts`)) {
         return;

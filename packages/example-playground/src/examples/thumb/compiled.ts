@@ -5,7 +5,7 @@ import { Factory } from '../../framework/types/factory';
 
 interface ThumbProps { url: string; }
 interface ThumbState { imageLoaded: boolean; }
-interface ThumbCtx { img1?: HTMLImageElement; div1: HTMLDivElement; div2?: HTMLDivElement; }
+interface ThumbCtx { img1?: HTMLImageElement; div1?: HTMLDivElement; root: HTMLDivElement; }
 
 export const ThumbFactory: Factory<Thumb> = {
     unique: Symbol('ThumbFactory'),
@@ -13,23 +13,27 @@ export const ThumbFactory: Factory<Thumb> = {
     initialState: _props => ({
         imageLoaded: false
     }),
-    toString: (_props, state) => `<div class="thumb">
-        ${state.imageLoaded ? `No way to reference the Image as it's created in the instance`: '<div class="preloader" />'}
+    toString: (_props, state = { imageLoaded: false }) => `<div class="thumb">
+        ${state!.imageLoaded ? `No way to reference the Image as it's created in the instance` : '<div class="preloader"></div>'}
     </div>`,
-    hydrate: (target, props, state) => {
+    hydrate: (target, props, state?) => {
+        state = state || {
+            imageLoaded: false
+        };
         // NOTE: we should also implement validation and error recovery in case of mismatch
         // (not shown here for the sake of simplicity)
         const context: ThumbCtx = {
-            div1: target.children[0] as HTMLDivElement,
+            root: target as HTMLDivElement,
             // here is where the string generation approach starts to smell funny
             // depending of the state, one of those would have to be created
-            img1: state.imageLoaded ? target.children[0].children[0] as HTMLImageElement : undefined,
-            div2: state.imageLoaded ? undefined : target.children[0].childNodes[0] as HTMLDivElement
+            img1: state.imageLoaded ? target.children[0] as HTMLImageElement : undefined,
+            div1: state.imageLoaded ? undefined : target.childNodes[0] as HTMLDivElement
         };
-        return new Thumb(props, state, context);
+        const instance = new Thumb(props, state, context);
+        instance.$afterMount();
+        return instance;
     }
 };
-
 
 export class Thumb implements Stateful<ThumbCtx, ThumbProps, ThumbState> {
     public $afterUpdate = noop;
@@ -46,14 +50,14 @@ export class Thumb implements Stateful<ThumbCtx, ThumbProps, ThumbState> {
     }
 
     public $updateState(d: Diff<ThumbState>) {
-        const { context: { div1 } } = this;
+        const { context: { root } } = this;
         handleDiff(d, {
             imageLoaded: loaded => {
                 if (loaded) {
-                    div1.innerHTML = '';
-                    div1.appendChild(this.img);
+                    root.innerHTML = '';
+                    root.appendChild(this.img);
                 } else {
-                    div1.innerHTML = '<div class="preloader" />';
+                    root.innerHTML = '<div class="preloader" />';
                 }
             }
         });
