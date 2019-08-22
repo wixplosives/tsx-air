@@ -4,6 +4,7 @@ export const Thumb = TSXAir((props: { url: string }) => {
     const img = new Image();
     let imageLoaded = false;
 
+    // all component lifecycle stages are accessed from the "lifecycle" object using handlers
     lifecycle.onMount(_ref => {
         img.src = props.url;
         img.onload = () => {
@@ -11,10 +12,11 @@ export const Thumb = TSXAir((props: { url: string }) => {
         };
     });
 
-    lifecycle.beforeUpdate(() => {
-        if (img.src !== props.url) {
+    // "beforeUpdate"
+    lifecycle.beforeUpdate((p: { url: string }) => {
+        if (img.src !== p.url) {
             imageLoaded = false;
-            img.src = props.url;
+            img.src = p.url;
         }
     });
 
@@ -24,5 +26,5 @@ export const Thumb = TSXAir((props: { url: string }) => {
 });
 
 export const runExample = (target: HTMLElement) => {
-    render(target, Thumb, { url: 'https://i.imgur.com/2Feh8RD.jpg' });
+    render(target, Thumb, { url: 'https://i.pinimg.com/originals/ba/ea/e4/baeae441e72112a3154f840b70b930ea.jpg' });
 };

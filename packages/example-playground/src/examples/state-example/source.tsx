@@ -1,23 +1,25 @@
 import { render, TSXAir } from '../../framework';
 
 export const StatefulComp = TSXAir((props: { initialState: string }) => {
-    let state = props.initialState;
-    let state1 = props.initialState;
-
-    const onClick = () => state = state + '!';
-    const onClick1 = () => state1 = state1 + '*';
+    // No hooks, no state declaration. 
+    // Instead, state is inferred at compile time.
+    let a = props.initialState;
+    let b = props.initialState;
+    
+    const onClickA = () => a = a + '!';
+    const onClickB = () => b = b + '*';
 
     return <div>
-        <div onClick={onClick}>
-            ${state}
+        <div onClick={onClickA}>
+            ${a}
         </div>
-        <div onClick={onClick1}>
-            ${state1}
+        <div onClick={onClickB}>
+            ${b}
         </div>
     </div>;
 });
 
-export const runExample = (element: HTMLElement) => {
+export const runExample = (target: HTMLElement) => {
     const initialState = 'Click me!';
-    render(element, StatefulComp, { initialState });
+    render(target, StatefulComp, { initialState });
 };

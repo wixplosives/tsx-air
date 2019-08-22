@@ -4,18 +4,17 @@ import { Stateful } from '../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 
 interface ThumbProps { url: string; }
-interface ThumbState { img: HTMLImageElement; imageLoaded: boolean; }
-interface ThumbCtx { img1: HTMLImageElement; div1: HTMLDivElement; div2?: HTMLDivElement; }
+interface ThumbState { imageLoaded: boolean; }
+interface ThumbCtx { img1?: HTMLImageElement; div1: HTMLDivElement; div2?: HTMLDivElement; }
 
 export const ThumbFactory: Factory<Thumb> = {
     unique: Symbol('ThumbFactory'),
     // all derived from the code by the compiler
     initialState: _props => ({
-        img: new Image(),
         imageLoaded: false
     }),
-    toString: (_props, state) => `<div className="thumb">
-        ${state.imageLoaded ? state.img.outerHTML : '<div className="preloader" />'}
+    toString: (_props, state) => `<div class="thumb">
+        ${state.imageLoaded ? `No way to reference the Image as it's created in the instance`: '<div class="preloader" />'}
     </div>`,
     hydrate: (target, props, state) => {
         // NOTE: we should also implement validation and error recovery in case of mismatch
@@ -24,7 +23,7 @@ export const ThumbFactory: Factory<Thumb> = {
             div1: target.children[0] as HTMLDivElement,
             // here is where the string generation approach starts to smell funny
             // depending of the state, one of those would have to be created
-            img1: state.imageLoaded ? target.children[0].children[0] as HTMLImageElement : state.img,
+            img1: state.imageLoaded ? target.children[0].children[0] as HTMLImageElement : undefined,
             div2: state.imageLoaded ? undefined : target.children[0].childNodes[0] as HTMLDivElement
         };
         return new Thumb(props, state, context);
@@ -33,49 +32,48 @@ export const ThumbFactory: Factory<Thumb> = {
 
 
 export class Thumb implements Stateful<ThumbCtx, ThumbProps, ThumbState> {
-    public $beforeUpdate = noop;
+    public $afterUpdate = noop;
     public $afterUnmount = noop;
+    // user defined const
+    private img = new Image();
 
     constructor(public readonly props: ThumbProps, public readonly state: ThumbState, public context: ThumbCtx) { }
 
     public $updateProps(d: Diff<ThumbProps>) {
         handleDiff(d, {
-            url: value => {
-                this.context.img1.src = value;
-                runtime.updateState(this, { imageLoaded: false });
-            }
+            url: noop
         });
     }
 
     public $updateState(d: Diff<ThumbState>) {
-        const { context: { div1, img1 } } = this;
+        const { context: { div1 } } = this;
         handleDiff(d, {
             imageLoaded: loaded => {
                 if (loaded) {
                     div1.innerHTML = '';
-                    div1.appendChild(img1);
+                    div1.appendChild(this.img);
                 } else {
-                    div1.innerHTML = '<div className="preloader" />';
+                    div1.innerHTML = '<div class="preloader" />';
                 }
-            },
-            img: _value => { throw new Error('img is defined as a const'); }
+            }
         });
     }
 
     public $afterMount() {
-        const { state, props } = this;
-        state.img.src = props.url;
-        state.img.onload = () => runtime.updateState(this, { imageLoaded: true });
+        const { img, props } = this;
+        img.src = props.url;
+        img.onload = () => runtime.updateState(this, { imageLoaded: true });
     }
 
-    public $afterUpdate() {
-        if (this.state.img.src !== this.props.url) {
-            this.state.img.src = this.props.url;
-            runtime.updateState(this, {imageLoaded: false});
+
+    public $beforeUpdate(props: ThumbProps, _state?: Partial<ThumbState>) {
+        if (this.img.src !== props.url) {
+            this.img.src = props.url;
+            runtime.updateState(this, { imageLoaded: false });
         }
     }
 }
 
 export const runExample = (target: HTMLElement) => {
-    runtime.render(target, ThumbFactory, { url: 'https://i.imgur.com/2Feh8RD.jpg' });
+    runtime.render(target, ThumbFactory, { url: 'https://i.pinimg.com/originals/ba/ea/e4/baeae441e72112a3154f840b70b930ea.jpg' });
 };

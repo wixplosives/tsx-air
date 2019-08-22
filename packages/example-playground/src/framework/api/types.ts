@@ -7,41 +7,36 @@ export interface TsxAirNode<PROPS, T extends string | ComponentFactory<any>> {
     key: string | number | null;
 }
 
-export type TsxAirChild<PROPS> = null | string | number | TsxAirNode<PROPS, ComponentFactory<any>>;
+export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props, ComponentFactory<any>>;
 
+// This interface serves as a component definition in pre-compiled code
+export interface CompCreator<Props> {
+    (props: Props): TsxAirNode<Props, ComponentFactory<any>>;
+    factory: ComponentFactory<any>;
+}
 
-export const TSXAir = <PROPS>(t: (props: PROPS) => TsxAirChild<PROPS>) =>
-    t as unknown as ((props: PROPS) => TsxAirNode<PROPS, ComponentFactory<any>>);
+export const TSXAir = <Props>(t: (props: Props) => TsxAirChild<Props>) =>
+    t as CompCreator<Props>;
 
 TSXAir.createElement = (el: JSX.Element) => {
     return el as TsxAirNode<any, ComponentFactory<any>>;
 };
 
-// tslint:disable-next-line: no-namespace
-declare namespace JSX {
-    export type Element = TsxAirChild<any>;
-    export interface IntrinsicAttributes {
-        key?: number;
-    }
-    // export type ElementClass = CompiledComponent<any, any>;
-    export interface ElementAttributesProperty { props: {}; }
-    export interface ElementChildrenAttribute { children: {}; }
-    // export interface IntrinsicClassAttributes<T> { };
-    export type IntrinsicElements = IntrinsicElementsImported;
-}
 
 // tslint:disable-next-line: no-namespace
-// export namespace TSXAir.createElement {
-//     // tslint:disable-next-line: no-shadowed-variable
-//     export namespace JSX {
-//         export type Element = TsxAirChild<any>;
-//         export interface IntrinsicAttributes {
-//             key?: number;
-//         }
-//         // export type ElementClass = CompiledComponent<any, any>;
-//         export interface ElementAttributesProperty { props: {}; }
-//         export interface ElementChildrenAttribute { children: {}; }
-//         // export interface IntrinsicClassAttributes<T> { };
-//         export type IntrinsicElements = IntrinsicElementsImported;
-//     }
-// }
+export namespace TSXAir {
+    export namespace createElement {
+        export namespace JSX {
+            export type Element = TsxAirNode<any, any>;
+            export interface IntrinsicAttributes {
+                key?: string;
+            }
+            // export type ElementClass = CompiledComponent<any, any>;
+            // export interface ElementAttributesProperty { props: {}; }
+            export interface ElementChildrenAttribute { children: {}; }
+            // export interface IntrinsicClassAttributes<T> { };
+            export type IntrinsicElements = IntrinsicElementsImported;
+
+        }
+    }
+}

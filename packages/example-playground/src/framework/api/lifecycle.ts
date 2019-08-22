@@ -1,10 +1,10 @@
 import { noop } from '../runtime/utils';
 
-type SetHandler<T> = (handler:T)=>void;
+type SetHandler<T> = (handler: T) => void;
 interface LifeCycle {
-    onMount: SetHandler<(ref:HTMLElement) => void>;
+    onMount: SetHandler<(ref: HTMLElement) => void>;
     onUnmount: SetHandler<() => void>;
-    beforeUpdate: SetHandler<() => void>;
+    beforeUpdate: SetHandler<(props: any, state: any) => void>;
     afterUpdate: SetHandler<() => void>;
     // for stuff like mutable inner state and other convoluted state changes
     requestRender: SetHandler<() => void>;

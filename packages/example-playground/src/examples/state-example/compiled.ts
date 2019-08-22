@@ -4,9 +4,12 @@ import {  handleDiff, noop, assignTextContent, Diff } from '../../framework/runt
 import { Stateful } from '../../framework/types/component';
 
 
+// Inferred from the TSX all possible return values 
 interface StatefulCompCtx { div1: HTMLDivElement; div2: HTMLDivElement; }
+
 interface StatefulCompProps { initialState: string; }
-interface StatefulCompState { state: string; state1: string; }
+// All the component scope vars [possibly only those who are bound to the view]
+interface StatefulCompState { a: string; b: string; }
 
 class StatefulComp implements Stateful<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
     public $beforeUpdate = noop;
@@ -14,29 +17,32 @@ class StatefulComp implements Stateful<StatefulCompCtx, StatefulCompProps, State
     public $afterMount = noop;
     public $afterUnmount = noop;
     public $afterUpdate = noop;
+  
     constructor(public readonly context: StatefulCompCtx, public readonly props: StatefulCompProps, public readonly state: StatefulCompState) { 
-        context.div1.addEventListener('click', () => {
-            runtime.updateState(this, {state: this.state.state + '!'});
-        });
-        context.div2.addEventListener('click', () => runtime.updateState(this, {state1: this.state.state1 + '*'}));
+        context.div1.addEventListener('click', this.onClickA);
+        context.div2.addEventListener('click', this.onClickB);
     }
     public $updateState(diff:Diff<StatefulCompState>) {
         handleDiff(diff, {
-            state: assignTextContent(this.context.div1),
-            state1: assignTextContent(this.context.div2)
+            a: assignTextContent(this.context.div1),
+            b: assignTextContent(this.context.div2)
         });
     }
+
+    // shallow consts can be mapped to a private members
+    private onClickA = () => runtime.updateState(this, { a: this.state.a + '!' });
+    private onClickB = () => runtime.updateState(this, { b: this.state.b + '*' });
 }
 
 export const StatefulCompFactory: Factory<StatefulComp> = {
     unique: Symbol('StatefulCompFactory'),
-    initialState: props => ({ state: props.initialState, state1: props.initialState }),
+    initialState: props => ({ a: props.initialState, b: props.initialState }),
     toString: (_props, state) => `<div>
         <div>
-            ${state.state}
+            ${state.a}
         </div>
         <div>
-            ${state.state1}
+            ${state.b}
         </div>
     </div>`,
     hydrate: (element, props, state) => new StatefulComp(

@@ -1,5 +1,7 @@
+// No need to import anything you're not going to use
 import { TSXAir, render } from '../../framework';
 
+// Components are TSX functions wrapped by TSXAir
 export const ChildComp = TSXAir((props: { name: string }) => <div>Greetings {props.name} from child</div>);
 export const ParentComp = TSXAir((props: { name: string }) => (
     <div>
@@ -14,6 +16,7 @@ export const runExample = (element: HTMLElement) => {
     const comp = render(element, ParentComp, { name });
 
     const i = setInterval(() => {
+        // TBD: components provide imperative API
         comp.updateProps({ name: `${name} the ${count++}` });
     }, 50);
     return () => {

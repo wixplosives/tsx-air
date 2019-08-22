@@ -7,6 +7,15 @@ type PropsChange<PROPS> = [ComponentInstance<PROPS, any, any>, PROPS];
 
 const maxViewUpdateIterations = 50;
 
+const mappedDiff = (instance: ComponentInstance, map: Map<ComponentInstance, {}>, props: boolean) => {
+    if (map.has(instance)) {
+        return props
+            ? diff(map.get(instance), instance.props, true)
+            : diff(map.get(instance)!, (instance as Stateful<any, any, {}>).state, false);
+    }
+    return [];
+};
+
 export class Runtime {
     private pending: {
         props: Array<PropsChange<any>>,
@@ -49,28 +58,45 @@ export class Runtime {
         const changed = new Set<ComponentInstance<any, any, any>>();
 
         // Update props first, as it may trigger state changes from a parent 
-        const latestProps = new Map<ComponentInstance<any, any, any>, {}>();
+        const latestProps = new Map<ComponentInstance, {}>();
         props.forEach(([instance, newProps]) => {
             latestProps.set(instance, newProps);
             changed.add(instance);
         });
+        const accStateDiff = new Map<Stateful, {}>();
+        stateDiffs.forEach(([instance, d]) => {
+            const aggregated = accStateDiff.has(instance) ? { ...accStateDiff.get(instance), ...d } : d;
+            accStateDiff.set(instance, aggregated);
+            changed.add(instance);
+        });
+
+        changed.forEach(i => {
+            const instance = i as Stateful;
+            const propsDiff = mappedDiff(instance, latestProps, true);
+            const stateDiff = mappedDiff(instance, accStateDiff, false);
+            if (propsDiff.length + stateDiff.length > 0) {
+                instance.$beforeUpdate(latestProps.get(instance) || instance.props, accStateDiff.get(instance));
+                if (propsDiff.length > 0) {
+                    instance.$updateProps(propsDiff);
+                }
+                if (stateDiff.length > 0) {
+                    instance.$updateState(stateDiff);
+                }
+            }
+
+        });
+
         for (const [instance, newProps] of latestProps) {
             const d = diff(newProps, instance.props, true);
             if (d.length > 0) {
                 isStatefulInstance(instance)
                     ? instance.$beforeUpdate(newProps, instance.state)
                     : instance.$beforeUpdate(newProps);
-                instance.$updateProps(d);
+
             }
         }
 
-        const aggregatedDiffs = new Map<Stateful<any, any, any>, {}>();
-        stateDiffs.forEach(([instance, d]) => {
-            const aggregated = aggregatedDiffs.has(instance) ? { ...aggregatedDiffs.get(instance), ...d } : d;
-            aggregatedDiffs.set(instance, aggregated);
-            changed.add(instance);
-        });
-        for (const [instance, stateDiff] of aggregatedDiffs) {
+        for (const [instance, stateDiff] of accStateDiff) {
             const d = diff(stateDiff, instance.state, false);
             if (d.length > 0) {
                 instance.$beforeUpdate(instance.props, stateDiff);
@@ -84,10 +110,11 @@ export class Runtime {
 
     private updateView = () => {
         let count = 0;
-        const changed = new Set<ComponentInstance<any, any, any>>();
+        const changed = new Set<ComponentInstance>();
         do {
             if (count++ > maxViewUpdateIterations) {
-                // Throw error or release thread
+                // Throw error or release thread, 
+                // TODO: handle infinite loop over multiple frames
             }
             const { props, stateDiffs } = this.pending;
             this.pending = { props: [], stateDiffs: [] };

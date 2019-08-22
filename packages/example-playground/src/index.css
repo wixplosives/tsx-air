@@ -1,26 +1,58 @@
+body {
+    padding: 0;
+    margin: 0;
+}
+
+h1 {
+    text-align: center;
+}
+
 .selection {
     position: sticky;
     top: 0;
-    margin-left:1em;
+    display: flex;
+    flex-direction: row;
+    background-color: white;
+    padding-left: 1em;
+    justify-content: center;
+}
+
+.selection h2 {
+    margin: 0.2em;
+}
+
+.selection>* {
+    margin: 0.5em;
+    padding: 0;
+}
+
+.selection-follower {
+    position: sticky;
+    top: 1.2em;
+    /* background: white; */
+    height: 1em;
+    box-shadow: 1em 0.3em 0.3em rgba(17, 92, 2, 0.1), -1em 0.5em 0.5em rgba(6, 39, 128, 0.1);
 }
 
 .example {
     display: flex;
     flex-direction: row;
-    overflow: scroll;
-    flex-wrap: wrap-reverse;
+    overflow: auto;
+    flex-wrap: wrap;
     align-items: stretch;
+    margin-top: 1em;
 }
 
 .example>* {
-    width: 30%;
-    flex-grow: 1;
     border: 1px solid greenyellow;
     margin: 1em;
     padding: 1em;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    overflow: auto;
+    flex: 1 1;
+    flex-basis: 40%;
 }
 
 .example pre {
@@ -28,4 +60,9 @@
     flex-grow: 1;
     margin: 0;
     padding: 0;
+}
+
+.result {
+    flex: 2 2;
+    flex-basis: 100%;
 }

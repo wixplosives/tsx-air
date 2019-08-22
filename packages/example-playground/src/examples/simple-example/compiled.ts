@@ -24,9 +24,11 @@ export const ParentCompFactory: Factory<ParentComp> = ({
 });
 
 class ParentComp implements Stateless<ParentCompCtx, ParentCompProps> {
+    // lifecycle hooks
     public $beforeUpdate = noop;
     public $afterMount = noop;
     public $afterUpdate = noop;
+    public $afterUnmount = noop;
 
     constructor(public readonly props: ParentCompProps, public readonly context: ParentCompCtx) { }
     public $updateProps(diff: Diff<ParentCompProps>) {
@@ -39,10 +41,7 @@ class ParentComp implements Stateless<ParentCompCtx, ParentCompProps> {
         });
     }
 
-    public $afterUnmount() {
-        // possibly should be done by runtime
-        this.context.ChildComp1.$afterUnmount();
-    }
+   
 
 }
 
@@ -51,6 +50,7 @@ interface ChildCompCtx { text1: Text; }
 
 // tslint:disable-next-line: max-classes-per-file
 class ChildComp implements Stateless<ChildCompCtx, ChildCompProps> {
+    // lifecycle hooks
     public $beforeUpdate = noop;
     public $afterMount = noop;
     public $afterUnmount = noop;
