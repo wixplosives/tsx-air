@@ -1,28 +1,27 @@
 import { Factory } from './../../framework/types/factory';
 import runtime from '../../framework/runtime';
-import { handleDiff, noop, assignTextContent, Diff } from '../../framework/runtime/utils';
-import { Stateful } from '../../framework/types/component';
+import { handleDiff, assignTextContent, Diff } from '../../framework/runtime/utils';
+import { StatefulComponent, Context } from '../../framework/types/component';
 
 
 // Inferred from the TSX all possible return values 
-interface StatefulCompCtx { root: HTMLDivElement; div1: HTMLDivElement; div2: HTMLDivElement; }
+interface StatefulCompCtx extends Context { div1: HTMLDivElement; div2: HTMLDivElement; }
 
 interface StatefulCompProps { initialState: string; }
 // All the component scope vars [possibly only those who are bound to the view]
 interface StatefulCompState { a: string; b: string; }
 
-class StatefulComp implements Stateful<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
-    public $beforeUpdate = noop;
-    public $updateProps = noop;
-    public $afterMount = noop;
-    public $afterUnmount = noop;
-    public $afterUpdate = noop;
-
-    constructor(public readonly context: StatefulCompCtx, public readonly props: StatefulCompProps, public readonly state: StatefulCompState) {
-        context.div1.addEventListener('click', this.onClickA);
-        context.div2.addEventListener('click', this.onClickB);
+class StatefulComp extends StatefulComponent<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
+    public $updateProps(_diff: any): void {
+        /* Noop */
     }
-    public $updateState(diff: Diff<StatefulCompState>) {
+
+    public $afterMount(_:HTMLElement){
+        this.context.div1.addEventListener('click', this.onClickA);
+        this.context.div2.addEventListener('click', this.onClickB);
+    }
+
+    public $updateState(diff: Diff<StatefulCompState>, _delta:Partial<StatefulCompState>) {
         handleDiff(diff, {
             a: assignTextContent(this.context.div1),
             b: assignTextContent(this.context.div2)
@@ -50,11 +49,11 @@ export const StatefulCompFactory: Factory<StatefulComp> = {
         </div>
     </div>`;
     },
-    hydrate: (element, props, state) => new StatefulComp(
+    hydrate: (root, props, state) => new StatefulComp(
         {
-            root: element as HTMLDivElement,
-            div1: element.children[0] as HTMLDivElement,
-            div2: element.children[1] as HTMLDivElement,
+            root,
+            div1: root.children[0] as HTMLDivElement,
+            div2: root.children[1] as HTMLDivElement,
         }, props, state || initialState(props)
     )
 };

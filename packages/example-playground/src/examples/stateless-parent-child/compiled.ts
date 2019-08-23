@@ -1,10 +1,11 @@
+import { Context } from './../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
-import { noop, handleDiff, Diff, assignTextContent } from '../../framework/runtime/utils';
+import { handleDiff, Diff, assignTextContent } from '../../framework/runtime/utils';
 import runtime from '../../framework/runtime';
-import { Stateless } from '../../framework/types/component';
+import { StatelessComponent } from '../../framework/types/component';
 
 interface ParentCompProps { name: string; }
-interface ParentCompCtx {
+interface ParentCompCtx extends Context {
     text1: ChildNode;
     ChildComp1: ChildComp;
 }
@@ -15,22 +16,15 @@ export const ParentCompFactory: Factory<ParentComp> = ({
       Hello <!-- start props.name -->${props.name}<!-- end props.name --> from parent
       ${ChildCompFactory.toString(props)}
     </div>`,
-    hydrate: (element, props) => new ParentComp(
-        props,
+    hydrate: (root, props) => new ParentComp(
         {
-            text1: element.childNodes[2],
-            ChildComp1: ChildCompFactory.hydrate(element.children[0] as HTMLElement, props)
-        })
+            root,
+            text1: root.childNodes[2],
+            ChildComp1: ChildCompFactory.hydrate(root.children[0] as HTMLElement, props)
+        }, props)
 });
 
-class ParentComp implements Stateless<ParentCompCtx, ParentCompProps> {
-    // lifecycle hooks
-    public $beforeUpdate = noop;
-    public $afterMount = noop;
-    public $afterUpdate = noop;
-    public $afterUnmount = noop;
-
-    constructor(public readonly props: ParentCompProps, public readonly context: ParentCompCtx) { }
+class ParentComp extends StatelessComponent<ParentCompCtx, ParentCompProps> {
     public $updateProps(diff: Diff<ParentCompProps>) {
         const {context:{text1, ChildComp1: childComp1}} =this;
         handleDiff(diff, {
@@ -40,23 +34,13 @@ class ParentComp implements Stateless<ParentCompCtx, ParentCompProps> {
             }
         });
     }
-
-   
-
 }
 
 interface ChildCompProps { name: string; }
-interface ChildCompCtx { text1: Text; }
+interface ChildCompCtx extends Context { text1: Text; }
 
 // tslint:disable-next-line: max-classes-per-file
-class ChildComp implements Stateless<ChildCompCtx, ChildCompProps> {
-    // lifecycle hooks
-    public $beforeUpdate = noop;
-    public $afterMount = noop;
-    public $afterUnmount = noop;
-    public $afterUpdate = noop;
-
-    constructor(public readonly props: ChildCompProps, public readonly context: ChildCompCtx) { }
+class ChildComp extends  StatelessComponent<ChildCompCtx, ChildCompProps> {
     public $updateProps(diff: Diff<ChildCompProps>) {
         handleDiff(diff, {
             name: assignTextContent(this.context.text1)
@@ -67,9 +51,10 @@ class ChildComp implements Stateless<ChildCompCtx, ChildCompProps> {
 export const ChildCompFactory: Factory<ChildComp> = ({
     unique: Symbol('ChildComp'),
     toString: (props: { name: string }) => `<div class="child">Greetings <!-- start props.name -->${props.name}<!-- end props.name --> from child</div>`,
-    hydrate: (target, props) => new ChildComp(props, {
-        text1: target.childNodes[2] as Text,
-    })
+    hydrate: (root, props) => new ChildComp({
+        root,
+        text1: root.childNodes[2] as Text,
+    }, props)
 });
 
 export const runExample = (element: HTMLElement) => {

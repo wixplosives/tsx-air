@@ -30,7 +30,7 @@ export function diff<Model>(after: Model, before: Model, symmetric: boolean = fa
 }
 
 type ChangeHandlers<T> = { [key in keyof T]: (value: T[key]) => void };
-export function handleDiff<Props>(d: Diff<Props>, handlers: ChangeHandlers<Props>) {
+export function handleDiff<Model>(d: Diff<Model>, handlers: ChangeHandlers<Model>) {
     for (const [key, value] of d) {
         handlers[key](value!);
     }

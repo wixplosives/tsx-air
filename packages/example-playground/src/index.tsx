@@ -6,6 +6,7 @@ import 'prismjs/components/prism-jsx.js';
 import 'prismjs/components/prism-tsx.js';
 import 'prismjs/themes/prism.css';
 import './index.css';
+import {stats} from './framework';
 
 document.body.innerHTML = `
 <h1>Show me the samples</h1>
@@ -54,15 +55,9 @@ const compiled = document.getElementById('compiled')!;
 const style = document.getElementById('style')!;
 const fps = document.getElementById('fps')!;
 
-let frameTime: number[] = [];
-const takeFrameTime = () => {
-    const time = performance.now();
-    frameTime = [...frameTime, time].filter(t => t >= time - 1000);
-    requestAnimationFrame(takeFrameTime);
-};
-takeFrameTime();
+stats.startFpsProbe();
 
-setInterval(() => fps.innerText = performance.now() - frameTime[0] >= 900 ? `FTP: ${frameTime.length}` : '', 100);
+setInterval(() => fps.innerText = '' + stats.getFps() || '');
 
 const selectExample = () => {
     if (stop !== undefined) { stop(); }

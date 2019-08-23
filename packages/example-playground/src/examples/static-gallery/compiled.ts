@@ -1,25 +1,15 @@
-import { Stateless } from './../../framework/types/component';
+import { Context, StatelessComponent } from './../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 import runtime from '../../framework/runtime';
-import { handleDiff, noop, Diff } from '../../framework/runtime/utils';
+import { handleDiff, Diff } from '../../framework/runtime/utils';
 import { Thumb, ThumbFactory } from '../thumb/compiled';
 
 
 // Inferred from the TSX all possible return values 
-interface StaticGalleryCtx { root: HTMLDivElement; thumbs: Thumb[]; }
+interface StaticGalleryCtx extends Context { thumbs: Thumb[]; }
 interface StaticGalleryProps { urls: string[]; }
 
-class StaticGallery implements Stateless<StaticGalleryCtx, StaticGalleryProps> {
-
-    public $beforeUpdate = noop;
-    public $afterMount = noop;
-    public $afterUnmount = noop;
-    public $afterUpdate = noop;
-
-    constructor(public readonly context: StaticGalleryCtx, public readonly props: StaticGalleryProps) {
-
-    }
-
+class StaticGallery extends StatelessComponent<StaticGalleryCtx, StaticGalleryProps> {
     public $updateProps(diff: Diff<StaticGalleryProps>) {
         handleDiff(diff, {
             urls: _value => {

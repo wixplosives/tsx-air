@@ -1,3 +1,4 @@
+import { Context } from './../types/component';
 import { Stateful, ComponentInstance } from '../types/component';
 import { PropsOf, StateOf, isStatefulFactory, isNonTrivialFactory, Factory, TrivialComponentFactory } from '../types/factory';
 import { diff } from './utils';
@@ -24,7 +25,7 @@ export class Runtime {
 
     private viewUpdatePending: boolean = false;
 
-    public updateState<Ctx, Props, State>(instance: Stateful<Ctx, Props, State>, stateDiff: Partial<State>) {
+    public updateState<Ctx extends Context, Props, State>(instance: Stateful<Ctx, Props, State>, stateDiff: Partial<State>) {
         this.pending.stateDiffs.push([instance, stateDiff]);
         this.triggerViewUpdate();
     }
@@ -74,14 +75,15 @@ export class Runtime {
             const propsDiff = mappedDiff(instance, latestProps, true);
             const stateDiff = mappedDiff(instance, accStateDiff, false);
             if (propsDiff.length + stateDiff.length > 0) {
-                instance.$beforeUpdate(latestProps.get(instance) || instance.props, accStateDiff.get(instance));
+                const newProps = latestProps.get(instance) || instance.props;
+                const delta = accStateDiff.get(instance)!;
+                instance.$beforeUpdate(newProps, delta);
                 if (propsDiff.length > 0) {
-                    instance.$updateProps(propsDiff);
+                    instance.$updateProps(propsDiff, newProps);
                     // @ts-ignore
                     instance.props = latestProps.get(instance);
                 }
                 if (stateDiff.length > 0) {
-                    const delta = accStateDiff.get(instance)!;
                     instance.$updateState(stateDiff, delta);
                     // @ts-ignore
                     instance.state = { ...instance.state, ...delta };
