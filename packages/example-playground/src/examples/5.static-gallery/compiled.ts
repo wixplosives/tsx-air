@@ -22,7 +22,8 @@ class StaticGallery extends StatelessComponent<StaticGalleryCtx, StaticGalleryPr
 export const StaticGalleryFactory: Factory<StaticGallery> = {
     unique: Symbol('StaticGalleryFactory'),
     toString: props => `<div class="gallery">
-      ${props.urls.map(url => ThumbFactory.toString({ url, key: url })).join('\n\t')}
+        ${props.urls.map(url => ThumbFactory.toString({ url, key: url })).join('\n\t')}
+        {}
     </div>`,
     hydrate: (element, props) => new StaticGallery(
         {
