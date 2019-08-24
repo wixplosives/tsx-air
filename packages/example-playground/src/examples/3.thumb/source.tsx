@@ -1,6 +1,6 @@
 import { TSXAir, lifecycle, render } from '../../framework';
 
-export const Thumb = TSXAir((props: { url: string }) => {
+export const Thumb = TSXAir((props: { url: string, onClick?:()=>void}) => {
     const img = new Image();
     let imageLoaded = false;
 
@@ -22,7 +22,8 @@ export const Thumb = TSXAir((props: { url: string }) => {
         }
     });
 
-    return <div className="thumb" >
+    // TODO: see if there's a way to make {onClick} valid for props forwarding
+    return <div className="thumb" onClick={props.onClick} >
         {imageLoaded ? img : <div className="preloader" />}
     </div>;
 });

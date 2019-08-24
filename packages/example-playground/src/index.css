@@ -55,9 +55,9 @@ section:empty {
 
 .selection-follower {
     position: sticky;
-    top: 1.2em;
+    top: 1.7em;
     /* background: white; */
-    height: 1em;
+    height: 0.5em;
     box-shadow: 1em 0.3em 0.3em rgba(17, 92, 2, 0.1), -1em 0.5em 0.5em rgba(6, 39, 128, 0.1);
 }
 
@@ -92,4 +92,46 @@ section:empty {
 .result {
     flex: 2 2;
     flex-basis: 100%;
+}
+
+.h {
+    position: fixed;
+    bottom: 0;
+    transform: translateY(100%);
+    animation: h 5s;
+    animation-iteration-count: 1;
+    transform-origin: center bottom;
+}
+
+@keyframes h {
+    0% {
+        transform: translateY(100%);
+    }
+    15% {
+        transform: translateY(40%);
+    }
+    20% {
+        transform: rotateZ(-1deg) translateY(42%);
+    }
+    25% {
+        transform: rotateZ(1deg) translateY(40%);
+    }
+    30% {
+        transform: rotateZ(-2deg) translateY(35%);
+    }
+    35% {
+        transform: translateY(40%);
+    }
+    45% {
+        transform: translateY(100%);
+    }
+    70% {
+        transform: translateY(100%) translateX(100%);
+    }
+    90% {
+        transform: translateY(80%) translateX(100%);
+    }
+    100% {
+        transform: translateY(100%) translateX(100%);
+    }
 }

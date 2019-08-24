@@ -61,7 +61,15 @@ const fps = document.getElementById('fps')!;
 
 stats.startFpsProbe();
 
-setInterval(() => fps.innerText = '' + stats.getFps() || '');
+setInterval(() => {fps.innerText = 'Fps: ' + stats.getFps() || '';
+    if (Math.random() < 0.0001) {
+        const i = new Image();
+        i.src='/images/homer.png';
+        i.classList.add('h');
+        i.addEventListener('animationend', () => i.remove());
+        i.onload = ()=>document.body.appendChild(i);
+    }
+}, 100);
 
 const selectExample = () => {
     if (stop !== undefined) { stop(); }
