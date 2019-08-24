@@ -1,4 +1,4 @@
-import { Context } from './../../framework/types/component';
+import { Context } from '../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 import { handleDiff, Diff, assignTextContent } from '../../framework/runtime/utils';
 import runtime from '../../framework/runtime';

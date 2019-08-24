@@ -1,5 +1,5 @@
 import { TSXAir, render } from '../../framework';
-import { Thumb } from '../thumb/source';
+import { Thumb } from '../3.thumb/source';
 
 export const Gallery = TSXAir((props: { urls: string[] }) => {
     return <div className="gallery">

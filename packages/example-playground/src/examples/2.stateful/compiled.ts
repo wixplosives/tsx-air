@@ -1,4 +1,4 @@
-import { Factory } from './../../framework/types/factory';
+import { Factory } from '../../framework/types/factory';
 import runtime from '../../framework/runtime';
 import { handleDiff, assignTextContent, Diff } from '../../framework/runtime/utils';
 import { StatefulComponent, Context } from '../../framework/types/component';

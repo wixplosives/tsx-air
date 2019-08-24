@@ -2,7 +2,7 @@ import { Context, StatelessComponent } from './../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 import runtime from '../../framework/runtime';
 import { handleDiff, Diff } from '../../framework/runtime/utils';
-import { Thumb, ThumbFactory } from '../thumb/compiled';
+import { Thumb, ThumbFactory } from '../3.thumb/compiled';
 
 
 // Inferred from the TSX all possible return values 

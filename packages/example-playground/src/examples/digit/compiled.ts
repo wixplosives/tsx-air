@@ -70,7 +70,7 @@ export class Digit extends StatefulComponent<DigitContext, DigitProps, DigitStat
                 isInProgress: false
             });
         });
-    }
+    };
 
     private startChange() {
         if (!this.state.isInProgress) {

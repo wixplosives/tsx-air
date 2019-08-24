@@ -1,3 +1,4 @@
+import { ComponentFactory, PropsOf } from './../types/factory';
 export function assignTextContent(field: { textContent: string | null }) {
     return (v: string) => field.textContent = v;
 }
@@ -34,4 +35,8 @@ export function handleDiff<Model>(d: Diff<Model>, handlers: ChangeHandlers<Model
     for (const [key, value] of d) {
         handlers[key](value!);
     }
+}
+
+export function toStringChildren<Child>(props:Array<PropsOf<Child>>, factory:ComponentFactory<Child>):string {
+    return props.map(p => factory.toString(p)).join('');
 }

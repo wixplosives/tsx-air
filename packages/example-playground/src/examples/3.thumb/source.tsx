@@ -5,18 +5,20 @@ export const Thumb = TSXAir((props: { url: string }) => {
     let imageLoaded = false;
 
     // all component lifecycle stages are accessed from the "lifecycle" object using handlers
-    lifecycle.onMount(_ref => {
+    lifecycle.afterMount(_ref => {
         img.src = props.url;
         img.onload = () => {
             imageLoaded = true;
         };
     });
 
-    // "beforeUpdate"
-    lifecycle.beforeUpdate((p: { url: string }) => {
-        if (img.src !== p.url) {
+    // "beforeUpdate" is called before applying changes to the view or scope variables
+    // newProps are a full list of props as set by the parent/update,
+    // _changedVars is the scope vars diff, (mirroring the state delta in the runtime)
+    lifecycle.beforeUpdate((newProps: { url: string }, _changedVars: { imageLoaded?:boolean}) => {
+        if (img.src !== newProps.url) {
             imageLoaded = false;
-            img.src = p.url;
+            img.src = newProps.url;
         }
     });
 

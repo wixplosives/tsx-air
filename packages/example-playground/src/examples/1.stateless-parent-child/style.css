@@ -1,0 +1,15 @@
+.parent {
+    background: rgb(255, 15, 15);
+    padding: 1em;
+    color: white;
+    border-radius: 0.5em;
+    box-shadow: 0.1em 0.1em 0.5em 0.5em rgba(0, 0, 0, 0.1);
+}
+
+.child {
+    background: rgb(124, 199, 11);
+    padding: 0.5em;
+    margin:0.5em;
+    border-radius: 0.5em;
+    box-shadow: 0.1em 0.1em 0.5em 0.5em rgba(0, 0, 0, 0.1);
+}

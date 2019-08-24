@@ -1,3 +1,8 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto|Roboto+Mono&display=swap');
+* {
+    font-family: 'Roboto', sans-serif;
+}
+
 body {
     padding: 0;
     margin: 0;
@@ -5,6 +10,10 @@ body {
 
 h1 {
     text-align: center;
+}
+
+pre, code {
+    font-family: 'Roboto Mono', monospace;
 }
 
 .selection {
@@ -15,6 +24,24 @@ h1 {
     background-color: white;
     padding-left: 1em;
     justify-content: center;
+}
+
+section:empty {
+    display: none;
+}
+
+#readme {
+    border: none;
+    text-align: left;
+    display: flex;
+    flex-direction: row;
+    align-content: space-between;
+    justify-items: stretch;
+    flex-wrap: nowrap;
+}
+
+#readme section code:empty::after {
+    content: 'Not found 😠';
 }
 
 .selection h2 {

@@ -1,6 +1,7 @@
 import runtime from './runtime/index';
 import { CompCreator as ComponentDef } from './api/types';
 import { ComponentInstance } from './types/component';
+import * as delegate from './api/delegate';
 
 class ComponentApi<Props> {
     constructor(readonly $instance: ComponentInstance<any, Props, any>, readonly rootElement: HTMLElement) { }
@@ -15,4 +16,5 @@ export function render<Props>(target: HTMLElement, component: ComponentDef<Props
 export { TSXAir } from './api/types';
 export { lifecycle } from './api/lifecycle';
 
+export { delegate };
 export { stats } from './api/debug-tools';

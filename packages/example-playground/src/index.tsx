@@ -6,7 +6,7 @@ import 'prismjs/components/prism-jsx.js';
 import 'prismjs/components/prism-tsx.js';
 import 'prismjs/themes/prism.css';
 import './index.css';
-import {stats} from './framework';
+import { stats } from './framework';
 
 document.body.innerHTML = `
 <h1>Show me the samples</h1>
@@ -18,6 +18,9 @@ document.body.innerHTML = `
 </div>
 <div class="selection-follower"></div>
 <div class="example">
+    <section id="readme">
+    </section>
+
     <section class="result">
         <h3>Result</h3>
         <div id="result" />
@@ -47,6 +50,7 @@ document.body.innerHTML = `
 `;
 
 let stop: () => void;
+const readme = document.getElementById('readme')!;
 const select = document.querySelector('select')!;
 const result = document.getElementById('result')!;
 const resultRoot = result.attachShadow({ mode: 'open' });
@@ -62,23 +66,18 @@ setInterval(() => fps.innerText = '' + stats.getFps() || '');
 const selectExample = () => {
     if (stop !== undefined) { stop(); }
     localStorage.setItem('selected', select.value);
-    const selectedIndex = select.value as unknown as number;
-    if (isNaN(selectedIndex)) {
-        source.textContent = '';
-        compiled.textContent = '';
-        style.textContent = '';
-        resultRoot.innerHTML = '<div></div>';
-    } else {
-        const selected = examples[select.value as unknown as number];
-        source.textContent = selected.source.trim();
-        compiled.textContent = selected.compiled.trim();
-        style.textContent = selected.style.trim();
-        Prism.highlightAll();
-        resultRoot.innerHTML = `<style>${selected.style}
+    window.scrollTo(0,0);
+    const selected = examples[select.value as unknown as number];
+    readme.innerHTML = selected.readme && `<div>${selected.readme}</div>` || '';
+    source.textContent = selected.source.trim();
+    compiled.textContent = selected.compiled.trim();
+    style.textContent = selected.style.trim();
+
+    Prism.highlightAll();
+    resultRoot.innerHTML = `<style>${selected.style}
             .result.root { display:flex; }
             </style><div class="result root"></div>`;
-        stop = selected.run(resultRoot.querySelector('div')!);
-    }
+    stop = selected.run(resultRoot.querySelector('div')!);
 };
 select.addEventListener('change', selectExample);
 

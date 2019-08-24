@@ -2,7 +2,7 @@ import { noop } from '../runtime/utils';
 
 type SetHandler<T> = (handler: T) => void;
 interface LifeCycle {
-    onMount: SetHandler<(ref: HTMLElement) => void>;
+    afterMount: SetHandler<(ref: HTMLElement) => void>;
     onUnmount: SetHandler<() => void>;
     beforeUpdate: SetHandler<(props: any, state: any) => void>;
     afterUpdate: SetHandler<() => void>;
@@ -13,7 +13,7 @@ interface LifeCycle {
 const apiToCompiledHooks = noop;
 
 export const lifecycle: LifeCycle = {
-    onMount: apiToCompiledHooks,
+    afterMount: apiToCompiledHooks,
     onUnmount: apiToCompiledHooks,
     beforeUpdate: apiToCompiledHooks,
     afterUpdate: apiToCompiledHooks,

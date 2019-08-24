@@ -47,7 +47,7 @@
 //         root,
 //         digits: Array.from(root.children)
 //             .filter(i => !(i instanceof HTMLSpanElement))
-//             .map((d,i) => DigitFactory.hydrate(d, {props})).reduce((acc, instance, index) => ({
+//             .map((d, i) => DigitFactory.hydrate(d, { props })).reduce((acc, instance, index) => ({
 //                 ...acc,
 //                 []
 //             }), {}),
@@ -58,9 +58,9 @@
 
 export const runExample = (_target: HTMLElement) => {
 //     let val = 0;
-//     const comp = runtime.render(target, DigitFactory, { value: '' + val as DigitChar })!;
+//     const comp = runtime.render(target, DigitFactory, { value: '' + val })!;
 //     const intId = setInterval(() => {
-//         runtime.updateProps(comp, { value: '' + val as DigitChar, updateTime: Date.now() });
+//         runtime.updateProps(comp, { value: '' + val, updateTime: Date.now() });
 //         val++;
 //         val %= 10;
 //     }, 200);
