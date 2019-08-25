@@ -26,10 +26,7 @@ export namespace TSXAir {
         export interface IntrinsicAttributes {
             key?: string;
         }
-        // export type ElementClass = CompiledComponent<any, any>;
-        // export interface ElementAttributesProperty { props: {}; }
         export interface ElementChildrenAttribute { children: {}; }
-        // export interface IntrinsicClassAttributes<T> { };
         export type IntrinsicElements = IntrinsicElementsImported;
     }
 }

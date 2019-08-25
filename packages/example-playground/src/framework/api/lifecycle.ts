@@ -1,13 +1,13 @@
 import { noop } from '../runtime/utils';
 
-type SetHandler<T> = (handler: T) => void;
+type SetHandler<T = () => void, R=void> = (handler: T) => R;
 interface LifeCycle {
     afterMount: SetHandler<(ref: HTMLElement) => void>;
-    onUnmount: SetHandler<() => void>;
+    onUnmount: SetHandler;
     beforeUpdate: SetHandler<(props: any, state: any) => void>;
-    afterUpdate: SetHandler<() => void>;
+    afterUpdate: SetHandler;
     // for stuff like mutable inner state and other convoluted state changes
-    requestRender: SetHandler<() => void>;
+    render: () => Promise<void>;
 }
 
 const apiToCompiledHooks = noop;
@@ -17,5 +17,5 @@ export const lifecycle: LifeCycle = {
     onUnmount: apiToCompiledHooks,
     beforeUpdate: apiToCompiledHooks,
     afterUpdate: apiToCompiledHooks,
-    requestRender: apiToCompiledHooks
+    render: () => Promise.resolve()
 };

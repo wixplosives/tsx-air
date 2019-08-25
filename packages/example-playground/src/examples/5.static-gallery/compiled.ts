@@ -1,21 +1,17 @@
 import { Context, StatelessComponent } from './../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 import runtime from '../../framework/runtime';
-import { handleDiff, Diff } from '../../framework/runtime/utils';
+import { Diff } from '../../framework/runtime/utils';
 import { Thumb, ThumbFactory } from '../3.thumb/compiled';
 
 
 // Inferred from the TSX all possible return values 
 interface StaticGalleryCtx extends Context { thumbs: Thumb[]; }
-interface StaticGalleryProps { urls: string[]; }
+interface StaticGalleryProps { urls: string[]; onItemClick?: (url: string, index: number) => void; }
 
 class StaticGallery extends StatelessComponent<StaticGalleryCtx, StaticGalleryProps> {
-    public $updateProps(diff: Diff<StaticGalleryProps>) {
-        handleDiff(diff, {
-            urls: _value => {
-                // TODO
-            }
-        });
+    public $updateProps(_diff: Diff<StaticGalleryProps>) {
+        // TODO
     }
 }
 
@@ -29,7 +25,7 @@ export const StaticGalleryFactory: Factory<StaticGallery> = {
         {
             root: element as HTMLDivElement,
             // TODO: remove or make optional props and state for hydration. the html should be enough
-            thumbs: (Array.from(element.children) as HTMLElement[]).map((thumb, i) => ThumbFactory.hydrate(thumb, { url:props.urls[i] }))
+            thumbs: (Array.from(element.children) as HTMLElement[]).map((thumb, i) => ThumbFactory.hydrate(thumb, { url: props.urls[i] }))
         }, props)
 };
 

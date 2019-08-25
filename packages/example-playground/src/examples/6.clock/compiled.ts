@@ -3,7 +3,6 @@ import { StatefulComponent } from '../../framework/types/component';
 import runtime from '../../framework/runtime';
 import { Diff } from '../../framework/runtime/utils';
 
-
 interface DigitContext { root: HTMLElement; a: HTMLDivElement; b: HTMLDivElement; }
 interface DigitProps { value: string; updateTime?: number; }
 interface DigitState {
@@ -83,7 +82,6 @@ export class Digit extends StatefulComponent<DigitContext, DigitProps, DigitStat
     }
 }
 
-
 const initialState = (props: DigitProps): DigitState => ({
     nextValue: props.value,
     isInProgress: false,
@@ -108,6 +106,8 @@ export const DigitFactory: Factory<Digit> = {
         }, props, state || initialState(props)),
     initialState
 };
+
+
 
 export const runExample = (target: HTMLElement) => {
     let val = 0;
