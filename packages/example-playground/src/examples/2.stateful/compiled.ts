@@ -1,82 +1,130 @@
-import { Factory } from '../../framework/types/factory';
-import runtime from '../../framework/runtime';
-import { handleDiff, assignTextContent, Diff } from '../../framework/runtime/utils';
-import { StatefulComponent, Context } from '../../framework/types/component';
+import { CompiledComponent, render, InternalComponentInstance, performStateUpdate, initInstructions } from '../../framework/runtime/runtime2';
+// tslint:disable: no-bitwise
 
-
+const formater = (str: string, format: string) => str + format;
 // Inferred from the TSX all possible return values 
-interface StatefulCompCtx extends Context { div1: HTMLDivElement; div2: HTMLDivElement; span1: HTMLDivElement; span2: HTMLDivElement; }
+interface StatefulCompCtx extends Record<string, ChildNode> { div1: Element; div2: Element; span1: Element; span2: Element; }
 
-interface StatefulCompProps { initialState: string; }
+interface StatefulCompProps { initialState: string; format: string; }
 // All the component scope vars [possibly only those who are bound to the view]
 interface StatefulCompState { a: string; b: string; c: string; d: string; }
 
-class StatefulComp extends StatefulComponent<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
-    public $updateProps(diff: any): void {
-        handleDiff<StatefulCompProps>(diff, {
-            initialState: val => {
-                runtime.updateState(this, { a: val, c: val });
-            }
-        });
-    }
 
-    public $afterMount(_: HTMLElement) {
-        this.context.div1.addEventListener('click', this.onClickA);
-        this.context.div2.addEventListener('click', this.onClickB);
-    }
-
-    public $updateState(diff: Diff<StatefulCompState>, _delta: Partial<StatefulCompState>) {
-        handleDiff<StatefulCompState>(diff, {
-            a: assignTextContent(this.context.div1),
-            b: assignTextContent(this.context.div2),
-            c: assignTextContent(this.context.span1),
-            d: assignTextContent(this.context.span2)
-        });
-    }
-
-    // shallow consts can be mapped to a private members
-    private onClickA = () => runtime.updateState(this, { a: this.state.a + '!' });
-    private onClickB = () => runtime.updateState(this, { b: this.state.b + '*' });
-}
-
-
-const initialState = (props: StatefulCompProps) => ({ a: props.initialState, b: props.initialState, c: props.initialState, d: props.initialState }) as StatefulCompState;
-export const StatefulCompFactory: Factory<StatefulComp> = {
-    unique: Symbol('StatefulCompFactory'),
-    initialState,
-    toString: (props, state) => {
-        state = state || initialState(props);
-        return `<div>
-        <div>
-            ${state.a}
-        </div>
-        <div>
-            ${state.b}
-        </div>
-        <span>${state.c}</span>
-        <span>${state.d}</span>
-    </div>`;
+const StatefulComp: CompiledComponent<StatefulCompProps, StatefulCompState, StatefulCompCtx> = {
+    propsMap: {
+        initialState: 1 << 0,
+        format: 1 << 1
     },
-    hydrate: (root, props, state) => new StatefulComp(
-        {
-            root,
-            div1: root.children[0] as HTMLDivElement,
-            div2: root.children[1] as HTMLDivElement,
-            span1: root.children[3] as HTMLDivElement,
-            span2: root.children[4] as HTMLDivElement,
-        }, props, state || initialState(props)
-    )
+    stateMap: {
+        a: 1 << 2,
+        b: 1 << 3,
+        c: 1 << 4,
+        d: 1 << 5
+    },
+    createInstructions(type) {
+        return {
+            calcInstructions: [{
+                dependencies: type.propsMap.initialState,
+                execute: ctx => {
+                    ctx.state.a = ctx.props.initialState;
+                    return type.stateMap.a;
+                }
+            }, {
+                dependencies: 0,
+                execute: ctx => {
+                    ctx.state.b = ctx.props.initialState;
+                    return type.stateMap.b;
+                }
+            }, {
+                dependencies: type.propsMap.initialState | type.propsMap.format,
+                execute: ctx => {
+                    ctx.state.c = formater(ctx.props.initialState, ctx.props.format);
+                    return type.stateMap.c;
+                }
+            }, {
+                dependencies: 0,
+                execute: ctx => {
+                    ctx.state.d = ctx.props.initialState;
+                    return type.stateMap.d;
+                }
+            }],
+            renderInstuctions: [
+                {
+                    dependencies: type.stateMap.a,
+                    execute: ctx => {
+                        ctx.dom.div1.textContent = ctx.state.a;
+                        return 0;
+                    }
+                },
+                {
+                    dependencies: type.stateMap.b,
+                    execute: ctx => {
+                        ctx.dom.div2.textContent = ctx.state.b;
+                        return 0;
+                    }
+                },
+                {
+                    dependencies: type.stateMap.c,
+                    execute: ctx => {
+                        ctx.dom.span1.textContent = ctx.state.c;
+                        return 0;
+                    }
+                },
+                {
+                    dependencies: type.stateMap.d,
+                    execute: ctx => {
+                        ctx.dom.span2.textContent = ctx.state.d;
+                        return 0;
+                    }
+                }
+            ]
+        };
+    },
+    renderToString(_props: StatefulCompProps, state: StatefulCompState) {
+        return `<div>
+            <div>
+                ${state.a}
+            </div>
+            <div>
+                ${state.b}
+            </div>
+            <span>${state.c}</span>
+            <span>${state.d}</span>
+        </div>`;
+    },
+    hydrate(comp: InternalComponentInstance<StatefulCompProps, StatefulCompState, StatefulCompCtx>, element: Element) {
+        const ctx = {
+            div1: element.children[0],
+            div2: element.children[1],
+            span1: element.children[2],
+            span2: element.children[3],
+        };
+        ctx.div1.addEventListener('click', () => {
+            performStateUpdate(comp, {
+                a: comp.state.a + '!'
+            });
+        });
+        ctx.div2.addEventListener('click', () => {
+            performStateUpdate(comp, {
+                b: comp.state.b + '*'
+            });
+        });
+        return ctx;
+    },
+    instructions: {} as any
 };
+initInstructions(StatefulComp);
+
 
 export const runExample = (element: HTMLElement) => {
     const values = ['click me', 'kill homer'];
     let current = 0;
-    const comp = runtime.render(element, StatefulCompFactory, { initialState: values[0] })!;
+    const api = render(element, StatefulComp, { initialState: values[0], format: 'gaga' });
     const i = setInterval(() => {
-        if (Math.random() > 0.99) {
+        if (Math.random() > 0.9) {
             current = current === 0 ? 1 : 0;
+            api.update({ initialState: values[current], format: 'gaga' });
         }
-        runtime.updateProps(comp, { initialState: values[current] });
     }, 50);
     return () => {
         clearInterval(i);

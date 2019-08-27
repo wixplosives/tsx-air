@@ -45,6 +45,7 @@ export interface Stateful<Ctx extends Context = Context, Props = any, State = an
     readonly state: State;
     $updateState: (diff: Diff<State>, delta: Partial<State>) => void;
     $beforeUpdate: (props: Props, stateDiff: State) => void;
+    $run?: (props: Props, state: State) => void;
 }
 
 // tslint:disable-next-line: max-classes-per-file

@@ -1,13 +1,13 @@
 import { render, TSXAir, lifecycle } from '../../framework';
-
-export const StatefulComp = TSXAir((props: { initialState: string }) => {
+const formater = (str: string, format: string) => str + format;
+export const StatefulComp = TSXAir((props: { initialState: string, format: string }) => {
 
     // No hooks, no state declaration. 
     // Instead, state is inferred at compile time.
     let a = props.initialState;
     // any expression you do not want to be treated as reactive can be wrapped with once
     let b = lifecycle.once(() => props.initialState);
-    const c = props.initialState;
+    const c = formater(props.initialState, props.format);
     const d = lifecycle.once(() => props.initialState);
 
 
@@ -35,12 +35,12 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
 export const runExample = (element: HTMLElement) => {
     const values = ['click me', 'kill homer'];
     let current = 0;
-    const comp = render(element, StatefulComp ,  { initialState: values[0] })!;
+    const comp = render(element, StatefulComp, { initialState: values[0], format: 'gaga' })!;
     const i = setInterval(() => {
         if (Math.random() > 0.99) {
             current = current === 0 ? 1 : 0;
         }
-        comp.updateProps({ initialState: values[current] });
+        comp.updateProps({ initialState: values[current], format: 'gaga' });
     }, 50);
     return () => {
         clearInterval(i);
