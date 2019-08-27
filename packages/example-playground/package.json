@@ -11,6 +11,7 @@
         "prebuild": "yarn clean",
         "start:server": "node server.js",
         "start": "ts-node src/utils/watch-examples.ts& webpack-dev-server --progress --open",
+        "dev": "webpack-dev-server --progress --open",
         "test": "mocha -r @ts-tools/node/r \"test/**/*.spec.ts?(x)\""
     },
     "dependencies": {

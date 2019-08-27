@@ -13,7 +13,7 @@ export const ParentComp = TSXAir((props: { name: string }) => (
 export const runExample = (element: HTMLElement) => {
     let count = 1;
     const name = 'Sir Gaga';
-    const comp = render(element, ParentComp, { name });
+    const comp = render(element, ParentComp, { name })!;
 
     const i = setInterval(() => {
         // TBD: components provide imperative API

@@ -30,13 +30,15 @@ export function diff<Model>(after: Model, before: Model, symmetric: boolean = fa
     }).map(key => [key, after[key]]);
 }
 
-type ChangeHandlers<T> = { [key in keyof T]: (value: T[key]) => void };
+type ChangeHandlers<T> = { [key in keyof T]?: (value: T[key]) => void };
 export function handleDiff<Model>(d: Diff<Model>, handlers: ChangeHandlers<Model>) {
     for (const [key, value] of d) {
-        handlers[key](value!);
+        if (handlers[key] !== undefined) {
+            handlers[key]!(value!);
+        }
     }
 }
 
-export function toStringChildren<Child>(props:Array<PropsOf<Child>>, factory:ComponentFactory<Child>):string {
+export function toStringChildren<Child>(props: Array<PropsOf<Child>>, factory: ComponentFactory<Child>): string {
     return props.map(p => factory.toString(p)).join('');
 }
