@@ -78,26 +78,16 @@ export class Runtime {
                 const newProps = latestProps.get(instance) || instance.props;
                 const delta = accStateDiff.get(instance)!;
                 instance.$beforeUpdate(newProps, delta);
-                if (instance.$run) {
-                    const aggregated: Record<string, any> = { ...instance.state, ...delta };
-                    instance.$run(newProps, aggregated);
+                if (propsDiff.length > 0) {
+                    instance.$updateProps(propsDiff, newProps);
                     // @ts-ignore
-                    instance.props = newProps;
-                    // @ts-ignore
-                    instance.state = aggregated;
-                } else {
-                    if (propsDiff.length > 0) {
-                        instance.$updateProps(propsDiff, newProps);
-                        // @ts-ignore
-                        instance.props = latestProps.get(instance);
-                    }
-                    if (stateDiff.length > 0) {
-                        instance.$updateState(stateDiff, delta);
-                        // @ts-ignore
-                        instance.state = { ...instance.state, ...delta };
-                    }
+                    instance.props = latestProps.get(instance);
                 }
-
+                if (stateDiff.length > 0) {
+                    instance.$updateState(stateDiff, delta);
+                    // @ts-ignore
+                    instance.state = { ...instance.state, ...delta };
+                }
             }
         });
         return changed;

@@ -5,10 +5,10 @@ export interface Context {
     root: HTMLElement;
 }
 
-export interface ComponentInstance<Ctx = Context, Props = {}, _State = any|never> {
+export interface ComponentInstance<Ctx = Context, Props = {}, _State = any | never> {
     readonly context: Ctx;
     readonly props: Props;
-    $updateProps: (diff: Diff<Props>, newProps:Props) => void;
+    $updateProps: (diff: Diff<Props>, newProps: Props) => void;
     $afterMount: (ref: HTMLElement) => void;
     $afterUnmount: () => void;
     $beforeUpdate: (...args: any[]) => void;
@@ -20,15 +20,15 @@ abstract class Component<Ctx extends Context, Props> {
     constructor(
         readonly context: Ctx,
         readonly props: Props) {
-        requestAnimationFrame(() =>this.$afterMount(context.root));
+        requestAnimationFrame(() => this.$afterMount(context.root));
     }
-    public abstract $updateProps(diff: Diff<Props>, newProps:Props): void;
+    public abstract $updateProps(diff: Diff<Props>, newProps: Props): void;
 
     public $afterMount(_ref: HTMLElement) {/** Noop */ }
     public $afterUnmount() {/** Noop */ }
     public $afterUpdate() {/** Noop */ }
 }
-export interface Stateless<Ctx extends Context = Context, Props extends {} ={}> extends ComponentInstance<Ctx, Props, never> {
+export interface Stateless<Ctx extends Context = Context, Props extends {} = {}> extends ComponentInstance<Ctx, Props, never> {
     $beforeUpdate: (props: Props) => void;
 }
 
@@ -45,7 +45,6 @@ export interface Stateful<Ctx extends Context = Context, Props = any, State = an
     readonly state: State;
     $updateState: (diff: Diff<State>, delta: Partial<State>) => void;
     $beforeUpdate: (props: Props, stateDiff: State) => void;
-    $run?: (props: Props, state: State) => void;
 }
 
 // tslint:disable-next-line: max-classes-per-file
