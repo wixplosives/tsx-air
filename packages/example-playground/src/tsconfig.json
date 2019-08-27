@@ -3,6 +3,7 @@
     "compilerOptions": {
         "types": ["node"],
         "jsx": "react",
-        "jsxFactory": "createElement"
-    }
+        "jsxFactory": "TSXAir"
+    },
+    "exclude": ["**/examples/index.ts"]
 }

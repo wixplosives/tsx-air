@@ -1,0 +1,42 @@
+.zoom {
+    position: relative;
+    height: 50vmax;
+    width: 50vmax;
+}
+
+.zoomedOut {
+    position: absolute;
+    width: 30%;
+    height: 30%;
+    top: 5%;
+    left: 5%;
+    overflow: visible;
+}
+
+.zoomedOut img {
+    object-position: top;
+    filter: drop-shadow(0.5em 0.5em 1em);
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    cursor: none;
+}
+
+.zoomed {
+    border: red solid 2px;
+    position: absolute;
+    cursor: none;
+}
+
+.zoomedIn {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.zoomedIn img {
+    position: absolute;
+    object-fit: none;
+    object-position: 0;
+}

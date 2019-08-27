@@ -1,8 +1,6 @@
-const { StylableWebpackPlugin } = require('@stylable/webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
-module.exports = (_env, {mode = 'development', devtool = 'source-map'}) => {
+module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
   return {
     entry: {
       main: './src'
@@ -41,7 +39,7 @@ module.exports = (_env, {mode = 'development', devtool = 'source-map'}) => {
       // new StylableWebpackPlugin(),
       new HtmlWebpackPlugin({
         title: 'TSXAir examples Playground',
-        
+
       }),
       // new MonacoWebpackPlugin({
       //   languages: ['css', 'javascript', 'typescript', 'html'],
@@ -51,6 +49,13 @@ module.exports = (_env, {mode = 'development', devtool = 'source-map'}) => {
     ],
     performance: {
       hints: false
-    }
+    },
+
+    devServer: {
+      contentBase: 'public',
+      hot: true,
+      historyApiFallback: true,
+      
+    },
   }
 }
