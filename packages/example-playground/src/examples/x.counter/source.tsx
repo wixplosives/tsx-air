@@ -1,4 +1,4 @@
-import { render, TSXAir } from '../../framework';
+import { TSXAir, render } from '../../framework/runtime/runtime2';
 export const StatefulComp = TSXAir((props: { seconds: number }) => {
 
     let counter = 0;
@@ -17,7 +17,7 @@ export const runExample = (element: HTMLElement) => {
     const comp = render(element, StatefulComp, { seconds: current })!;
     const i = setInterval(() => {
         current++;
-        comp.updateProps({ seconds: current });
+        comp.update({ seconds: current });
     }, 1000);
     return () => {
         clearInterval(i);

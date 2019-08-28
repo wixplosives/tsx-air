@@ -1,5 +1,33 @@
 
+import { IntrinsicElements as IntrinsicElementsImported } from '../api/dom';
 
+export interface TsxAirNode<PROPS, T extends string | CompiledComponent<PROPS, any, any>> {
+    type: T;
+    props: PROPS;
+    key?: string | number | null;
+}
+
+export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props, CompiledComponent<any, any, any>>;
+
+
+export const TSXAir = <Props>(t: (props: Props) => TsxAirChild<Props>) =>
+    t as any as CompiledComponent<Props, any, any>;
+
+// tslint:disable-next-line: no-namespace
+export namespace TSXAir {
+    export namespace JSX {
+        export type Element = TsxAirChild<any>;
+        export interface IntrinsicAttributes {
+            key?: string;
+        }
+        export interface ElementChildrenAttribute { children: {}; }
+        export type IntrinsicElements = IntrinsicElementsImported;
+    }
+}
+
+export interface RefHolder<T extends HTMLElement> {
+    element?: T;
+}
 export interface Instruction<CONTEXT extends object> {
     dependencies: number;
     execute: (context: CONTEXT) => number;
@@ -53,7 +81,7 @@ export interface CompiledComponent<PROPS extends Record<string, any>, STATE exte
     instructions: {
         calcInstructions: InstructionList<{ props: PROPS, state: STATE }>;
         renderInstuctions: InstructionList<{ props: PROPS, state: STATE, dom: DOMContext }>;
-    }
+    };
     createInstructions(type: CompiledComponent<PROPS, STATE, DOMContext>): {
         calcInstructions: InstructionList<{ props: PROPS, state: STATE }>;
         renderInstuctions: InstructionList<{ props: PROPS, state: STATE, dom: DOMContext }>;
@@ -73,7 +101,7 @@ export interface InternalComponentInstance<PROPS extends Record<string, any>, ST
     type: CompiledComponent<PROPS, STATE, DOMContext>;
 }
 
-export function initInstructions(comp: CompiledComponent<any, any, any>){
+export function initInstructions(comp: CompiledComponent<any, any, any>) {
     comp.instructions = comp.createInstructions(comp);
 }
 
