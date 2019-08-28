@@ -1,11 +1,13 @@
 import { render, TSXAir, lifecycle } from '../../framework/runtime/runtime2';
+
 const formater = (str: string, format: string) => str + format;
+
 export const StatefulComp = TSXAir((props: { initialState: string, format: string }) => {
 
     // No hooks, no state declaration. 
     // Instead, state is inferred at compile time.
     let a = props.initialState;
-    // any expression you whose reactivity you want to control can be wrapped width memo
+    // any expression whose reactivity you want to control can be wrapped with memo
     let b = lifecycle.memo(() => props.initialState);
     const c = formater(props.initialState, props.format);
     // in the following line memo is called with no effect as it sets the reactivty to the infered default
@@ -18,15 +20,14 @@ export const StatefulComp = TSXAir((props: { initialState: string, format: strin
 
 
     // a, c and d will update when initialState updates
-    // b d will not update when initialState updates
-    // a and b are both state because they are reassigned d is state only because it is set once.
+    // b will not update when initialState updates
 
     return <div>
         <div onClick={onClickA}>
-            ${a}
+            {a}
         </div>
         <div onClick={onClickB}>
-            ${b}
+            {b}
         </div>
         <span>{c}</span>
         <span>{d}</span>
