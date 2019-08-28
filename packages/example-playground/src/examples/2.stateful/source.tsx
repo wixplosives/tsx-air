@@ -1,14 +1,15 @@
-import { render, TSXAir, lifecycle } from '../../framework';
+import { render, TSXAir, lifecycle } from '../../framework/runtime/runtime2';
 const formater = (str: string, format: string) => str + format;
 export const StatefulComp = TSXAir((props: { initialState: string, format: string }) => {
 
     // No hooks, no state declaration. 
     // Instead, state is inferred at compile time.
     let a = props.initialState;
-    // any expression you do not want to be treated as reactive can be wrapped with once
-    let b = lifecycle.once(() => props.initialState);
+    // any expression you whose reactivity you want to control can be wrapped width memo
+    let b = lifecycle.memo(() => props.initialState);
     const c = formater(props.initialState, props.format);
-    const d = lifecycle.once(() => props.initialState);
+    // in the following line memo is called with no effect as it sets the reactivty to the infered default
+    const d = lifecycle.memo(() => props.initialState, [props.initialState]);
 
 
     // any variable of this scope that is that is being assigned to inside a different method scope is state
@@ -16,8 +17,8 @@ export const StatefulComp = TSXAir((props: { initialState: string, format: strin
     const onClickB = () => b = b + '*';
 
 
-    // a and c will update when initialState updates
-    // b and d will not update when initialState updates
+    // a, c and d will update when initialState updates
+    // b d will not update when initialState updates
     // a and b are both state because they are reassigned d is state only because it is set once.
 
     return <div>
@@ -40,7 +41,7 @@ export const runExample = (element: HTMLElement) => {
         if (Math.random() > 0.99) {
             current = current === 0 ? 1 : 0;
         }
-        comp.updateProps({ initialState: values[current], format: 'gaga' });
+        comp.update({ initialState: values[current], format: 'gaga' });
     }, 50);
     return () => {
         clearInterval(i);

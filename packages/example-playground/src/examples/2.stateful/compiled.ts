@@ -42,7 +42,7 @@ const StatefulComp: CompiledComponent<StatefulCompProps, StatefulCompState, Stat
                     return type.stateMap.c;
                 }
             }, {
-                dependencies: 0,
+                dependencies: type.propsMap.initialState,
                 execute: ctx => {
                     ctx.state.d = ctx.props.initialState;
                     return type.stateMap.d;
