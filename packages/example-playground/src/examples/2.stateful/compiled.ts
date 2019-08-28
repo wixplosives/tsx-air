@@ -27,13 +27,8 @@ const StatefulComp: CompiledComponent<StatefulCompProps, StatefulCompState, Stat
                 dependencies: type.propsMap.initialState,
                 execute: ctx => {
                     ctx.state.a = ctx.props.initialState;
-                    return type.stateMap.a;
-                }
-            }, {
-                dependencies: 0,
-                execute: ctx => {
                     ctx.state.b = ctx.props.initialState;
-                    return type.stateMap.b;
+                    return type.stateMap.b | type.stateMap.a;
                 }
             }, {
                 dependencies: type.propsMap.initialState | type.propsMap.format,

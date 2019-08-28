@@ -172,8 +172,11 @@ export function performStateUpdate<PROPS extends Record<string, any>, STATE exte
 }
 
 export const lifecycle = {
-    memo<T>(calc:()=>T, _dependencies: any[] = []){
+    memo<T>(calc: () => T, _dependencies: any[] = []) {
         return calc();
+    },
+    state<T>(state: T): [T, (newState: T)=>void] {
+        return [state, (_newState: T) => undefined];
     }
 };
 

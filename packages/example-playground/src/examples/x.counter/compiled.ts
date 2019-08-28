@@ -24,19 +24,9 @@ const StatefulComp: CompiledComponent<StatefulCompProps, StatefulCompState, Stat
                 dependencies: 0,
                 execute: ctx => {
                     ctx.state.counter = 0;
-                    return type.stateMap.counter;
-                }
-            }, {
-                dependencies: 0,
-                execute: ctx => {
                     ctx.state.clickCounter = 0;
-                    return type.stateMap.clickCounter;
-                }
-            }, {
-                dependencies: 0,
-                execute: ctx => {
                     ctx.state.label = '';
-                    return type.stateMap.label;
+                    return type.stateMap.counter | type.stateMap.clickCounter | type.stateMap.label;
                 }
             }, {
                 dependencies: type.propsMap.seconds | type.stateMap.counter | type.stateMap.clickCounter | type.stateMap.label,
