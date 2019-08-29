@@ -10,8 +10,8 @@ export interface TsxAirNode<PROPS, T extends string | CompiledComponent<PROPS, a
 export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props, CompiledComponent<any, any, any>>;
 
 
-export const TSXAir = <Props>(t: (props: Props) => TsxAirChild<Props>) =>
-    t as any as CompiledComponent<Props, any, any>;
+export const TSXAir = <Props, State = {}>(t: (props: Props, state: Partial<State>) => TsxAirChild<Props>) =>
+    t as any as CompiledComponent<Props, State, any>;
 
 // tslint:disable-next-line: no-namespace
 export namespace TSXAir {
@@ -175,9 +175,12 @@ export const lifecycle = {
     memo<T>(calc: () => T, _dependencies: any[] = []) {
         return calc();
     },
-    state<T>(state: T): [T, (newState: T)=>void] {
+    state<T>(state: T): [T, (newState: T) => void] {
         return [state, (_newState: T) => undefined];
-    }
+    },
+    effect(_exec: () => void, _dependencies: any[] = []) {
+        //
+    },
 };
 
 // const example = {

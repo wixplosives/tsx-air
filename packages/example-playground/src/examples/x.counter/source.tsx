@@ -6,7 +6,6 @@ export const StatefulComp = TSXAir((props: { seconds: number }) => {
         clickeCounter: 0,
         label: ''
     }));
-
     label = `seconds : ${props.seconds} renders: ${++counter} clicks: ${clickeCounter}\n` + label;
     const onClickA = () => { clickeCounter++; clickeCounter++; };
     return <pre onClick={onClickA}>
@@ -14,6 +13,28 @@ export const StatefulComp = TSXAir((props: { seconds: number }) => {
     </pre>;
 
 });
+
+
+export interface StatefulCompState{
+    counter: number;
+    clickCounter: number;
+    label: string;
+}
+
+export const StatefulComp5 = TSXAir<{ seconds: number }, StatefulCompState>((props, {
+    counter = 0,
+    clickCounter = 0,
+    label = ''
+}) => {
+    
+    label = `seconds : ${props.seconds} renders: ${++counter} clicks: ${clickCounter}\n` + label;
+    const onClickA = () => { clickCounter++; };
+    return <pre onClick={onClickA}>
+        {label}
+    </pre>;
+
+});
+
 
 export const StatefulComp1 = TSXAir((props: { seconds: number }) => {
     let counter = 0;
@@ -32,8 +53,7 @@ export const StatefulComp3 = TSXAir((props: { seconds: number }) => {
     let counter = 0;
     let clickeCounter = 0;
     let label = '';
-
-    
+   
     $: label = `seconds : ${props.seconds} renders: ${++counter} clicks: ${clickeCounter}\n` + label;
     const onClickA = () => {
         clickeCounter++;
