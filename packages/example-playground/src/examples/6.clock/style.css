@@ -9,7 +9,7 @@
 .digit>* {
     font-weight: 900;
     font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-    transition: transform linear 200ms;
+    transition: transform linear 1000ms;
     transform: translateY(0);
     position: absolute;
     top: 0;
@@ -20,12 +20,12 @@
 .exit {
     transform:  translateY(-1em);
     /* transition-timing-function: ease-out; */
-    transition-delay: 50ms;
-    transition-duration: 200ms;
+    transition-delay: 150ms;
+    transition-duration: 1000ms;
 }
 
 .enter {
-    animation: 200ms enter;
+    animation: 500ms enter;
 }
 
 @keyframes enter {

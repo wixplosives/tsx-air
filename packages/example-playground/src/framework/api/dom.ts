@@ -1,7 +1,6 @@
 import { Properties } from 'csstype';
 import { ChangeEvent } from 'react';
-import { TsxAirChild } from '../types/factory';
-import { RefHolder } from './types';
+import { RefHolder, TsxAirChild } from './types';
 
 
 export type CSSProperties = Properties<string | number>;
@@ -396,7 +395,7 @@ interface DOMAttributes<T> {
 export interface HTMLAttributes<T extends HTMLElement> extends AriaAttributes, DOMAttributes<T> {
     // Tsx-air-specific Attributes
     key?: string;
-    children?: TsxAirChild | TsxAirChild[];
+    children?: TsxAirChild<any> | Array<TsxAirChild<any>>;
     ref?: RefHolder<T>; 
     // Standard HTML Attributes
     accessKey?: string;

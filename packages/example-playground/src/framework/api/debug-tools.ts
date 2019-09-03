@@ -1,4 +1,4 @@
-import { ComponentInstance, Stateful, Stateless } from './../types/component';
+import { Component } from './../types/component';
 
 export interface Stats {
     startFpsProbe: () => Promise<void>;
@@ -8,13 +8,11 @@ export interface Stats {
 }
 
 export interface ComponentsStats {
-    live: WeakSet<ComponentInstance>;
-    stateful: WeakSet<Stateful>;
-    stateless: WeakSet<Stateless>;
+    live: WeakSet<Component>;
     created: number;
     hydrated: number;
     disposed: number;
-    suspended: WeakSet<ComponentInstance>;
+    suspended: WeakSet<Component>;
     stateUpdates: number;
     stateUpdateCycles: number;
     propUpdates: number;

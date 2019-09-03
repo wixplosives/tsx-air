@@ -1,6 +1,7 @@
-import { TSXAir, lifecycle } from '../../framework';
+import { TSXAir, bind, lifecycle } from '../../framework';
 
-interface AnimatedDiv {
+// exported to keep the example code compact 
+export interface AnimatedDiv {
     // _prop will not be spread as attributes
     _isAnimating: boolean;
     // $textContent will be "spread" into the element
@@ -9,23 +10,22 @@ interface AnimatedDiv {
     key: string;
 }
 
-export const Digit = TSXAir((props: { value: string; lastUpdate: any }) => {
-    const current: AnimatedDiv = { $textContent: props.value, className: 'enter', _isAnimating: true, key: 'current' };
-    const next: AnimatedDiv = { $textContent: '', className: 'waiting', _isAnimating: false, key: 'next' };
+export const Digit = TSXAir(async (props: { value: string; lastUpdate: any }) => {
+    const current = bind.init({ $textContent: props.value, className: 'enter', _isAnimating: true, key: 'current' }) as AnimatedDiv;
+    const next = bind.init({ $textContent: '', className: 'waiting', _isAnimating: false, key: 'next' }) as AnimatedDiv;
     let pendingValue: string | null = null;
 
     const doneAnimating = (elm: AnimatedDiv) => {
         elm._isAnimating = false;
     };
 
-    lifecycle.beforeUpdate((newProps:{value:string, lastUpdate:any}) => {
-        if (props.lastUpdate !== newProps.lastUpdate) {
-            pendingValue = newProps.value;
-        }
+    bind.when(bind.wasChanged(props.lastUpdate), () => {
+        pendingValue = props.value;
     });
 
-    lifecycle.afterUpdate(async () => {
-        if (!current._isAnimating && !next._isAnimating) {
+    // bind.when(
+    //     [() => (current._isAnimating || next._isAnimating) === false, bind.wasChanged(pendingValue)],
+    //     async () => {
             current.className = 'no-transition exit';
             next.className = 'no-transition';
             await lifecycle.render();
@@ -34,12 +34,13 @@ export const Digit = TSXAir((props: { value: string; lastUpdate: any }) => {
             current.$textContent = next.$textContent;
             await lifecycle.render();
             if (pendingValue !== null) {
+                next._isAnimating = current._isAnimating = true;
                 next.$textContent = pendingValue;
                 next.className = '';
                 current.className = 'exit';
             }
-        }
-    });
+    //     }
+    // );
 
     return <div>
         {[current, next].map(div =>

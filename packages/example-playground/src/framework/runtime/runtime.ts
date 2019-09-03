@@ -1,116 +1,112 @@
-import { Context } from './../types/component';
-import { Stateful, ComponentInstance } from '../types/component';
-import { PropsOf, StateOf, isStatefulFactory, isNonTrivialFactory, Factory, TrivialComponentFactory } from '../types/factory';
-import { diff } from './utils';
+import { Component, Dom } from '../types/component';
+import { PropsOf, StateOf, Factory } from '../types/factory';
+import { cloneDeep } from 'lodash';
+/*  tslint:disable:rule: no-bitwise */
 
-type StateDiff<STATE> = [Stateful<any, STATE, any>, Partial<STATE>];
-type PropsChange<PROPS> = [ComponentInstance<PROPS, any, any>, PROPS];
 
-const maxViewUpdateIterations = 50;
-
-const mappedDiff = (instance: ComponentInstance, map: Map<ComponentInstance, {}>, props: boolean) => {
-    if (map.has(instance)) {
-        return props
-            ? diff(map.get(instance), instance.props, true)
-            : diff(map.get(instance)!, (instance as Stateful<any, any, {}>).state, false);
-    }
-    return [];
-};
+type Mutator = (obj: any) => number;
+type StateMutator<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State> ? (state: State) => number : never;
+type PropsMutator<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State> ? (props: Props) => number : never;
+type PropMutation<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State> ? [Comp, PropsMutator<Props>] : never;
+type StateMutation<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State> ? [Comp, StateMutator<State>] : never;
+// type SomeComp<Comp> = Comp extends Component<infer Ctx, infer Props, infer State> ? Component<Ctx, Props, State>: never;
 
 export class Runtime {
     private pending: {
-        props: Array<PropsChange<any>>,
-        stateDiffs: Array<StateDiff<any>>
-    } = { props: [], stateDiffs: [] };
+        props: Array<PropMutation<Component>>,
+        states: Array<StateMutation<Component>>,
+        requested: Map<Component, IterableIterator<void>>
+    } = {
+            props: [], states: [],
+            requested: new Map()
+        };
+
 
     private viewUpdatePending: boolean = false;
 
-    public updateState<Ctx extends Context, Props, State>(instance: Stateful<Ctx, Props, State>, stateDiff: Partial<State>) {
-        this.pending.stateDiffs.push([instance, stateDiff]);
+    public updateProps<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(instance: Comp, mutator: PropsMutator<Comp>) {
+        // @ts-ignore
+        this.pending.props.push([instance, mutator]);
         this.triggerViewUpdate();
     }
 
-    public updateProps<Ctx, Props, State>(instance: ComponentInstance<Ctx, Props, State>, newProps: Props) {
-        this.pending.props.push([instance, newProps]);
+    public updateState<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(instance: Comp, mutator: StateMutator<Comp>) {
+        // @ts-ignore
+        this.pending.states.push([instance, mutator]);
         this.triggerViewUpdate();
     }
 
-    public render<Component>(
+    public render<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
         target: HTMLElement,
-        factory: Factory<Component>,
-        props: PropsOf<Component>,
-        state?: StateOf<Component>
-    ): Component | undefined {
-        if (isNonTrivialFactory<Component>(factory)) {
-            const safeState = isStatefulFactory<Component>(factory) ? state || factory.initialState(props) : undefined;
-            target.innerHTML = factory.toString(props, safeState);
-            const compHtml = target.children[0] as HTMLElement;
-            return factory.hydrate(compHtml, props, safeState);
-        } else {
-            target.innerHTML = (factory as TrivialComponentFactory<Component>).toString();
-            return;
-        }
+        factory: Factory<Comp>,
+        props: PropsOf<Comp>,
+        state?: StateOf<Comp>
+    ): Comp {
+        const safeState = state || factory.initialState(props);
+        target.innerHTML = factory.toString(props, safeState);
+        const compHtml = target.children[0] as HTMLElement;
+        return factory.hydrate(compHtml, props, safeState);
     }
 
-    private updateViewOnce(props: Array<PropsChange<any>>,
-        stateDiffs: Array<StateDiff<any>>) {
+    private mutate(
+        mutator: Mutator,
+        instance: Component,
+        initialData: any,
+        mutatedData: Map<Component, any>,
+        changeBitmasks: Map<Component, number>,
+    ) {
+        if (!mutatedData.has(instance)) {
+            mutatedData.set(instance, cloneDeep(initialData));
+        }
+        const modMapping = mutator(mutatedData.get(instance));
+        changeBitmasks.set(instance, changeBitmasks.get(instance)! | modMapping);
+    }
 
-        const changed = new Set<ComponentInstance<any, any, any>>();
+    private updateViewOnce(
+        props: Array<PropMutation<Component>>,
+        states: Array<StateMutation<Component>>,
+        requested: Map<Component, IterableIterator<void>>) {
 
-        // Update props first, as it may trigger state changes from a parent 
-        const latestProps = new Map<ComponentInstance, {}>();
-        props.forEach(([instance, newProps]) => {
-            latestProps.set(instance, newProps);
-            changed.add(instance);
-        });
-        const accStateDiff = new Map<Stateful, {}>();
-        stateDiffs.forEach(([instance, d]) => {
-            const aggregated = accStateDiff.has(instance) ? { ...accStateDiff.get(instance), ...d } : d;
-            accStateDiff.set(instance, aggregated);
-            changed.add(instance);
-        });
+        const changeBitmasks = new Map<Component, number>([...requested.keys()].map(k => [k, 0]));
+        const latestProps = new Map<Component, {}>();
+        const latestStates = new Map<Component, {}>();
 
-        changed.forEach(i => {
-            const instance = i as Stateful;
-            const propsDiff = mappedDiff(instance, latestProps, true);
-            const stateDiff = mappedDiff(instance, accStateDiff, false);
-            if (propsDiff.length + stateDiff.length > 0) {
-                const newProps = latestProps.get(instance) || instance.props;
-                const delta = accStateDiff.get(instance)!;
-                instance.$beforeUpdate(newProps, delta);
-                if (propsDiff.length > 0) {
-                    instance.$updateProps(propsDiff, newProps);
-                    // @ts-ignore
-                    instance.props = latestProps.get(instance);
-                }
-                if (stateDiff.length > 0) {
-                    instance.$updateState(stateDiff, delta);
-                    // @ts-ignore
-                    instance.state = { ...instance.state, ...delta };
-                }
-            }
+        props.forEach(([instance, mutator]) => this.mutate(mutator, instance, instance.props, latestProps, changeBitmasks));
+        states.forEach(([instance, mutator]) => this.mutate(mutator, instance, instance.state, latestStates, changeBitmasks));
+
+        changeBitmasks.forEach((changeMap, instance) => {
+            const newProps = latestProps.get(instance) || instance.props;
+            const newState = latestStates.get(instance) || instance.state;
+
+            instance.$beforeUpdate(newProps, newState);
+            instance.$$processUpdate(newProps, newState, changeMap);
+            // @ts-ignore
+            instance.props = newProps;
+            // @ts-ignore
+            instance.state = newState;
         });
-        return changed;
+        return changeBitmasks.keys();
     }
 
     private updateView = () => {
-        let count = 0;
-        const changed = new Set<ComponentInstance>();
-        do {
-            if (count++ > maxViewUpdateIterations) {
-                // Throw error or release thread, 
-                // TODO: handle infinite loop over multiple frames
-            }
-            const { props, stateDiffs } = this.pending;
-            this.pending = { props: [], stateDiffs: [] };
-            this.updateViewOnce(props, stateDiffs).forEach(i => changed.add(i));
-        } while (this.pending.props.length > 0);
-
         this.viewUpdatePending = false;
+        const changed = new Set<Component>();
+        const { props, states, requested } = this.pending;
+        this.pending = { props: [], states: [], requested };
+        for (const i of this.updateViewOnce(props, states, requested)) {
+            changed.add(i);
+        }
 
         if (changed.size > 0) {
             window.requestAnimationFrame(() => {
-                changed.forEach(i => i.$afterUpdate());
+                changed.forEach(i => {
+                    const req = this.pending.requested.get(i) || i.$afterUpdate();
+                    if (!req.next().done) {
+                        this.pending.requested.set(i, req);
+                    } else {
+                        this.pending.requested.delete(i);
+                    }
+                });
             });
         }
     };

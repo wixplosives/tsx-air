@@ -1,21 +1,23 @@
-import { render, TSXAir } from '../../framework';
+import { render, TSXAir, bind } from '../../framework';
 
 export const StatefulComp = TSXAir((props: { initialState: string }) => {
     // No hooks, no state declaration. 
     // Instead, state is inferred at compile time.
-    let a = props.initialState;
-    let b = props.initialState;
+    let a = bind.init(props.initialState);
+    let b = bind.init(props.initialState);
+    let changeCount = bind.init(0);
 
     const onClickA = () => a = a + '!';
     const onClickB = () => b = b + '*';
 
     return <div>
         <div onClick={onClickA}>
-            ${a}
+            {a}
         </div>
         <div onClick={onClickB}>
-            ${b}
+            {b}
         </div>
+        <div>state changed {changeCount++} times</div>
     </div>;
 });
 
