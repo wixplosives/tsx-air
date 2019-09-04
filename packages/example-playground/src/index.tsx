@@ -61,20 +61,21 @@ const fps = document.getElementById('fps')!;
 
 stats.startFpsProbe();
 
-setInterval(() => {fps.innerText = 'Fps: ' + stats.getFps() || '';
+setInterval(() => {
+    fps.innerText = 'Fps: ' + stats.getFps() || '';
     if (Math.random() < 0.0001) {
         const i = new Image();
-        i.src='/images/homer.png';
+        i.src = '/images/homer.png';
         i.classList.add('h');
         i.addEventListener('animationend', () => i.remove());
-        i.onload = ()=>document.body.appendChild(i);
+        i.onload = () => document.body.appendChild(i);
     }
 }, 100);
 
 const selectExample = () => {
     if (stop !== undefined) { stop(); }
     localStorage.setItem('selected', select.value);
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
     const selected = examples[select.value as unknown as number];
     readme.innerHTML = selected.readme && `<div>${selected.readme}</div>` || '';
     source.textContent = selected.source.trim();

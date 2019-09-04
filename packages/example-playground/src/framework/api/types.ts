@@ -7,7 +7,7 @@ export interface TsxAirNode<PROPS, T extends string | ComponentFactory<any>> {
     key?: string | number | null;
 }
 
-export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props, ComponentFactory<any>> | CompCreator<any> ;
+export type TsxAirChild<Props = any> = null | string | number | TsxAirNode<Props, ComponentFactory<any>> | CompCreator<any>;
 
 // This interface serves as a component definition in pre-compiled code
 export interface CompCreator<Props> {
@@ -22,7 +22,7 @@ export const TSXAir = <Props>(t: (props: Props) => TsxAirChild<Props>) =>
 // tslint:disable-next-line: no-namespace
 export namespace TSXAir {
     export namespace JSX {
-        export type Element = TsxAirChild<any>;
+        export type Element = TsxAirChild<any> | any;
         export interface IntrinsicAttributes {
             key?: string;
         }

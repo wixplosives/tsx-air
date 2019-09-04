@@ -1,81 +1,29 @@
+// tslint:disable: jsx-no-lambda
 // tslint:disable: label-position
-import { TSXAir, render, lifecycle } from '../../framework/runtime/runtime2';
-export const StatefulComp = TSXAir((props: { seconds: number }) => {
-    let { counter, clickeCounter, label } = lifecycle.memo(() => ({
+import { TSXAir, TSXAir2, render, getState } from '../../framework/runtime/runtime2';
+
+/**
+ * outlined in this file are different syntax suggestions for TSX AIR
+ */
+
+
+
+
+export const StatefulComp = TSXAir2((props: { seconds: number }) => {
+    const state = getState({
         counter: 0,
         clickeCounter: 0,
         label: ''
-    }));
-    label = `seconds : ${props.seconds} renders: ${++counter} clicks: ${clickeCounter}\n` + label;
-    const onClickA = () => { clickeCounter++; clickeCounter++; };
-    return <pre onClick={onClickA}>
-        {label}
-    </pre>;
-
-});
-
-
-export interface StatefulCompState{
-    counter: number;
-    clickCounter: number;
-    label: string;
-}
-
-export const StatefulComp5 = TSXAir<{ seconds: number }, StatefulCompState>((props, {
-    counter = 0,
-    clickCounter = 0,
-    label = ''
-}) => {
+    });
+    if(state.clickeCounter > 0){
+        state.label = `seconds : ${props.seconds} renders: ${++state.counter} clicks: ${state.clickeCounter}\n` + state.label;
+    }else{
+        state.label = `seconds : ${props.seconds}\n` + state.label;
+    }
     
-    label = `seconds : ${props.seconds} renders: ${++counter} clicks: ${clickCounter}\n` + label;
-    const onClickA = () => { clickCounter++; };
+    const onClickA = () => { state.clickeCounter++; state.clickeCounter++; };
     return <pre onClick={onClickA}>
-        {label}
-    </pre>;
-
-});
-
-
-export const StatefulComp1 = TSXAir((props: { seconds: number }) => {
-    let counter = 0;
-    let clickeCounter = 0;
-    let label = '';
-
-    label = `seconds : ${props.seconds} renders: ${++counter} clicks: ${clickeCounter}\n` + label;
-    const onClickA = () => { clickeCounter++; };
-    return <pre onClick={onClickA}>
-        {label}
-    </pre>;
-
-});
-
-export const StatefulComp3 = TSXAir((props: { seconds: number }) => {
-    let counter = 0;
-    let clickeCounter = 0;
-    let label = '';
-   
-    $: label = `seconds : ${props.seconds} renders: ${++counter} clicks: ${clickeCounter}\n` + label;
-    const onClickA = () => {
-        clickeCounter++;
-    };
-
-    return <pre onClick={onClickA}>
-        {label}
-    </pre>;
-
-});
-
-export const StatefulComp2 = TSXAir((props: { seconds: number }) => {
-    const [counter, setCounter] = lifecycle.state(0);
-    const [clickeCounter, setClickCounter] = lifecycle.state(0);
-    const [label, setLabel] = lifecycle.state('');
-
-    const newLabel = `seconds : ${props.seconds} renders: ${counter + 1} clicks: ${clickeCounter}\n` + label;
-    setLabel(newLabel);
-    setCounter(counter + 1);
-    const onClickA = () => { setClickCounter(clickeCounter + 1); };
-    return <pre onClick={onClickA}>
-        {newLabel}
+        {state.label}
     </pre>;
 
 });
