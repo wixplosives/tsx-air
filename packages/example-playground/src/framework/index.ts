@@ -16,6 +16,14 @@ export function render<Props>(target: HTMLElement, component: ComponentDef<Props
     return comp && new ComponentApi(comp as ComponentInstance<any, Props, any>, target);
 }
 
+export function initState<T>(state: T) {
+    return state;
+}
+
+export function when(dependencies?: any[], cb: () => void) {
+    //
+}
+
 export { TSXAir } from './api/types';
 export { lifecycle } from './api/lifecycle';
 
