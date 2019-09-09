@@ -2,10 +2,10 @@
 
 ## User guide
 
-- Props, state and stores are not reactive
-- All other vars and code are reactive
-- A reactive var may not be set outside the render cycle (at events, timeouts etc)
-- State change in the return statement are forbidden
+- Props, and Stores are not reactive by default
+- All other vars and code **are reactive**
+- A reactive var may **not be set outside the render** cycle (at events, timeouts etc)
+- Store changes in the return statement are forbidden
 - Assignment to input.value creates a 2-way (reactive) bind
 
 ## The why - leading principals
