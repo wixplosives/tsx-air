@@ -1,35 +1,45 @@
-import { TSXAir, render, delegate } from '../../framework';
+import { TSXAir, render, delegate, store } from '../../framework';
 import { RefHolder } from '../../framework/api/types';
 import { calculateDimensions, Area, calcZoomFrameXY } from './helper';
 
-
 export const Zoom = TSXAir((props: { url: string }) => {
-
-    const zoomedOut: RefHolder<HTMLImageElement> = {};
-    const zoomedIn: RefHolder<HTMLImageElement> = {};
-    const root: RefHolder<HTMLDivElement> = {};
-
-    let x = 0;
-    let y = 0;
-    let original = new Area();
-    let zoomFrame = new Area();
-    let zoomedOutSize = new Area(1, 1);
+    const state = store({
+        zoomedOut: {} as RefHolder<HTMLImageElement>,
+        zoomedIn: {} as RefHolder<HTMLImageElement>,
+        root: {} as RefHolder<HTMLDivElement>,
+        x: 0,
+        y: 0,
+        original: new Area(),
+        zoomFrame: new Area(),
+        zoomedOutSize: new Area(1, 1),
+    });
 
     const updateDimensions = () => {
         [
-            original,
-            zoomFrame,
-            zoomedOutSize
-        ] = calculateDimensions(root.element!, zoomedIn.element!, zoomedOut.element!);
+            state.original,
+            state.zoomFrame,
+            state.zoomedOutSize
+        ] = calculateDimensions(state.root.element!, state.zoomedIn.element!, state.zoomedOut.element!);
     };
 
     // Shorthand for afterMount => addEventListener, afterUnmount => removeEventListener
     delegate.window.onresize = updateDimensions;
 
     const updateZoomLocation = (e: MouseEvent) => {
-        [x, y] = calcZoomFrameXY(e, zoomedOut.element!, zoomFrame, zoomedOutSize);
+        [state.x, state.y] = calcZoomFrameXY(e, state.zoomedOut.element!, state.zoomFrame, state.zoomedOutSize);
     };
 
+
+    const {
+        zoomedOut,
+        zoomedIn,
+        root,
+        x,
+        y,
+        original,
+        zoomFrame,
+        zoomedOutSize
+    } = state;
     return <div className="zoom" ref={root} onMouseMove={updateZoomLocation}>
         <div className="zoomedIn">
             <img src={props.url} alt="Cute animal, up close" ref={zoomedIn} onLoad={updateDimensions} />

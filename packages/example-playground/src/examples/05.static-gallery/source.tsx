@@ -1,18 +1,23 @@
-import { TSXAir, render } from '../../framework';
-import { Thumb } from '../3.thumb/source';
-import { Zoom } from '../4.zoom/source';
+import { TSXAir, render, store } from '../../framework';
+import { Thumb } from '../03.thumb/source';
+import { Zoom } from '../04.zoom/source';
 
 export const Gallery = TSXAir((props: { urls: string[] }) => {
-    let zoomed: string | null = null;
+    const state = store({
+        zoomed: null as string | null
+    });
+
+    const { zoomed } = state;
+
     return <div className="gallery">
         {props.urls.map(url => <Thumb url={url} key={url} onClick={
             // Lambda is all good bro, we're compiling this shit
             // tslint:disable-next-line: jsx-no-lambda
-            () => zoomed = url} />)}
+            () => state.zoomed = url} />)}
         {zoomed ?
             <div className="modal" onClick={
                 // tslint:disable-next-line: jsx-no-lambda
-                e => { zoomed = null; e.stopPropagation(); }}>
+                e => { state.zoomed = null; e.stopPropagation(); }}>
                 <Zoom url={zoomed} />
             </div> : null
         }
