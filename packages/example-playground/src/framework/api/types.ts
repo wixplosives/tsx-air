@@ -7,7 +7,7 @@ export interface TsxAirNode<PROPS, T extends string | Factory<any>> {
     key?: string | number | null;
 }
 
-export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props, Factory<any>> | CompCreator<any> ;
+export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props, Factory<any>> | CompCreator<any> | HTMLElement;
 
 // This interface serves as a component definition in pre-compiled code
 export interface CompCreator<Props> {

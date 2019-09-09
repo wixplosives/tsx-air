@@ -1,3 +1,5 @@
+// cSpell:disable
+
 import { Properties } from 'csstype';
 import { ChangeEvent } from 'react';
 import { RefHolder, TsxAirChild } from './types';
@@ -459,6 +461,16 @@ export interface ImgHTMLAttributes<T extends HTMLImageElement> extends HTMLAttri
     width?: number | string;
 }
 
+export interface InputHTMLAttributes extends HTMLAttributes<HTMLInputElement> {
+    type?: 'button'|'checkbox'|'color'|'date'|'datetime'|'email'|'file'|'hidden'|'image'|'month'|'number'|'password'|'radio'|'range'|'reset'|'search'|'submit'|'tel'|'text'|'time'|'url'|'week';
+    step?: number;
+    value?: string|number;
+    width?: string | number;
+    disabled?: boolean;
+    min?: number;
+    max?: number;
+}
+
 
 export interface IntrinsicElements {
     a: HTMLAttributes<HTMLAnchorElement>;
@@ -514,7 +526,7 @@ export interface IntrinsicElements {
     i: HTMLAttributes<HTMLElement>;
     iframe: HTMLAttributes<HTMLIFrameElement>;
     img: ImgHTMLAttributes<HTMLImageElement>;
-    input: HTMLAttributes<HTMLInputElement>;
+    input: InputHTMLAttributes;
     ins: HTMLAttributes<HTMLModElement>;
     kbd: HTMLAttributes<HTMLElement>;
     keygen: HTMLAttributes<HTMLElement>;

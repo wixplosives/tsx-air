@@ -16,7 +16,6 @@ export const runExample = (element: HTMLElement) => {
     const comp = render(element, ParentComp, { name });
 
     const i = setInterval(() => {
-        // TBD: components provide imperative API
         comp.updateProps({ name: `${name} the ${count++}` });
     }, 50);
     return () => {

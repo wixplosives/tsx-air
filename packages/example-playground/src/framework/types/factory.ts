@@ -14,4 +14,4 @@ export type PropsOf<Comp> = Comp extends Component<infer _Ctx, infer Props, infe
 export type StateOf<Comp> =
     Comp extends Component<infer _Ctx, infer _Props, infer State>
     ? State
-    : never;
+    : any;

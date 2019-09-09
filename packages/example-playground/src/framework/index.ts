@@ -43,8 +43,10 @@ export function render<Props>(target: HTMLElement, component: ComponentDef<Props
 }
 
 export { TSXAir } from './api/types';
-export { lifecycle } from './api/lifecycle';
 
 export { delegate };
 export { stats } from './api/debug-tools';
 export { bind } from './api/bind';
+
+export { store } from './api/store';
+export { when,  always, requestRender} from './api/lifecycle';
