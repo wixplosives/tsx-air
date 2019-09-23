@@ -5,8 +5,6 @@ import { Component, Dom } from './types/component';
 import * as delegate from './api/delegate';
 import { setProp } from './runtime/utils';
 
-/* tslint:disable:rule: no-bitwise */
-
 class ComponentApi<Props> {
     constructor(readonly $instance: Component<Dom, Props, any>, readonly rootElement: HTMLElement) { }
     public updateProps = (props: Props) => runtime.updateProps(
@@ -45,7 +43,7 @@ export function render<Props>(target: HTMLElement, component: ComponentDef<Props
 export { TSXAir } from './api/types';
 
 export { delegate };
-export { stats } from './api/debug-tools';
+export { stats } from './api/debug/stats';
 export { bind } from './api/bind';
 
 export { store } from './api/store';

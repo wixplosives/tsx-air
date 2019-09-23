@@ -29,7 +29,6 @@ export const Zoom = TSXAir((props: { url: string }) => {
         [state.x, state.y] = calcZoomFrameXY(e, state.zoomedOut.element!, state.zoomFrame, state.zoomedOutSize);
     };
 
-
     const {
         zoomedOut,
         zoomedIn,
@@ -48,7 +47,7 @@ export const Zoom = TSXAir((props: { url: string }) => {
         <div className="zoomedOut">
             <img src={props.url} alt="Cute animal, zoomed out" ref={zoomedOut}
                 style={{
-                    left: -x / zoomedOutSize.width * original.height,
+                    left: -x / zoomedOutSize.width * original.width,
                     top: -y / zoomedOutSize.height * original.height
                 }} />
             <div className="zoomed" style={{ top: y, left: x, ...zoomFrame }} />

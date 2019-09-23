@@ -13,10 +13,10 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
     */
 
     return <div>
-        <div onClick={onClickA}>
+        <div className="btn" onClick={onClickA}>
             {state.a}
         </div>
-        <div onClick={onClickB}>
+        <div className="btn" onClick={onClickB}>
             {state.b}
         </div>
         <div>state changed {state.changeCount} times</div>

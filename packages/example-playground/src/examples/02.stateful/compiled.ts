@@ -50,7 +50,7 @@ class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, Statefu
     });
 
     private onClickB = () => runtime.updateState(this as StatefulComp, (s: StatefulCompState) => {
-        s.b = s.b + '!';
+        s.b = s.b + '*';
         return StatefulComp.changeBitmask.b;
     });
 }
@@ -62,10 +62,10 @@ StatefulComp.factory = {
     toString: (props, state?) => {
         state = state || initialState(props);
         return `<div>
-        <div>
+        <div class="btn">
             ${state.a}
         </div>
-        <div>
+        <div class="btn">
             ${state.b}
         </div>
         <div>

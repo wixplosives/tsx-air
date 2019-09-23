@@ -1,17 +1,23 @@
 import { Component, Dom } from '../types/component';
 import { PropsOf, StateOf, Factory } from '../types/factory';
 import { cloneDeep } from 'lodash';
-/*  tslint:disable:rule: no-bitwise */
-
 
 type Mutator = (obj: any) => number;
 type StateMutator<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State> ? (state: State) => number : never;
 type PropsMutator<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State> ? (props: Props) => number : never;
 type PropMutation<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State> ? [Comp, PropsMutator<Props>] : never;
 type StateMutation<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State> ? [Comp, StateMutator<State>] : never;
-// type SomeComp<Comp> = Comp extends Component<infer Ctx, infer Props, infer State> ? Component<Ctx, Props, State>: never;
+
+export interface RuntimeCycle {
+    readonly stateTime: number;
+    readonly endTime: number;
+    readonly actions: number;
+    readonly changed: number;
+}
 
 export class Runtime {
+    public $stats = [] as RuntimeCycle[];
+
     private pending: {
         props: Array<PropMutation<Component>>,
         states: Array<StateMutation<Component>>,
@@ -21,8 +27,9 @@ export class Runtime {
             requested: new Map()
         };
 
-
     private viewUpdatePending: boolean = false;
+
+    public $tick = (fn: FrameRequestCallback) => window.requestAnimationFrame(fn);
 
     public updateProps<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(instance: Comp, mutator: PropsMutator<Comp>) {
         // @ts-ignore
@@ -78,7 +85,6 @@ export class Runtime {
             const newProps = latestProps.get(instance) || instance.props;
             const newState = latestStates.get(instance) || instance.state;
 
-            instance.$beforeUpdate(newProps, newState);
             instance.$$processUpdate(newProps, newState, changeMap);
             // @ts-ignore
             instance.props = newProps;
@@ -89,16 +95,19 @@ export class Runtime {
     }
 
     private updateView = () => {
+        const stateTime = performance.now();
+
         this.viewUpdatePending = false;
         const changed = new Set<Component>();
         const { props, states, requested } = this.pending;
+        const actions = props.length + states.length + requested.size;
         this.pending = { props: [], states: [], requested };
         for (const i of this.updateViewOnce(props, states, requested)) {
             changed.add(i);
         }
 
         if (changed.size > 0) {
-            window.requestAnimationFrame(() => {
+            this.$tick(() => {
                 changed.forEach(i => {
                     const req = this.pending.requested.get(i) || i.$afterUpdate();
                     if (!req.next().done) {
@@ -109,12 +118,18 @@ export class Runtime {
                 });
             });
         }
+        this.$stats.push({
+            stateTime,
+            endTime: performance.now(),
+            actions,
+            changed: changed.size
+        });
     };
 
     private triggerViewUpdate() {
         if (!this.viewUpdatePending) {
             this.viewUpdatePending = true;
-            window.requestAnimationFrame(this.updateView);
+            this.$tick(this.updateView);
         }
     }
 }

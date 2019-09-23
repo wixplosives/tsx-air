@@ -1,17 +1,18 @@
 import { TSXAir, render, store, when } from '../../framework';
 
-export const Thumb = TSXAir((props: { url: string, onClick?: () => void }) => {
+export const Thumb = TSXAir((props: { url: string, onClick?: (e:MouseEvent) => void }) => {
     const state = store({
         img: new Image(),
         imageLoaded: false
     });
+    // runs only once, since img does not change
+    state.img.onload = () => {
+        state.imageLoaded = true;
+    };
 
     when(props.url, () => {
         state.img.src = props.url;
         state.imageLoaded = false;
-        state.img.onload = () => {
-            state.imageLoaded = true;
-        };
     });
 
     // TODO: see if there's a way to make {onClick} valid for props forwarding

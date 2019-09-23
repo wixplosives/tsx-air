@@ -1,4 +1,4 @@
-import { Component } from './../types/component';
+import { Component } from '../../types/component';
 
 export interface Stats {
     startFpsProbe: () => Promise<void>;

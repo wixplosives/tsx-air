@@ -4,7 +4,7 @@
     align-items: flex-start;
 }
 
-.root>div>div {
+.btn {
     user-select: none;
     cursor: pointer;
     border-radius: 0.5em;
@@ -14,7 +14,7 @@
     transition: all 300ms ease-out;
 }
 
-.root>div>div:hover {
+.btn:hover {
     background: rgb(152, 153, 214);
     transform: scale(1.2);
 }

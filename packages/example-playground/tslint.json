@@ -33,6 +33,7 @@
         ],
         "no-bitwise": false,
         "no-console": false,
-        "jsx-no-lambda": false
+        "jsx-no-lambda": false,
+        "member-access": false
     }
 }

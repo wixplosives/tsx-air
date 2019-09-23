@@ -3,8 +3,6 @@ import { Factory } from '../../framework/types/factory';
 import runtime from '../../framework/runtime';
 import { Component } from '../../framework/types/component';
 
-/* tslint:disable:rule no-bitwise */
-
 interface ParentCompProps { name: string; }
 interface ParentCompCtx extends Dom {
     text1: ChildNode;
