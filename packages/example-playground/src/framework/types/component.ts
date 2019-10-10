@@ -23,4 +23,7 @@ export abstract class Component<Ctx extends Dom=Dom, Props={}, State={}> {
     public *$afterUpdate(): IterableIterator<void> {/** Noop */ }
 }
 
-
+// tslint:disable-next-line: max-classes-per-file
+// export abstract class ComponentWrapper<T, Ctx, Props, State> extends Component<Ctx, State, Props> {
+    
+// }

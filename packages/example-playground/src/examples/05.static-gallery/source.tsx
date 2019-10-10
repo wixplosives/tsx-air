@@ -12,11 +12,9 @@ export const Gallery = TSXAir((props: { urls: string[] }) => {
     return <div className="gallery">
         {props.urls.map(url => <Thumb url={url} key={url} onClick={
             // Lambda is all good bro, we're compiling this shit
-            // tslint:disable-next-line: jsx-no-lambda
             () => state.zoomed = url} />)}
         {zoomed ?
             <div className="modal" onClick={
-                // tslint:disable-next-line: jsx-no-lambda
                 e => { state.zoomed = null; e.stopPropagation(); }}>
                 <Zoom url={zoomed} />
             </div> : null

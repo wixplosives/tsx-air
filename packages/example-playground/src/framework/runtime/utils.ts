@@ -55,6 +55,7 @@ export function updateSpreadElement(elm: HTMLElement, data: object) {
 export function setProp<Props>(instance: Component<any, Props, any>, p: Props, value: any, key: keyof Props) {
     if (p[key]!==value) {
         p[key] = value;
+        // @ts-ignore
         return instance.propMap[key];
     }
     return 0;
