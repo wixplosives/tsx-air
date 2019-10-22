@@ -1,0 +1,46 @@
+.digit {
+    font-size: 3em;
+    width: 0.7em;
+    height: 1em;
+    overflow: hidden;
+    position: relative;
+}
+
+.digit>* {
+    font-weight: 900;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    transition: transform linear 1000ms;
+    transform: translateY(0);
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: center center;
+}
+
+.exit {
+    transform:  translateY(-1em);
+    /* transition-timing-function: ease-out; */
+    transition-delay: 150ms;
+    transition-duration: 1000ms;
+}
+
+.enter {
+    animation: 500ms enter;
+}
+
+@keyframes enter {
+    from {
+        transform:  translateY(1em);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.waiting {
+    transform: translateY(1em);
+}
+
+.no-transition {
+    transition: none;
+}

@@ -10,7 +10,7 @@
         "lint": "tslint -p src",
         "prebuild": "yarn clean",
         "start:server": "node server.js",
-        "start": "ts-node src/utils/watch-examples.ts& webpack-dev-server --progress --open",
+        "start": "concurrently \"ts-node src/utils/watch-examples.ts\"  \"webpack-dev-server --progress --open\"",
         "test": "mocha -r @ts-tools/node/r \"test/**/*.spec.ts?(x)\""
     },
     "dependencies": {
@@ -20,6 +20,7 @@
         "@types/lodash": "^4.14.137",
         "@types/prismjs": "^1.16.0",
         "@types/showdown": "^1.9.3",
+        "concurrently": "^4.1.2",
         "csstype": "^2.6.6",
         "hljs": "^6.2.3",
         "lodash": "^4.17.15",

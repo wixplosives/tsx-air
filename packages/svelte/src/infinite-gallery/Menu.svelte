@@ -1,6 +1,9 @@
 <script>
     import { menu } from './store';
     const selected = $menu.selected;
+    // $: s = $menu.selected;
+    // s = s+'3';
+    // console.log(s);
 </script>
 
 <style>
