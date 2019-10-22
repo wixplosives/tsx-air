@@ -50,6 +50,9 @@ module.exports = (_env, {mode = 'development', devtool = 'source-map'}) => {
     ],
     performance: {
       hints: false
+    },
+    externals: {
+      '@microsoft/typescript-etw': 'commonjs @microsoft/typescript-etw'
     }
   }
 }

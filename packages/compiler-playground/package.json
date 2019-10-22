@@ -14,15 +14,15 @@
         "test": "mocha -r @ts-tools/node/r \"test/**/*.spec.ts?(x)\""
     },
     "dependencies": {
-        "@file-services/memory": "^2.0.0",
-        "@file-services/typescript": "^2.0.0",
-        "@types/react-syntax-highlighter": "^10.2.1",
+        "@file-services/memory": "^2.0.1",
+        "@file-services/typescript": "^2.0.1",
+        "@types/react-syntax-highlighter": "^11.0.1",
         "monaco-editor": "^0.17.0",
         "monaco-editor-webpack-plugin": "^1.7.0",
-        "react": "^16.8.6",
-        "react-dom": "^16.8.6",
+        "react": "^16.10.2",
+        "react-dom": "^16.10.2",
         "react-syntax-highlighter": "^11.0.2",
-        "sanitize.css": "^10.0.0",
+        "sanitize.css": "^11.0.0",
         "tslib": "^1.10.0"
     },
     "browser": {
