@@ -4,10 +4,7 @@ import { Properties } from 'csstype';
 import { ChangeEvent } from 'react';
 import { RefHolder, TsxAirChild } from './types';
 
-
 export type CSSProperties = Properties<string | number>;
-
-
 
 export interface AriaAttributes {
     /** Identifies the currently active element when DOM focus is on a composite widget, textbox, group, or application. */
@@ -393,7 +390,6 @@ interface DOMAttributes<T> {
     onTransitionEndCapture?: NativeEventHandler<T, TransitionEvent>;
 }
 
-
 export interface HTMLAttributes<T extends HTMLElement> extends AriaAttributes, DOMAttributes<T> {
     // Tsx-air-specific Attributes
     key?: string;
@@ -585,7 +581,7 @@ export interface IntrinsicElements {
     track: HTMLAttributes<HTMLTrackElement>;
     u: HTMLAttributes<HTMLElement>;
     ul: HTMLAttributes<HTMLUListElement>;
-    'var': HTMLAttributes<HTMLElement>;
+    var: HTMLAttributes<HTMLElement>;
     video: HTMLAttributes<HTMLVideoElement>;
     wbr: HTMLAttributes<HTMLElement>;
     webview: HTMLAttributes<HTMLWebViewElement>;
