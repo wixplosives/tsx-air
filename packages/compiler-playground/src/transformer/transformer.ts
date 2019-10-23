@@ -1,7 +1,5 @@
 import ts from 'typescript';
 import { ScannedChild, ScannedJSX } from './types';
-import { createToStringMethod } from './toStringGenerator';
-import { createToHydrateMethod } from './hydrateGenerator';
 (window as any).ts = ts;
 
 export function tsxAirTransformer(context: ts.TransformationContext): ts.Transformer<ts.SourceFile> {
@@ -15,8 +13,8 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
                 return ts.visitEachChild(node, replaceTsxAirFunctions, context);
             }
             const arg = node.arguments[0];
-            if (!ts.isArrowFunction(arg)) {
-                throw new Error('unhanlded input');
+            if (!(ts.isArrowFunction(arg) || ts.isFunctionExpression(arg))) {
+                throw new Error('TSXAir must receive a functional component');
             }
             const { returnStatements, visitor } = createReturnStatementsVisitor();
             ts.visitEachChild(node, visitor, context);
@@ -29,12 +27,13 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
                 throw new Error('unhnadled input');
             }
 
-            const scanned = getJSXElements(expression, {}, []);
-            return ts.createCall(ts.createIdentifier('TSXAir'), [], [ts.createObjectLiteral([
-                ts.createPropertyAssignment('unique', ts.createCall(ts.createIdentifier('Symbol'), undefined, [ts.createStringLiteral((node.parent! as any).name.getText())])),
-                createToStringMethod(scanned),
-                createToHydrateMethod(scanned)
-            ], true)]);
+            return node;
+            // return node;
+            // return ts.createCall(ts.createIdentifier('TSXAir'), [], [ts.createObjectLiteral([
+            //     ts.createPropertyAssignment('unique', ts.createCall(ts.createIdentifier('Symbol'), undefined, [ts.createStringLiteral((node.parent! as any).name.getText())])),
+            //     createToStringMethod(scanned),
+            //     createToHydrateMethod(scanned)
+            // ], true)]);
         }
     };
 

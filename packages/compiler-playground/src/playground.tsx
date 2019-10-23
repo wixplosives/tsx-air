@@ -8,10 +8,11 @@ import * as Session from './session';
 import 'sanitize.css';
 import 'sanitize.css/typography.css';
 import './playground.css';
-import { tsxAirTransformer } from './transformer/transformer';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // @ts-ignore
 import { atomOneLight as style } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { FileScanner } from './transformer/scanner';
+import { sourceWithNotes } from './transformer/marker';
 
 export interface IPlaygroundProps {
     fs: IFileSystem;
@@ -25,12 +26,17 @@ export interface IPlaygroundState {
 }
 
 export type RenderTarget = 'react' | 'markdown';
+
+
+
 export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroundState> {
     public state: IPlaygroundState = {
         output: ''
     };
+    private scanner!: FileScanner;
 
     public componentDidMount() {
+        this.scanner = new FileScanner(this.props.fs, this.getFilePath());
         this.updateTranspiled();
     }
 
@@ -38,8 +44,7 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
         const { fs } = this.props;
         const filePath = this.getFilePath();
 
-        return (
-            <div className="playground">
+        return (<div className="playground">
                 <div className="playground-pane source-code-pane">
                     <Editor
                         className="source-code-editor"
@@ -72,14 +77,13 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
     };
 
     private updateTranspiled() {
-        const content = this.props.fs.readFileSync(this.props.filePath);
-        const compilerOptions: ts.CompilerOptions = { target: ts.ScriptTarget.ES2017, jsx: ts.JsxEmit.React };
-        const output = ts.transpileModule(content.toString(), { compilerOptions, transformers: { before: [tsxAirTransformer] } }).outputText;
-
-        // console.log(output);
-        this.setState({
-            output: output.split('\\n').join('\n')
+        const notes = this.scanner.scan(this.getFilePath(), node => {
+            if (node.kind === ts.SyntaxKind.VariableDeclaration) {
+                return '/* var */ ';
+            }
+            return undefined;
         });
+        const output =  sourceWithNotes(this.scanner.source, notes);
+       this.setState({output});
     }
-
 }

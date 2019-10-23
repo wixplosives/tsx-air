@@ -108,6 +108,14 @@
     "@file-services/types" "^2.0.1"
     "@file-services/utils" "^2.0.1"
 
+"@file-services/node@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@file-services/node/-/node-2.0.2.tgz#9817d7ea36c12fe959e85429fc09810acd3b6d06"
+  integrity sha512-d0cEeCkCmLbLVN6uMluSjJawvxdZS96goqB5DuoWyfHqsf/Y3fcAyUO5SaE0kOYFSs9ztiHGvDyS57OrzqXgcg==
+  dependencies:
+    "@file-services/types" "^2.0.1"
+    "@file-services/utils" "^2.0.1"
+
 "@file-services/posix-path@^1.0.3":
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/@file-services/posix-path/-/posix-path-1.0.3.tgz#d176afbbb6fe284f055217f06fd51d5a0475bbb8"
@@ -1048,7 +1056,12 @@
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-5.2.7.tgz#315d570ccb56c53452ff8638738df60726d5b6ea"
   integrity sha512-NYrtPht0wGzhwe9+/idPaBB+TqkY9AhTvOLMkThm0IoEfLaiVQZwBwyJ5puCkO3AUCWrmcoePjp2mbFocKy4SQ==
 
-"@types/node@*", "@types/node@^12.11.1", "@types/node@^12.11.6":
+"@types/node@*":
+  version "12.11.5"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.11.5.tgz#6c3c8dc84988aff11fd2a63d7b5fbf39eaaab7b1"
+  integrity sha512-LC8ALj/24PhByn39nr5jnTvpE7MujK8y7LQmV74kHYF5iQ0odCPkMH4IZNZw+cobKfSXqaC8GgegcbIsQpffdA==
+
+"@types/node@^12.11.1", "@types/node@^12.11.6":
   version "12.11.6"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.11.6.tgz#2f8d551aef252de78f42acdccd53f5a8ce0cac4d"
   integrity sha512-4uPUyY1Aofo1YzoypalYHNd2SnKYxH2b6LzXwpryZCJKA2XlagZSynXx5C8sfPH0r1cSltUpaVHV2q5sYXschQ==
