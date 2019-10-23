@@ -1,4 +1,3 @@
-import { nodeFs } from '@file-services/node';
 import { IFileSystem } from '@file-services/types';
 import { createBaseHost, createLanguageServiceHost } from '@file-services/typescript';
 import ts from 'typescript';
@@ -17,7 +16,7 @@ export class FileScanner {
     constructor(public readonly fs: IFileSystem, public readonly filePath: string) {
         const baseHost = createBaseHost(fs);
         const baseLangServiceHost = createLanguageServiceHost(baseHost, () => [filePath], () => {
-            return { target: ts.ScriptTarget.ES2017, jsx: ts.JsxEmit.React, jsxFactory: 'TSXAir' };
+            return { target: ts.ScriptTarget.ES2017, jsx: ts.JsxEmit.React , jsxFactory: 'TSXAir' };
         }, '/node_modules/typescript/lib');
 
         this.langService = ts.createLanguageService(baseLangServiceHost);        
@@ -31,7 +30,7 @@ export class FileScanner {
      * @param visitor returns a note on the visited node (or undefined)
      */
     public scan(filePath: string, visitor: Visitor) {
-        this._source = nodeFs.readFileSync(filePath).toString('utf8');
+        this._source = this.fs.readFileSync(filePath).toString('utf8');
         const program = this.langService.getProgram()!;
         const source = program.getSourceFile(filePath)!;
         return scan(source, visitor);
