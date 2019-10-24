@@ -25,6 +25,7 @@ export interface IPlaygroundProps {
 
 export interface IPlaygroundState {
     output: string;
+    scanned: string;
 }
 
 export type RenderTarget = 'react' | 'markdown';
@@ -33,7 +34,8 @@ export type RenderTarget = 'react' | 'markdown';
 
 export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroundState> {
     public state: IPlaygroundState = {
-        output: ''
+        output: '',
+        scanned: ''
     };
     private scanner!: FileAstLoader;
 
@@ -56,6 +58,11 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
                     />
                 </div>
 
+                <div className="playground-pane view-pane" >
+                    <SyntaxHighlighter language="typescript" style={style}>
+                        {this.state.scanned}
+                    </SyntaxHighlighter>
+                </div>
 
                 <div className="playground-pane view-pane" >
                     <SyntaxHighlighter language="javascript" style={style}>
@@ -79,17 +86,17 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
     };
 
     private updateTranspiled() {
-        // const { ast, source } = this.scanner.getAst(this.getFilePath());
-        // const notes = scan( ast , tsxair);
-        // const output =  sourceWithNotes(source, notes);
+        const { ast, source } = this.scanner.getAst(this.getFilePath());
+        const notes = scan( ast , tsxair);
+        const scanned =  sourceWithNotes(source, notes);
         
         const content = this.props.fs.readFileSync(this.props.filePath);
         const compilerOptions: ts.CompilerOptions = { target: ts.ScriptTarget.ES2017, jsx: ts.JsxEmit.React };
         const output = ts.transpileModule(content.toString(), { compilerOptions, transformers: { before: [tsxAirTransformer] } }).outputText;
 
-        // console.log(output);
         this.setState({
-            output: output.split('\\n').join('\n')
+            output: output.split('\\n').join('\n'),
+            scanned
         });
 
     //    this.setState({output});

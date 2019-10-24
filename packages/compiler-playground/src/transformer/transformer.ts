@@ -2,8 +2,8 @@ import { tsxair } from './visitors/jsx';
 import ts from 'typescript';
 import { ScannedChild, ScannedJSX } from './types';
 import { scan } from './scanner';
-import { createToStringMethod } from './toStringGenerator';
-import { createToHydrateMethod } from './hydrateGenerator';
+// import { createToStringMethod } from './toStringGenerator';
+// import { createToHydrateMethod } from './hydrateGenerator';
 (window as any).ts = ts;
 
 export function tsxAirTransformer(context: ts.TransformationContext): ts.Transformer<ts.SourceFile> {
@@ -19,7 +19,7 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
                 ({node})=> 
                     node === n);
             if (jsxItem ) {
-                const {node} = jsxItem;
+                // const {node} = jsxItem;
 
                 const mockFile = ts.createSourceFile('frag1.ts', `
                 export const frag = {
@@ -27,7 +27,7 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
                     hydrate: () => undefined
                 };`, ts.ScriptTarget.Latest);
 
-                const literals = scan(mockFile, (nd, ignoreChildren)=>{
+                const literals = scan(mockFile, (nd, {ignoreChildren})=>{
                     if (ts.isObjectLiteralExpression(nd)) {
                         ignoreChildren();
                         return 'Literal';

@@ -1,4 +1,4 @@
-import { FileAstLoader, scan } from './scanner';
+import { FileAstLoader, scan, find } from './scanner';
 
 import { expect } from 'chai';
 import 'mocha';
@@ -44,42 +44,70 @@ describe(`scan, Given a valid AST`, () => {
         expect(result[0]).to.haveOwnProperty('note');
     });
 
-    describe('using ignoreChildren param', () => {
-        it(`should not call visitor on the node's children`, () => {
-            const result = scan(ast, (_, ignoreChildren) => {
-                ignoreChildren!();
-                return 'Visited';
+    describe('api', () => {
+
+        describe('ignoreChildren', () => {
+            it(`should not call visitor on the node's children`, () => {
+                const result = scan(ast, (_, { ignoreChildren }) => {
+                    ignoreChildren!();
+                    return 'Visited';
+                });
+                expect(result).to.have.length(1);
+                expect(result[0].node.kind).to.equal(ts.SyntaxKind.SourceFile);
             });
-            expect(result).to.have.length(1);
-            expect(result[0].node.kind).to.equal(ts.SyntaxKind.SourceFile);
+        });
+
+        describe('report', () => {
+            it('should add an additional point of interest to the spawning scan', () => {
+                const result = scan(ast, (node, { report }) => {
+                    report!({
+                        node,
+                        note: 'Reported'
+                    });
+                    return 'Visited';
+                });
+                expect(result).to.have.length(26);
+            });
+
+            it('should be able to report points of interest on behalf of children in seamlessly', () => {
+                const result = scan(ast, (node, { ignoreChildren, report }) => {
+                    ignoreChildren();
+                    node.forEachChild(child => {
+                        report(scan(child, () => {
+                            return 'Descendent';
+                        }));
+                    });
+
+                    return 'Root';
+                });
+                expect(result.filter(i => i.note === 'Root')).to.have.length(1);
+                expect(result.filter(i => i.note === 'Descendent')).to.have.length(12);
+            });
+        });
+
+        describe('stop', () => {
+            it('should not visit any nodes after after a visitor executed stop', () => {
+                let visited = 0;
+                const result = scan(ast, (_, { stop }) => {
+                    if (visited++ >= 5) {
+                        stop();
+                    }
+                    return 'Visited';
+                });
+                expect(result).to.have.length(5 + 1);
+            });
         });
     });
 
-    describe('using report param', () => {
-        it('should add an additional point of interest to the spawning scan', () => {
-            const result = scan(ast, (node, __, report) => {
-                report!({
-                    node,
-                    note: 'Reported'
-                });
-                return 'Visited';
-            });
-            expect(result).to.have.length(26);
+    describe('find', () => {
+        it('should find the first (dfs) node that matches the predicate', () => {
+            const found = find(ast, n => n.kind === ts.SyntaxKind.ExportKeyword);
+            expect(found.kind).to.equal(ts.SyntaxKind.ExportKeyword);
         });
-
-        it('should be able to report points of interest on behalf of children in seamlessly', () => {
-            const result = scan(ast, (node, ignoreChildren, report) => {
-                ignoreChildren();
-                node.forEachChild(child => {
-                    report(scan(child, () => {
-                        return 'Descendent';
-                    }));
-                });
-
-                return 'Root';
-            });
-            expect(result.filter(i => i.note === 'Root')).to.have.length(1);
-            expect(result.filter(i => i.note === 'Descendent')).to.have.length(12);
+        it('should return undefined when no match is found', () => {
+            const found = find(ast, n => n.kind === ts.SyntaxKind.JsxAttribute);
+            // tslint:disable-next-line: no-unused-expression
+            expect(found).to.be.undefined;
         });
     });
 });

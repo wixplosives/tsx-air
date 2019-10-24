@@ -1,7 +1,7 @@
 import * as  ts from 'typescript';
 import { Visitor, scan } from './../scanner';
 
-export const tsxair: Visitor = (node, ignoreChildren, report) => {
+export const tsxair: Visitor = (node, {ignoreChildren, report}) => {
     if (ts.isCallExpression(node) && node.expression.getText() === 'TSXAir') {
         ignoreChildren();
         node.forEachChild(n => {
@@ -12,13 +12,13 @@ export const tsxair: Visitor = (node, ignoreChildren, report) => {
     return undefined;
 };
 
-const findJsxFragment: Visitor = (node, ignoreChildren) => {
+const findJsxFragment: Visitor = (node, {ignoreChildren}) => {
     if (
         ts.isJsxElement(node) ||
         ts.isJsxSelfClosingElement(node) ||
         ts.isJsxFragment(node)
     ) {
-        ignoreChildren!();
+        // ignoreChildren!();
         return '/* Jsx */';
     }
     return undefined;

@@ -8,9 +8,13 @@ export interface PointsOfInterest {
     node: ts.Node;
 }
 
-export type Visitor = (node: ts.Node,
-    ignoreChildren: () => void,
-    report: (pois: PointsOfInterest|PointsOfInterest[]) => void) => any | undefined;
+interface ScannerApi {
+    ignoreChildren: () => void;
+    report: (pois: PointsOfInterest | PointsOfInterest[]) => void;
+    stop: () => void;
+}
+
+export type Visitor = (node: ts.Node, scannerApi: ScannerApi) => any | undefined;
 
 export type Scanner = (target: ts.Node, visitor: Visitor) => PointsOfInterest[];
 
@@ -38,23 +42,33 @@ export class FileAstLoader {
     }
 }
 
-const walker = (node: ts.Node, report: (point: PointsOfInterest) => void, visitorr: Visitor) => {
-    let ignoreChildren = false;
-    const reportChildren = 
-        (pois: PointsOfInterest | PointsOfInterest[]) => {
-            if (!(pois instanceof Array)) {
-                pois = [pois];
-            }
-            pois.forEach(p => report(p));
-        };
-    
+interface StopScan {
+    (): void;
+    shouldStop: boolean;
+}
 
-    const note = visitorr(node, () => ignoreChildren = true, reportChildren);
-    if (note) {
-        report({ node, note });
-    }
-    if (!ignoreChildren) {
-        node.forEachChild(n => walker(n, report, visitorr));
+const walker = (node: ts.Node, report: (point: PointsOfInterest) => void, stop: StopScan, visitorr: Visitor) => {
+    if (!stop.shouldStop) {
+        let ignoreChildren = false;
+        const api: ScannerApi = {
+            ignoreChildren: () => ignoreChildren = true,
+            report: pois => {
+                if (!(pois instanceof Array)) {
+                    pois = [pois];
+                }
+                pois.forEach(p => report(p));
+            }, stop
+        };
+
+        const note = visitorr(node, api);
+        if (note) {
+            report({ node, note });
+        }
+        if (!ignoreChildren) {
+            node.forEachChild(n =>
+                walker(n, report, stop, visitorr)
+            );
+        }
     }
 };
 
@@ -65,6 +79,22 @@ export const scan: Scanner = (target, visitor) => {
         pointsOfInterest.push(point);
     };
 
-    walker(target, reportPOI, visitor);
+    const stop: StopScan = () => { 
+        stop.shouldStop = true; 
+    };
+    stop.shouldStop = false;
+
+    walker(target, reportPOI, stop, visitor);
     return pointsOfInterest;
+};
+
+export const find = (target:ts.Node, predicate:Visitor) => {
+    const result = scan(target, (node, api) => {
+        const ret = predicate(node, api);
+        if (ret) {
+            api.stop();
+        }
+        return ret;
+    })[0];
+    return result && result.node;
 };
