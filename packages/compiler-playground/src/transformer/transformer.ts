@@ -44,7 +44,7 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
                 // return ts.createCall(ts.createIdentifier('TSXAir'), [], [ts.createObjectLiteral([
                 //     ts.createPropertyAssignment('unique', ts.createCall(ts.createIdentifier('Symbol'), undefined, [ts.createStringLiteral((node.parent! as any).name.getText())])),
                 //     createToStringMethod(scanned),
-                //     createToHydrateMethod(scanned)
+                    // createToHydrateMethod(scanned)
                 // ], true)]);
 
             } else {
