@@ -11,7 +11,7 @@
         "prebuild": "yarn clean",
         "start:server": "node server.js",
         "start": "webpack-dev-server --progress --open",
-        "test": "mocha \"test/**/*.test.ts?(x)\""
+        "test": "mocha \"**/*.test.ts?(x)\""
     },
     "dependencies": {
         "@file-services/memory": "^2.0.1",

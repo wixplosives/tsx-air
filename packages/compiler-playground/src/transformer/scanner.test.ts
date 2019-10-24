@@ -7,7 +7,7 @@ import ts from 'typescript';
 import nodeFs from '@file-services/node';
 
 describe('FileAstLoader', () => {
-    const samplePath = 'test/resources/scanner/sample.tsx';
+    const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
     const fs = nodeFs;
     const scanner = new FileAstLoader(fs, samplePath);
 
@@ -21,7 +21,7 @@ export const b=a;`);
 });
 
 describe(`scan, Given a valid AST`, () => {
-    const samplePath = 'test/resources/scanner/sample.tsx';
+    const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
     const fs = nodeFs;
     const scanner = new FileAstLoader(fs, samplePath);
     const { ast } = scanner.getAst(samplePath);
