@@ -11,9 +11,7 @@ import './playground.css';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // @ts-ignore
 import { atomOneLight as style } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { FileAstLoader, scan } from './transformer/scanner';
-import { sourceWithNotes } from './transformer/marker';
-import { tsxair } from './transformer/visitors/jsx';
+import { tsxair, FileAstLoader, scan, sourceWithNotes } from '@wixc3/tsx-air-compiler';
 import { tsxAirTransformer } from './transformer/transformer';
 
 export interface IPlaygroundProps {
@@ -49,27 +47,30 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
         const filePath = this.getFilePath();
 
         return (<div className="playground">
-                <div className="playground-pane source-code-pane">
-                    <Editor
-                        className="source-code-editor"
-                        fs={fs}
-                        filePath={filePath}
-                        onChange={this.handleSourceCodeChange}
-                    />
-                </div>
-
-                <div className="playground-pane view-pane" >
-                    <SyntaxHighlighter language="typescript" style={style}>
-                        {this.state.scanned}
-                    </SyntaxHighlighter>
-                </div>
-
-                <div className="playground-pane view-pane" >
-                    <SyntaxHighlighter language="javascript" style={style}>
-                        {this.state.output}
-                    </SyntaxHighlighter>
-                </div>
+            <div className="playground-pane source-code-pane">
+                <h2>Source</h2>
+                <Editor
+                    className="source-code-editor"
+                    fs={fs}
+                    filePath={filePath}
+                    onChange={this.handleSourceCodeChange}
+                />
             </div>
+
+            <div className="playground-pane view-pane" >
+                <h2>Scanned</h2>
+                <SyntaxHighlighter language="typescript" style={style}>
+                    {this.state.scanned}
+                </SyntaxHighlighter>
+            </div>
+
+            <div className="playground-pane view-pane" >
+                <h2>Compiled</h2>
+                <SyntaxHighlighter language="javascript" style={style}>
+                    {this.state.output}
+                </SyntaxHighlighter>
+            </div>
+        </div>
         );
     }
 
@@ -87,9 +88,9 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
 
     private updateTranspiled() {
         const { ast, source } = this.scanner.getAst(this.getFilePath());
-        const notes = scan( ast , tsxair);
-        const scanned =  sourceWithNotes(source, notes);
-        
+        const notes = scan(ast, tsxair);
+        const scanned = sourceWithNotes(source, notes);
+
         const content = this.props.fs.readFileSync(this.props.filePath);
         const compilerOptions: ts.CompilerOptions = { target: ts.ScriptTarget.ES2017, jsx: ts.JsxEmit.React };
         const output = ts.transpileModule(content.toString(), { compilerOptions, transformers: { before: [tsxAirTransformer] } }).outputText;
@@ -98,7 +99,5 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
             output: output.split('\\n').join('\n'),
             scanned
         });
-
-    //    this.setState({output});
     }
 }

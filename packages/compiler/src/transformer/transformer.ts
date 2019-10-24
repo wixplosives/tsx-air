@@ -1,5 +1,8 @@
-import { tsxair, scan } from '@wixc3/tsx-air-compiler';
+import { tsxair } from '../visitors/jsx';
 import ts from 'typescript';
+import { scan } from '../astUtils/scanner';
+// import { createToStringMethod } from './toStringGenerator';
+// import { createToHydrateMethod } from './hydrateGenerator';
 (window as any).ts = ts;
 
 export function tsxAirTransformer(context: ts.TransformationContext): ts.Transformer<ts.SourceFile> {
@@ -10,6 +13,7 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
         return sourceFile;
 
         function replaceTsxAirFunctions(n: ts.Node): ts.Node | ts.Node[] {
+            
             const jsxItem = jsxs.find(
                 ({node})=> 
                     node === n);
@@ -35,9 +39,16 @@ export function tsxAirTransformer(context: ts.TransformationContext): ts.Transfo
                 }
                 
                 return literals[0].node;
+              
+
             } else {
                 return ts.visitEachChild(n, replaceTsxAirFunctions, context);
             } 
+
+
+            // return node;
         }
     };
 }
+
+
