@@ -1,3 +1,4 @@
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
@@ -15,7 +16,10 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
         {
           test: /\.tsx?$/,
           exclude: /node_modules/,
-          loader: '@ts-tools/webpack-loader'
+          loader: '@ts-tools/webpack-loader',
+          options: {
+            configFilePath: require.resolve('./src/tsconfig.json')
+          }
         },
         {
           test: /\.d\.ts$/,
@@ -28,24 +32,16 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
           use: ['style-loader', 'css-loader']
         }
       ],
-      noParse: [
-        require.resolve('typescript/lib/typescript.js')
-      ]
     },
     resolve: {
-      extensions: ['.tsx', '.ts', '.js', '.json']
+      extensions: ['.tsx', '.ts', '.js', '.json'],
+      plugins: [new TsconfigPathsPlugin({ configFile: require.resolve('../../tsconfig.base.json') })]
     },
     plugins: [
-      // new StylableWebpackPlugin(),
       new HtmlWebpackPlugin({
         title: 'TSXAir examples Playground',
 
       }),
-      // new MonacoWebpackPlugin({
-      //   languages: ['css', 'javascript', 'typescript', 'html'],
-      //   output: 'workers'
-      // })
-      // new require('webpack-bundle-analyzer').BundleAnalyzerPlugin()
     ],
     performance: {
       hints: false

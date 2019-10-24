@@ -11,6 +11,6 @@
     "dev": "run-p start:dev autobuild",
     "start": "sirv public --single",
     "start:dev": "sirv public --single --dev",
-    "clean": "rm -rf public/* server/build/*"
+    "clean": "rimraf public server/build"
   }
 }
