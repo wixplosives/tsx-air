@@ -1,4 +1,4 @@
-import { FileScanner } from './scanner';
+import { FileAstLoader, scan } from './scanner';
 
 import { expect } from 'chai';
 import 'mocha';
@@ -6,14 +6,29 @@ import { fail } from 'assert';
 import ts from 'typescript';
 import nodeFs from '@file-services/node';
 
-describe(`Scanner,.scan, Given a valid tsx file and file system`, () => {
+describe('FileAstLoader', () => {
     const samplePath = 'test/resources/scanner/sample.tsx';
     const fs = nodeFs;
-    const scanner = new FileScanner(fs, samplePath);
+    const scanner = new FileAstLoader(fs, samplePath);
+
+
+    it('should load a file as an AST and raw source', () => {
+        const { ast, source } = scanner.getAst(samplePath);
+        expect(ast.kind).to.equal(ts.SyntaxKind.SourceFile);
+        expect(source).to.equal(`const a=1;
+export const b=a;`);
+    });
+});
+
+describe(`scan, Given a valid AST`, () => {
+    const samplePath = 'test/resources/scanner/sample.tsx';
+    const fs = nodeFs;
+    const scanner = new FileAstLoader(fs, samplePath);
+    const { ast } = scanner.getAst(samplePath);
 
     it('should run visitor on every node of the AST once', () => {
         const visited = [] as ts.Node[];
-        scanner.scan(samplePath, node => {
+        scan(ast, node => {
             if (visited.find(i => i === node)) {
                 fail('A node was visited more than once');
             }
@@ -23,15 +38,48 @@ describe(`Scanner,.scan, Given a valid tsx file and file system`, () => {
     });
 
     it('should return the points of interest, as returned from the visitor', () => {
-        const result = scanner.scan(samplePath, node => node.kind === ts.SyntaxKind.VariableDeclaration ? 'Var!' : undefined);
+        const result = scan(ast, node => node.kind === ts.SyntaxKind.VariableDeclaration ? 'Var!' : undefined);
         expect(result).to.have.length(2);
         expect(result[0]).to.haveOwnProperty('node');
         expect(result[0]).to.haveOwnProperty('note');
     });
 
-    it('should update FileScanner source after scanning', () => {
-        scanner.scan(samplePath, node => node.kind === ts.SyntaxKind.VariableDeclaration ? 'Var!' : undefined);
-        expect(scanner.source).to.equal(`const a=1;
-export const b=a;`);
+    describe('using ignoreChildren param', () => {
+        it(`should not call visitor on the node's children`, () => {
+            const result = scan(ast, (_, ignoreChildren) => {
+                ignoreChildren!();
+                return 'Visited';
+            });
+            expect(result).to.have.length(1);
+            expect(result[0].node.kind).to.equal(ts.SyntaxKind.SourceFile);
+        });
+    });
+
+    describe('using report param', () => {
+        it('should add an additional point of interest to the spawning scan', () => {
+            const result = scan(ast, (node, __, report) => {
+                report!({
+                    node,
+                    note: 'Reported'
+                });
+                return 'Visited';
+            });
+            expect(result).to.have.length(26);
+        });
+
+        it('should be able to report points of interest on behalf of children in seamlessly', () => {
+            const result = scan(ast, (node, ignoreChildren, report) => {
+                ignoreChildren();
+                node.forEachChild(child => {
+                    report(scan(child, () => {
+                        return 'Descendent';
+                    }));
+                });
+
+                return 'Root';
+            });
+            expect(result.filter(i => i.note === 'Root')).to.have.length(1);
+            expect(result.filter(i => i.note === 'Descendent')).to.have.length(12);
+        });
     });
 });

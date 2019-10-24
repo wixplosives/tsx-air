@@ -11,8 +11,10 @@ import './playground.css';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // @ts-ignore
 import { atomOneLight as style } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { FileScanner } from './transformer/scanner';
+import { FileAstLoader, scan } from './transformer/scanner';
 import { sourceWithNotes } from './transformer/marker';
+import { tsxair } from './transformer/visitors/jsx';
+import { tsxAirTransformer } from './transformer/transformer';
 
 export interface IPlaygroundProps {
     fs: IFileSystem;
@@ -33,10 +35,10 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
     public state: IPlaygroundState = {
         output: ''
     };
-    private scanner!: FileScanner;
+    private scanner!: FileAstLoader;
 
     public componentDidMount() {
-        this.scanner = new FileScanner(this.props.fs, this.getFilePath());
+        this.scanner = new FileAstLoader(this.props.fs, this.getFilePath());
         this.updateTranspiled();
     }
 
@@ -77,13 +79,19 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
     };
 
     private updateTranspiled() {
-        const notes = this.scanner.scan(this.getFilePath(), node => {
-            if (node.kind === ts.SyntaxKind.VariableDeclaration) {
-                return '/* var */ ';
-            }
-            return undefined;
+        // const { ast, source } = this.scanner.getAst(this.getFilePath());
+        // const notes = scan( ast , tsxair);
+        // const output =  sourceWithNotes(source, notes);
+        
+        const content = this.props.fs.readFileSync(this.props.filePath);
+        const compilerOptions: ts.CompilerOptions = { target: ts.ScriptTarget.ES2017, jsx: ts.JsxEmit.React };
+        const output = ts.transpileModule(content.toString(), { compilerOptions, transformers: { before: [tsxAirTransformer] } }).outputText;
+
+        // console.log(output);
+        this.setState({
+            output: output.split('\\n').join('\n')
         });
-        const output =  sourceWithNotes(this.scanner.source, notes);
-       this.setState({output});
+
+    //    this.setState({output});
     }
 }

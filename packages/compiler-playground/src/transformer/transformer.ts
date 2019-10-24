@@ -1,39 +1,58 @@
+import { tsxair } from './visitors/jsx';
 import ts from 'typescript';
 import { ScannedChild, ScannedJSX } from './types';
+import { scan } from './scanner';
+import { createToStringMethod } from './toStringGenerator';
+import { createToHydrateMethod } from './hydrateGenerator';
 (window as any).ts = ts;
 
 export function tsxAirTransformer(context: ts.TransformationContext): ts.Transformer<ts.SourceFile> {
     return sourceFile => {
+        const jsxs = scan(sourceFile, tsxair).filter(({note})=>note === '/* Jsx */');
         sourceFile = ts.visitEachChild(sourceFile, replaceTsxAirFunctions, context);
 
         return sourceFile;
 
-        function replaceTsxAirFunctions(node: ts.Node): ts.Node | ts.Node[] {
-            if (!ts.isCallExpression(node) || node.expression.getText() !== 'TSXAir') {
-                return ts.visitEachChild(node, replaceTsxAirFunctions, context);
-            }
-            const arg = node.arguments[0];
-            if (!(ts.isArrowFunction(arg) || ts.isFunctionExpression(arg))) {
-                throw new Error('TSXAir must receive a functional component');
-            }
-            const { returnStatements, visitor } = createReturnStatementsVisitor();
-            ts.visitEachChild(node, visitor, context);
-            let expression = returnStatements[0].expression!;
+        function replaceTsxAirFunctions(n: ts.Node): ts.Node | ts.Node[] {
+            
+            const jsxItem = jsxs.find(
+                ({node})=> 
+                    node === n);
+            if (jsxItem ) {
+                const {node} = jsxItem;
 
-            if (ts.isParenthesizedExpression(expression)) {
-                expression = expression.expression;
-            }
-            if (!ts.isJsxElement(expression)) {
-                throw new Error('unhnadled input');
-            }
+                const mockFile = ts.createSourceFile('frag1.ts', `
+                export const frag = {
+                    toString: () => 'string',
+                    hydrate: () => undefined
+                };`, ts.ScriptTarget.Latest);
 
-            return node;
+                const literals = scan(mockFile, (nd, ignoreChildren)=>{
+                    if (ts.isObjectLiteralExpression(nd)) {
+                        ignoreChildren();
+                        return 'Literal';
+                    }
+                    return undefined;
+                });
+
+                if (literals.length !== 1) {
+                    throw new Error('Failed to get source AST');
+                }
+                
+                return literals[0].node;
+              
+                // return ts.createCall(ts.createIdentifier('TSXAir'), [], [ts.createObjectLiteral([
+                //     ts.createPropertyAssignment('unique', ts.createCall(ts.createIdentifier('Symbol'), undefined, [ts.createStringLiteral((node.parent! as any).name.getText())])),
+                //     createToStringMethod(scanned),
+                //     createToHydrateMethod(scanned)
+                // ], true)]);
+
+            } else {
+                return ts.visitEachChild(n, replaceTsxAirFunctions, context);
+            } 
+
+
             // return node;
-            // return ts.createCall(ts.createIdentifier('TSXAir'), [], [ts.createObjectLiteral([
-            //     ts.createPropertyAssignment('unique', ts.createCall(ts.createIdentifier('Symbol'), undefined, [ts.createStringLiteral((node.parent! as any).name.getText())])),
-            //     createToStringMethod(scanned),
-            //     createToHydrateMethod(scanned)
-            // ], true)]);
         }
     };
 
