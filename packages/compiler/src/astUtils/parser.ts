@@ -22,7 +22,7 @@ export const parseValue = (obj: string | object) => {
     if (validValue &&
         // tslint:disable-next-line: no-bitwise
         !(validValue.flags & ts.NodeFlags.ThisNodeHasError)) {
-        return validValue;
+        return validValue as ts.Node;
     }
     throw new Error('Invalid value object');
 };

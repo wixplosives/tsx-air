@@ -32,11 +32,11 @@ export class FileAstLoader {
     }
 
 
-    public getAst(filePath: string) {
+    public getAst(filePath: string, content?: string) {
         const program = this.langService.getProgram()!;
-        const ast = program.getSourceFile(filePath)!;
+        const ast = content ? ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest) : program.getSourceFile(filePath)!;
         return {
-            source: this.fs.readFileSync(filePath).toString('utf8'),
+            source: content || this.fs.readFileSync(filePath).toString('utf8'),
             ast
         };
     }
@@ -79,8 +79,8 @@ export const scan: Scanner = (target, visitor) => {
         pointsOfInterest.push(point);
     };
 
-    const stop: StopScan = () => { 
-        stop.shouldStop = true; 
+    const stop: StopScan = () => {
+        stop.shouldStop = true;
     };
     stop.shouldStop = false;
 
@@ -88,7 +88,7 @@ export const scan: Scanner = (target, visitor) => {
     return pointsOfInterest;
 };
 
-export const find = (target:ts.Node, predicate:Visitor) => {
+export const find = (target: ts.Node, predicate: Visitor) => {
     const result = scan(target, (node, api) => {
         const ret = predicate(node, api);
         if (ret) {

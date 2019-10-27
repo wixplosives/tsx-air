@@ -12,19 +12,8 @@ export const jsx: Transformer = {
     transformer: (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
         return sourceFile => {
             const jsxs = scan(sourceFile, tsxair).filter(({ note }) => note === '/* Jsx */');
-            return ts.visitEachChild(sourceFile, transformTsxAir, context);
-
-            function transformTsxAir(n: ts.Node): ts.Node | ts.Node[] {
-
-                const jsxItem = jsxs.find(
-                    ({ node }) =>
-                        node === n);
-                if (jsxItem) {
-                    return parseValue(`TSXAir.createElement(FRAGMENT_CHECKBOX_a, {})`);
-                } else {
-                    return ts.visitEachChild(n, transformTsxAir, context);
-                }
-            }
+            const output = `const output='some js'`;
+            return ts.createSourceFile(sourceFile.fileName, output, ts.ScriptTarget.Latest);
         };
     }
 };
