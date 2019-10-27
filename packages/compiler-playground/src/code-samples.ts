@@ -13,17 +13,5 @@ export const Internal = TSXAir((props: {title: string})=> {
     </div>
   );
 });
-export const Checkbox = TSXAir((props: {title: string, gaga: string})=> {
-  const b = <div />;
-  const c = <><div /></>;
-
-  return (
-    <div>
-      <Internal title="aa"/>
-      <span>{props.title}</span>
-      <div>{props.title}</div>
-    </div>
-  );
-});
 
 `.trimLeft();
