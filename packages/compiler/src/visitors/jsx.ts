@@ -1,6 +1,15 @@
 import * as  ts from 'typescript';
 import { Visitor, scan } from '../astUtils/scanner';
+export interface TSXAirData {
+    kind: 'TSXAIR';
+    name: string;
+}
 
+export interface JSXRootData {
+    kind: 'JSXRoot';
+    name: 'string';
+    expressions: string[];
+}
 export const tsxair: Visitor = (node, { ignoreChildren, report }) => {
     if (ts.isCallExpression(node) && node.expression.getText() === 'TSXAir') {
         ignoreChildren();
@@ -16,7 +25,16 @@ export const tsxair: Visitor = (node, { ignoreChildren, report }) => {
         node.forEachChild(n => {
             report(scan(n, findJsxExpression));
         });
-        return '/* TSXAir call */ ';
+        const parent = node.parent;
+        let name = 'unknown';
+        // const fragments = scan(node, findJsxRoot);
+        if (ts.isVariableDeclaration(parent)) {
+            name = parent.name.getText();
+        }
+        return {
+            kind: 'TSXAIR',
+            name,
+        } as TSXAirData;
     }
     return undefined;
 };
@@ -28,7 +46,9 @@ const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
         ts.isJsxFragment(node)
     ) {
         ignoreChildren();
-        return '/* Root */';
+        return {
+            type: 'jsxRoot'
+        };
     }
     return undefined;
 };
@@ -58,7 +78,7 @@ const findJsxComponent: Visitor = node => {
     return undefined;
 };
 
-const findJsxExpression:Visitor = node => {
+const findJsxExpression: Visitor = node => {
     if (ts.isJsxExpression(node)) {
         return '/* Expression */';
     }

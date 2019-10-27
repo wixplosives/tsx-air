@@ -11,9 +11,23 @@ export const jsx: Transformer = {
     requires: [],
     transformer: (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
         return sourceFile => {
-            const jsxs = scan(sourceFile, tsxair).filter(({ note }) => note === '/* Jsx */');
-            const output = `const output='some js'`;
-            return ts.createSourceFile(sourceFile.fileName, output, ts.ScriptTarget.Latest);
+            const scanRes = scan(sourceFile, tsxair);
+            const tsxAirs = scanRes.filter(({ note }) => note.kind === 'TSXAIR');
+            return ts.visitEachChild(sourceFile, transformTsxAir, context);
+
+            function transformTsxAir(n: ts.Node): ts.Node | ts.Node[] {
+
+                const tsxAirCall = tsxAirs.find(
+                    ({ node }) =>
+                        node.parent.parent === n);
+                if (tsxAirCall) {
+                    return parseValue(`class ${tsxAirCall.note.name}{
+
+                    }`);
+                } else {
+                    return ts.visitEachChild(n, transformTsxAir, context);
+                }
+            }
         };
     }
 };
