@@ -12,13 +12,22 @@ describe('sourceWithNotes', () => {
     const fs = nodeFs;
     const scanner = new FileAstLoader(fs, samplePath);
     const { ast, source } = scanner.getAst(samplePath);
-    let counter = 1;
 
     it('should insert notes into the original source', () => {
+        let counter = 1;
         const notes = scan(ast, node => node.kind === ts.SyntaxKind.VariableDeclaration ? `/* Var ${counter++} */ ` : undefined);
 
         expect(sourceWithNotes(source, notes)).to.equal(
             `const /* Var 1 */ a=1;
 export const /* Var 2 */ b=a;`);
+    });
+
+    it('should insert object notes as a string comment into the original source', () => {
+        let counter = 1;
+        const notes = scan(ast, node => node.kind === ts.SyntaxKind.VariableDeclaration ? ({ 'Var': counter++ }) : undefined);
+
+        expect(sourceWithNotes(source, notes)).to.equal(
+            `const /* {"Var":1} */ a=1;
+export const /* {"Var":2} */ b=a;`);
     });
 });

@@ -3,7 +3,7 @@ import { parseValue } from './parser';
 import { expect } from 'chai';
 import { scan } from './scanner';
 
-describe('parseLiteral', () => {
+describe('parseValue', () => {
     it('should return the AST of a stringified literal object', () => {
         const ast = parseValue(`{
             prop: 'value'
@@ -33,6 +33,6 @@ describe('parseLiteral', () => {
     it('should throw if not a valid obj', () => {
         expect(()=>{
             parseValue(`{ not a valid object literal`);
-        }).to.throw('Invalid literal object');
+        }).to.throw('Invalid value object');
     });
 });
