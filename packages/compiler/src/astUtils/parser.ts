@@ -7,7 +7,7 @@ import { isString } from 'lodash';
  * @param obj a stringified js object
  * @returns Ast node of {obj}
  */
-export const parseLiteral = (obj: string | object) => {
+export const parseValue = (obj: string | object) => {
     const mockFileContent = `export const frag = ${isString(obj) ? obj : JSON.stringify(obj)}`;
     const mockFile = ts.createSourceFile('mock.ts', mockFileContent, ts.ScriptTarget.Latest);
     const def = find(mockFile, nd => {
@@ -17,13 +17,12 @@ export const parseLiteral = (obj: string | object) => {
         return undefined;
     }) as ts.VariableDeclaration;
 
-    const literal = def && def.initializer &&
-        ts.isObjectLiteralExpression(def.initializer) && def.initializer as ts.ObjectLiteralExpression;
+    const validValue = def && def.initializer;
 
-    if (literal &&
+    if (validValue &&
         // tslint:disable-next-line: no-bitwise
-        !(literal.flags & ts.NodeFlags.ThisNodeHasError)) {
-        return literal;
+        !(validValue.flags & ts.NodeFlags.ThisNodeHasError)) {
+        return validValue;
     }
-    throw new Error('Invalid literal object');
+    throw new Error('Invalid value object');
 };

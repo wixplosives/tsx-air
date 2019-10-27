@@ -1,11 +1,11 @@
 import * as ts  from 'typescript';
-import { parseLiteral } from './parser';
+import { parseValue } from './parser';
 import { expect } from 'chai';
 import { scan } from './scanner';
 
 describe('parseLiteral', () => {
     it('should return the AST of a stringified literal object', () => {
-        const ast = parseLiteral(`{
+        const ast = parseValue(`{
             prop: 'value'
         }`);
         expect(ast.kind).to.equal(ts.SyntaxKind.ObjectLiteralExpression);
@@ -18,7 +18,7 @@ describe('parseLiteral', () => {
     });
   
     it('should return the AST of a literal object', () => {
-        const ast = parseLiteral({
+        const ast = parseValue({
             prop: 'value'
         });
         expect(ast.kind).to.equal(ts.SyntaxKind.ObjectLiteralExpression);
@@ -32,7 +32,7 @@ describe('parseLiteral', () => {
 
     it('should throw if not a valid obj', () => {
         expect(()=>{
-            parseLiteral(`{ not a valid object literal`);
+            parseValue(`{ not a valid object literal`);
         }).to.throw('Invalid literal object');
     });
 });

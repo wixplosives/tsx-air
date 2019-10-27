@@ -1,5 +1,5 @@
 import { Transformer } from './index';
-import { parseLiteral } from '../astUtils/parser';
+import { parseValue } from '../astUtils/parser';
 import { tsxair } from '../visitors/jsx';
 import ts from 'typescript';
 import { scan } from '../astUtils/scanner';
@@ -20,7 +20,7 @@ export const jsx: Transformer = {
                     ({ node }) =>
                         node === n);
                 if (jsxItem) {
-                    return parseLiteral(`{toString:()=>'string', hydrate:()=>'hydrate'}`);
+                    return parseValue(`TSXAir.createElement(FRAGMENT_CHECKBOX_a, {})`);
                 } else {
                     return ts.visitEachChild(n, transformTsxAir, context);
                 }

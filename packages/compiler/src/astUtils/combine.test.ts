@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import { combineVisitors } from './combine';
 import { scan } from './scanner';
-import { parseLiteral } from './parser';
+import { parseValue } from './parser';
 
 describe('combineVisitors', () => {
-    const ast = parseLiteral({ prop: 'value' });
+    const ast = parseValue({ prop: 'value' });
 
     it('should execute all the visitors for all nodes, once per', () => {
         const nodes = scan(ast, () => true).map(i => i.node);
