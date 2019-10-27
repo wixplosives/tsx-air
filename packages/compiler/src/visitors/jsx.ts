@@ -10,7 +10,7 @@ export interface JSXRootData {
     name: 'string';
     expressions: string[];
 }
-export const tsxair: Visitor = (node, { ignoreChildren, report }) => {
+export const tsxair: Visitor<TSXAirData> = (node, { ignoreChildren, report }) => {
     if (ts.isCallExpression(node) && node.expression.getText() === 'TSXAir') {
         ignoreChildren();
         node.forEachChild(n => {
@@ -32,7 +32,7 @@ export const tsxair: Visitor = (node, { ignoreChildren, report }) => {
             name = parent.name.getText();
         }
         const userMethod = node.arguments[0];
-        if(!ts.isArrowFunction(userMethod) && !ts.isFunctionDeclaration(userMethod)){
+        if (!ts.isArrowFunction(userMethod) && !ts.isFunctionDeclaration(userMethod)) {
             throw new Error('unhandled input');
         }
         const propsIdentifier = userMethod.parameters[0].name.getText();
@@ -40,7 +40,7 @@ export const tsxair: Visitor = (node, { ignoreChildren, report }) => {
             kind: 'TSXAIR',
             name,
             propsIdentifier
-        } as TSXAirData;
+        };
     }
     return undefined;
 };

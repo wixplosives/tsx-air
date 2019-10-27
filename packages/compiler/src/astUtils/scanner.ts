@@ -3,20 +3,20 @@ import { createBaseHost, createLanguageServiceHost } from '@file-services/typesc
 import ts from 'typescript';
 import * as _ from 'lodash';
 
-export interface PointsOfInterest {
-    note: any;
+export interface PointsOfInterest<T = any> {
+    note: T;
     node: ts.Node;
 }
 
 interface ScannerApi {
     ignoreChildren: () => void;
-    report: (pois: PointsOfInterest | PointsOfInterest[]) => void;
+    report: (pois: PointsOfInterest<any> | Array<PointsOfInterest<any>>) => void;
     stop: () => void;
 }
 
-export type Visitor = (node: ts.Node, scannerApi: ScannerApi) => any | undefined;
+export type Visitor<T = any> = (node: ts.Node, scannerApi: ScannerApi) => T | undefined;
 
-export type Scanner = (target: ts.Node, visitor: Visitor) => PointsOfInterest[];
+export type Scanner = <T>(target: ts.Node, visitor: Visitor<T>) => Array<PointsOfInterest<T>>;
 
 
 export class FileAstLoader {
