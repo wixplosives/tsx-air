@@ -13,3 +13,13 @@ export const sourceWithNotes = (source: string, notes: PointsOfInterest[]) => {
     return result;
 };
 
+export const sourceWithHighlights = (source: string, notes: PointsOfInterest[]) => {
+    let result = source;
+    const sorted = notes.filter(({ note }) => _.isString(note)).sort(
+        (a, b) => b.node.getStart() - a.node.getStart()
+    );
+
+    sorted.forEach(({ note, node }) => result = insert(result, node.getStart(), note));
+
+    return result;
+};

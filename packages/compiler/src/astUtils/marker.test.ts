@@ -8,7 +8,7 @@ import nodeFs from '@file-services/node';
 import { sourceWithNotes } from './marker';
 
 describe('sourceWithNotes', () => {
-    const samplePath = 'test/resources/scanner/sample.tsx';
+    const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
     const fs = nodeFs;
     const scanner = new FileAstLoader(fs, samplePath);
     const { ast, source } = scanner.getAst(samplePath);

@@ -13,6 +13,9 @@ export const tsxair: Visitor = (node, { ignoreChildren, report }) => {
         node.forEachChild(n => {
             report(scan(n, findJsxComponent));
         });
+        node.forEachChild(n => {
+            report(scan(n, findJsxExpression));
+        });
         return '/* TSXAir call */ ';
     }
     return undefined;
@@ -42,13 +45,22 @@ const findJsxNode: Visitor = node => {
 };
 
 const findJsxComponent: Visitor = node => {
-    if (
-        (ts.isJsxElement(node) ||
-            ts.isJsxSelfClosingElement(node)
-        ) &&
-        node.getText().toUpperCase() === node.getText()
-    ) {
+    let tag = '';
+    if (ts.isJsxElement(node)) {
+        tag = node.openingElement.tagName.getText();
+    }
+    if (ts.isJsxSelfClosingElement(node)) {
+        tag = node.tagName.getText();
+    }
+    if (tag.match(/[A-Z].*/)) {
         return '/* Component */';
+    }
+    return undefined;
+};
+
+const findJsxExpression:Visitor = node => {
+    if (ts.isJsxExpression(node)) {
+        return '/* Expression */';
     }
     return undefined;
 };
