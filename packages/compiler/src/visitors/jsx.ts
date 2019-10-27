@@ -31,9 +31,15 @@ export const tsxair: Visitor = (node, { ignoreChildren, report }) => {
         if (ts.isVariableDeclaration(parent)) {
             name = parent.name.getText();
         }
+        const userMethod = node.arguments[0];
+        if(!ts.isArrowFunction(userMethod) && !ts.isFunctionDeclaration(userMethod)){
+            throw new Error('unhandled input');
+        }
+        const propsIdentifier = userMethod.parameters[0].name.getText();
         return {
             kind: 'TSXAIR',
             name,
+            propsIdentifier
         } as TSXAirData;
     }
     return undefined;
