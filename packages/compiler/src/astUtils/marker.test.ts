@@ -6,6 +6,7 @@ import 'mocha';
 import ts from 'typescript';
 import nodeFs from '@file-services/node';
 import { sourceWithNotes, replaceNodeText } from './marker';
+import { normalizeLineBreaks } from './test.helpers';
 
 describe('sourceWithNotes', () => {
     const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
@@ -17,7 +18,7 @@ describe('sourceWithNotes', () => {
         let counter = 1;
         const notes = scan(ast, node => node.kind === ts.SyntaxKind.VariableDeclaration ? `/* Var ${counter++} */ ` : undefined);
 
-        expect(sourceWithNotes(source, notes).replace(/\r\n/g, '\n')).to.equal(
+        expect(normalizeLineBreaks(sourceWithNotes(source, notes))).to.equal(
             `const /* Var 1 */ a=1;
 export const /* Var 2 */ b=a;`);
     });
@@ -26,7 +27,7 @@ export const /* Var 2 */ b=a;`);
         let counter = 1;
         const notes = scan(ast, node => node.kind === ts.SyntaxKind.VariableDeclaration ? ({ 'Var': counter++ }) : undefined);
 
-        expect(sourceWithNotes(source, notes).replace(/\r\n/g, '\n')).to.equal(
+        expect(normalizeLineBreaks(sourceWithNotes(source, notes))).to.equal(
             `const /* {"Var":1} */ a=1;
 export const /* {"Var":2} */ b=a;`);
     });

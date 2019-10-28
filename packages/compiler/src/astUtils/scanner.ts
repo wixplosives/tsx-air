@@ -3,20 +3,20 @@ import { createBaseHost, createLanguageServiceHost } from '@file-services/typesc
 import ts from 'typescript';
 import * as _ from 'lodash';
 
-export interface PointsOfInterest<T = any> {
+export interface MeaningfulNode<T = any> {
     note: T;
     node: ts.Node;
 }
 
 interface ScannerApi {
     ignoreChildren: () => void;
-    report: (pois: PointsOfInterest<any> | Array<PointsOfInterest<any>>) => void;
+    report: (pois: MeaningfulNode<any> | Array<MeaningfulNode<any>>) => void;
     stop: () => void;
 }
 
 export type Visitor<T = any> = (node: ts.Node, scannerApi: ScannerApi) => T | undefined;
 
-export type Scanner = <T>(target: ts.Node, visitor: Visitor<T>) => Array<PointsOfInterest<T>>;
+export type Scanner = <T>(target: ts.Node, visitor: Visitor<T>) => Array<MeaningfulNode<T>>;
 
 
 export class FileAstLoader {
@@ -48,7 +48,7 @@ interface StopScan {
     shouldStop: boolean;
 }
 
-const walker = (node: ts.Node, report: (point: PointsOfInterest) => void, stop: StopScan, visitorr: Visitor) => {
+const walker = (node: ts.Node, report: (point: MeaningfulNode) => void, stop: StopScan, visitorr: Visitor) => {
     if (!stop.shouldStop) {
         let ignoreChildren = false;
         const api: ScannerApi = {
@@ -74,9 +74,9 @@ const walker = (node: ts.Node, report: (point: PointsOfInterest) => void, stop: 
 };
 
 export const scan: Scanner = (target, visitor) => {
-    const pointsOfInterest = [] as PointsOfInterest[];
+    const pointsOfInterest = [] as MeaningfulNode[];
 
-    const reportPOI = (point: PointsOfInterest) => {
+    const reportPOI = (point: MeaningfulNode) => {
         pointsOfInterest.push(point);
     };
 
