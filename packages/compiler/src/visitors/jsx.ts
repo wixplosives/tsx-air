@@ -1,55 +1,12 @@
-import * as  ts from 'typescript';
-import { Visitor, scan } from '../astUtils/scanner';
-export interface TSXAirData {
-    kind: 'TSXAIR';
-    name: string;
-}
+import { Visitor } from '../astUtils/scanner';
+import { isJsxSelfClosingElement, isJsxElement, isJsxFragment, isJsxExpression } from 'typescript';
 
-export interface JSXRootData {
-    kind: 'JSXRoot';
-    name: 'string';
-    expressions: string[];
-}
-export const tsxair: Visitor = (node, { ignoreChildren, report }) => {
-    if (ts.isCallExpression(node) && node.expression.getText() === 'TSXAir') {
-        ignoreChildren();
-        node.forEachChild(n => {
-            report(scan(n, findJsxRoot));
-        });
-        node.forEachChild(n => {
-            report(scan(n, findJsxNode));
-        });
-        node.forEachChild(n => {
-            report(scan(n, findJsxComponent));
-        });
-        node.forEachChild(n => {
-            report(scan(n, findJsxExpression));
-        });
-        const parent = node.parent;
-        let name = 'unknown';
-        // const fragments = scan(node, findJsxRoot);
-        if (ts.isVariableDeclaration(parent)) {
-            name = parent.name.getText();
-        }
-        const userMethod = node.arguments[0];
-        if(!ts.isArrowFunction(userMethod) && !ts.isFunctionDeclaration(userMethod)){
-            throw new Error('unhandled input');
-        }
-        const propsIdentifier = userMethod.parameters[0].name.getText();
-        return {
-            kind: 'TSXAIR',
-            name,
-            propsIdentifier
-        } as TSXAirData;
-    }
-    return undefined;
-};
 
-const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
+export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
     if (
-        ts.isJsxElement(node) ||
-        ts.isJsxSelfClosingElement(node) ||
-        ts.isJsxFragment(node)
+        isJsxElement(node) ||
+        isJsxSelfClosingElement(node) ||
+        isJsxFragment(node)
     ) {
         ignoreChildren();
         return {
@@ -59,34 +16,36 @@ const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
     return undefined;
 };
 
-const findJsxNode: Visitor = node => {
+
+export const findJsxNode: Visitor = node => {
     if (
-        ts.isJsxElement(node) ||
-        ts.isJsxSelfClosingElement(node) ||
-        ts.isJsxFragment(node)
+        isJsxElement(node) ||
+        isJsxSelfClosingElement(node) ||
+        isJsxFragment(node)
     ) {
         return '/* Jsx */';
     }
     return undefined;
 };
 
-const findJsxComponent: Visitor = node => {
+export  const findJsxComponent: Visitor = (node, {ignoreChildren}) => {
     let tag = '';
-    if (ts.isJsxElement(node)) {
+    if (isJsxElement(node)) {
         tag = node.openingElement.tagName.getText();
     }
-    if (ts.isJsxSelfClosingElement(node)) {
+    if (isJsxSelfClosingElement(node)) {
         tag = node.tagName.getText();
     }
     if (tag.match(/[A-Z].*/)) {
+        ignoreChildren();
         return '/* Component */';
     }
     return undefined;
 };
 
-const findJsxExpression: Visitor = node => {
-    if (ts.isJsxExpression(node)) {
-        return '/* Expression */';
+export  const findJsxExpression: Visitor = node => {
+    if (isJsxExpression(node)) {
+        return `$`;
     }
     return undefined;
 };
