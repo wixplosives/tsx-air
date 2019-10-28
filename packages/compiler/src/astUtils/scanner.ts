@@ -24,7 +24,7 @@ export class FileAstLoader {
 
     constructor(public readonly fs: IFileSystem, public readonly filePath: string) {
         const baseHost = createBaseHost(fs);
-        const baseLangServiceHost = createLanguageServiceHost(baseHost, () => [filePath], () => {
+        const baseLangServiceHost = createLanguageServiceHost(baseHost, () => [fs.normalize(filePath)], () => {
             return { target: ts.ScriptTarget.ES2017, jsx: ts.JsxEmit.React, jsxFactory: 'TSXAir' };
         }, '/node_modules/typescript/lib');
 
@@ -33,10 +33,11 @@ export class FileAstLoader {
 
 
     public getAst(filePath: string, content?: string) {
+        filePath = this.fs.normalize(filePath);
         const program = this.langService.getProgram()!;
         const ast = content ? ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest) : program.getSourceFile(filePath)!;
         return {
-            source: content || this.fs.readFileSync(filePath).toString('utf8'),
+            source: content || this.fs.readFileSync(filePath, { encoding: 'utf8' }),
             ast
         };
     }

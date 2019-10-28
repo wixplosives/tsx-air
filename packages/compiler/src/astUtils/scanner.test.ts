@@ -15,7 +15,7 @@ describe('FileAstLoader', () => {
     it('should load a file as an AST and raw source', () => {
         const { ast, source } = scanner.getAst(samplePath);
         expect(ast.kind).to.equal(ts.SyntaxKind.SourceFile);
-        expect(source).to.equal(`const a=1;
+        expect(source.replace(/\r\n/g, '\n')).to.equal(`const a=1;
 export const b=a;`);
     });
 });
