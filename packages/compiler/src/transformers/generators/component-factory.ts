@@ -1,8 +1,8 @@
 import { scan } from './../../astUtils/scanner';
 import * as ts from 'typescript';
 import { TSXAirData } from '../../visitors/tsxair';
-import { findJsxExpression, findJsxRoot, findJsxComponent } from '../../visitors/jsx';
-import { sourceWithNotes } from '../../astUtils/marker';
+import { findJsxExpression, findJsxRoot } from '../../visitors/jsx';
+import { replaceNodeText } from '../../astUtils/marker';
 
 export const toString = (node: ts.Node, tsxAirData: TSXAirData) => {
     const returnedJsx = scan(node, findJsxRoot);
@@ -18,5 +18,5 @@ export const toString = (node: ts.Node, tsxAirData: TSXAirData) => {
     // comps.forEach(({node})=> {
     //     node.
     // })
-    return `(${tsxAirData.propsIdentifier})=>\`${sourceWithNotes(jsx.getText(), expressions, jsx.getStart())}\``;
+    return `(${tsxAirData.propsIdentifier})=>\`${replaceNodeText(jsx, expressions, p => '$' + p.note.sourceText)}\``;
 };
