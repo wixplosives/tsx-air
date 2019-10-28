@@ -5,7 +5,7 @@ import 'mocha';
 
 import ts from 'typescript';
 import nodeFs from '@file-services/node';
-import { sourceWithNotes } from './marker';
+import { sourceWithNotes, replaceNodeText } from './marker';
 
 describe('sourceWithNotes', () => {
     const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
@@ -29,5 +29,41 @@ export const /* Var 2 */ b=a;`);
         expect(sourceWithNotes(source, notes).replace(/\r\n/g, '\n')).to.equal(
             `const /* {"Var":1} */ a=1;
 export const /* {"Var":2} */ b=a;`);
+    });
+});
+
+
+
+describe('replaceNodeText', () => {
+    const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
+    const fs = nodeFs;
+    const scanner = new FileAstLoader(fs, samplePath);
+    const { ast } = scanner.getAst(samplePath);
+
+    it('should replace nodes with new text', () => {
+        const notes = scan(ast, node => node.kind === ts.SyntaxKind.VariableDeclaration ? {
+            name: (node as ts.VariableDeclaration).name.getText()
+        } : undefined);
+
+        expect(replaceNodeText(ast, notes, p => `recombabulated_${p.note.name} = 'gaga'`).replace(/\r\n/g, '\n')).to.equal(
+            `const recombabulated_a = 'gaga';
+export const recombabulated_b = 'gaga';`);
+    });
+    it('should replace nested nodes', () => {
+        const { ast: testAst } = scanner.getAst(samplePath, `
+            const a = {
+                b: {
+                    c: {
+
+                    }
+                }
+            };
+        `);
+        const notes = scan(testAst, node => node.kind === ts.SyntaxKind.ObjectLiteralExpression ? {
+            kind: 'objectLiteral'
+        } : undefined);
+
+        expect(replaceNodeText(testAst, notes, _p => `'gaga'`).replace(/\r\n/g, '\n')).to.equal(
+            `const a = 'gaga'`);
     });
 });

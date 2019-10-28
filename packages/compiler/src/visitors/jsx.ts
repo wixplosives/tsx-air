@@ -28,7 +28,7 @@ export const findJsxNode: Visitor = node => {
     return undefined;
 };
 
-export  const findJsxComponent: Visitor = (node, {ignoreChildren}) => {
+export const findJsxComponent: Visitor = (node, { ignoreChildren }) => {
     let tag = '';
     if (isJsxElement(node)) {
         tag = node.openingElement.tagName.getText();
@@ -43,9 +43,16 @@ export  const findJsxComponent: Visitor = (node, {ignoreChildren}) => {
     return undefined;
 };
 
-export  const findJsxExpression: Visitor = node => {
+export interface JSXExpressionData {
+    kind: 'JSXExpression';
+    sourceText: string;
+}
+export const findJsxExpression: Visitor<JSXExpressionData> = node => {
     if (isJsxExpression(node)) {
-        return `$`;
+        return {
+            kind: 'JSXExpression',
+            sourceText: node.getText()
+        };
     }
     return undefined;
 };

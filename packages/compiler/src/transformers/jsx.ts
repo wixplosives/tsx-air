@@ -26,7 +26,7 @@ export const jsx: Transformer = {
                     return parseValue(`(()=>{
     class ${name}{
     }
-    ${name}.changeBitmask={${(tsxAirCall.note as TSXAirData).usedProps.map((name, i) => `${name}:1<<${i}`).join() }}
+    ${name}.changeBitmask={${(tsxAirCall.note as TSXAirData).usedProps.map((name, i) => `${name}:1<<${i}`).join()}}
     ${name}.factory={
         unique: Symbol('${name}'),
         toString:${toString(tsxAirCall.node, tsxAirCall.note)},
