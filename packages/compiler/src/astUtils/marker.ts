@@ -1,4 +1,4 @@
-import { PointsOfInterest } from './scanner';
+import { MeaningfulNode } from './scanner';
 import * as _ from 'lodash';
 import { isString } from 'lodash';
 
@@ -9,7 +9,7 @@ export const insert = (source: string, index: number, insertStr: string | object
         : `/* ${JSON.stringify(insertStr)} */ `)
     + source.slice(index);
 
-export const sourceWithNotes = (source: string, notes: PointsOfInterest[], offset=0) => {
+export const sourceWithNotes = (source: string, notes: MeaningfulNode[], offset=0) => {
     let result = source;
     const sorted = notes.sort(
         (a, b) => b.node.getStart() - a.node.getStart()
@@ -19,7 +19,7 @@ export const sourceWithNotes = (source: string, notes: PointsOfInterest[], offse
     return result;
 };
 
-export const sourceWithHighlights = (source: string, notes: PointsOfInterest[]) => {
+export const sourceWithHighlights = (source: string, notes: MeaningfulNode[]) => {
     let result = source;
     const sorted = notes.filter(({ note }) => _.isString(note)).sort(
         (a, b) => b.node.getStart() - a.node.getStart()

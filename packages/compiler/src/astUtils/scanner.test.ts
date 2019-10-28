@@ -1,10 +1,10 @@
 import { FileAstLoader, scan, find } from './scanner';
-
 import { expect } from 'chai';
 import 'mocha';
 import { fail } from 'assert';
 import ts from 'typescript';
 import nodeFs from '@file-services/node';
+import { normalizeLineBreaks } from './test.helpers';
 
 describe('FileAstLoader', () => {
     const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
@@ -15,7 +15,7 @@ describe('FileAstLoader', () => {
     it('should load a file as an AST and raw source', () => {
         const { ast, source } = scanner.getAst(samplePath);
         expect(ast.kind).to.equal(ts.SyntaxKind.SourceFile);
-        expect(source.replace(/\r\n/g, '\n')).to.equal(`const a=1;
+        expect(normalizeLineBreaks(source)).to.equal(`const a=1;
 export const b=a;`);
     });
 });
