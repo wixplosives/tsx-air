@@ -3,20 +3,20 @@ import { createBaseHost, createLanguageServiceHost } from '@file-services/typesc
 import ts from 'typescript';
 import * as _ from 'lodash';
 
-export interface MeaningfulNode<T = any> {
-    note: T;
+export interface NodeMetaData<T = any> {
+    metadata: T; 
     node: ts.Node;
 }
 
 interface ScannerApi {
     ignoreChildren: () => void;
-    report: (pois: MeaningfulNode<any> | Array<MeaningfulNode<any>>) => void;
+    report: (metadata: NodeMetaData<any> | Array<NodeMetaData<any>>) => void;
     stop: () => void;
 }
 
 export type Visitor<T = any> = (node: ts.Node, scannerApi: ScannerApi) => T | undefined;
 
-export type Scanner = <T>(target: ts.Node, visitor: Visitor<T>) => Array<MeaningfulNode<T>>;
+export type Scanner = <T>(target: ts.Node, visitor: Visitor<T>) => Array<NodeMetaData<T>>;
 
 
 export class FileAstLoader {
@@ -48,36 +48,37 @@ interface StopScan {
     shouldStop: boolean;
 }
 
-const walker = (node: ts.Node, report: (point: MeaningfulNode) => void, stop: StopScan, visitorr: Visitor) => {
+const walker = (node: ts.Node, report: (point: NodeMetaData) => void, stop: StopScan, visitor: Visitor) => {
     if (!stop.shouldStop) {
         let ignoreChildren = false;
         const api: ScannerApi = {
+            stop,
             ignoreChildren: () => ignoreChildren = true,
             report: pois => {
                 if (!(pois instanceof Array)) {
                     pois = [pois];
                 }
                 pois.forEach(p => report(p));
-            }, stop
+            }
         };
 
-        const note = visitorr(node, api);
+        const note = visitor(node, api);
         if (note) {
-            report({ node, note });
+            report({ node, metadata: note });
         }
         if (!ignoreChildren) {
             node.forEachChild(n =>
-                walker(n, report, stop, visitorr)
+                walker(n, report, stop, visitor)
             );
         }
     }
 };
 
 export const scan: Scanner = (target, visitor) => {
-    const pointsOfInterest = [] as MeaningfulNode[];
+    const meaningfulNode = [] as NodeMetaData[];
 
-    const reportPOI = (point: MeaningfulNode) => {
-        pointsOfInterest.push(point);
+    const reportNode = (point: NodeMetaData) => {
+        meaningfulNode.push(point);
     };
 
     const stop: StopScan = () => {
@@ -85,9 +86,28 @@ export const scan: Scanner = (target, visitor) => {
     };
     stop.shouldStop = false;
 
-    walker(target, reportPOI, stop, visitor);
-    return pointsOfInterest;
+    walker(target, reportNode, stop, visitor);
+    return meaningfulNode;
 };
+
+// export const scanChildren: Scanner = (target, visitor) => {
+//     const meaningfulNode = [] as NodeMetaData[];
+//     const reportNode = (metadata: NodeMetaData) => {
+//         meaningfulNode.push(metadata);
+//     };
+//     const stop: StopScan = () => {
+//         stop.shouldStop = true;
+//     };
+
+//     target.forEachChild(child => {
+//         if (!stop.shouldStop) {
+//             const childMetaData = visitor(child, { stop, report:metadata => reportNode({ node: child, metadata}), ignoreChildren: () => void (0) });
+//             if (childMetaData) {
+//                 reportNode({ node: child, metadata: childMetaData });
+//             }
+//         }
+//     });
+// };
 
 export const find = (target: ts.Node, predicate: Visitor) => {
     const result = scan(target, (node, api) => {

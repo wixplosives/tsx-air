@@ -13,7 +13,7 @@ export const jsx: Transformer = {
     transformer: (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
         return sourceFile => {
             const scanRes = scan(sourceFile, tsxair);
-            const tsxAirs = scanRes.filter(({ note }) => note.kind === 'TSXAIR');
+            const tsxAirs = scanRes.filter(({ metadata: note }) => note.kind === 'TSXAIR');
             return ts.visitEachChild(sourceFile, transformTsxAir, context);
 
             function transformTsxAir(n: ts.Node): ts.Node | ts.Node[] {
@@ -22,20 +22,18 @@ export const jsx: Transformer = {
                     ({ node }) =>
                         node === n);
                 if (tsxAirCall) {
-                    const { note: { name } } = tsxAirCall;
+                    const { metadata: { name } } = tsxAirCall;
                     return parseValue(`(()=>{
     class ${name}{
     }
-    ${name}.changeBitmask={${(tsxAirCall.note as TSXAirData).usedProps.map((name, i) => `${name}:1<<${i}`).join()}}
+    ${name}.changeBitmask={${(tsxAirCall.metadata as TSXAirData).usedProps.map((prop, i) => `${prop}:1<<${i}`).join()}}
     ${name}.factory={
         unique: Symbol('${name}'),
-        toString:${toString(tsxAirCall.node, tsxAirCall.note)},
-        hydrate:(root, props)=> new ${name}({
-            root
-        }, props, {}),
+        toString:${toString(tsxAirCall.node, tsxAirCall.metadata)},
+        hydrate:${'hydrate(tsxAirCall.node, tsxAirCall.metadata)'},
         initialState: () => ({})
     };
-    return ${tsxAirCall.note.name};})()`);
+    return ${tsxAirCall.metadata.name};})()`);
                 } else {
                     return ts.visitEachChild(n, transformTsxAir, context);
                 }

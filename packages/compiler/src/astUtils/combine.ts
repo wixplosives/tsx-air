@@ -5,13 +5,13 @@ export const combineVisitors = (...visitors: Visitor[]): Visitor => (node, scann
         if (stopped.has(visitor)) {
             return;
         }
-        const note = visitor(node, {
+        const metadata = visitor(node, {
             ...scanner, stop: () => {
                 stopped.add(visitor);
             }
         });
-        if (note) {
-            scanner.report({ note, node });
+        if (metadata) {
+            scanner.report({ metadata, node });
         }
     });
 };

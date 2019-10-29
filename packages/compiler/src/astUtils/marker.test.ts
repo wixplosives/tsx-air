@@ -5,7 +5,7 @@ import 'mocha';
 
 import ts from 'typescript';
 import nodeFs from '@file-services/node';
-import { sourceWithNotes, replaceNodeText } from './marker';
+import { sourceWithNotes, transpileNode } from './marker';
 import { normalizeLineBreaks } from './test.helpers';
 
 describe('sourceWithNotes', () => {
@@ -46,7 +46,7 @@ describe('replaceNodeText', () => {
             name: (node as ts.VariableDeclaration).name.getText()
         } : undefined);
 
-        expect(replaceNodeText(ast, notes, p => `recombabulated_${p.note.name} = 'gaga'`).replace(/\r\n/g, '\n')).to.equal(
+        expect(transpileNode(ast, notes, p => `recombabulated_${p.metadata.name} = 'gaga'`).replace(/\r\n/g, '\n')).to.equal(
             `const recombabulated_a = 'gaga';
 export const recombabulated_b = 'gaga';`);
     });
@@ -64,7 +64,7 @@ export const recombabulated_b = 'gaga';`);
             kind: 'objectLiteral'
         } : undefined);
 
-        expect(replaceNodeText(testAst, notes, _p => `'gaga'`).replace(/\r\n/g, '\n')).to.equal(
+        expect(transpileNode(testAst, notes, _p => `'gaga'`).replace(/\r\n/g, '\n')).to.equal(
             `const a = 'gaga'`);
     });
 });

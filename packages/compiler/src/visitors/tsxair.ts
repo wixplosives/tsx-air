@@ -13,21 +13,9 @@ export interface JSXRootData {
     name: 'string';
     expressions: string[];
 }
-export const tsxair: Visitor = (node, { ignoreChildren }) => {
+export const tsxair: Visitor<TSXAirData> = (node, { ignoreChildren }) => {
     if (ts.isCallExpression(node) && node.expression.getText() === 'TSXAir') {
         ignoreChildren();
-        // node.forEachChild(n => {
-        //     report(scan(n, findJsxRoot));
-        // });
-        // node.forEachChild(n => {
-        //     report(scan(n, findJsxNode));
-        // });
-        // node.forEachChild(n => {
-        //     report(scan(n, findJsxComponent));
-        // });
-        // node.forEachChild(n => {
-        //     report(scan(n, findJsxExpression));
-        // });
         const parent = node.parent;
         let name = 'unknown';
         // const fragments = scan(node, findJsxRoot);
@@ -39,14 +27,13 @@ export const tsxair: Visitor = (node, { ignoreChildren }) => {
             throw new Error('unhandled input');
         }
         const propsIdentifier = userMethod.parameters[0].name.getText();
-
         
         return {
             kind: 'TSXAIR',
             name,
             propsIdentifier,
             usedProps: findUsedProps(node, propsIdentifier)
-        } as TSXAirData;
+        };
     }
     return undefined;
 };
@@ -57,7 +44,7 @@ const findUsedProps = (node:ts.Node, name:string) =>  uniq(
                 return n.name.getText();
             }
             return;
-    }).map(i => i.note));
+    }).map(i => i.metadata));
     
 
 

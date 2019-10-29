@@ -40,8 +40,8 @@ describe(`scan, Given a valid AST`, () => {
     it('should return the points of interest, as returned from the visitor', () => {
         const result = scan(ast, node => node.kind === ts.SyntaxKind.VariableDeclaration ? 'Var!' : undefined);
         expect(result).to.have.length(2);
+        expect(result[0]).to.haveOwnProperty('metadata');
         expect(result[0]).to.haveOwnProperty('node');
-        expect(result[0]).to.haveOwnProperty('note');
     });
 
     describe('api', () => {
@@ -62,7 +62,7 @@ describe(`scan, Given a valid AST`, () => {
                 const result = scan(ast, (node, { report }) => {
                     report!({
                         node,
-                        note: 'Reported'
+                        metadata: 'Reported'
                     });
                     return 'Visited';
                 });
@@ -80,8 +80,8 @@ describe(`scan, Given a valid AST`, () => {
 
                     return 'Root';
                 });
-                expect(result.filter(i => i.note === 'Root')).to.have.length(1);
-                expect(result.filter(i => i.note === 'Descendent')).to.have.length(12);
+                expect(result.filter(i => i.metadata === 'Root')).to.have.length(1);
+                expect(result.filter(i => i.metadata === 'Descendent')).to.have.length(12);
             });
         });
 

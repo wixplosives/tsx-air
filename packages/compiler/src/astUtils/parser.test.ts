@@ -9,7 +9,7 @@ describe('parseValue', () => {
             prop: 'value'
         }`);
         expect(ast.kind).to.equal(ts.SyntaxKind.ObjectLiteralExpression);
-        expect(scan(ast, node => node.kind).map(i => i.note)).to.deep.equal([
+        expect(scan(ast, node => node.kind).map(i => i.metadata)).to.deep.equal([
             ts.SyntaxKind.ObjectLiteralExpression,
             ts.SyntaxKind.PropertyAssignment,
             ts.SyntaxKind.Identifier,
@@ -22,7 +22,7 @@ describe('parseValue', () => {
             prop: 'value'
         });
         expect(ast.kind).to.equal(ts.SyntaxKind.ObjectLiteralExpression);
-        expect(scan(ast, node => node.kind).map(i => i.note)).to.deep.equal([
+        expect(scan(ast, node => node.kind).map(i => i.metadata)).to.deep.equal([
             ts.SyntaxKind.ObjectLiteralExpression,
             ts.SyntaxKind.PropertyAssignment,
             ts.SyntaxKind.StringLiteral,

@@ -100,7 +100,7 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
     };
 
     private updateTranspiled() {
-        const { ast, source } = this.scanner.getAst(this.getFilePath());
+        const { ast } = this.scanner.getAst(this.getFilePath());
         const notes = scan(ast, tsxair);
         const scanned = sourceWithNotes(ast.getFullText(), notes);
 

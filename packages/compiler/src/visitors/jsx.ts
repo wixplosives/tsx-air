@@ -1,5 +1,5 @@
 import { Visitor } from '../astUtils/scanner';
-import { isJsxSelfClosingElement, isJsxElement, isJsxFragment, isJsxExpression } from 'typescript';
+import { isJsxSelfClosingElement, isJsxElement, isJsxFragment, isJsxExpression, JsxOpeningElement, isStringLiteral, JsxAttribute } from 'typescript';
 
 
 export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
@@ -38,7 +38,26 @@ export const findJsxComponent: Visitor = (node, { ignoreChildren }) => {
     }
     if (tag.match(/[A-Z].*/)) {
         ignoreChildren();
-        return '/* Component */';
+        const props = (node as JsxOpeningElement).attributes.properties.reduce<Array<{ name: string, value: string }>>(
+            (acc, attribute) => {
+                const att = attribute as JsxAttribute;
+                acc.push(
+                    {
+                        name: att.name.escapedText as string,
+                        value: isStringLiteral(att.initializer!)
+                            ? att.initializer.getText()
+                            // @ts-ignore
+                            : att.initializer.expression.getText()
+                    });
+                return acc;
+            },
+            []
+        );
+        return {
+            kind: 'Component',
+            tag,
+            props
+        };
     }
     return undefined;
 };
