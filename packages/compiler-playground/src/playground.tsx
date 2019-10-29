@@ -63,12 +63,12 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
                 />
             </div>
 
-            <div className="playground-pane view-pane" >
+            {/* <div className="playground-pane view-pane" >
                 <h2>Scanned</h2>
                 <SyntaxHighlighter language="typescript" style={style}>
                     {this.state.scanned}
                 </SyntaxHighlighter>
-            </div>
+            </div> */}
 
             <div className="playground-pane view-pane" >
                 <h2>Compiled</h2>

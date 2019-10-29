@@ -1,4 +1,4 @@
-import { toString } from './generators/component-factory';
+import { toString, hydrate } from './generators/component-factory';
 import { Transformer } from './index';
 import { parseValue } from '../astUtils/parser';
 import { tsxair, TSXAirData } from '../visitors/tsxair';
@@ -30,7 +30,7 @@ export const jsx: Transformer = {
     ${name}.factory={
         unique: Symbol('${name}'),
         toString:${toString(tsxAirCall.node, tsxAirCall.metadata)},
-        hydrate:${'hydrate(tsxAirCall.node, tsxAirCall.metadata)'},
+        hydrate:${hydrate(tsxAirCall.node, tsxAirCall.metadata)},
         initialState: () => ({})
     };
     return ${tsxAirCall.metadata.name};})()`);
@@ -41,6 +41,4 @@ export const jsx: Transformer = {
         };
     }
 };
-
-
 
