@@ -5,8 +5,8 @@ os:
   - osx
 
 node_js:
-  - 11 # current
-  - 10 # lts
+  - 13 # current
+  - 12 # lts
 
 cache:
   yarn: true
