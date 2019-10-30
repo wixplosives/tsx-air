@@ -20,7 +20,6 @@ export const parseValue = (obj: string | object) => {
     const validValue = def && def.initializer;
 
     if (validValue &&
-        // tslint:disable-next-line: no-bitwise
         !(validValue.flags & ts.NodeFlags.ThisNodeHasError)) {
         return validValue as ts.Node;
     }
