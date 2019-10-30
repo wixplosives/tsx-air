@@ -3,7 +3,7 @@ import { DomBinding } from './component-common';
 import { TSXAirData } from '../../visitors/tsxair';
 import { find } from '../../astUtils/scanner';
 import { isPropertyAccessExpression, isJsxExpression, JsxElement, isJsxSelfClosingElement } from 'typescript';
-import { flatMap, groupBy, partition } from 'lodash';
+import { flatMap, partition } from 'lodash';
 
 export const compClass = (dom: DomBinding[], metadata: TSXAirData) => {
     const { name } = metadata;
