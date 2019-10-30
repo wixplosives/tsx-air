@@ -1,10 +1,10 @@
-import { findJsxComponent, findJsxText, getTextBlockChildren, getComponentTag } from './../../visitors/jsx';
-import { scan, find } from './../../astUtils/scanner';
+import { findJsxComponent } from './../../visitors/jsx';
+import { scan } from './../../astUtils/scanner';
 import * as ts from 'typescript';
 import { TSXAirData } from '../../visitors/tsxair';
 import { findJsxExpression, findJsxRoot } from '../../visitors/jsx';
 import { transpileNode } from '../../astUtils/marker';
-import { SyntaxKind } from 'typescript';
+import { DomBinding } from './component-common';
 
 export const toString = (node: ts.Node, tsxAirData: TSXAirData) => {
     const returnedJsx = scan(node, findJsxRoot);
@@ -37,44 +37,10 @@ export const toString = (node: ts.Node, tsxAirData: TSXAirData) => {
         }\``;
 };
 
-export const hydrate = (node: ts.Node, tsxAirData: TSXAirData) => {
-
-    const expressions: string[] = ['root'];
-    const returnedJsx = find(node, findJsxRoot);
-
-    const addExpressions = (nd: ts.Node, prefix = 'root.childNode') => {
-        let childCount = 0;
-        let compCount = 0;
-        nd.forEachChild(child => {
-            switch (child.kind) {
-                case SyntaxKind.JsxText:
-                    childCount++;
-                    break;
-                case SyntaxKind.JsxExpression:
-                    expressions.push(`exp${expressions.length}: ${prefix}[${childCount + 1}]`);
-                    childCount += 3;
-                    break;
-                case SyntaxKind.JsxElement:
-                case SyntaxKind.JsxSelfClosingElement:
-                    const tag = getComponentTag(child);
-                    if (tag) {
-                        expressions.push(`${tag}${++compCount}: ${tag}.factory.hydrate(${prefix}[${childCount}])`);
-                    } else {
-                        addExpressions(child, `${prefix}[${childCount}].childNode`);
-                    }
-                    childCount++;
-                    break;
-                default:
-                // throw new Error('Unhandled JSX hydration');
-            }
-        });
-    };
-
-    addExpressions(returnedJsx);
-
-    return `(root,${tsxAirData.propsIdentifier})=>
+export const hydrate = (tsxAirData: TSXAirData, expressions: DomBinding[]) =>
+    `(root,${tsxAirData.propsIdentifier})=>
         new ${tsxAirData.name}({
-            ${expressions.join(',\n')}
+            ${[{ dom: 'root', name:'root' }, ...expressions]
+                .map(i => `${i.name}:${i.dom}` ).join(',\n')}
         })
     `;
-};

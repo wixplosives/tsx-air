@@ -1,9 +1,11 @@
+import { findDomBindings } from './generators/component-common';
 import { toString, hydrate } from './generators/component-factory';
 import { Transformer } from './index';
 import { parseValue } from '../astUtils/parser';
 import { tsxair, TSXAirData } from '../visitors/tsxair';
 import ts from 'typescript';
 import { scan } from '../astUtils/scanner';
+import { compClass } from './generators/component-class';
 (window as any).ts = ts;
 
 export const jsx: Transformer = {
@@ -22,15 +24,15 @@ export const jsx: Transformer = {
                     ({ node }) =>
                         node === n);
                 if (tsxAirCall) {
+                    const dom = findDomBindings(tsxAirCall.node);
                     const { metadata: { name } } = tsxAirCall;
                     return parseValue(`(()=>{
-    class ${name}{
-    }
+    ${compClass(dom, tsxAirCall.metadata)}
     ${name}.changeBitmask={${(tsxAirCall.metadata as TSXAirData).usedProps.map((prop, i) => `${prop}:1<<${i}`).join()}}
     ${name}.factory={
         unique: Symbol('${name}'),
         toString:${toString(tsxAirCall.node, tsxAirCall.metadata)},
-        hydrate:${hydrate(tsxAirCall.node, tsxAirCall.metadata)},
+        hydrate:${hydrate(tsxAirCall.metadata, dom)},
         initialState: () => ({})
     };
     return ${tsxAirCall.metadata.name};})()`);
