@@ -1,0 +1,1 @@
+export const TSXAir = (comp:any) => comp;
