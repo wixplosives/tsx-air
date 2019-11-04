@@ -13,7 +13,6 @@ export interface JSXRootData {
     name: 'string';
     expressions: string[];
 }
-
 export const tsxair: Visitor<TSXAirData> = (node, { ignoreChildren }) => {
     if (ts.isCallExpression(node) && node.expression.getText() === 'TSXAir') {
         ignoreChildren();
