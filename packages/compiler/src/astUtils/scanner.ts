@@ -14,7 +14,7 @@ interface ScannerApi {
     stop: () => void;
 }
 
-export type Visitor<T = any> = (node: ts.Node, scannerApi: ScannerApi) => T | undefined;
+export type Visitor<T = any> = (node: ts.Node, scannerApi: ScannerApi) => T | undefined | void;
 
 export type Scanner = <T>(target: ts.Node, visitor: Visitor<T>) => Array<NodeMetaData<T>>;
 

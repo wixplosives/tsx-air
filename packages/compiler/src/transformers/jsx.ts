@@ -19,7 +19,6 @@ export const jsx: Transformer = {
             return ts.visitEachChild(sourceFile, transformTsxAir, context);
 
             function transformTsxAir(n: ts.Node): ts.Node | ts.Node[] {
-
                 const tsxAirCall = tsxAirs.find(
                     ({ node }) =>
                         node === n);

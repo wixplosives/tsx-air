@@ -13,12 +13,12 @@ export interface JSXRootData {
     name: 'string';
     expressions: string[];
 }
+
 export const tsxair: Visitor<TSXAirData> = (node, { ignoreChildren }) => {
     if (ts.isCallExpression(node) && node.expression.getText() === 'TSXAir') {
         ignoreChildren();
         const parent = node.parent;
         let name = 'unknown';
-        // const fragments = scan(node, findJsxRoot);
         if (ts.isVariableDeclaration(parent)) {
             name = parent.name.getText();
         }
@@ -45,6 +45,3 @@ const findUsedProps = (node:ts.Node, name:string) =>  uniq(
             }
             return;
     }).map(i => i.metadata));
-    
-
-

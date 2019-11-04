@@ -24,14 +24,12 @@ const processUpdate = (dom: DomBinding[], metadata: TSXAirData) => `public $$pro
                 ${
             expressions.map(i => `${i!.nodeBinding.name}.textContent=` +
                 // @ts-ignore
-                `${i!.nodeBinding.node.expression.getText().replace(props, 'newProps')}`)
-            }
+                `${i && i.nodeBinding && i.nodeBinding.node && i.nodeBinding.node.expression && i.nodeBinding.node.expression.getText().replace(props, 'newProps') || ''}`)}
                 ${
             components.map(
-                //
                 i => i.length ? `runtime.updateProps(this.context.${i![0]!.nodeBinding.name},p => {
-                            ${i.map(p => 
-                                `p.${p!.compPropName} = newProps.${prop};`).join('\n')}                                                      
+                            ${i.map(p =>
+                    `p.${p!.compPropName} = newProps.${prop};`).join('\n')}                                                      
                             return ${i.map(p => `${p!.compName}.changeBitmask.${p!.compPropName}`).join('|')};
                         });` : '')
             }
