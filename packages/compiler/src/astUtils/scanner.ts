@@ -90,25 +90,6 @@ export const scan: Scanner = (target, visitor) => {
     return meaningfulNode;
 };
 
-// export const scanChildren: Scanner = (target, visitor) => {
-//     const meaningfulNode = [] as NodeMetaData[];
-//     const reportNode = (metadata: NodeMetaData) => {
-//         meaningfulNode.push(metadata);
-//     };
-//     const stop: StopScan = () => {
-//         stop.shouldStop = true;
-//     };
-
-//     target.forEachChild(child => {
-//         if (!stop.shouldStop) {
-//             const childMetaData = visitor(child, { stop, report:metadata => reportNode({ node: child, metadata}), ignoreChildren: () => void (0) });
-//             if (childMetaData) {
-//                 reportNode({ node: child, metadata: childMetaData });
-//             }
-//         }
-//     });
-// };
-
 export const find = (target: ts.Node, predicate: Visitor) => {
     const result = scan(target, (node, api) => {
         const ret = predicate(node, api);

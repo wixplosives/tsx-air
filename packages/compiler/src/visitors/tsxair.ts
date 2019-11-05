@@ -22,7 +22,7 @@ export const tsxair: Visitor<TSXAirData> = (node, { ignoreChildren }) => {
             name = parent.name.getText();
         }
         const userMethod = node.arguments[0];
-        if(!ts.isArrowFunction(userMethod) && !ts.isFunctionDeclaration(userMethod)){
+        if(!ts.isArrowFunction(userMethod) && !ts.isFunctionExpression(userMethod)){
             throw new Error('unhandled input');
         }
         const propsIdentifier = userMethod.parameters[0].name.getText();

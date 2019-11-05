@@ -1,7 +1,7 @@
 import { TsxAirNode } from './types';
 import * as ts from 'typescript';
 
-export type Analyzer<N extends ts.Node = ts.Node, T extends TsxAirNode<N> = TsxAirNode<N>> = (node: N) => T | void | undefined;
+export type Analyzer<N extends ts.Node = ts.Node, T extends TsxAirNode<N> = TsxAirNode<N>> = (node: N) => T | TsxAirNodeError | undefined;
 
 export type TsxAirNodeType = 'CompDefinition' | 'TrivialComponentDefinition' |
     'JsxRoot' | 'JsxExpression' |
@@ -23,16 +23,10 @@ export interface TsxAirNode<T extends ts.Node> {
     errors?: TsxAirError[];
 }
 
-export interface TrivialComponentDefinition extends TsxAirNode<ts.CallExpression> {
-    kind: 'TrivialComponentDefinition';
-    name?: string;
-    jsxRoots: JsxRoot[];
-}
-
 export interface CompDefinition extends TsxAirNode<ts.CallExpression> {
     kind: 'CompDefinition';
     name?: string;
-    propsIdentifier: string;
+    propsIdentifier?: string;
     usedProps: CompProps[];
     jsxRoots: JsxRoot[];
 }
@@ -44,12 +38,14 @@ export interface CompProps extends TsxAirNode<ts.Identifier> {
 
 export interface JsxRoot extends TsxAirNode<JsxElm> {
     kind: 'JsxRoot';
-    expressions: string[];
+    expressions: JsxExpression[];
+    components: JsxComponent[];
 }
 
 export interface JsxExpression extends TsxAirNode<ts.JsxExpression> {
     kind: 'JsxExpression';
     dependencies: CompProps[];
+    expression: string;
 }
 
 export interface JsxComponent extends TsxAirNode<JsxElm> {

@@ -11,6 +11,9 @@ import {
     sampleTypescriptFile,
 } from './code-samples';
 
+// for debugging ease
+(window as any).ts = ts;
+
 async function main() {
     const fs = createMemoryFs();
 

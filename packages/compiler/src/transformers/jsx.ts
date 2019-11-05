@@ -6,7 +6,6 @@ import { tsxair, TSXAirData } from '../visitors/tsxair';
 import ts from 'typescript';
 import { scan } from '../astUtils/scanner';
 import { compClass } from './generators/component-class';
-(window as any).ts = ts;
 
 export const jsx: Transformer = {
     name: 'Jsx',

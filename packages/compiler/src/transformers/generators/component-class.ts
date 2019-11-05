@@ -20,7 +20,7 @@ const processUpdate = (dom: DomBinding[], metadata: TSXAirData) => `public $$pro
         const components = getAffectedComponents(prop, dom, metadata);
         const props = new RegExp(`(?<![\\d\\w])(${metadata.propsIdentifier})`, 'g');
 
-        return `if (changeMap & ${metadata.name}.changeBitmask.${prop}) {
+        return `if (changeMap & ${metadata.name}.changeBitmask.${prop.trim()}) {
                 ${
             expressions.map(i => `${i!.nodeBinding.name}.textContent=` +
                 // @ts-ignore
@@ -45,7 +45,7 @@ const getAffectedExpressions = (prop: string, dom: DomBinding[], metadata: TSXAi
     }
     const used = find(n.node!, nd => isPropertyAccessExpression(nd) &&
         nd.expression.getText() === metadata.propsIdentifier &&
-        nd.name.getText() === prop);
+        nd.name.getText().trim() === prop);
     if (used) {
         return {
             prop,
@@ -75,9 +75,9 @@ const getAffectedComponents = (prop: string, dom: DomBinding[], metadata: TSXAir
                         prop,
                         nodeBinding: n,
                         compName,
-                        compPropName: att.name!.getText()
+                        compPropName: att.name!.getText().trim()
                     };
                 }
                 return;
             }).filter(i => i);
-        }).filter(i => i), 'nodeBinding');
+        }).filter(i => i), 'nodeBinding').filter(i => i.length);

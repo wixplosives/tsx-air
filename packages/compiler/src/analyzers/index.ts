@@ -1,10 +1,8 @@
-import { TsxAirNode, Analyzer } from './types';
-import * as ts from 'typescript';
-import { find } from '../astUtils/scanner';
-import { tsxair } from '../visitors/tsxair';
+import { isCallExpression } from 'typescript';
+import {  Analyzer } from './types';
 import { compDefinition } from './comp-definition';
 
-export const  analyze:Analyzer<> (node: ts.Node): TsxAirNode<ts.Node> {
+export const  analyze:Analyzer = node => {
     if (!node) {
         return {
             sourceAstNode: node,
@@ -16,9 +14,11 @@ export const  analyze:Analyzer<> (node: ts.Node): TsxAirNode<ts.Node> {
         };
     }
 
-    const tsx = find(node, tsxair);
-    if (tsx) {
-        return compDefinition(node);
+    if (isCallExpression(node)){
+        const comp = compDefinition(node);
+        if (comp && comp.kind === 'CompDefinition') {
+            return comp;
+        }
     }
 
     return {
@@ -29,4 +29,4 @@ export const  analyze:Analyzer<> (node: ts.Node): TsxAirNode<ts.Node> {
             type: 'internal'
         }]
     };
-} 
+};
