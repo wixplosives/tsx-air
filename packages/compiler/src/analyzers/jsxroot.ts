@@ -1,15 +1,15 @@
 import { Visitor } from './../astUtils/scanner';
 import { findJsxRoot, findJsxExpression, getComponentTag } from './../visitors/jsx';
 import { scan, ScannerApi } from '../astUtils/scanner';
-import { CompProps, JsxExpression, JsxRoot, JsxElm, JsxComponent, JsxComponentProps, ExpressionScope } from './types';
-import ts, { isJsxElement, isJsxOpeningElement, isJsxAttribute } from 'typescript';
+import { CompProps, JsxExpression, JsxRoot, JsxElm, JsxComponent, JsxComponentProps } from './types';
+import ts, { isJsxElement } from 'typescript';
 
-export function jsxRoots(astNode: ts.Node, propsIdentifier: string | undefined, usedProps: CompProps[]) {
+export function jsxRoots(astNode: ts.Node, _propsIdentifier: string | undefined, _usedProps: CompProps[]) {
     return scan(astNode, findJsxRoot)
-        .map(({ node }) => jsxRoot(node as JsxElm, propsIdentifier, usedProps));
+        .map(({ node }) => jsxRoot(node as JsxElm));
 }
 
-const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string | undefined, usedProps: CompProps[]) => {
+const jsxRoot = (sourceAstNode: JsxElm) => {
     const expressions = scan(sourceAstNode, findJsxExpression).map(({ node }) => parseExpression(node));
     const components = scan(sourceAstNode, findJsxComponent).map<JsxComponent>(i => i.metadata);
 

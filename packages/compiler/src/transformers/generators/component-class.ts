@@ -22,28 +22,27 @@ const processUpdate = (dom: DomBinding[], metadata: TSXAirData) => `public $$pro
 
         return `if (changeMap & ${metadata.name}.changeBitmask.${prop.trim()}) {
                 ${
-            expressions.map(i => `${i!.nodeBinding.name}.textContent=` +
+            expressions.map(i => `${i!.nodeBinding.ctxName}.textContent=` +
                 // @ts-ignore
-                `${i && i.nodeBinding && i.nodeBinding.node && i.nodeBinding.node.expression && i.nodeBinding.node.expression.getText().replace(props, 'newProps') || ''}`)}
+                `${i && i.nodeBinding && i.nodeBinding.astNode && i.nodeBinding.astNode.expression && i.nodeBinding.astNode.expression.getText().replace(props, 'newProps') || ''}`)}
                 ${
             components.map(
-                i => i.length ? `runtime.updateProps(this.context.${i![0]!.nodeBinding.name},p => {
+                i => i.length ? `runtime.updateProps(this.context.${i![0]!.nodeBinding.ctxName},p => {
                             ${i.map(p =>
                     `p.${p!.compPropName} = newProps.${prop};`).join('\n')}                                                      
                             return ${i.map(p => `${p!.compName}.changeBitmask.${p!.compPropName}`).join('|')};
                         });` : '')
             }
             }`;
-
     }).join(';\n')
     }
 }`;
 
 const getAffectedExpressions = (prop: string, dom: DomBinding[], metadata: TSXAirData) => dom.map(n => {
-    if (!isJsxExpression(n.node!)) {
+    if (!isJsxExpression(n.astNode!)) {
         return;
     }
-    const used = find(n.node!, nd => isPropertyAccessExpression(nd) &&
+    const used = find(n.astNode!, nd => isPropertyAccessExpression(nd) &&
         nd.expression.getText() === metadata.propsIdentifier &&
         nd.name.getText().trim() === prop);
     if (used) {
@@ -58,13 +57,13 @@ const getAffectedExpressions = (prop: string, dom: DomBinding[], metadata: TSXAi
 const getAffectedComponents = (prop: string, dom: DomBinding[], metadata: TSXAirData) =>
     partition(
         flatMap(dom, n => {
-            const compName = n.node && getComponentTag(n.node);
+            const compName = n.astNode && getComponentTag(n.astNode);
             if (!compName) {
                 return;
             }
-            const attributes = isJsxSelfClosingElement(n.node!)
-                ? n.node.attributes
-                : (n.node as JsxElement).openingElement.attributes;
+            const attributes = isJsxSelfClosingElement(n.astNode!)
+                ? n.astNode.attributes
+                : (n.astNode as JsxElement).openingElement.attributes;
 
             return attributes.properties.map(att => {
                 const usage = find(attributes, nd => isPropertyAccessExpression(nd) &&
