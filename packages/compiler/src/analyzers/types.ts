@@ -31,7 +31,7 @@ export interface CompDefinition extends TsxAirNode<ts.CallExpression> {
     jsxRoots: JsxRoot[];
 }
 
-export interface CompProps extends TsxAirNode<ts.Identifier> {
+export interface CompProps extends TsxAirNode<ts.Identifier | ts.PropertyAccessExpression> {
     kind: 'CompProps';
     name: string;
 }
@@ -54,9 +54,8 @@ export interface JsxComponent extends TsxAirNode<JsxElm> {
     props: JsxComponentProps[];
 }
 
-export interface JsxComponentProps extends TsxAirNode<ts.JsxAttribute> {
+export interface JsxComponentProps extends TsxAirNode<ts.JsxAttributeLike> {
     kind: 'JsxComponentProps';
     name: string;
-    isDynamic: boolean;
     value: string | JsxExpression;
 }

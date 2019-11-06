@@ -8,7 +8,7 @@ export interface NodeMetaData<T = any> {
     node: ts.Node;
 }
 
-interface ScannerApi {
+export interface ScannerApi {
     ignoreChildren: () => void;
     report: (metadata: NodeMetaData<any> | Array<NodeMetaData<any>>) => void;
     stop: () => void;

@@ -5,10 +5,10 @@ import ts, { isCallExpression } from 'typescript';
 import { find } from '../astUtils/scanner';
 import { CompDefinition } from './types';
 
-const getCompDef = (code: string) => {
+export const getCompDef = (code: string) => {
     const ast = parseStatement(code);
     const tsxairNode = find(ast, node => isCallExpression(node));
-    const comp = compDefinition(tsxairNode as ts.CallExpression);
+    const comp = compDefinition(tsxairNode as ts.CallExpression) as CompDefinition;
 
     return { ast, comp, tsxairNode };
 };
@@ -52,7 +52,7 @@ describe('TSXAir component definition', () => {
                 sourceAstNode: tsxairNode
             });
 
-            const { usedProps } = comp as CompDefinition;
+            const { usedProps } = comp;
             expect(usedProps).to.have.length(1);
             expect(usedProps[0]).to.deep.include({ kind: 'CompProps', name: 'name' });
         });
@@ -68,51 +68,10 @@ describe('TSXAir component definition', () => {
                 sourceAstNode: tsxairNode
             });
 
-            const { usedProps } = comp as CompDefinition;
+            const { usedProps } = comp;
             expect(usedProps).to.have.length(1);
             expect(usedProps[0]).to.deep.include({ kind: 'CompProps', name: 'name' });
         });
     });
 
-    describe('jsx', () => {
-        it('should find all the jsx roots', () => {
-            const { comp: c } = getCompDef(`const Comp = TSXAir(function(props){ 
-                const aRandomJsx = <span>!</span>;
-                return <div>{props.name}</div>;})`);
-            const comp = c as CompDefinition;
-
-            expect(comp.jsxRoots).to.have.length(2);
-            const [span, div] = comp.jsxRoots.map(i => i.sourceAstNode.getText());
-            expect(span).to.equal('<span>!</span>');
-            expect(div).to.equal('<div>{props.name}</div>');
-        });
-
-        it('should find {jsxExpressions}', () => {
-            const { comp: c } = getCompDef(`const Comp = TSXAir(function(props){ 
-                const aRandomJsx = <span>!</span>;
-                return <div>{props.name}{3}</div>;})`);
-            const comp = c as CompDefinition;
-
-            expect(comp.jsxRoots).to.have.length(2);
-            const [span, div] = comp.jsxRoots.map(i => i.expressions);
-            expect(span).to.have.length(0);
-            expect(div).to.have.length(2);
-            expect(div[0].dependencies).to.have.length(1);
-            expect(div[0].dependencies[0].name).to.equal('name');
-            expect(div[1].dependencies).to.deep.equal([]);
-        });
-
-        // it('should find components', () => {
-        //     const { comp: c } = getCompDef(`const Comp = TSXAir(function(props){ 
-        //         return <div>
-        //             <Comp1 />
-        //             <Comp2>bla</Comp2>
-        //         </div>;})`);
-        //     const comp = c as CompDefinition;
-
-        //     expect(comp.jsxRoots[0].components).to.have.length(1);
-        //     const [comp1, comp2] = comp.jsxRoots.map(i => i.components);
-
-        // });
-    });
 });
