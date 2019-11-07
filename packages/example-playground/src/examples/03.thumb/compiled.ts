@@ -2,6 +2,7 @@ import { handleChanges } from '../../framework/runtime/utils';
 import runtime from '../../framework/runtime';
 import { Component } from '../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
+import { render } from '../../framework';
 
 /* tslint:disable:rule no-bitwise */
 
@@ -38,7 +39,7 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
             }],
             [Thumb.changeBitmask.onClick, () => {
                 if (this.props.onClick) {
-                    this.context.root.removeEventListener('click', this.props.onClick);                    
+                    this.context.root.removeEventListener('click', this.props.onClick);
                 }
                 if (newProps.onClick) {
                     this.context.root.addEventListener('click', newProps.onClick);
@@ -84,6 +85,7 @@ Thumb.factory = {
     }
 };
 
+
 export const runExample = (target: HTMLElement) => {
-    runtime.render(target, Thumb.factory, { url: 'https://i.pinimg.com/originals/ba/ea/e4/baeae441e72112a3154f840b70b930ea.jpg' });
+    render(target, Thumb as any, { url: 'https://i.pinimg.com/originals/ba/ea/e4/baeae441e72112a3154f840b70b930ea.jpg' });
 };

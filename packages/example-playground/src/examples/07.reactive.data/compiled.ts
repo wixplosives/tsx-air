@@ -1,3 +1,3 @@
 export const runExample = (_: HTMLElement) => {
-    return null;
+    return () => null;
 };

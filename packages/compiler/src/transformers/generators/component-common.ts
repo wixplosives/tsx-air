@@ -3,9 +3,9 @@ import { findJsxRoot, getComponentTag } from '../../visitors/jsx';
 import { find } from '../../astUtils/scanner';
 
 export interface DomBinding {
-    name:string;
-    dom: string;
-    node?: ts.Node;
+    ctxName:string;
+    viewLocator: string;
+    astNode?: ts.Node;
 }
 
 export const findDomBindings = (node: ts.Node) => {
@@ -22,9 +22,9 @@ export const findDomBindings = (node: ts.Node) => {
                     break;
                 case SyntaxKind.JsxExpression:
                     expressions.push({
-                        name: `exp${expressions.length}`,
-                        dom: `${prefix}[${childCount + 1}]`,
-                        node: child
+                        ctxName: `exp${expressions.length}`,
+                        viewLocator: `${prefix}[${childCount + 1}]`,
+                        astNode: child
                     });
                     childCount += 3;
                     break;
@@ -33,9 +33,9 @@ export const findDomBindings = (node: ts.Node) => {
                     const tag = getComponentTag(child);
                     if (tag) {
                         expressions.push({
-                            name: `${tag}${++compCount}`,
-                            dom: `${tag}.factory.hydrate(${prefix}[${childCount}])`,
-                            node: child
+                            ctxName: `${tag}${++compCount}`,
+                            viewLocator: `${tag}.factory.hydrate(${prefix}[${childCount}])`,
+                            astNode: child
                         });
                     } else {
                         addDomElement(child, `${prefix}[${childCount}].childNode`);

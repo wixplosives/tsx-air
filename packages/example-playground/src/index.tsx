@@ -1,4 +1,5 @@
 import examples from './examples';
+import { compilers } from './compilers';
 import Prism from 'prismjs';
 // @ts-ignore
 import 'prismjs/components/prism-jsx.js';
@@ -7,51 +8,62 @@ import 'prismjs/components/prism-tsx.js';
 import 'prismjs/themes/prism.css';
 import './index.css';
 import { stats } from './framework';
+import { evalModule } from './utils/eval-module';
 
 document.body.innerHTML = `
 <h1>Show me the samples</h1>
 <div class="selection">
-    <select>
+    <h3>Example:</h2>
+    <select id="select-example">
         ${examples.map((example, i) => `<option value="${i}">${example.name}</option>`).join('\n')}
+    </select>
+    <h3>Compiler:</h2>
+    <select id="select-compiler">
+        ${compilers.map((compiler, i) => `<option value="${i}">${compiler.label}</option>`).join('\n')}
     </select>
     <h2 id="fps"></h2>
 </div>
 <div class="selection-follower"></div>
+<section id="readme" class="readme">
+</section>
 <div class="example">
-    <section id="readme">
+    <section  class="half">
+        <h3>Source</h3>
+        <pre>
+            <code id="source" class="lang-tsx"></code>
+        </pre>
     </section>
 
-    <section class="result">
+    <section  class="half">
+        <h3>Style</h3>
+        <pre>
+            <code id="style" class="lang-css"></code>
+        </pre>
+    </section>
+        
+</div>
+
+    <section class="half">
         <h3>Result</h3>
         <div id="result" />
     </section>
 
-    <section>
-        <h3>Source</h3>
-        <pre>
-        <code id="source" class="lang-tsx"></code>
-        </pre>
-    </section>
 
-     <section>
-        <h3>Style</h3>
-        <pre>
-        <code id="style" class="lang-css"></code>
-        </pre>
-    </section>
 
-    <section>
+    <section class="half">
         <h3>Compiled</h3>
         <pre>
-        <code id="compiled" class="lang-tsx"></code>
+            <code id="compiled" class="lang-tsx"></code>
         </pre>
     </section>
-</div>
+
+
 `;
 
 let stop: () => void;
 const readme = document.getElementById('readme')!;
-const select = document.querySelector('select')!;
+const selectExample = document.getElementById('select-example')! as HTMLSelectElement;
+const selectCompiler = document.getElementById('select-compiler')! as HTMLSelectElement;
 const result = document.getElementById('result')!;
 const resultRoot = result.attachShadow({ mode: 'open' });
 const source = document.getElementById('source')!;
@@ -61,36 +73,46 @@ const fps = document.getElementById('fps')!;
 
 stats.startFpsProbe();
 
-setInterval(() => {fps.innerText = 'Fps: ' + stats.getFps() || '';
+setInterval(() => {
+    fps.innerText = 'Fps: ' + stats.getFps() || '';
     if (Math.random() < 0.0001) {
         const i = new Image();
-        i.src='/images/homer.png';
+        i.src = '/images/homer.png';
         i.classList.add('h');
         i.addEventListener('animationend', () => i.remove());
-        i.onload = ()=>document.body.appendChild(i);
+        i.onload = () => document.body.appendChild(i);
     }
 }, 100);
 
-const selectExample = () => {
+const changeHandler = async () => {
     if (stop !== undefined) { stop(); }
-    localStorage.setItem('selected', select.value);
-    window.scrollTo(0,0);
-    const selected = examples[select.value as unknown as number];
+    localStorage.setItem('selected', selectExample.value);
+    localStorage.setItem('selected-compiler', selectCompiler.value);
+    window.scrollTo(0, 0);
+    const selected = examples[selectExample.value as unknown as number];
+    const compiler = compilers[selectCompiler.value as unknown as number];
     readme.innerHTML = selected.readme && `<div>${selected.readme}</div>` || '';
     source.textContent = selected.source.trim();
-    compiled.textContent = selected.compiled.trim();
+    const output = compiler.compile(selected.source, selected.compiled);
+    compiled.textContent = output.printVer;
     style.textContent = selected.style.trim();
 
     Prism.highlightAll();
     resultRoot.innerHTML = `<style>${selected.style}
             .result.root { display:flex; }
             </style><div class="result root"></div>`;
-    stop = selected.run(resultRoot.querySelector('div')!);
-};
-select.addEventListener('change', selectExample);
 
-select.value = localStorage.getItem('selected') || '0';
-selectExample();
+    const module = await evalModule(output.runVer);
+    stop = module.runExample(resultRoot.querySelector('div')!);
+};
+
+
+selectExample.addEventListener('change', changeHandler);
+selectCompiler.addEventListener('change', changeHandler);
+
+selectExample.value = localStorage.getItem('selected') || '0';
+selectCompiler.value = localStorage.getItem('selected-compiler') || '0';
+changeHandler();
 
 // @ts-ignore
 window.scrollTo(localStorage.getItem('scrollX'), localStorage.getItem('scrollY'));

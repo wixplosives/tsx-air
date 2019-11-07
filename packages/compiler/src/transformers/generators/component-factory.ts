@@ -40,7 +40,7 @@ export const toString = (node: ts.Node, tsxAirData: TSXAirData) => {
 export const hydrate = (tsxAirData: TSXAirData, expressions: DomBinding[]) =>
     `(root,${tsxAirData.propsIdentifier})=>
         new ${tsxAirData.name}({
-            ${[{ dom: 'root', name:'root' }, ...expressions]
-                .map(i => `${i.name}:${i.dom}` ).join(',\n')}
+            ${[{ ctxName: 'root', viewLocator: 'root' }, ...expressions]
+        .map(i => `${i.ctxName}:${i.viewLocator}`).join(',\n')}
         })
     `;

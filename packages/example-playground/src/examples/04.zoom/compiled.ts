@@ -1,4 +1,5 @@
 import runtime from '../../framework/runtime';
+import { render } from '../../framework';
 import { Component } from '../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 import { RefHolder } from '../../framework/api/types';
@@ -110,6 +111,7 @@ Zoom.factory = {
     initialState
 } as Factory<Zoom>;
 
+
 export const runExample = (target: HTMLElement) => {
-    runtime.render(target, Zoom.factory, { url: '/images/bunny.jpg' });
+    render(target, Zoom as any, { url: '/images/bunny.jpg' });
 };

@@ -5,6 +5,6 @@
       "node"
     ],
     "jsx": "react",
-    "jsxFactory": "React.createElement"
+    "jsxFactory": "TSXAir"
   }
 }
