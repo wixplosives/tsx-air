@@ -1,3 +1,4 @@
+import { flatMap } from 'lodash';
 import { Visitor } from './../astUtils/scanner';
 import { findJsxRoot, findJsxExpression, getComponentTag } from './../visitors/jsx';
 import { scan, ScannerApi } from '../astUtils/scanner';
@@ -72,14 +73,42 @@ const jsxRoot = (sourceAstNode: JsxElm) => {
                 },
                 []
             );
+
+            const items = findChildren(jsxCompNode);
+            const childComponents = flatMap(items, 'components');
+            const childExpressions = flatMap(items, 'expressions');
+
             const comp: JsxComponent = {
                 kind: 'JsxComponent',
                 name,
                 props,
-                sourceAstNode: jsxCompNode as JsxElm
+                sourceAstNode: jsxCompNode as JsxElm,
+                children: items.length ? {
+                    kind: 'JsxFragment',
+                    components: childComponents,
+                    expressions: childExpressions,
+                    items,
+                    sourceAstNode: jsxCompNode as ts.JsxFragment
+                } : undefined
             };
             return comp;
         }
         return;
+    }
+
+    function findChildren(jsxCompNode: ts.Node) {
+        if (ts.isJsxSelfClosingElement(jsxCompNode)) {
+            return [];
+        }
+        const children: JsxRoot[] = [];
+        jsxCompNode.forEachChild(jsxNode => {
+            if (ts.isJsxOpeningElement(jsxNode) 
+            || ts.isJsxClosingElement(jsxNode)
+            ) {
+                return;
+            }
+            children.push(jsxRoot(jsxNode as JsxElm));
+        });
+        return children;
     }
 };

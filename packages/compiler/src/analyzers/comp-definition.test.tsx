@@ -36,6 +36,7 @@ describe('TSXAir component definition', () => {
             expect(comp).to.deep.include({
                 kind: 'CompDefinition',
                 propsIdentifier: undefined,
+                name: undefined,
                 sourceAstNode: tsxairNode
             });
         });
@@ -73,5 +74,4 @@ describe('TSXAir component definition', () => {
             expect(usedProps[0]).to.deep.include({ kind: 'CompProps', name: 'name' });
         });
     });
-
 });

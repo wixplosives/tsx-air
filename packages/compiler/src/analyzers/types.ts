@@ -1,9 +1,9 @@
 import { TsxAirNode } from './types';
-import * as ts from 'typescript';
+import ts from 'typescript';
 
 export type Analyzer<N extends ts.Node = ts.Node, T extends TsxAirNode<N> = TsxAirNode<N>> = (node: N) => T | TsxAirNodeError | undefined;
 
-export type TsxAirNodeType = 'CompDefinition' | 'TrivialComponentDefinition' |
+export type TsxAirNodeType = 'CompDefinition' | 'JsxFragment' |
     'JsxRoot' | 'JsxExpression' |
     'JsxComponent' | 'JsxComponentProps' | 'CompProps' | 'error';
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
@@ -42,6 +42,13 @@ export interface JsxRoot extends TsxAirNode<JsxElm> {
     components: JsxComponent[];
 }
 
+export interface JsxFragment extends TsxAirNode<ts.JsxFragment> {
+    kind: 'JsxFragment';
+    expressions: JsxExpression[];
+    components: JsxComponent[];
+    items: JsxRoot[];    
+}
+
 export interface JsxExpression extends TsxAirNode<ts.JsxExpression> {
     kind: 'JsxExpression';
     dependencies: CompProps[];
@@ -52,6 +59,7 @@ export interface JsxComponent extends TsxAirNode<JsxElm> {
     kind: 'JsxComponent';
     name: string;
     props: JsxComponentProps[];
+    children?: JsxFragment;
 }
 
 export interface JsxComponentProps extends TsxAirNode<ts.JsxAttributeLike> {
