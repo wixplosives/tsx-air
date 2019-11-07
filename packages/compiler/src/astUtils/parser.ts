@@ -2,6 +2,8 @@ import ts from 'typescript';
 import { find } from './scanner';
 import { isString } from 'lodash';
 
+export const asSourceFile = (statement: string ) =>  ts.createSourceFile('mock.ts', statement, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+
 /**
  * 
  * @param obj a stringified js object
@@ -9,7 +11,7 @@ import { isString } from 'lodash';
  */
 export const parseValue = (obj: string | object) => {
     const mockFileContent = `export const frag = ${isString(obj) ? obj : JSON.stringify(obj)}`;
-    const mockFile = ts.createSourceFile('mock.ts', mockFileContent, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const mockFile = asSourceFile(mockFileContent); 
     const def = find(mockFile, nd => {
         if (ts.isVariableDeclaration(nd) && ts.isIdentifier(nd.name) && nd.name.escapedText === 'frag') {
             return 'Literal';
@@ -26,9 +28,9 @@ export const parseValue = (obj: string | object) => {
     throw new Error('Invalid value object');
 };
 
+
 export const parseStatement = (statement: string) => {
-    const mockFileContent = `${isString(statement) ? statement : JSON.stringify(statement)}`;
-    const mockFile = ts.createSourceFile('mock.ts', mockFileContent, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const mockFile = asSourceFile(statement); 
 
     let validValue:any;
     mockFile.forEachChild(c => validValue = validValue || c);

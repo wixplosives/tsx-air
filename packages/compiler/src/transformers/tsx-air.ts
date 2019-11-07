@@ -9,9 +9,9 @@ import { compClass } from './generators/component-class';
 import { cloneDeep } from './generators/ast-generators';
 (window as any).ts = ts;
 
-export const jsx: Transformer = {
-    name: 'Jsx',
-    description: 'Transpiles Jsx to fragments',
+export const tsxAir: Transformer = {
+    name: 'TSXAir',
+    description: 'Transpiles TSXAir() declarations',
     requires: [],
     transformer: (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
         return sourceFile => {
