@@ -30,8 +30,13 @@ const processUpdate = (dom: DomBinding[], metadata: TSXAirData) => `public $$pro
             components.map(
                 //
                 i => i.length ? `runtime.updateProps(this.context.${i![0]!.nodeBinding.name},p => {
+<<<<<<< HEAD
                             ${i.map(p =>
                     `p.${p!.compPropName} = newProps.${prop};`).join('\n')}                                                      
+=======
+                            ${i.map(p => 
+                                `p.${p!.compPropName} = newProps.${prop};`).join('\n')}                                                      
+>>>>>>> 98cb72045a47edda69f9b1c5588411038d18594e
                             return ${i.map(p => `${p!.compName}.changeBitmask.${p!.compPropName}`).join('|')};
                         });` : '')
             }

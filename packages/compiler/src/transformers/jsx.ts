@@ -36,7 +36,7 @@ export const jsx: Transformer = {
         hydrate:${hydrate(tsxAirCall.metadata, dom)},
         initialState: () => ({})
     };
-    return ${tsxAirCall.metadata.name};})()`));
+    return ${tsxAirCall.metadata.name};})()`);
                 } else {
                     return ts.visitEachChild(n, transformTsxAir, context);
                 }

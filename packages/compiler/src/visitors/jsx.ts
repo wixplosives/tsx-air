@@ -1,6 +1,5 @@
 import { Visitor } from '../astUtils/scanner';
 import { isJsxSelfClosingElement, isJsxElement, isJsxFragment, isJsxExpression, JsxOpeningElement, isStringLiteral, JsxAttribute, Node, isJsxText } from 'typescript';
-import { partition } from 'lodash';
 
 
 export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
@@ -55,8 +54,7 @@ export const findJsxComponent: Visitor = (node, { ignoreChildren }) => {
                             name: att.name.escapedText as string,
                             value: isStringLiteral(att.initializer!)
                                 ? att.initializer.getText()
-                                // @ts-ignore
-                                : att.initializer.expression.getText()
+                                : att.initializer!.expression && att.initializer!.expression.getText() || ''
                         });
                 }
 
