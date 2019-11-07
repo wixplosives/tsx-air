@@ -4,7 +4,7 @@ import ts from 'typescript';
 export type Analyzer<N extends ts.Node = ts.Node, T extends TsxAirNode<N> = TsxAirNode<N>> = (node: N) => T | TsxAirNodeError | undefined;
 
 export type TsxAirNodeType = 'CompDefinition' | 'JsxFragment' |
-    'JsxRoot' | 'JsxExpression' |
+    'JsxRoot' | 'JsxExpression' | 'file' |
     'JsxComponent' | 'JsxComponentProps' | 'CompProps' | 'error';
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 
@@ -21,6 +21,11 @@ export interface TsxAirNode<T extends ts.Node> {
     kind: TsxAirNodeType;
     sourceAstNode: T;
     errors?: TsxAirError[];
+}
+
+export interface TsxFile extends TsxAirNode<ts.SourceFile> {
+    kind: 'file';
+    compDefinitions: CompDefinition[];
 }
 
 export interface CompDefinition extends TsxAirNode<ts.CallExpression> {
@@ -46,7 +51,7 @@ export interface JsxFragment extends TsxAirNode<ts.JsxFragment> {
     kind: 'JsxFragment';
     expressions: JsxExpression[];
     components: JsxComponent[];
-    items: JsxRoot[];    
+    items: JsxRoot[];
 }
 
 export interface JsxExpression extends TsxAirNode<ts.JsxExpression> {

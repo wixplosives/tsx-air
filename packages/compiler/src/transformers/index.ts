@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { jsx } from './jsx';
+import { tsxAir } from './tsx-air';
 
 export interface Transformer {
     name:string;
@@ -9,5 +9,5 @@ export interface Transformer {
 }
 
 export const transformers = [
-    jsx
+    tsxAir
 ];
