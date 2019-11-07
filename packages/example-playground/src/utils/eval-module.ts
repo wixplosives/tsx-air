@@ -1,5 +1,7 @@
 
 const initRequirable = async () => ({
+    '../../framework': await import('../framework'),
+    './helper': await import('../examples/04.zoom/helper'),
     '../../framework/runtime': await import('../framework/runtime'),
     '../../framework/runtime/utils': await import('../framework/runtime/utils'),
     '../../framework/types/component': await import('../framework/types/component')
@@ -23,6 +25,7 @@ export const evalModule = async (src: string) => {
         return requirable![path];
     }) as any;
 
+    // tslint:disable-next-line: no-eval
     eval(src);
     window.exports = {};
     return exp as any;

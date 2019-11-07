@@ -13,10 +13,10 @@ export const ParentComp = TSXAir((props: { name: string }) => (
 export const runExample = (element: HTMLElement) => {
     let count = 1;
     const name = 'Sir Gaga';
-    const comp = render(element, ParentComp, { name });
+    const app = render(element, ParentComp, { name });
 
     const i = setInterval(() => {
-        comp.updateProps({ name: `${name} the ${count++}` });
+        app.updateProps({ name: `${name} the ${count++}` });
     }, 50);
     return () => {
         clearInterval(i);

@@ -8,9 +8,8 @@ import { isString } from 'lodash';
  * @returns Ast node of {obj}
  */
 export const parseValue = (obj: string | object) => {
-    const mockFileContent = `const frag=${isString(obj) ? obj : JSON.stringify(obj)}`;
+    const mockFileContent = `export const frag = ${isString(obj) ? obj : JSON.stringify(obj)}`;
     const mockFile = ts.createSourceFile('mock.ts', mockFileContent, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-
     const def = find(mockFile, nd => {
         if (ts.isVariableDeclaration(nd) && ts.isIdentifier(nd.name) && nd.name.escapedText === 'frag') {
             return 'Literal';

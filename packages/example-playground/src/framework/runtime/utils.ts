@@ -1,7 +1,7 @@
 import { Component } from './../types/component';
 import { Factory, PropsOf } from './../types/factory';
 
-export function assignTextContent(field: { textContent: string | null }, value:string) {
+export function assignTextContent(field: { textContent: string | null }, value: string) {
     return () => field.textContent = value;
 }
 
@@ -53,15 +53,15 @@ export function updateSpreadElement(elm: HTMLElement, data: object) {
 }
 
 export function setProp<Props>(instance: Component<any, Props, any>, p: Props, value: any, key: keyof Props) {
-    if (p[key]!==value) {
+    if (p[key] !== value) {
         p[key] = value;
         // @ts-ignore
-        return instance.propMap[key];
+        return instance.constructor.changeBitmask[key];
     }
     return 0;
 }
 
-export function handleChanges(handlers:Map<number, ()=>void>, changesFlags:number) {
+export function handleChanges(handlers: Map<number, () => void>, changesFlags: number) {
     for (const [bitmask, action] of handlers) {
         // tslint:disable-next-line: no-bitwise
         if (bitmask & changesFlags) {
@@ -70,10 +70,10 @@ export function handleChanges(handlers:Map<number, ()=>void>, changesFlags:numbe
     }
 }
 
-export function setStyle(element:HTMLElement, style:object) {
+export function setStyle(element: HTMLElement, style: object) {
     let stl = '';
     for (const [key, value] of Object.entries(style)) {
-        stl = `${stl}${key}:${isNaN(Number(value))?value:(value|0)+'px'};`;
+        stl = `${stl}${key}:${isNaN(Number(value)) ? value : (value | 0) + 'px'};`;
     }
     element.setAttribute('style', stl);
 }
