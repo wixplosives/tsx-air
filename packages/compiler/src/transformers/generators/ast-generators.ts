@@ -101,6 +101,8 @@ function createSynthesizedNode(kind: ts.SyntaxKind) {
     return node;
 }
 
+
+
 export const cloneDeep = <T extends ts.Node>(node: T) => {
     const clone = createSynthesizedNode(node.kind) as T;
     for (const key in node) {
@@ -108,8 +110,13 @@ export const cloneDeep = <T extends ts.Node>(node: T) => {
             continue;
         }
         if (node[key] && (node[key] as any).kind) {
+            console.log('cloning key ' + key);
             clone[key] = (cloneDeep(node[key] as any as ts.Node) as any);
+        } else if (node[key] && (node[key] as any).length && (node[key] as any)[0].kind) {
+            console.log('cloning key ' + key + ' as children array');
+            clone[key] = (node[key] as any as ts.Node[]).map(item => cloneDeep(item)) as any;
         } else {
+            console.log('copying key ' + key);
             clone[key] = node[key];
         }
     }

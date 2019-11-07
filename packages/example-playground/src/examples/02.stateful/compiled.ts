@@ -1,5 +1,6 @@
 import { Factory } from '../../framework/types/factory';
 import runtime from '../../framework/runtime';
+import { render } from '../../framework';
 import { assignTextContent, noop, handleChanges } from '../../framework/runtime/utils';
 import { Component } from '../../framework/types/component';
 
@@ -83,6 +84,6 @@ StatefulComp.factory = {
     )
 };
 
-export const runExample = (element: HTMLElement) => {
-    runtime.render(element, StatefulComp.factory, { initialState: 'Click me' });
+export const runExample = (target: HTMLElement) => {
+    render(target, StatefulComp as any, { initialState: 'Click me!' });
 };

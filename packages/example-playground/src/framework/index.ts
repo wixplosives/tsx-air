@@ -10,14 +10,14 @@ class ComponentApi<Props> {
     public updateProps = (props: Props) => runtime.updateProps(
         this.$instance as unknown as Component, p => {
             let changed = 0;
-            for (const [value, key] of Object.entries(props)) {
-                changed |= setProp(this.$instance, p as Props, value, key);
+            for (const [key, value] of Object.entries(props)) {
+                changed |= setProp(this.$instance, p as Props, value, key as any);
             }
-            for (const [value, key] of Object.entries(p)) {
+            for (const [key, value] of Object.entries(p)) {
                 // @ts-ignore
                 if (value !== props[key]) {
                     // @ts-ignore
-                    changed |= this.$instance.propMap[key];
+                    changed |= this.$instance.constructor.changeBitmask[key];
                     // @ts-ignore
                     delete p[key];
                 }
@@ -40,6 +40,7 @@ export function render<Props>(target: HTMLElement, component: ComponentDef<Props
     return comp && new ComponentApi(comp, target);
 }
 
+
 export { TSXAir } from './api/types';
 
 export { delegate };
@@ -47,4 +48,4 @@ export { stats } from './api/debug/stats';
 export { bind } from './api/bind';
 
 export { store } from './api/store';
-export { when,  always, requestRender} from './api/lifecycle';
+export { when, always, requestRender } from './api/lifecycle';

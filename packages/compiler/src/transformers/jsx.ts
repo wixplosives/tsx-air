@@ -6,6 +6,7 @@ import { tsxair, TSXAirData } from '../visitors/tsxair';
 import ts from 'typescript';
 import { scan } from '../astUtils/scanner';
 import { compClass } from './generators/component-class';
+import { cloneDeep } from './generators/ast-generators';
 (window as any).ts = ts;
 
 export const jsx: Transformer = {
@@ -26,7 +27,7 @@ export const jsx: Transformer = {
                 if (tsxAirCall) {
                     const dom = findDomBindings(tsxAirCall.node);
                     const { metadata: { name } } = tsxAirCall;
-                    return parseValue(`(()=>{
+                    return cloneDeep(parseValue(`(()=>{
     ${compClass(dom, tsxAirCall.metadata)}
     ${name}.changeBitmask={${(tsxAirCall.metadata as TSXAirData).usedProps.map((prop, i) => `${prop}:1<<${i}`).join()}}
     ${name}.factory={
@@ -35,7 +36,7 @@ export const jsx: Transformer = {
         hydrate:${hydrate(tsxAirCall.metadata, dom)},
         initialState: () => ({})
     };
-    return ${tsxAirCall.metadata.name};})()`);
+    return ${tsxAirCall.metadata.name};})()`));
                 } else {
                     return ts.visitEachChild(n, transformTsxAir, context);
                 }

@@ -1,6 +1,7 @@
 import { Dom } from '../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 import runtime from '../../framework/runtime';
+import {render } from '../../framework';
 import { Component } from '../../framework/types/component';
 
 interface ParentCompProps { name: string; }
@@ -71,13 +72,10 @@ ChildComp.factory = {
 export const runExample = (element: HTMLElement) => {
     let count = 1;
     const name = 'Sir Gaga';
-    const comp = runtime.render(element, ParentComp.factory, { name })!;
+    const app = render(element, ParentComp as any, { name });
 
     const i = setInterval(() => {
-        runtime.updateProps(comp as ParentComp, (p:ParentCompProps) => {
-            p.name = `${name} the ${count++}`;
-            return ParentComp.changeBitmask.name;
-        });
+        app.updateProps({ name: `${name} the ${count++}` });
     }, 50);
     return () => {
         clearInterval(i);
