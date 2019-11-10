@@ -1,6 +1,7 @@
 // tslint:disable: no-bitwise
 
-import ts from 'typescript';
+import ts, { JsxSelfClosingElement, createArrayBindingPattern } from 'typescript';
+import { isArray } from 'util';
 export const cArrow = (body: ts.ConciseBody, ...params: string[]) => {
     return ts.createArrowFunction(undefined, undefined,
         params.map(item => ts.createParameter(undefined, undefined, undefined, item, undefined, undefined, undefined)),
@@ -9,17 +10,71 @@ export const cArrow = (body: ts.ConciseBody, ...params: string[]) => {
 };
 
 
+export const cCall = (callPath: string[], args: ts.Expression[]) => {
+    let identifier: ts.Expression = ts.createIdentifier(callPath[0]);
+    for (let i = 1; i < callPath.length; i++) {
+        identifier = ts.createPropertyAccess(identifier, callPath[i]);
+    }
+
+    return ts.createCall(identifier, undefined, args);
+};
+
+
+
+
+/**
+ * creates a literal pojo from a literal pojo, supports nested expressions
+ */
+export const cObject = (properties: Record<string, any>) => {
+    return ts.createObjectLiteral(Object.entries(properties).map(([name, value]) => {
+        return ts.createPropertyAssignment(name, cLiteralAst(value));
+    }));
+};
+
+export const cArray = (items: any[]) => {
+    return ts.createArrayLiteral(items.map(cLiteralAst));
+};
+
+export function cLiteralAst(item: any): ts.Expression {
+    const exp = isTSNode(item) ? item :
+        isArray(item) ? cArray(item) :
+            (typeof item === 'object') ? cObject(item) :
+                cPrimitive(item);
+
+    if (exp === null) {
+        throw new Error('unknown conversion');
+    }
+    return exp as ts.Expression;
+}
+
+export function isTSNode(node: any): node is ts.Node {
+    return node && !!node.kind;
+}
+
+export const cPrimitive = (input: any) => {
+    if (typeof input === 'string') {
+        return ts.createStringLiteral(input);
+    }
+    if (typeof input === 'number') {
+        return ts.createNumericLiteral(input.toString());
+    }
+    if (typeof input === 'boolean') {
+        return input ? ts.createTrue() : ts.createFalse();
+    }
+    return null;
+};
+
 export interface ExpressionData {
     expression: ts.Expression;
     prefix?: string;
     suffix?: string;
 }
 
-export interface ExpressionReplacer {
-    isApplicable: (node: ts.Node) => boolean;
-    getExpression: (node: ts.Node) => ExpressionData;
+export interface ExpressionReplacer<T extends ts.Node = ts.Node> {
+    isApplicable: (node: ts.Node) => node is T;
+    getExpression: (node: T) => ExpressionData;
 }
-export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: ExpressionReplacer[]) => {
+export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: Array<ExpressionReplacer<any>>) => {
     const res = nodeToStringParts(jsx, replacers);
     const flattened = res.reduce((accum, item) => {
         if (typeof item === 'string') {
@@ -119,4 +174,62 @@ export const cloneDeep = <T extends ts.Node>(node: T) => {
     }
     return clone;
 
+};
+
+export const attributeReplacer: ExpressionReplacer<ts.JsxExpression> = {
+    isApplicable(node): node is ts.JsxExpression {
+        return ts.isJsxExpression(node) && ts.isJsxAttribute(node.parent);
+    },
+    getExpression(node) {
+        return {
+            prefix: '"',
+            expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
+            suffix: '"'
+        };
+    }
+};
+
+export const jsxTextExpressionReplacer: ExpressionReplacer<ts.JsxExpression> = {
+    isApplicable(node): node is ts.JsxExpression {
+        return ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent);
+    },
+    getExpression(node) {
+        return {
+            prefix: `<!-- ${node.expression ? node.expression.getText() : 'empty expression'} -->`,
+            expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
+            suffix: `<!-- ${node.expression ? node.expression.getText() : 'empty expression'} -->`
+        };
+    }
+};
+
+export const jsxComponentReplacer: ExpressionReplacer<ts.JsxElement | JsxSelfClosingElement> = {
+    isApplicable(node): node is ts.JsxElement | JsxSelfClosingElement {
+        if (ts.isJsxElement(node) && isComponentTag(node.openingElement.tagName)) {
+            return true;
+        }
+        if (ts.isJsxSelfClosingElement(node) && isComponentTag(node.tagName)) {
+            return true;
+        }
+        return false;
+    },
+    getExpression(node) {
+        const openingNode = ts.isJsxElement(node) ? node.openingElement : node;
+        const tagName = openingNode.tagName.getText();
+
+        return {
+            expression: cCall([tagName, 'toString'],
+                [cObject(openingNode.attributes.properties.reduce((accum, prop) => {
+                    if (ts.isJsxSpreadAttribute(prop)) {
+                        throw new Error('spread in attributes is not handled yet');
+                    }
+                    accum[prop.name.getText()] = prop.initializer ? cloneDeep(prop.initializer) : ts.createTrue();
+                    return accum;
+                }, {} as Record<string, any>))]),
+        };
+    }
+};
+
+export const isComponentTag = (node: ts.JsxTagNameExpression) => {
+    const text = node.getText();
+    return text[0].toLowerCase() !== text[0] || text.indexOf('.') !== -1;
 };

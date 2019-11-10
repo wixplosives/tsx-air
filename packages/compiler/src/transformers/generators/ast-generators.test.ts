@@ -1,7 +1,9 @@
 import * as ts from 'typescript';
 import { parseValue } from '../../astUtils/parser';
 import { expect } from 'chai';
-import { jsxToStringTemplate, cloneDeep } from './ast-generators';
+import { jsxToStringTemplate, cloneDeep, attributeReplacer, jsxTextExpressionReplacer, jsxComponentReplacer } from './ast-generators';
+import { analyze } from '../../analyzers';
+import { CompDefinition } from '../../analyzers/types';
 
 const connectToString = (generator: (ctx: ts.TransformationContext) => ts.Node) => {
 
@@ -49,7 +51,7 @@ describe('jsxToStringTemplate', () => {
     it('should replace to template string expressions according to visitors', () => {
         const ast = parseValue(`<div id={window.location}>gaga</div>`);
         const generator = () => jsxToStringTemplate(ast as ts.JsxElement, [{
-            isApplicable(node) {
+            isApplicable(node): node is ts.JsxExpression {
                 return ts.isJsxExpression(node);
             },
             getExpression(node) {
@@ -64,5 +66,51 @@ describe('jsxToStringTemplate', () => {
         }]);
         const res = connectToString(generator);
         expect(res).to.include('const a = `<div id="${window.location}">gaga</div>`');
+    });
+});
+
+
+describe('replace attribute expression', () => {
+    it('should replace jsx attributes and leave other jsx expressions alone', () => {
+        const ast = parseValue(`TSXAir((props)=>{
+            return <div id={props.id}>{props.title}</div>
+        })`);
+
+        const info = analyze(ast) as CompDefinition;
+        const jsxRootInfo = info.jsxRoots[0];
+
+        const generator = () => jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [attributeReplacer]);
+        const res = connectToString(generator);
+        expect(res).to.include('const a = `<div id="${props.id}">{props.title}</div>`');
+    });
+});
+
+describe('jsx text expression replacer', () => {
+    it('should replace jsx text expressions and leave other jsx expressions alone', () => {
+        const ast = parseValue(`TSXAir((props)=>{
+            return <div id={props.id}>{props.title}</div>
+        })`);
+
+        const info = analyze(ast) as CompDefinition;
+        const jsxRootInfo = info.jsxRoots[0];
+
+        const generator = () => jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer]);
+        const res = connectToString(generator);
+        expect(res).to.include('const a = `<div id={props.id}><!-- props.title -->${props.title}<!-- props.title --></div>`');
+    });
+});
+
+describe('component node replacer', () => {
+    it('should replace jsx nodes with upper case into calls to the component to string', () => {
+        const ast = parseValue(`TSXAir((props)=>{
+            return <div id={props.id}><Comp name="gaga" title={props.title}></Comp></div>
+        })`);
+
+        const info = analyze(ast) as CompDefinition;
+        const jsxRootInfo = info.jsxRoots[0];
+
+        const generator = () => jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxComponentReplacer]);
+        const res = connectToString(generator);
+        expect(res).to.include(`const a = \`<div id={props.id}>\${Comp.toString({ name: "gaga", title: (props.title) })}</div>\``);
     });
 });
