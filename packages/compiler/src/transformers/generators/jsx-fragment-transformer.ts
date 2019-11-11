@@ -5,6 +5,8 @@ import { GeneratorTransformer } from './append-node-transformer';
 
 export const fragmentTransformer: GeneratorTransformer = (genCtx, ctx) => {
     const visitor: ts.Transformer<ts.Node> = node => {
+        const scan = genCtx.getScanRes();
+        
         if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)) {
             const fragmentRef = genCtx.appendPrivateVar('gaga', cObject(
                 {
