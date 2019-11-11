@@ -6,7 +6,9 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
     const mask = bitMask(def);
     const propsIdentifierRegExp = new RegExp(`(?<![\\d\\w])(${def.propsIdentifier})`, 'g');
 
+    const usedComps = def.jsxRoots[0].components.length ? `const ${def.jsxRoots[0].components.map(({name:n}) => n+'=exports.'+n).join()};` :'';
     return `
+    ${usedComps}
     class ${def.name}{
         constructor(public readonly context){}
        ${processUpdate()}
@@ -42,7 +44,7 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
         return comps.map(comp => {
             const props = comp.props.filter(p => isJsxExpression(p.value));
             const ctxName = dom.find(c => c.astNode === comp.sourceAstNode)!.ctxName;
-            const update = props.reduce((ret, p) => `${ret}p.${p.name} = ${replaceProps((p.value as JsxExpression).expression)};\n`, '');
+            const update = props.reduce((ret, p) => `${ret}p.${p.name} = ${replaceProps((p.value as JsxExpression).expression, 'newProps')};\n`, '');
             const changed = props.reduce((ret, p) => `${ret && ret + '|'}${comp.name}.changeBitmask.${p.name}`, '');
 
             return `runtime.updateProps(this.context.${ctxName} , p => {
@@ -53,7 +55,7 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
         });
     }
 
-    function replaceProps(exp: string, replacePropsWith:string='p') {
+    function replaceProps(exp: string, replacePropsWith: string = 'p') {
         return exp.replace(propsIdentifierRegExp, replacePropsWith);
     }
 };

@@ -14,7 +14,7 @@ export const generateDomBindings = (compDef: CompDefinition) => {
         throw new Error('Unsupported (yet): TSXAir components must have a single JsxRoot');
     }
 
-    const addDomElement = (nd: ts.Node, prefix = 'root.childNode') => {
+    const addDomElement = (nd: ts.Node, prefix = 'root.childNodes') => {
         let childCount = 0;
         let compCount = 0;
         nd.forEachChild(child => {
@@ -36,11 +36,11 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                     if (tag) {
                         expressions.push({
                             ctxName: `${tag}${++compCount}`,
-                            viewLocator: `(${tag} || exports.${tag}).factory.hydrate(${prefix}[${childCount}])`,
+                            viewLocator: `${tag}.factory.hydrate(${prefix}[${childCount}])`,
                             astNode: child
                         });
                     } else {
-                        addDomElement(child, `${prefix}[${childCount}].childNode`);
+                        addDomElement(child, `${prefix}[${childCount}].childNodes`);
                     }
                     childCount++;
                     break;
