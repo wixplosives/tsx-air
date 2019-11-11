@@ -1,7 +1,6 @@
 import ts from 'typescript';
 import { expect } from 'chai';
 import { getCompDef } from './comp-definition.test';
-import { CompDefinition } from './types';
 import { find } from '../astUtils/scanner';
 // tslint:disable: no-unused-expression
 // tslint:disable: no-shadowed-variable

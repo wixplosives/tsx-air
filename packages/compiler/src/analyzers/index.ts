@@ -1,52 +1,45 @@
-import ts  from 'typescript';
-import { Analyzer, TsxFile } from './types';
+import ts from 'typescript';
+import { Analyzer, TsxFile, CompDefinition } from './types';
 import { compDefinition } from './comp-definition';
 import { scan } from '../astUtils/scanner';
+import { hasError, errorNode, isTsxAirNode, addToNodesMap, NodesMap } from './types.helpers';
 
-
-export const analyze:Analyzer = node => {
-    if (!node) {
-        return {
-            sourceAstNode: node,
-            kind: 'error',
-            errors: [{
-                message: 'undefined or null node',
-                type: 'internal'
-            }]
-        };
-    }
-
-    if (ts.isCallExpression(node)){
-        const comp = compDefinition(node);
-        if (comp && comp.kind === 'CompDefinition') {
-            return comp;
-        }
-    }
-
+export const analyzeFile: Analyzer<ts.SourceFile, TsxFile> = node => {
     if (ts.isSourceFile(node)) {
-        return {
+        const astToTsxAir: NodesMap = new Map();
+        const tsxAir: TsxFile = {
             kind: 'file',
             compDefinitions: scan(node, (n, { ignoreChildren }) => {
                 if (ts.isSourceFile(n)) {
                     return;
                 }
                 const analyzed = analyze(n);
-                if (analyzed && !analyzed.errors) {
+                if (isTsxAirNode(analyzed.tsxAir) && !hasError(analyzed.tsxAir)) {
                     ignoreChildren();
-                    return analyzed;
+                    addToNodesMap(astToTsxAir, analyzed.astToTsxAir);
+                    return analyzed.tsxAir;
                 }
                 return;
-            }).map(i => i.metadata as unknown as TsxFile),
+            }).map(i => i.metadata as unknown as CompDefinition),
             sourceAstNode: node
+        };
+        return {
+            tsxAir, astToTsxAir
         };
     }
 
-    return {
-        sourceAstNode: node,
-        kind: 'error',
-        errors: [{
-            message: 'unidentified node',
-            type: 'internal'
-        }]
-    };
+    return errorNode(node, 'Not a source file');
+};
+
+export const analyze: Analyzer = node => {
+    if (!node) {
+        return errorNode(node, 'undefined or null node', 'internal');
+    }
+
+    const comp = compDefinition(node);
+    if (isTsxAirNode(comp.tsxAir) && !hasError(comp.tsxAir)) {
+        return comp;
+    }
+
+    return errorNode(node, 'Unidentified node', 'unsupported');
 };

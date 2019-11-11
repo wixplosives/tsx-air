@@ -1,14 +1,14 @@
 import {  parseStatement } from '../astUtils/parser';
 import { expect } from 'chai';
 import { compDefinition } from './comp-definition';
-import ts, { isCallExpression } from 'typescript';
+import ts from 'typescript';
 import { find } from '../astUtils/scanner';
 import { CompDefinition } from './types';
 
 export const getCompDef = (code: string) => {
     const ast = parseStatement(code);
-    const tsxairNode = find(ast, node => isCallExpression(node));
-    const comp = compDefinition(tsxairNode as ts.CallExpression) as CompDefinition;
+    const tsxairNode = find(ast, node => ts.isCallExpression(node));
+    const comp = compDefinition(tsxairNode).tsxAir as CompDefinition;
 
     return { ast, comp, tsxairNode };
 };

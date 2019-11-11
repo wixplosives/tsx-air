@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { analyze } from '.';
+import { analyze, analyzeFile } from '.';
 import { parseValue, asSourceFile } from '../astUtils/parser';
 import { TsxFile } from './types';
 
@@ -7,7 +7,7 @@ describe('analyze', () => {
     describe('file', () => {
         it('should fins all the component definitions', () => {
             const file = asSourceFile('const Comp1 = TSXAir(() => <div>TsxAir Component</div>)); const Comp2 = TSXAir(() => <div>TsxAir Component</div>))')
-            const result = analyze(file) as TsxFile;
+            const result = analyzeFile(file).tsxAir as TsxFile;
             expect(result.kind).to.equal('file');
             expect(result.compDefinitions).to.have.length(2);
             expect(result.compDefinitions[0].name).to.equal('Comp1');
@@ -17,14 +17,14 @@ describe('analyze', () => {
 
     describe('invalid input node', () => {
         it('should return an TsxAirError for unidentified nodes', () => {
-            const result = analyze(parseValue('Strings are not interesting to analyze'))!;
+            const result = analyze(parseValue('Strings are not interesting to analyze')).tsxAir;
             expect(result.kind).to.equal('error');
-            expect(result.errors![0].message).to.equal('unidentified node');
+            expect(result.errors![0].message).to.equal('Unidentified node');
         });
 
         it('should return an TsxAirError for undefined nodes', () => {
             // @ts-ignore
-            const result = analyze()!;
+            const result = analyze().tsxAir;
             expect(result.kind).to.equal('error');
             expect(result.errors![0].message).to.equal('undefined or null node');
         });
@@ -33,8 +33,16 @@ describe('analyze', () => {
     describe('valid input node identification', () => {
         it('should identify TsxAir component definition', () => {
             const ast = parseValue('TSXAir(() => <div>TsxAir Component</div>))');
-            const result = analyze(ast)!;
+            const result = analyze(ast).tsxAir;
             expect(result.kind).to.equal('CompDefinition');
+        });
+    });
+
+    describe('astToTsxAir', () => {
+        it('should collect all referenced AST nodes', () => {
+            const ast = parseValue('TSXAir(() => <div>TsxAir Component</div>))');
+            const result = analyze(ast).astToTsxAir;
+            expect(result.size).to.equal(2);
         });
     });
 });
