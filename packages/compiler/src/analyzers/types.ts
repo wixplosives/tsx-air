@@ -60,11 +60,16 @@ export interface JsxExpression extends TsxAirNode<ts.JsxExpression> {
     expression: string;
 }
 
+export function isJsxExpression(x: any): x is JsxExpression {
+    return x.kind === 'JsxExpression' && x.expression && x.sourceAstNode;
+}
+
 export interface JsxComponent extends TsxAirNode<JsxElm> {
     kind: 'JsxComponent';
     name: string;
     props: JsxComponentProps[];
     children?: JsxFragment;
+    dependencies: CompProps[];
 }
 
 export interface JsxComponentProps extends TsxAirNode<ts.JsxAttributeLike> {
