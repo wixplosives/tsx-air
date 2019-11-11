@@ -6,7 +6,7 @@ import { TsxFile, CompDefinition } from './types';
 describe('analyze', () => {
     describe('file', () => {
         it('should fins all the component definitions', () => {
-            const file = asSourceFile('const Comp1 = TSXAir(() => <div>TsxAir Component</div>)); const Comp2 = TSXAir(() => <div>TsxAir Component</div>))')
+            const file = asSourceFile('const Comp1 = TSXAir(() => <div>TsxAir Component</div>)); const Comp2 = TSXAir(() => <div>TsxAir Component</div>))');
             const result = analyzeFile(file).tsxAir as TsxFile;
             expect(result.kind).to.equal('file');
             expect(result.compDefinitions).to.have.length(2);
