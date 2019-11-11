@@ -28,6 +28,7 @@ export const tsxAir: Transformer = {
                 const output = `(()=>{
                             ${compClass(dom, tsxAirCall)}
                             ${compFactory(dom, tsxAirCall)}
+                            return ${tsxAirCall.name};
                         })()`;
                 console.log(output);
 
