@@ -1,7 +1,6 @@
 import ts from 'typescript';
 import { expect } from 'chai';
 import { getCompDef } from './comp-definition.test';
-import { find } from '../astUtils/scanner';
 // tslint:disable: no-unused-expression
 // tslint:disable: no-shadowed-variable
 
@@ -44,8 +43,7 @@ describe('TSXAir component analyzer: Jsx', () => {
         });
 
         it('should find properties with expressions', () => {
-            const { ast, comp } = getCompDef(`TSXAir(props => (<span att="3" exp={props.name}>!</span>)`);
-            const propValue = find(ast, i => ts.isPropertyAccessExpression(i));
+            const { comp } = getCompDef(`TSXAir(props => (<span att="3" exp={props.name}>!</span>)`);
             const prop = comp.jsxRoots[0].expressions[0];
 
             expect(prop).to.deep.include({
