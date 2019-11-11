@@ -11,7 +11,7 @@ export interface DomBinding {
 export const generateDomBindings = (compDef: CompDefinition) => {
     const expressions: DomBinding[] = [];
     if (compDef.jsxRoots.length !== 1) {
-        throw new Error('Unsupported (yet): TSXAit components must have a single JsxRoot');
+        throw new Error('Unsupported (yet): TSXAir components must have a single JsxRoot');
     }
 
     const addDomElement = (nd: ts.Node, prefix = 'root.childNode') => {
@@ -36,7 +36,7 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                     if (tag) {
                         expressions.push({
                             ctxName: `${tag}${++compCount}`,
-                            viewLocator: `${tag}.factory.hydrate(${prefix}[${childCount}])`,
+                            viewLocator: `(${tag} || exports.${tag}).factory.hydrate(${prefix}[${childCount}])`,
                             astNode: child
                         });
                     } else {

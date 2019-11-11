@@ -1,14 +1,13 @@
-import { toString } from './component-factory';
 import { CompDefinition } from './../../analyzers/types';
 import { findJsxComponent } from './../../visitors/jsx';
 import { scan } from './../../astUtils/scanner';
 import { findJsxExpression, findJsxRoot } from '../../visitors/jsx';
 import { transpileNode } from '../../astUtils/marker';
 import { DomBinding } from './component-common';
-import { hydrateTemplate, domCtxTemplate } from './templates/hydrate';
 
 export const compFactory = (dom: DomBinding[], def: CompDefinition) => {
     return `${def.name}.factory = {
+        initialState: ()=>{},
         toString: ${toString(def)},
         hydrate: ${hydrate(dom, def)}
     };`;
@@ -35,7 +34,7 @@ const toString = (def: CompDefinition) => {
                     case 'JSXExpression':
                         return `<!-- Hydrate: ${metadata.sourceText} -->runtime.tsxAirToString($${metadata.sourceText})<!-- End: ${metadata.sourceText} -->`;
                     case 'Component':
-                        return `\${${metadata.tag}.factory.toString({${metadata.props.map((i: any) =>
+                        return `\${(${metadata.tag} || exports.${metadata.tag}).factory.toString({${metadata.props.map((i: any) =>
                             `${i.name}:${i.value}`)
                             .join(',')}})}`;
                     default:
