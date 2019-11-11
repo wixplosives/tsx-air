@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { analyze, analyzeFile } from '.';
 import { parseValue, asSourceFile } from '../astUtils/parser';
-import { TsxFile } from './types';
+import { TsxFile, CompDefinition } from './types';
 
 describe('analyze', () => {
     describe('file', () => {
@@ -40,9 +40,14 @@ describe('analyze', () => {
 
     describe('astToTsxAir', () => {
         it('should collect all referenced AST nodes', () => {
-            const ast = parseValue('TSXAir(() => <div>TsxAir Component</div>))');
-            const result = analyze(ast).astToTsxAir;
-            expect(result.size).to.equal(2);
+            const ast = parseValue(`TSXAir(() => <div>TsxAir Component{'with expression'}</div>))`);
+            const { tsxAir, astToTsxAir} = analyze(ast);
+            expect(astToTsxAir.size).to.equal(3);
+            expect(astToTsxAir.get(ast)).to.deep.equal([tsxAir]);
+            const jsxRoot = (tsxAir as CompDefinition).jsxRoots[0];
+            expect(astToTsxAir.get(jsxRoot.sourceAstNode)).to.deep.equal([jsxRoot]);
+            const expression = jsxRoot.expressions[0];
+            expect(astToTsxAir.get(expression.sourceAstNode)).to.deep.equal([expression]);
         });
     });
 });
