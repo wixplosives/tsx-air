@@ -1,4 +1,5 @@
-import { parseStatement } from './../astUtils/parser';
+import { cloneDeep } from './generators/ast-generators';
+import { parseValue } from './../astUtils/parser';
 import { generateDomBindings } from './generators/component-common';
 import { compFactory } from './generators/component-factory';
 import { Transformer } from './index';
@@ -6,7 +7,8 @@ import ts from 'typescript';
 import { compClass } from './generators/component-class';
 import { analyze } from '../analyzers';
 import { TsxFile } from '../analyzers/types';
-(window as any).ts = ts;
+// tslint:disable-next-line: no-unused-expression
+window && ((window as any).ts = ts);
 
 export const tsxAir: Transformer = {
     name: 'TSXAir',
@@ -30,12 +32,8 @@ export const tsxAir: Transformer = {
                             ${compFactory(dom, tsxAirCall)}
                             return ${tsxAirCall.name};
                         })()`;
-                console.log(output);
 
-                return  parseStatement(
-                        output
-                    )
-                ;
+                return cloneDeep(parseValue(output));
             }
         };
     }

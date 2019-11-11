@@ -8,16 +8,14 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
 
     return `
     class ${def.name}{
-        public static changeBitmask:Record<string,number>;
-        public static factory: { toString: (props: any) => string, hydrate: (root: any, props: any) => ${def.name}};
-        constructor(public readonly context:any){}
+        constructor(public readonly context){}
        ${processUpdate()}
     }
     ${def.name}.changeBitmask=${JSON.stringify(mask)};`;
 
 
     function processUpdate() {
-        return `public $$processUpdate(newProps:any, newState:any, changeMap:number) {
+        return `public $$processUpdate(newProps, newState, changeMap) {
             ${def.usedProps.map(handlePropChange)}
         }`;
     }
@@ -26,7 +24,6 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
         return `if (changeMap & ${def.name}.changeBitmask.${prop.name}){
             ${handlePropExpressions(prop).join('\n')}
             ${handlePropComp(prop).join('\n')}
-
         }`;
     }
 
