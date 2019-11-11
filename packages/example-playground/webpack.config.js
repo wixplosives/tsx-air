@@ -1,5 +1,6 @@
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { resolve } = require('path');
 
 module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
   return {
@@ -39,19 +40,25 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
     },
     plugins: [
       new HtmlWebpackPlugin({
-        title: 'TSXAir examples Playground',
-
-      }),
+        title: 'TsxAir example playground',
+        template: resolve(__dirname, 'src/index.html')
+      })
     ],
     performance: {
       hints: false
     },
 
+    externals: {
+      typescript: 'ts'
+    },
+
     devServer: {
-      contentBase: 'public',
+      contentBase: [
+        resolve(__dirname, 'public'),
+        resolve(__dirname, '../../node_modules')
+      ],
       hot: true,
       historyApiFallback: true,
-      
     },
   }
 }
