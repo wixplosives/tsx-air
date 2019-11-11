@@ -25,15 +25,16 @@ export const cCall = (callPath: string[], args: ts.Expression[]) => {
 /**
  * creates a literal pojo from a literal pojo, supports nested expressions
  */
-export const cObject = (properties: Record<string, any>) => {
+export const cObject = (properties: Record<string, any>, multiline: boolean = true) => {
     return ts.createObjectLiteral(Object.entries(properties).map(([name, value]) => {
         return ts.createPropertyAssignment(name, cLiteralAst(value));
-    }));
+    }), multiline);
 };
 
 export const cArray = (items: any[]) => {
     return ts.createArrayLiteral(items.map(cLiteralAst));
 };
+
 
 export function cLiteralAst(item: any): ts.Expression {
     const exp = isTSNode(item) ? item :
@@ -176,7 +177,7 @@ export const cloneDeep = <T extends ts.Node>(node: T) => {
 
 };
 
-export const attributeReplacer: ExpressionReplacer<ts.JsxExpression> = {
+export const jsxAttributeReplacer: ExpressionReplacer<ts.JsxExpression> = {
     isApplicable(node): node is ts.JsxExpression {
         return ts.isJsxExpression(node) && ts.isJsxAttribute(node.parent);
     },

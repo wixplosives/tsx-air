@@ -1,7 +1,7 @@
 import * as ts from 'typescript';
 import { parseValue } from '../../astUtils/parser';
 import { expect } from 'chai';
-import { jsxToStringTemplate, cloneDeep, attributeReplacer, jsxTextExpressionReplacer, jsxComponentReplacer } from './ast-generators';
+import { jsxToStringTemplate, cloneDeep, jsxAttributeReplacer, jsxTextExpressionReplacer, jsxComponentReplacer } from './ast-generators';
 import { analyze } from '../../analyzers';
 import { CompDefinition } from '../../analyzers/types';
 
@@ -79,7 +79,7 @@ describe('replace attribute expression', () => {
         const info = analyze(ast) as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
-        const generator = () => jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [attributeReplacer]);
+        const generator = () => jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
         const res = connectToString(generator);
         expect(res).to.include('const a = `<div id="${props.id}">{props.title}</div>`');
     });
@@ -98,8 +98,20 @@ describe('jsx text expression replacer', () => {
         const res = connectToString(generator);
         expect(res).to.include('const a = `<div id={props.id}><!-- props.title -->${props.title}<!-- props.title --></div>`');
     });
-});
 
+    it('should handle quates', () => {
+        const ast = parseValue(`TSXAir((props)=>{
+            return <div id={\`"gaga"\`}>{props.title}</div>
+        })`);
+
+        const info = analyze(ast) as CompDefinition;
+        const jsxRootInfo = info.jsxRoots[0];
+
+        const generator = () => jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
+        const res = connectToString(generator);
+        expect(res).to.include('const a = `<div id="${"gaga"}">{props.title}</div>`');
+    });
+});
 describe('component node replacer', () => {
     it('should replace jsx nodes with upper case into calls to the component to string', () => {
         const ast = parseValue(`TSXAir((props)=>{

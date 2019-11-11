@@ -72,3 +72,12 @@ export interface JsxComponentProps extends TsxAirNode<ts.JsxAttributeLike> {
     name: string;
     value: string | JsxExpression;
 }
+
+
+export type tsNodeToAirNode<T extends ts.Node> = T extends ts.JsxAttributeLike ? JsxComponentProps :
+    T extends JsxElm ? JsxComponent :
+    T extends ts.JsxExpression ? JsxExpression : 
+    T extends ts.JsxFragment ? JsxFragment | JsxRoot :
+    T extends ts.Identifier | ts.PropertyAccessExpression ? CompProps :
+    T extends ts.CallExpression ?  CompDefinition : 
+    T extends ts.SourceFile ? TsxFile : TsxAirNode<T>;
