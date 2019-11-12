@@ -2,6 +2,7 @@
 
 import ts, { JsxSelfClosingElement, createArrayBindingPattern } from 'typescript';
 import { isArray } from 'util';
+import { JsxElm, JsxRoot, CompDefinition } from '../../analyzers/types';
 export const cArrow = (body: ts.ConciseBody, ...params: string[]) => {
     return ts.createArrowFunction(undefined, undefined,
         params.map(item => ts.createParameter(undefined, undefined, undefined, item, undefined, undefined, undefined)),
@@ -233,4 +234,20 @@ export const jsxComponentReplacer: ExpressionReplacer<ts.JsxElement | JsxSelfClo
 export const isComponentTag = (node: ts.JsxTagNameExpression) => {
     const text = node.getText();
     return text[0].toLowerCase() !== text[0] || text.indexOf('.') !== -1;
+};
+
+export const generateToString = (node: JsxRoot, parentComp: CompDefinition) => {
+    return cArrow(jsxToStringTemplate(node.sourceAstNode, [
+        jsxComponentReplacer,
+        jsxTextExpressionReplacer,
+        jsxAttributeReplacer
+    ]), parentComp.propsIdentifier || 'props');
+};
+
+export const generateToHydrate = (node: JsxRoot, parentComp: CompDefinition) => {
+    return cArrow(jsxToStringTemplate(node.sourceAstNode, [
+        jsxComponentReplacer,
+        jsxTextExpressionReplacer,
+        jsxAttributeReplacer
+    ]), parentComp.propsIdentifier || 'props');
 };
