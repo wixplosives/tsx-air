@@ -1,6 +1,6 @@
+import { CompDefinition } from './../../analyzers/types';
 import ts, { SyntaxKind } from 'typescript';
-import { findJsxRoot, getComponentTag } from '../../visitors/jsx';
-import { find } from '../../astUtils/scanner';
+import { getComponentTag } from '../../visitors/jsx';
 
 export interface DomBinding {
     ctxName:string;
@@ -8,11 +8,13 @@ export interface DomBinding {
     astNode?: ts.Node;
 }
 
-export const findDomBindings = (node: ts.Node) => {
+export const generateDomBindings = (compDef: CompDefinition) => {
     const expressions: DomBinding[] = [];
-    const returnedJsx = find(node, findJsxRoot);
+    if (compDef.jsxRoots.length !== 1) {
+        throw new Error('Unsupported (yet): TSXAir components must have a single JsxRoot');
+    }
 
-    const addDomElement = (nd: ts.Node, prefix = 'root.childNode') => {
+    const addDomElement = (nd: ts.Node, prefix = 'root.childNodes') => {
         let childCount = 0;
         let compCount = 0;
         nd.forEachChild(child => {
@@ -38,7 +40,7 @@ export const findDomBindings = (node: ts.Node) => {
                             astNode: child
                         });
                     } else {
-                        addDomElement(child, `${prefix}[${childCount}].childNode`);
+                        addDomElement(child, `${prefix}[${childCount}].childNodes`);
                     }
                     childCount++;
                     break;
@@ -48,6 +50,6 @@ export const findDomBindings = (node: ts.Node) => {
         });
     };
 
-    addDomElement(returnedJsx);
+    addDomElement(compDef.jsxRoots[0].sourceAstNode);
     return expressions;
 };

@@ -1,23 +1,29 @@
 import { TsxAirNode } from './types';
 import ts from 'typescript';
 
-export type Analyzer<N extends ts.Node = ts.Node, T extends TsxAirNode<N> = TsxAirNode<N>> = (node: N) => T | TsxAirNodeError | undefined;
+export interface AnalyzerResult<T> {
+    tsxAir: T | TsxAirNodeError;
+    astToTsxAir: Map<ts.Node, TsxAirNode[]>;
+}
+
+export type Analyzer<N extends ts.Node = ts.Node, T extends TsxAirNode<N> = TsxAirNode<N>> = (node: N) => AnalyzerResult<T>;
 
 export type TsxAirNodeType = 'CompDefinition' | 'JsxFragment' |
     'JsxRoot' | 'JsxExpression' | 'file' |
     'JsxComponent' | 'JsxComponentProps' | 'CompProps' | 'error';
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
+export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
 
-export interface TsxAirError {
+interface TsxAirError {
     message: string;
-    type: 'internal' | 'code' | 'unsupported' | 'not supported yet';
+    type: TsxErrorType;
 }
 
 export interface TsxAirNodeError extends TsxAirNode<ts.Node> {
     kind: 'error';
 }
 
-export interface TsxAirNode<T extends ts.Node> {
+export interface TsxAirNode<T extends ts.Node = ts.Node> {
     kind: TsxAirNodeType;
     sourceAstNode: T;
     errors?: TsxAirError[];
@@ -60,11 +66,16 @@ export interface JsxExpression extends TsxAirNode<ts.JsxExpression> {
     expression: string;
 }
 
+export function isJsxExpression(x: any): x is JsxExpression {
+    return x.kind === 'JsxExpression' && x.expression && x.sourceAstNode;
+}
+
 export interface JsxComponent extends TsxAirNode<JsxElm> {
     kind: 'JsxComponent';
     name: string;
     props: JsxComponentProps[];
     children?: JsxFragment;
+    dependencies: CompProps[];
 }
 
 export interface JsxComponentProps extends TsxAirNode<ts.JsxAttributeLike> {

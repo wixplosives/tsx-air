@@ -27,7 +27,7 @@ export const compilers: Compiler[] = [
         compile: (src, _exp) => {
             const compiled = ts.transpileModule(src, {
                 compilerOptions: {
-                    jsx: ts.JsxEmit.React,
+                    jsx: ts.JsxEmit.Preserve,
                     jsxFactory: 'TSXAir',
                     target: ts.ScriptTarget.ES2020,
                     module: ts.ModuleKind.CommonJS,
