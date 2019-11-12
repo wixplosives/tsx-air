@@ -76,7 +76,7 @@ describe('replace attribute expression', () => {
             return <div id={props.id}>{props.title}</div>
         })`);
 
-        const info = analyze(ast) as CompDefinition;
+        const info = analyze(ast).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
         const generator = () => jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
@@ -91,7 +91,7 @@ describe('jsx text expression replacer', () => {
             return <div id={props.id}>{props.title}</div>
         })`);
 
-        const info = analyze(ast) as CompDefinition;
+        const info = analyze(ast).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
         const generator = () => jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer]);
@@ -104,7 +104,7 @@ describe('jsx text expression replacer', () => {
             return <div id={\`"gaga"\`}>{props.title}</div>
         })`);
 
-        const info = analyze(ast) as CompDefinition;
+        const info = analyze(ast).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
         const generator = () => jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
@@ -118,7 +118,7 @@ describe('component node replacer', () => {
             return <div id={props.id}><Comp name="gaga" title={props.title}></Comp></div>
         })`);
 
-        const info = analyze(ast) as CompDefinition;
+        const info = analyze(ast).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
         const generator = () => jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxComponentReplacer]);

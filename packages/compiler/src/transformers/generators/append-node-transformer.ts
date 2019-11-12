@@ -1,12 +1,13 @@
 import ts from 'typescript';
 import { cObject } from './ast-generators';
-import { TsxFile, tsNodeToAirNode, TsxAirNode, isTsxFile, isCompDefinition, isJsxRoot, isJsxComponent, isJsxComponentProps, isJsxFragment } from '../../analyzers/types';
-import { analyze } from '../../analyzers';
+import { TsxFile, tsNodeToAirNode, AnalyzerResult, TsxAirNode } from '../../analyzers/types';
+import {  analyzeFile } from '../../analyzers';
 
 
 export interface GeneratorContext {
     appendPrivateVar(wantedName: string, expression: ts.Expression): ts.Expression;
     getScanRes(): TsxFile;
+    getNodeInfo<T extends ts.Node>(node: T): Array<tsNodeToAirNode<T>> | undefined;
 }
 
 export type GeneratorTransformer = (genCtx: GeneratorContext, ctx: ts.TransformationContext) => ts.Transformer<ts.Node>;
@@ -14,7 +15,7 @@ export type GeneratorTransformer = (genCtx: GeneratorContext, ctx: ts.Transforma
 const varHolderIdentifier = '__private_tsx_air__';
 export const appendNodeTransformer: (gen: GeneratorTransformer) => ts.TransformerFactory<ts.SourceFile> = gen => ctx => {
     const appendedNodes: Record<string, ts.Expression> = {};
-    let scanRes: TsxFile;
+    let scanRes: AnalyzerResult<TsxAirNode<ts.Node>>;
     const genCtx: GeneratorContext = {
         appendPrivateVar(wantedName, exp) {
             let counter = 0;
@@ -25,13 +26,17 @@ export const appendNodeTransformer: (gen: GeneratorTransformer) => ts.Transforme
             return ts.createPropertyAccess(ts.createIdentifier(varHolderIdentifier), ts.createIdentifier(wantedName + counter));
         },
         getScanRes() {
-            return scanRes;
+            return scanRes.tsxAir as any;
+        },
+        getNodeInfo(node) {
+            return scanRes.astToTsxAir.get(node) as any;
         }
     };
 
 
     return (node: ts.SourceFile) => {
-        scanRes = analyze(node) as any;
+        scanRes = analyzeFile(node);
+        
         const res = ts.visitEachChild(node, gen(genCtx, ctx), ctx);
         const varHolder = ts.createVariableStatement(undefined, [ts.createVariableDeclaration(varHolderIdentifier, undefined, cObject(appendedNodes))]);
         return ts.updateSourceFileNode(node, res.statements.concat([varHolder]));

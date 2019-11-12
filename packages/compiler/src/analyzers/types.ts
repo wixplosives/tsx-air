@@ -66,10 +66,6 @@ export interface JsxExpression extends TsxAirNode<ts.JsxExpression> {
     expression: string;
 }
 
-export function isJsxExpression(x: any): x is JsxExpression {
-    return x.kind === 'JsxExpression' && x.expression && x.sourceAstNode;
-}
-
 export interface JsxComponent extends TsxAirNode<JsxElm> {
     kind: 'JsxComponent';
     name: string;
@@ -86,7 +82,7 @@ export interface JsxComponentProps extends TsxAirNode<ts.JsxAttributeLike> {
 
 
 export type tsNodeToAirNode<T extends ts.Node> = T extends ts.JsxAttributeLike ? JsxComponentProps :
-    T extends JsxElm ? JsxComponent :
+    T extends JsxElm ? JsxComponent | JsxRoot :
     T extends ts.JsxExpression ? JsxExpression :
     T extends ts.JsxFragment ? JsxFragment | JsxRoot :
     T extends ts.Identifier | ts.PropertyAccessExpression ? CompProps :
@@ -94,34 +90,34 @@ export type tsNodeToAirNode<T extends ts.Node> = T extends ts.JsxAttributeLike ?
     T extends ts.SourceFile ? TsxFile : TsxAirNode<T>;
 
 
-export function isJsxComponentProps(node: TsxAirNode<any>): node is JsxComponentProps {
+export function isJsxComponentProps(node: any): node is JsxComponentProps {
     return node.kind === 'JsxComponentProps';
 }
 
-export function isJsxComponent(node: TsxAirNode<any>): node is JsxComponent {
-    return node.kind === 'JsxComponent';
+export function isJsxComponent(node: any): node is JsxComponent {
+    return node && node.kind === 'JsxComponent';
 }
 
-export function isJsxExpression(node: TsxAirNode<any>): node is JsxExpression {
-    return node.kind === 'JsxExpression';
+export function isJsxExpression(node: any): node is JsxExpression {
+    return node && node.kind === 'JsxExpression';
 }
 
-export function isJsxFragment(node: TsxAirNode<any>): node is JsxFragment {
-    return node.kind === 'JsxFragment';
+export function isJsxFragment(node: any): node is JsxFragment {
+    return node && node.kind === 'JsxFragment';
 }
 
-export function isJsxRoot(node: TsxAirNode<any>): node is JsxRoot {
-    return node.kind === 'JsxRoot';
+export function isJsxRoot(node: any): node is JsxRoot {
+    return node && node.kind === 'JsxRoot';
 }
 
-export function isCompProps(node: TsxAirNode<any>): node is CompProps {
-    return node.kind === 'CompProps';
+export function isCompProps(node: any): node is CompProps {
+    return node && node.kind === 'CompProps';
 }
 
-export function isCompDefinition(node: TsxAirNode<any>): node is CompDefinition {
-    return node.kind === 'CompDefinition';
+export function isCompDefinition(node: any): node is CompDefinition {
+    return node && node.kind === 'CompDefinition';
 }
 
-export function isTsxFile(node: TsxAirNode<any>): node is TsxFile {
-    return node.kind === 'file';
+export function isTsxFile(node: any): node is TsxFile {
+    return node && node.kind === 'file';
 }

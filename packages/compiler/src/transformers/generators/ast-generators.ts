@@ -1,8 +1,8 @@
 // tslint:disable: no-bitwise
 
-import ts, { JsxSelfClosingElement, createArrayBindingPattern } from 'typescript';
+import ts, { JsxSelfClosingElement } from 'typescript';
 import { isArray } from 'util';
-import { JsxElm, JsxRoot, CompDefinition } from '../../analyzers/types';
+import {  JsxRoot, CompDefinition } from '../../analyzers/types';
 export const cArrow = (body: ts.ConciseBody, ...params: string[]) => {
     return ts.createArrowFunction(undefined, undefined,
         params.map(item => ts.createParameter(undefined, undefined, undefined, item, undefined, undefined, undefined)),
