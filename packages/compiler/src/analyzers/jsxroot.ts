@@ -2,7 +2,7 @@ import { flatMap, uniqBy } from 'lodash';
 import { Visitor } from './../astUtils/scanner';
 import { findJsxRoot, findJsxExpression, getComponentTag } from './../visitors/jsx';
 import { scan, ScannerApi } from '../astUtils/scanner';
-import { CompProps, JsxExpression, JsxRoot, JsxElm, JsxComponent, JsxComponentProps, isJsxExpression } from './types';
+import { CompProps, JsxExpression, JsxRoot, JsxElm, JsxComponent, JsxAttribute, isJsxExpression } from './types';
 import ts, { isJsxElement } from 'typescript';
 
 export function jsxRoots(astNode: ts.Node, propsIdentifier: string | undefined, usedProps: CompProps[]) {
@@ -52,7 +52,7 @@ const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string, usedProps: Comp
         if (name) {
             ignoreChildren();
             const { attributes } = isJsxElement(jsxCompNode) ? jsxCompNode.openingElement : jsxCompNode as ts.JsxSelfClosingElement;
-            const props = attributes.properties.reduce<JsxComponentProps[]>(
+            const props = attributes.properties.reduce<JsxAttribute[]>(
                 (acc, attribute) => {
                     const att = attribute as ts.JsxAttribute;
                     const { initializer } = att;
@@ -63,7 +63,7 @@ const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string, usedProps: Comp
                             : parseExpression(initializer!);
                         acc.push(
                             {
-                                kind: 'JsxComponentProps',
+                                kind: 'JsxAttribute',
                                 name: att.name.escapedText as string,
                                 sourceAstNode: attribute as ts.JsxAttribute,
                                 value

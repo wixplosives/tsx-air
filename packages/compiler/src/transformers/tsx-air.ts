@@ -19,7 +19,7 @@ export const tsxAir: Transformer = {
             const sourceData = analyzeFile(sourceFile).tsxAir as TsxFile;
             return ts.visitEachChild(sourceFile, transformTsxAir, context);
 
-            function transformTsxAir(n: ts.Node): ts.Node | ts.Node[] {
+            function transformTsxAir(n: ts.Node): ts.Node {
                 const tsxAirCall = sourceData.compDefinitions.find(i => {
                     return i.sourceAstNode === n;
                 });
@@ -33,7 +33,7 @@ export const tsxAir: Transformer = {
                             return ${tsxAirCall.name};
                         })()`;
 
-                return cloneDeep(parseValue(output));
+                return cloneDeep(parseValue(output)); 
             }
         };
     }

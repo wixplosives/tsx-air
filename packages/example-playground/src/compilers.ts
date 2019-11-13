@@ -7,7 +7,7 @@ export const compilers: Compiler[] = [
         compile: (_src, exp) => {
             const compiled = ts.transpileModule(exp, {
                 compilerOptions: {
-                    jsx: ts.JsxEmit.React,
+                    jsx: ts.JsxEmit.Preserve,
                     jsxFactory: 'TSXAir',
                     target: ts.ScriptTarget.ES2020,
                     module: ts.ModuleKind.CommonJS,
@@ -15,7 +15,7 @@ export const compilers: Compiler[] = [
                 }
             }).outputText;
             return {
-                printVer: exp,
+                printVer: compiled,
                 runVer: compiled
             };
         }
@@ -23,16 +23,26 @@ export const compilers: Compiler[] = [
     {
         label: 'Compiler 1',
         compile: (src, _exp) => {
-            const compiled = ts.transpileModule(src, {
+            const preCompiled = ts.transpileModule(src, {
+                compilerOptions: {
+                    jsx: ts.JsxEmit.Preserve,
+                    jsxFactory: 'TSXAir',
+                    target: ts.ScriptTarget.ES2020,
+                    // module: ts.ModuleKind.CommonJS,
+                    esModuleInterop: true
+                },
+                transformers: {
+                    before: transformers.map(item => item.transformer)
+                }
+            }).outputText;
+            console.log(preCompiled);
+            const compiled = ts.transpileModule(preCompiled, {
                 compilerOptions: {
                     jsx: ts.JsxEmit.Preserve,
                     jsxFactory: 'TSXAir',
                     target: ts.ScriptTarget.ES2020,
                     module: ts.ModuleKind.CommonJS,
                     esModuleInterop: true
-                },
-                transformers: {
-                    before: transformers.map(item => item.transformer)
                 }
             }).outputText;
             return {

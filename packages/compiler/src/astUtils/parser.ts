@@ -28,7 +28,6 @@ export const parseValue = (obj: string | object) => {
     throw new Error('Invalid value object');
 };
 
-
 export const parseStatement = (statement: string) => {
     const mockFile = asSourceFile(statement); 
 

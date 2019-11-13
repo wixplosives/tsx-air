@@ -9,6 +9,7 @@ import 'prismjs/themes/prism.css';
 import './index.css';
 import { stats } from './framework';
 import { evalModule } from './utils/eval-module';
+// tslint:disable: no-unused-expression
 
 document.body.innerHTML = `
 <h1>Show me the samples</h1>
@@ -44,7 +45,7 @@ document.body.innerHTML = `
 </div>
 
     <section class="half">
-        <h3>Result</h3>
+        <h3>Result <button id="refreshResult">🔄</button></h3>
         <div id="result" />
     </section>
 
@@ -56,8 +57,6 @@ document.body.innerHTML = `
             <code id="compiled" class="lang-tsx"></code>
         </pre>
     </section>
-
-
 `;
 
 let stop: () => void;
@@ -65,6 +64,7 @@ const readme = document.getElementById('readme')!;
 const selectExample = document.getElementById('select-example')! as HTMLSelectElement;
 const selectCompiler = document.getElementById('select-compiler')! as HTMLSelectElement;
 const result = document.getElementById('result')!;
+const refreshResult = document.getElementById('refreshResult')!;
 const resultRoot = result.attachShadow({ mode: 'open' });
 const source = document.getElementById('source')!;
 const compiled = document.getElementById('compiled')!;
@@ -84,11 +84,11 @@ setInterval(() => {
     }
 }, 100);
 
-const changeHandler = async () => {
+const changeHandler = async (noScroll = false) => {
     if (stop !== undefined) { stop(); }
     localStorage.setItem('selected', selectExample.value);
     localStorage.setItem('selected-compiler', selectCompiler.value);
-    window.scrollTo(0, 0);
+    noScroll || window.scrollTo(0, 0);
     const selected = examples[selectExample.value as unknown as number];
     const compiler = compilers[selectCompiler.value as unknown as number];
     readme.innerHTML = selected.readme && `<div>${selected.readme}</div>` || '';
@@ -107,8 +107,9 @@ const changeHandler = async () => {
 };
 
 
-selectExample.addEventListener('change', changeHandler);
-selectCompiler.addEventListener('change', changeHandler);
+selectExample.addEventListener('change', () => changeHandler());
+selectCompiler.addEventListener('change', () => changeHandler(true));
+refreshResult.addEventListener('click', () => changeHandler(true));
 
 selectExample.value = localStorage.getItem('selected') || '0';
 selectCompiler.value = localStorage.getItem('selected-compiler') || '0';

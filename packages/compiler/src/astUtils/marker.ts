@@ -33,11 +33,11 @@ export const sourceWithHighlights = (source: string, notes: NodeMetaData[]) => {
 
 export const transpileNode = <T>(source: ts.Node,
     nodesToStringify: Array<NodeMetaData<T>>,
-    stringify: (childToModify: NodeMetaData<T>) => string) => {
+    stringify: (childToModify: NodeMetaData<T>) => string|void) => {
     const offset = source.getStart();
     const sorted = nodesToStringify.sort(
         (a, b) => b.node.getStart() - a.node.getStart()
     );
     return sorted.reduce((res, childToStringify) =>
-        res.slice(0, childToStringify.node.getStart() - offset) + stringify(childToStringify) + res.slice(childToStringify.node.getEnd() - offset), source.getText());
+        res.slice(0, childToStringify.node.getStart() - offset) + (stringify(childToStringify) || childToStringify) + res.slice(childToStringify.node.getEnd() - offset), source.getText());
 };

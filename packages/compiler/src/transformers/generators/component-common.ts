@@ -36,7 +36,8 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                     if (tag) {
                         expressions.push({
                             ctxName: `${tag}${++compCount}`,
-                            viewLocator: `${tag}.factory.hydrate(${prefix}[${childCount}])`,
+                            // TODO handle props mapping
+                            viewLocator: `${tag}.factory.hydrate(${prefix}[${childCount}], props)`,
                             astNode: child
                         });
                     } else {

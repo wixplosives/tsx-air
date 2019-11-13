@@ -10,7 +10,7 @@ export type Analyzer<N extends ts.Node = ts.Node, T extends TsxAirNode<N> = TsxA
 
 export type TsxAirNodeType = 'CompDefinition' | 'JsxFragment' |
     'JsxRoot' | 'JsxExpression' | 'file' |
-    'JsxComponent' | 'JsxComponentProps' | 'CompProps' | 'error';
+    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error';
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
 
@@ -73,13 +73,13 @@ export function isJsxExpression(x: any): x is JsxExpression {
 export interface JsxComponent extends TsxAirNode<JsxElm> {
     kind: 'JsxComponent';
     name: string;
-    props: JsxComponentProps[];
+    props: JsxAttribute[];
     children?: JsxFragment;
     dependencies: CompProps[];
 }
 
-export interface JsxComponentProps extends TsxAirNode<ts.JsxAttributeLike> {
-    kind: 'JsxComponentProps';
+export interface JsxAttribute extends TsxAirNode<ts.JsxAttributeLike> {
+    kind: 'JsxAttribute';
     name: string;
-    value: string | JsxExpression;
+    value: string | JsxExpression | boolean;
 }
