@@ -14,10 +14,7 @@ export const compilers: Compiler[] = [
                     esModuleInterop: true
                 }
             }).outputText;
-            return {
-                printVer: compiled,
-                runVer: compiled
-            };
+            return compiled;
         }
     },
     {
@@ -35,7 +32,6 @@ export const compilers: Compiler[] = [
                     before: transformers.map(item => item.transformer)
                 }
             }).outputText;
-            console.log(preCompiled);
             const compiled = ts.transpileModule(preCompiled, {
                 compilerOptions: {
                     jsx: ts.JsxEmit.Preserve,
@@ -45,10 +41,7 @@ export const compilers: Compiler[] = [
                     esModuleInterop: true
                 }
             }).outputText;
-            return {
-                printVer: compiled,
-                runVer: compiled
-            };
+            return compiled;
         }
     }
 ]; 
