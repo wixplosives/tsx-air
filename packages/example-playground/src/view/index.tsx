@@ -11,6 +11,8 @@ import { getExamples, loadExample, Example } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
 import { preloader } from './preloader';
+import { resolve } from 'path';
+import { tsLoaded } from './helpers';
 
 let stop: () => void;
 
@@ -63,6 +65,7 @@ const loadExampleFiles = async (example: string) => {
     }
 };
 
+
 const runExample = async (loaded: Example) => {
     let compiled:string;
     try {
@@ -83,7 +86,7 @@ const runExample = async (loaded: Example) => {
         const runner = await evalModule(compiled!, './source.js');
         stop = runner.runExample(dom.resultRoot.querySelector('div')!);
     } catch (e) {
-        dom.resultRoot.innerHTML = `<div>🤒</div><code><pre>${e.message}</pre></code>`;
+        dom.resultRoot.innerHTML = `<div>🤒</div><pre>${e.message}</pre>`;
     }
 };
 

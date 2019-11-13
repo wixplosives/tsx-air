@@ -1,6 +1,11 @@
-import { Compiler } from './types';
 import { transformers } from '@wixc3/tsx-air-compiler';
 import ts from 'typescript';
+
+export interface Compiler {
+    compile: (src: string, expectedTarget: string) => string;
+    label: string;
+}
+
 export const compilers: Compiler[] = [
     {
         label: 'Manual + TS',
