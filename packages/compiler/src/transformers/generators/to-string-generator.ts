@@ -136,7 +136,16 @@ export const jsxComponentReplacer: AstNodeReplacer<ts.JsxElement | JsxSelfClosin
                         if (ts.isJsxSpreadAttribute(prop)) {
                             throw new Error('spread in attributes is not handled yet');
                         }
-                        accum[prop.name.getText()] = prop.initializer ? cloneDeep(prop.initializer) : ts.createTrue();
+                        const initializer = prop.initializer
+                        if (!initializer) {
+                            accum[prop.name.getText()] = ts.createTrue()
+                        } else if (ts.isJsxExpression(initializer)) {
+                            if (initializer.expression) {
+                                accum[prop.name.getText()] = cloneDeep(initializer.expression);
+                            }
+                        } else {
+                            accum[prop.name.getText()] = cloneDeep(initializer);
+                        }
                         return accum;
                     }, {} as Record<string, any>))
                 ]),

@@ -6,12 +6,13 @@ import { analyze } from '../../analyzers';
 import { CompDefinition } from '../../analyzers/types';
 import { printAST } from '../../dev-utils/print-ast';
 import { cloneDeep } from './ast-generators';
+import { expectEqualIgnoreWhiteSpace } from '../../dev-utils/expect-equal-ingnore-whitespace';
 
 describe('jsxToStringTemplate', () => {
     it('should return a the string of a jsx node if no replacers exist', () => {
         const ast = parseValue(`<div>gaga</div>`);
         const res = printAST(jsxToStringTemplate(ast as ts.JsxElement, []));
-        expect(res).to.include('const a = `<div>gaga</div>`');
+        expect(res).to.equal('`<div>gaga</div>`');
     });
     it('should replace to template string expressions according to visitors', () => {
         const ast = parseValue(`<div id={window.location}>gaga</div>`);
@@ -30,7 +31,7 @@ describe('jsxToStringTemplate', () => {
 
         }]);
         const res = printAST(templateAst);
-        expect(res).to.include('const a = `<div id="${window.location}">gaga</div>`');
+        expect(res).to.equal('`<div id="${window.location}">gaga</div>`');
     });
 });
 
@@ -46,7 +47,7 @@ describe('replace attribute expression', () => {
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
         const res = printAST(templateAst);
-        expect(res).to.include('const a = `<div id="${props.id}">{props.title}</div>`');
+        expect(res).to.equal('`<div id="${props.id}">{props.title}</div>`');
     });
 });
 
@@ -61,7 +62,7 @@ describe('jsx text expression replacer', () => {
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer]);
         const res = printAST(templateAst);
-        expect(res).to.include('const a = `<div id={props.id}><!-- props.title -->${props.title}<!-- props.title --></div>`');
+        expect(res).to.equal('`<div id={props.id}><!-- props.title -->${props.title}<!-- props.title --></div>`');
     });
 
     it('should handle quates', () => {
@@ -74,9 +75,10 @@ describe('jsx text expression replacer', () => {
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
         const res = printAST(templateAst);
-        expect(res).to.include('const a = `<div id="${"gaga"}">{props.title}</div>`');
+        expect(res).to.equal('`<div id="${`"gaga"`}">{props.title}</div>`');
     });
 });
+(global as any).printAST = printAST;
 describe('component node replacer', () => {
     it('should replace jsx nodes with upper case into calls to the component to string', () => {
         const ast = parseValue(`TSXAir((props)=>{
@@ -85,9 +87,9 @@ describe('component node replacer', () => {
 
         const info = analyze(ast).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
-
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxComponentReplacer]);
         const res = printAST(templateAst);
-        expect(res).to.include(`const a = \`<div id={props.id}>\${Comp.toString({ name: "gaga", title: (props.title) })}</div>\``);
+        expectEqualIgnoreWhiteSpace(res, `\`<div id={props.id}>\${Comp.toString({ name: "gaga", title: props.title })}</div>\``);
+
     });
 });

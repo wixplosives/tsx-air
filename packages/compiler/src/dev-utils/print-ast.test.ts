@@ -3,12 +3,7 @@ import { parseValue, parseStatement } from '../astUtils/parser';
 import { expect } from 'chai';
 import { printAST } from './print-ast';
 import { cObject } from '../transformers/generators/ast-generators';
-
-
-export const expectEqualNonWhiteSpaces = (_actual: string, _expected: string) => {
-    // const splitActual = actual.split(/\w+/);
-    // const splitExpected = expected.split(/\w+/)
-};
+import { expectEqualIgnoreWhiteSpace } from './expect-equal-ingnore-whitespace';
 
 describe('print ast', () => {
     describe('with ast created through a file', () => {
@@ -34,16 +29,33 @@ describe('print ast', () => {
         });
     });
     describe('with ast created through a factory', () => {
-        it.only('should print expressions', () => {
+        it('should print expressions', () => {
             const ast = cObject({
                 a: 'gaga',
                 b: 'baga'
+            }, {
+                multiline: true,
+                useSingleQuates: true
             });
-            expect(printAST(ast)).to.to.equal(`{
-    a: 'gaga',
-    b: 'baga'
-}`);
-        });
+            expectEqualIgnoreWhiteSpace(printAST(ast), `{
+                a: 'gaga',
+                b: 'baga'
+            }`);
 
+        });
+        it('should support double quates', () => {
+            const ast = cObject({
+                a: 'gaga',
+                b: 'baga'
+            }, {
+                multiline: true,
+                useSingleQuates: false
+            });
+            expectEqualIgnoreWhiteSpace(printAST(ast), `{
+                a: "gaga",
+                b: "baga"
+            }`);
+
+        });
     });
 });
