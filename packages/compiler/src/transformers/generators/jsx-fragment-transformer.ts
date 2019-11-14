@@ -1,7 +1,8 @@
 import ts from 'typescript';
-import { cObject, cCall, generateToString } from './ast-generators';
+import { cObject, cCall, generateHydrate } from './ast-generators';
 import { GeneratorTransformer } from './append-node-transformer';
 import { isJsxRoot } from '../../analyzers/types';
+import { generateToString } from './to-string-generator';
 
 export const contains = (node: ts.Node, child: ts.Node) => node.getStart() <= child.getStart() && node.getEnd() >= child.getEnd()
 
@@ -19,7 +20,8 @@ export const fragmentTransformer: GeneratorTransformer = (genCtx, ctx) => {
             const info = rootInfo[0];
             const ref = isJsxRoot(info) ? genCtx.appendPrivateVar(parentComp.name + '_untitled', cObject(
                 {
-                    toString: generateToString(info, parentComp)
+                    toString: generateToString(info, parentComp),
+                    hydrate: generateHydrate(info, parentComp)
                 })) : ts.createIdentifier(info.name)
 
 

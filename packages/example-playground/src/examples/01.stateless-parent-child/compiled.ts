@@ -1,7 +1,7 @@
 import { Dom } from '../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 import runtime from '../../framework/runtime';
-import {render } from '../../framework';
+import { render } from '../../framework';
 import { Component } from '../../framework/types/component';
 
 interface ParentCompProps { name: string; }
@@ -10,7 +10,7 @@ interface ParentCompCtx extends Dom {
     childComp1: ChildComp;
 }
 
-class ParentComp extends Component<ParentCompCtx, ParentCompProps> {
+export class ParentComp extends Component<ParentCompCtx, ParentCompProps> {
     public static factory: Factory<ParentComp>;
     public static readonly changeBitmask = {
         name: 1 << 0
@@ -46,7 +46,7 @@ interface ChildCompProps { name: string; }
 interface ChildCompCtx extends Dom { text1: Text; }
 
 // tslint:disable-next-line: max-classes-per-file
-class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
+export class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
     public static factory: Factory<ChildComp>;
     public static readonly changeBitmask = {
         name: 1 << 0
@@ -81,3 +81,4 @@ export const runExample = (element: HTMLElement) => {
         clearInterval(i);
     };
 };
+
