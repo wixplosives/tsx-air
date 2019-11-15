@@ -10,6 +10,7 @@ import { getExamples, buildExample } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
 import { preloader } from './preloader';
+import { build } from '../utils/build';
 
 let stop: () => void;
 
@@ -24,7 +25,7 @@ getExamples().then((examples: string[]) => {
 
 const changeHandler = async (noScroll = false) => {
     if (stop !== undefined) { stop(); }
-    dom.resultRoot.innerHTML = preloader();
+    dom.style.innerHTML = dom.source.innerHTML = dom.compiled.innerHTML = dom.readme.innerHTML = dom.resultRoot.innerHTML = preloader();
 
     localStorage.setItem('selected', dom.selectExample.value);
     localStorage.setItem('selected-compiler', dom.selectCompiler.value);
@@ -46,6 +47,11 @@ const changeHandler = async (noScroll = false) => {
             dom.compiled.textContent = compiled;
             dom.source.textContent = source;
             Prism.highlightAll();
+        }).catch(async err => {
+            dom.compiled.textContent = `🤕
+        ${err.message}
+        🤕`;
+            dom.source.textContent = (await (await loaded).build).source;
         });
 
         try {

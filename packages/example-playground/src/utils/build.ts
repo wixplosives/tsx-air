@@ -20,24 +20,36 @@ export async function build(compiler: Compiler, load: Loader, path: string): Pro
         return await loading;
     });
 
-    const compiled = compiler.compile(source, path);
-    writeToFs(sources, path, source);
-    writeToFs(fs, path, compiled);
+    try {
+        const compiled = await compiler.compile(source, path);
+        writeToFs(sources, path, source);
+        writeToFs(fs, path, compiled);
 
-    // TODO: get the analyze AST from the compile pass
-    const { imports } = analyze(asSourceFile(source)).tsxAir as TsxFile;
+        // TODO: get the analyze AST from the compile pass
+        const { imports } = analyze(asSourceFile(source)).tsxAir as TsxFile;
 
-    const builtImports = imports.map(buildImport);
-    return {
-        source,
-        compiled,
-        imports: builtImports,
-        module: (async () => {
-            await Promise.all(builtImports);            
-            return cjs.requireModule(path);
-        })(),
-        path
-    };
+        const builtImports = imports.map(buildImport);
+        return {
+            source,
+            compiled,
+            imports: builtImports,
+            module: (async () => {
+                await Promise.all(builtImports);
+                return cjs.requireModule(path);
+            })(),
+            path
+        };
+    } catch (err) {
+        return {
+            source,
+            compiled: err,
+            imports: [],
+            // @ts-ignore
+            module: async () => {throw new Error(err);},
+            path
+        };
+    }
+
 
     async function buildImport(i: Import): Promise<BuiltCode> {
         const { folder } = splitFilePath(path);
