@@ -1,8 +1,7 @@
-import { Dom } from '../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 import runtime from '../../framework/runtime';
 import {render } from '../../framework';
-import { Component } from '../../framework/types/component';
+import { Component, Dom } from '../../framework/types/component';
 
 interface ParentCompProps { name: string; }
 interface ParentCompCtx extends Dom {
@@ -70,14 +69,32 @@ ChildComp.factory = {
 };
 
 export const runExample = (element: HTMLElement) => {
-    let count = 1;
-    const name = 'Sir Gaga';
-    const app = render(element, ParentComp as any, { name });
-
-    const i = setInterval(() => {
-        app.updateProps({ name: `${name} the ${count++}` });
-    }, 50);
-    return () => {
-        clearInterval(i);
+    const countTo = 100;
+    let count = 0;
+    let frames = 0;
+    const startTime = performance.now();
+    const app = render(element, ParentComp, { name: `Initial count: ${count}` });
+    const isViewUpdated = () => {
+        const countDisplayed = element.innerText.match(new RegExp(`${count}`, 'g'));
+        return (countDisplayed && countDisplayed.length === 2);
     };
+    const summery = () => {
+        const duration = Math.round(performance.now() - startTime);
+        return `It took ${frames} frames (${duration}mSec) to update the view ${countTo} times.
+                That's ${(frames / countTo).toFixed(2)} frames/update at ${(frames / duration * 1000).toFixed(2)} FPS`;
+    };
+
+    const framesCounter = () => {
+        frames++;
+        if (isViewUpdated()) {
+            app.updateProps({ name: `Updated ${++count} times` });
+        }
+        if (count <= countTo) {
+            requestAnimationFrame(framesCounter);
+        } else {
+            app.updateProps({ name: summery() });
+        }
+    };
+
+    framesCounter();
 };

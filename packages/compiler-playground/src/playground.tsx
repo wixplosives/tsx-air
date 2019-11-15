@@ -11,7 +11,7 @@ import './playground.css';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // @ts-ignore
 import { atomOneLight as style } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { tsxair, FileAstLoader, scan, sourceWithNotes, transformers } from '@wixc3/tsx-air-compiler';
+import { tsxair, FileAstLoader, scan, sourceWithNotes, transformers } from '@wixc3/tsx-air-compiler/src';
 
 export interface IPlaygroundProps {
     fs: IFileSystem;
@@ -105,7 +105,7 @@ export class Playground extends React.PureComponent<IPlaygroundProps, IPlaygroun
         const scanned = sourceWithNotes(ast.getFullText(), notes);
 
         const content = this.props.fs.readFileSync(this.props.filePath);
-        const compilerOptions: ts.CompilerOptions = { target: ts.ScriptTarget.Latest, jsx: ts.JsxEmit.React , jsxFactory: 'TSXAir'};
+        const compilerOptions: ts.CompilerOptions = { target: ts.ScriptTarget.Latest, jsx: ts.JsxEmit.Preserve , jsxFactory: 'TSXAir'};
         const output = ts.transpileModule(content.toString(), {
             compilerOptions, transformers: {
                 before: transformers.filter(t => !this.excluded.has(t)).map(i => i.transformer)

@@ -109,8 +109,8 @@ export class Runtime {
         if (changed.size > 0) {
             this.$tick(() => {
                 changed.forEach(i => {
-                    const req = this.pending.requested.get(i) || i.$afterUpdate();
-                    if (!req.next().done) {
+                    const req = this.pending.requested.get(i) || i.$afterUpdate && i.$afterUpdate();
+                    if (req && !req.next().done) {
                         this.pending.requested.set(i, req);
                     } else {
                         this.pending.requested.delete(i);

@@ -1,4 +1,4 @@
-import {  render } from '../../framework';
+import { render } from '../../framework';
 import { ParentComp } from './component';
 
 export const runExample = (element: HTMLElement) => {
