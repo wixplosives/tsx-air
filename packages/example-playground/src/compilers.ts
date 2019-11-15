@@ -21,7 +21,7 @@ export const compilers: Compiler[] = [
         compile: async (_src, path) => {            
             path = path.replace(/^\/src/,'').replace(/source(\.js|\.ts|\.tsx)?$/,'/compiled');
             const content = await (await fetch(path)).text();
-            return toCommonJs(content);
+            return content;
         }
     },
     {
@@ -40,7 +40,7 @@ export const compilers: Compiler[] = [
                 }
             }).outputText;
             
-            return toCommonJs(preCompiled);
+            return preCompiled;
         }
     }
 ]; 

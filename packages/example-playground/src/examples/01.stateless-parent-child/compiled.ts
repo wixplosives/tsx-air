@@ -1,8 +1,7 @@
-import { Dom } from '../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 import runtime from '../../framework/runtime';
 import {render } from '../../framework';
-import { Component } from '../../framework/types/component';
+import { Component, Dom } from '../../framework/types/component';
 
 interface ParentCompProps { name: string; }
 interface ParentCompCtx extends Dom {

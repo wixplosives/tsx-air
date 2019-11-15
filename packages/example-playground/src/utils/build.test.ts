@@ -1,13 +1,13 @@
 import { createMemoryFs } from '@file-services/memory';
 import { Loader } from './examples.index';
-import { Compiler, compilers, toCommonJs } from './../compilers';
+import { Compiler } from './../compilers';
 import { build } from './build';
 import { expect } from 'chai';
 
 describe('build', () => {
     const compiler: Compiler = {
         compile: async (source, _path) => {
-            return toCommonJs(source);
+            return source;
         },
         label: 'copier'
     };
@@ -15,6 +15,19 @@ describe('build', () => {
         '/data.js': `
             export const b='b'`,
         '/src': {
+            'examples':{
+                'ex1':{
+                    'source.js': `
+                        import { Component, Dom } from '../../framework/types/component';
+                        export class TestComp extends Component {
+                        }`
+                },
+                'ex2': {
+                    'source.js': `
+                    import {TSXAir} from '../../framework';
+                    export const air = TSXAir;`
+                }
+            },
             'main.js': `
                 import {a} from './a';
                 import {b} from '../data'
@@ -26,13 +39,6 @@ describe('build', () => {
                 'a.js': `
                 import {b} from '../../data';
                 export const val = 'a'+b;`
-            },
-            'examples': {
-                '1': {
-                    'source.js': `
-                    import {TSXAir} from '../../framework';
-                    export const air = TSXAir;`
-                }
             }
         }
     });
@@ -61,8 +67,14 @@ describe('build', () => {
         });
     });
     it('should evaluate a module that uses the framework', async () => {
-        const res = await build(compiler, load, '/src/examples/1/source');
+        const res = await build(compiler, load, '/src/examples/ex2/source');
         expect(res.error).to.equal(undefined);
         expect((await res.module as any).air).to.be.instanceOf(Function);
+    });
+    it('should have access to preloaded modules', async () => {
+        const res = await build(compiler, load, '/src/examples/ex1/source');
+        expect(res.error).to.equal(undefined);
+        expect((await res.module as any).TestComp).to.be.instanceOf(Function);
+        expect(((await res.module as any).TestComp)).to.be.instanceOf(Function);
     });
 });

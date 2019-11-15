@@ -21,9 +21,6 @@ exports.serveExamples = app => {
             } catch {
             }
         }
-        res.status(404).send(`
-                requested: "${req.params[0]}"
-                resolved: "${resolvedPath}"
-                error: ${e.message}`);
+        res.status(404).send(`Unable to resolve "${req.params[0]}"'`);
     });
 };
