@@ -58,9 +58,10 @@ const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string, usedProps: Comp
                     const { initializer } = att;
 
                     if (att.name) {
-                        const value = ts.isStringLiteral(initializer!)
-                            ? initializer.text
-                            : parseExpression(initializer!);
+                        const value = !initializer ? true :
+                            ts.isStringLiteral(initializer!)
+                                ? initializer.text
+                                : parseExpression(initializer!);
                         acc.push(
                             {
                                 kind: 'JsxAttribute',

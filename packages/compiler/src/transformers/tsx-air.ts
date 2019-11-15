@@ -5,10 +5,8 @@ import { compFactory } from './generators/component-factory';
 import { Transformer } from './index';
 import ts from 'typescript';
 import { compClass } from './generators/component-class';
-import { analyzeFile } from '../analyzers';
+import { analyze } from '../analyzers';
 import { TsxFile } from '../analyzers/types';
-// tslint:disable-next-line: no-unused-expression
-window && ((window as any).ts = ts);
 
 export const tsxAir: Transformer = {
     name: 'TSXAir',
@@ -16,7 +14,7 @@ export const tsxAir: Transformer = {
     requires: [],
     transformer: (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
         return sourceFile => {
-            const sourceData = analyzeFile(sourceFile).tsxAir as TsxFile;
+            const sourceData = analyze(sourceFile).tsxAir as TsxFile;
             return ts.visitEachChild(sourceFile, transformTsxAir, context);
 
             function transformTsxAir(n: ts.Node): ts.Node {

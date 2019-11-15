@@ -1,45 +1,27 @@
-import ts from 'typescript';
-import { Analyzer, TsxFile, CompDefinition } from './types';
+import { Analyzer, TsxAirNode } from './types';
 import { compDefinition } from './comp-definition';
-import { scan } from '../astUtils/scanner';
-import { hasError, errorNode, isTsxAirNode, addToNodesMap, NodesMap } from './types.helpers';
+import { hasError, errorNode, isTsxAirNode } from './types.helpers';
+import { importStatement } from './imports';
+import { sourceFile } from './sourcefile';
 
-export const analyzeFile: Analyzer<ts.SourceFile, TsxFile> = node => {
-    if (ts.isSourceFile(node)) {
-        const astToTsxAir: NodesMap = new Map();
-        const tsxAir: TsxFile = {
-            kind: 'file',
-            compDefinitions: scan(node, (n, { ignoreChildren }) => {
-                if (ts.isSourceFile(n)) {
-                    return;
-                }
-                const analyzed = analyze(n);
-                if (isTsxAirNode(analyzed.tsxAir) && !hasError(analyzed.tsxAir)) {
-                    ignoreChildren();
-                    addToNodesMap(astToTsxAir, analyzed.astToTsxAir);
-                    return analyzed.tsxAir;
-                }
-                return;
-            }).map(i => i.metadata as unknown as CompDefinition),
-            sourceAstNode: node
-        };
-        return {
-            tsxAir, astToTsxAir
-        };
-    }
-
-    return errorNode(node, 'Not a source file');
-};
-
-export const analyze: Analyzer = node => {
+export const analyze: Analyzer<TsxAirNode> = node => {
     if (!node) {
         return errorNode(node, 'undefined or null node', 'internal');
     }
+    const prioritizedAnalyzers = [
+        sourceFile,
+        importStatement,
+        compDefinition
+    ];
 
-    const comp = compDefinition(node);
-    if (isTsxAirNode(comp.tsxAir) && !hasError(comp.tsxAir)) {
-        return comp;
+    for (const tryToAnalyze of prioritizedAnalyzers) {
+        const detected = tryToAnalyze(node);
+        if (isTsxAirNode(detected.tsxAir) && !hasError(detected.tsxAir)) {
+            return detected;
+        }
     }
 
     return errorNode(node, 'Unidentified node', 'unsupported');
 };
+
+export * from './types';

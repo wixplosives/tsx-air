@@ -11,7 +11,7 @@ import './playground.css';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // @ts-ignore
 import { atomOneLight as style } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { tsxair, FileAstLoader, scan, sourceWithNotes, transformers } from '@wixc3/tsx-air-compiler';
+import { tsxair, FileAstLoader, scan, sourceWithNotes, transformers } from '@wixc3/tsx-air-compiler/src';
 
 export interface IPlaygroundProps {
     fs: IFileSystem;

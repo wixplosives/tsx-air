@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { getCompDef } from './comp-definition.test';
-import { CompDefinition, JsxExpression, JsxComponent } from './types';
+import { CompDefinition, JsxExpression, JsxComponent, isJsxAttribute } from './types';
 // tslint:disable: no-unused-expression
 
 describe('Jsx Components', () => {
@@ -9,6 +9,7 @@ describe('Jsx Components', () => {
     let comp2: JsxComponent;
     let comp3: JsxComponent;
     let comp4: JsxComponent;
+    let comp5: JsxComponent;
 
     beforeEach(() => {
         comp = getCompDef(`const Comp = TSXAir(function(props){ 
@@ -17,12 +18,13 @@ describe('Jsx Components', () => {
                         <Comp2>content</Comp2>
                         <Comp3 str="true" static={666} dynamic={props.name} multi={props.a*props.b+4}/>
                         <Comp4 str="true" static={666} dynamic={props.name} multi={props.a*props.b+4}>{props.child}</Comp4>
+                        <Comp5 noValue />
                     </div>;})`).comp as CompDefinition;
-        [comp1, comp2, comp3, comp4] = comp.jsxRoots[0].components;
+        [comp1, comp2, comp3, comp4, comp5] = comp.jsxRoots[0].components;
     });
 
     it('should find components', () => {
-        expect(comp.jsxRoots[0].components).to.have.length(4);
+        expect(comp.jsxRoots[0].components).to.have.length(5);
     });
 
     it('should find component properties', () => {
@@ -32,8 +34,9 @@ describe('Jsx Components', () => {
         [comp3, comp4].forEach(c => {
             expect(c.props, c.name).to.have.length(4);
             expect(c.props.map(p => p.name), c.name).to.deep.equal(['str', 'static', 'dynamic', 'multi']);
-            c.props.forEach(prop => expect(prop.kind).to.equal('JsxComponentProps'));
+            c.props.forEach(prop => expect(isJsxAttribute(prop)).to.be.true);
         });
+        expect(comp5.props[0].value).to.be.true;
     });
 
     it('should analyze static properties', () => {

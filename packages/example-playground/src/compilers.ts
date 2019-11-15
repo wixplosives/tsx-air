@@ -1,4 +1,4 @@
-import { transformers } from '@wixc3/tsx-air-compiler';
+import { transformers } from '@wixc3/tsx-air-compiler/src';
 import ts from 'typescript';
 
 export interface Compiler {

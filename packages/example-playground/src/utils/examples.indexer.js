@@ -12,12 +12,18 @@ getExamples = async () => {
 exports.serveExamples = app => {
     app.get('/examples', async (req, res) => res.json(await getExamples()));
     app.get('/examples/*', async (req, res) => {
-        try {
-            const content = await readFile(resolve(__dirname, '../examples', req.params[0]));
-            res.write(content);
-            res.end();
-        } catch (e) {
-            res.status(404).send(e.message);
+        for (const ext of ['', '.tsx', '.ts', '.js']) {
+            try {
+                const resolvedPath = resolve(__dirname, '../examples', req.params[0] + ext);
+                res.write(await readFile(resolvedPath));
+                res.end();
+                return;
+            } catch {
+            }
         }
+        res.status(404).send(`
+                requested: "${req.params[0]}"
+                resolved: "${resolvedPath}"
+                error: ${e.message}`);
     });
 };
