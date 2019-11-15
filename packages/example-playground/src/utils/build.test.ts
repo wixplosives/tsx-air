@@ -1,12 +1,14 @@
 import { createMemoryFs } from '@file-services/memory';
 import { Loader } from './examples.index';
-import { Compiler, compilers } from './../compilers';
+import { Compiler, compilers, toCommonJs } from './../compilers';
 import { build } from './build';
 import { expect } from 'chai';
 
 describe('build', () => {
     const compiler: Compiler = {
-        compile: (source, _path) => compilers[0].compile('', source),
+        compile: async (source, _path) => {
+            return toCommonJs(source);
+        },
         label: 'copier'
     };
     const mockFs = createMemoryFs({
@@ -42,12 +44,15 @@ describe('build', () => {
 
     it('should evaluate a module with no imports', async () => {
         const res = await build(compiler, load, '/data');
-        expect(await res.module).to.deep.equal({
+        const mod = await res.module;
+        expect(res.error).to.equal(undefined);
+        expect(mod).to.deep.equal({
             b: 'b'
         });
     });
     it('should evaluate a module with imports', async () => {
         const res = await build(compiler, load, '/src/main');
+        expect(res.error).to.equal(undefined);
         expect(await res.module).to.deep.equal({
             c: {
                 a: 'ab',
@@ -57,6 +62,7 @@ describe('build', () => {
     });
     it('should evaluate a module that uses the framework', async () => {
         const res = await build(compiler, load, '/src/examples/1/source');
+        expect(res.error).to.equal(undefined);
         expect((await res.module as any).air).to.be.instanceOf(Function);
     });
 });

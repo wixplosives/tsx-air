@@ -46,7 +46,8 @@ export async function build(compiler: Compiler, load: Loader, path: string): Pro
             imports: [],
             // @ts-ignore
             module: async () => {throw new Error(err);},
-            path
+            path,
+            error: err
         };
     }
 
@@ -95,4 +96,5 @@ export interface BuiltCode {
     compiled: string;
     imports: Array<Promise<BuiltCode>>;
     module: Promise<unknown>;
+    error?:any;
 }
