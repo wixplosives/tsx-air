@@ -1,5 +1,6 @@
 import { Factory } from '../types/factory';
 import { IntrinsicElements as IntrinsicElementsImported } from './dom';
+import runtime from '../runtime';
 
 export interface TsxAirNode<PROPS, T extends string | Factory<any>> {
     type: T;
@@ -18,6 +19,8 @@ export interface CompCreator<Props> {
 
 export const TSXAir = <Props>(t: (props: Props) => TsxAirChild<Props> | Promise<TsxAirChild<Props>>) =>
     t as CompCreator<Props>;
+// A silly hack to keep Nadav happy
+TSXAir.runtime = runtime;
 
 // tslint:disable-next-line: no-namespace
 export namespace TSXAir {

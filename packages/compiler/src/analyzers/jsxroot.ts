@@ -1,16 +1,16 @@
-import { flatMap } from 'lodash';
+import { flatMap, uniqBy } from 'lodash';
 import { Visitor } from './../astUtils/scanner';
 import { findJsxRoot, findJsxExpression, getComponentTag } from './../visitors/jsx';
 import { scan, ScannerApi } from '../astUtils/scanner';
-import { CompProps, JsxExpression, JsxRoot, JsxElm, JsxComponent, JsxComponentProps } from './types';
+import { CompProps, JsxExpression, JsxRoot, JsxElm, JsxComponent, JsxAttribute, isJsxExpression } from './types';
 import ts, { isJsxElement } from 'typescript';
 
-export function jsxRoots(astNode: ts.Node, _propsIdentifier: string | undefined, _usedProps: CompProps[]) {
+export function jsxRoots(astNode: ts.Node, propsIdentifier: string | undefined, usedProps: CompProps[]) {
     return scan(astNode, findJsxRoot)
-        .map(({ node }) => jsxRoot(node as JsxElm));
+        .map(({ node }) => jsxRoot(node as JsxElm, propsIdentifier!, usedProps));
 }
 
-const jsxRoot = (sourceAstNode: JsxElm) => {
+const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string, usedProps: CompProps[]) => {
     const expressions = scan(sourceAstNode, findJsxExpression).map(({ node }) => parseExpression(node));
     const components = scan(sourceAstNode, findJsxComponent).map<JsxComponent>(i => i.metadata);
 
@@ -26,11 +26,10 @@ const jsxRoot = (sourceAstNode: JsxElm) => {
         const findExpressionDependencies: Visitor<CompProps> = (nd, { ignoreChildren }) => {
             if (ts.isPropertyAccessExpression(nd) || ts.isIdentifier(nd)) {
                 ignoreChildren();
-                return {
-                    kind: 'CompProps',
-                    name: nd.getText(),
-                    sourceAstNode: nd
-                };
+                if (ts.isPropertyAccessExpression(nd) && nd.expression.getText() === propsIdentifier) {
+                    const name = nd.name.getText();
+                    return usedProps.find(p => p.name === name);
+                }
             }
             return;
         };
@@ -53,20 +52,22 @@ const jsxRoot = (sourceAstNode: JsxElm) => {
         if (name) {
             ignoreChildren();
             const { attributes } = isJsxElement(jsxCompNode) ? jsxCompNode.openingElement : jsxCompNode as ts.JsxSelfClosingElement;
-            const props = attributes.properties.reduce<JsxComponentProps[]>(
+            const props = attributes.properties.reduce<JsxAttribute[]>(
                 (acc, attribute) => {
                     const att = attribute as ts.JsxAttribute;
                     const { initializer } = att;
 
                     if (att.name) {
+                        const value = !initializer ? true :
+                            ts.isStringLiteral(initializer!)
+                                ? initializer.text
+                                : parseExpression(initializer!);
                         acc.push(
                             {
-                                kind: 'JsxComponentProps',
+                                kind: 'JsxAttribute',
                                 name: att.name.escapedText as string,
                                 sourceAstNode: attribute as ts.JsxAttribute,
-                                value: ts.isStringLiteral(initializer!)
-                                    ? initializer.text
-                                    : parseExpression(initializer!)
+                                value
                             });
                     }
                     return acc;
@@ -77,6 +78,11 @@ const jsxRoot = (sourceAstNode: JsxElm) => {
             const items = findChildren(jsxCompNode);
             const childComponents = flatMap(items, 'components');
             const childExpressions = flatMap(items, 'expressions');
+            const dependencies: CompProps[] = uniqBy([
+                ...flatMap(props.filter(p => isJsxExpression(p.value))
+                    .map(p => (p.value as JsxExpression).dependencies)),
+                ...flatMap(childComponents.map(c => c.dependencies)),
+                ...flatMap(childExpressions.map(c => c.dependencies))], 'name');
 
             const comp: JsxComponent = {
                 kind: 'JsxComponent',
@@ -89,7 +95,8 @@ const jsxRoot = (sourceAstNode: JsxElm) => {
                     expressions: childExpressions,
                     items,
                     sourceAstNode: jsxCompNode as ts.JsxFragment
-                } : undefined
+                } : undefined,
+                dependencies
             };
             return comp;
         }
@@ -102,12 +109,12 @@ const jsxRoot = (sourceAstNode: JsxElm) => {
         }
         const children: JsxRoot[] = [];
         jsxCompNode.forEachChild(jsxNode => {
-            if (ts.isJsxOpeningElement(jsxNode) 
-            || ts.isJsxClosingElement(jsxNode)
+            if (ts.isJsxOpeningElement(jsxNode)
+                || ts.isJsxClosingElement(jsxNode)
             ) {
                 return;
             }
-            children.push(jsxRoot(jsxNode as JsxElm));
+            children.push(jsxRoot(jsxNode as JsxElm, propsIdentifier, usedProps));
         });
         return children;
     }

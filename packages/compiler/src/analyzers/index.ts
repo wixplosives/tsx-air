@@ -1,52 +1,27 @@
-import ts  from 'typescript';
-import { Analyzer, TsxFile } from './types';
+import { Analyzer, TsxAirNode } from './types';
 import { compDefinition } from './comp-definition';
-import { scan } from '../astUtils/scanner';
+import { hasError, errorNode, isTsxAirNode } from './types.helpers';
+import { importStatement } from './imports';
+import { sourceFile } from './sourcefile';
 
-
-export const analyze:Analyzer = node => {
+export const analyze: Analyzer<TsxAirNode> = node => {
     if (!node) {
-        return {
-            sourceAstNode: node,
-            kind: 'error',
-            errors: [{
-                message: 'undefined or null node',
-                type: 'internal'
-            }]
-        };
+        return errorNode(node, 'undefined or null node', 'internal');
     }
+    const prioritizedAnalyzers = [
+        sourceFile,
+        importStatement,
+        compDefinition
+    ];
 
-    if (ts.isCallExpression(node)){
-        const comp = compDefinition(node);
-        if (comp && comp.kind === 'CompDefinition') {
-            return comp;
+    for (const tryToAnalyze of prioritizedAnalyzers) {
+        const detected = tryToAnalyze(node);
+        if (isTsxAirNode(detected.tsxAir) && !hasError(detected.tsxAir)) {
+            return detected;
         }
     }
 
-    if (ts.isSourceFile(node)) {
-        return {
-            kind: 'file',
-            compDefinitions: scan(node, (n, { ignoreChildren }) => {
-                if (ts.isSourceFile(n)) {
-                    return;
-                }
-                const analyzed = analyze(n);
-                if (analyzed && !analyzed.errors) {
-                    ignoreChildren();
-                    return analyzed;
-                }
-                return;
-            }).map(i => i.metadata as unknown as TsxFile),
-            sourceAstNode: node
-        };
-    }
-
-    return {
-        sourceAstNode: node,
-        kind: 'error',
-        errors: [{
-            message: 'unidentified node',
-            type: 'internal'
-        }]
-    };
+    return errorNode(node, 'Unidentified node', 'unsupported');
 };
+
+export * from './types';

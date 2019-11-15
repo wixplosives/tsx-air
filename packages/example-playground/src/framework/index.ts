@@ -5,6 +5,13 @@ import { Component, Dom } from './types/component';
 import * as delegate from './api/delegate';
 import { setProp } from './runtime/utils';
 
+export { TSXAir } from './api/types';
+export { delegate };
+export { stats } from './api/debug/stats';
+export { bind } from './api/bind';
+export { store } from './api/store';
+export { when, always, requestRender } from './api/lifecycle';
+
 class ComponentApi<Props> {
     constructor(readonly $instance: Component<Dom, Props, any>, readonly rootElement: HTMLElement) { }
     public updateProps = (props: Props) => runtime.updateProps(
@@ -39,13 +46,3 @@ export function render<Props>(target: HTMLElement, component: ComponentDef<Props
     const comp = runtime.render(target, component.factory, props) as Component<Dom, Props, {}>;
     return comp && new ComponentApi(comp, target);
 }
-
-
-export { TSXAir } from './api/types';
-
-export { delegate };
-export { stats } from './api/debug/stats';
-export { bind } from './api/bind';
-
-export { store } from './api/store';
-export { when, always, requestRender } from './api/lifecycle';

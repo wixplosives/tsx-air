@@ -1,17 +1,14 @@
 import ts from 'typescript';
 import { expect } from 'chai';
 import { getCompDef } from './comp-definition.test';
-import { CompDefinition } from './types';
-import { find } from '../astUtils/scanner';
 // tslint:disable: no-unused-expression
 // tslint:disable: no-shadowed-variable
 
 describe('TSXAir component analyzer: Jsx', () => {
     it('should find all the jsx roots', () => {
-        const { comp: c } = getCompDef(`const Comp = TSXAir(props=>{ 
+        const { comp } = getCompDef(`const Comp = TSXAir(props=>{ 
                 const aRandomJsx = <span>!</span>;
                 return <div>{props.name}</div>;})`);
-        const comp = c as CompDefinition;
 
         expect(comp.jsxRoots).to.have.length(2);
         const [span, div] = comp.jsxRoots.map(i => i.sourceAstNode.getText());
@@ -20,10 +17,9 @@ describe('TSXAir component analyzer: Jsx', () => {
     });
 
     describe('Expressions', () => {
-        const { comp: c } = getCompDef(`const Comp = TSXAir(props => { 
+        const { comp } = getCompDef(`const Comp = TSXAir(props => { 
                 const aRandomJsx = <span>!</span>;
                 return <div>{props.name}{3}</div>;})`);
-        const comp = c as CompDefinition;
         const [span, div] = comp.jsxRoots.map(i => i.expressions);
 
 
@@ -36,7 +32,7 @@ describe('TSXAir component analyzer: Jsx', () => {
         it('should find dynamic expression and their dependencies', () => {
             const dynamicExpression = div[0];
             expect(dynamicExpression.dependencies).to.have.length(1);
-            expect(dynamicExpression.dependencies[0].name).to.equal('props.name');
+            expect(dynamicExpression.dependencies[0]).to.deep.equal(comp.usedProps[0]);
             expect(dynamicExpression.expression).to.equal('props.name');
         });
 
@@ -47,23 +43,15 @@ describe('TSXAir component analyzer: Jsx', () => {
         });
 
         it('should find properties with expressions', () => {
-            const { ast, comp } = getCompDef(`TSXAir(props => (<span att="3" exp={props.name}>!</span>)`);
-            const propValue = find(ast, i => ts.isPropertyAccessExpression(i));
+            const { comp } = getCompDef(`TSXAir(props => (<span att="3" exp={props.name}>!</span>)`);
             const prop = comp.jsxRoots[0].expressions[0];
 
             expect(prop).to.deep.include({
                 kind: 'JsxExpression',
                 expression: 'props.name'
             });
-            expect(prop.dependencies[0]).to.deep.include({
-                kind: 'CompProps',
-                name: 'props.name',
-                sourceAstNode: propValue
-            });
+            expect(prop.dependencies[0]).to.deep.equal(comp.usedProps[0]);
             expect(prop.sourceAstNode.parent.kind).to.equal(ts.SyntaxKind.JsxAttribute);
         });
     });
-
-   
-
 });

@@ -1,5 +1,3 @@
-// tslint:disable: no-bitwise
-
 import ts from 'typescript';
 export const cArrow = (body: ts.ConciseBody, ...params: string[]) => {
     return ts.createArrowFunction(undefined, undefined,
@@ -7,7 +5,6 @@ export const cArrow = (body: ts.ConciseBody, ...params: string[]) => {
         undefined, undefined, body
     );
 };
-
 
 export interface ExpressionData {
     expression: ts.Expression;
@@ -19,6 +16,7 @@ export interface ExpressionReplacer {
     isApplicable: (node: ts.Node) => boolean;
     getExpression: (node: ts.Node) => ExpressionData;
 }
+
 export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: ExpressionReplacer[]) => {
     const res = nodeToStringParts(jsx, replacers);
     const flattened = res.reduce((accum, item) => {
@@ -118,5 +116,4 @@ export const cloneDeep = <T extends ts.Node>(node: T) => {
         }
     }
     return clone;
-
 };
