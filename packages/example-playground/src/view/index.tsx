@@ -10,7 +10,6 @@ import { getExamples, buildExample } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
 import { preloader } from './preloader';
-import { build } from '../utils/build';
 
 let stop: () => void;
 
