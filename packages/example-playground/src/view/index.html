@@ -22,12 +22,25 @@
     <div class="selection-follower"></div>
     <section id="readme" class="readme">
     </section>
+    <section class="half">
+        <h3>Result <button id="refreshResult">🔄</button></h3>
+        <div id="result"></div>
+    </section>
     <div class="example">
+        <div class="source-file selection">
+            <select id="compiled-imports"></select>
+        </div>
         <section class="half">
             <h3>Source</h3>
             <pre>
                 <code id="source" class="lang-tsx"></code>
             </pre>
+        </section>
+        <section class="half">
+            <h3>Compiled</h3>
+            <pre>
+                        <code id="compiled" class="lang-js"></code>
+                    </pre>
         </section>
         <section class="half">
             <h3>Style</h3>
@@ -36,16 +49,6 @@
             </pre>
         </section>
     </div>
-
-    <section class="half">
-        <h3>Result <button id="refreshResult">🔄</button></h3>
-        <div id="result" />
-    </section>
-    <section class="half">
-        <h3>Compiled</h3>
-        <pre>
-            <code id="compiled" class="lang-js"></code>
-        </pre>
-    </section>
 </body>
+
 </html>

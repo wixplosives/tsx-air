@@ -8,6 +8,7 @@ const source = document.getElementById('source')!;
 const compiled = document.getElementById('compiled')!;
 const style = document.getElementById('style')!;
 const fps = document.getElementById('fps')!;
+const imports = document.getElementById('compiled-imports')! as HTMLSelectElement;
 
 export default {
     readme,
@@ -19,5 +20,6 @@ export default {
     source,
     compiled,
     style,
-    fps
+    fps,
+    compiledImports: imports
 };

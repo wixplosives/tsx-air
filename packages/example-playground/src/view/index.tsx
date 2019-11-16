@@ -6,12 +6,13 @@ import 'prismjs/components/prism-jsx.js';
 import 'prismjs/components/prism-tsx.js';
 import 'prismjs/themes/prism.css';
 import './index.css';
-import { getExamples, buildExample } from '../utils/examples.index';
+import { getExamples, buildExample, Example } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
 import { preloader } from './preloader';
 
 let stop: () => void;
+let current!: Example;
 
 getExamples().then((examples: string[]) => {
     dom.selectExample.innerHTML =
@@ -34,6 +35,7 @@ const changeHandler = async (noScroll = false) => {
     const compiler = compilers[dom.selectCompiler.value as unknown as number];
     try {
         const loaded = await buildExample(dom.selectExample.value, compiler);
+        current = loaded;
         loaded.readme.then(t => {
             dom.readme.innerHTML = t;
             Prism.highlightAll();
@@ -42,10 +44,16 @@ const changeHandler = async (noScroll = false) => {
             dom.style.textContent = s;
             Prism.highlightAll();
         });
-        loaded.build.then(({ compiled, source }) => {
+        loaded.build.then(async ({ compiled, source }) => {
             dom.compiled.textContent = compiled;
             dom.source.textContent = source;
             Prism.highlightAll();
+            let imports = '';
+            for (const imprt of [loaded.build, ...((await loaded.build).imports)]) {
+                const src = await imprt;
+                imports = `${imports}<option value="${src.path}">${src.path.replace('/src/', '')}</option>`;
+            }
+            dom.compiledImports.innerHTML = imports;
         }).catch(async err => {
             dom.compiled.textContent = `🤕
         ${err.message}
@@ -53,16 +61,7 @@ const changeHandler = async (noScroll = false) => {
             dom.source.textContent = (await (await loaded).build).source;
         });
 
-        try {
-            dom.resultRoot.innerHTML = `
-            <style>${await loaded.style}
-                .result.root { display:flex; }
-            </style>
-            <div class="result root"></div>`;
-            stop = (await (await loaded.build).module as any).runExample(dom.resultRoot.querySelector('div')!);
-        } catch (err) {
-            dom.resultRoot.innerHTML = `<div>🤒</div><pre>${err.message}</pre>`;
-        }
+        runExample();
     } catch (e) {
         dom.compiled.textContent = `🤕
         ${e.message}
@@ -70,6 +69,33 @@ const changeHandler = async (noScroll = false) => {
     }
 };
 
+async function runExample() {
+    try {
+        if (stop !== undefined) { stop(); }
+        dom.resultRoot.innerHTML = `
+            <style>${await current.style}
+                .result.root { display:flex; }
+            </style>
+            <div class="result root"></div>`;
+        stop = (await (await current.build).module as any).runExample(dom.resultRoot.querySelector('div')!);
+    } catch (err) {
+        dom.resultRoot.innerHTML = `<div>🤒</div><pre>${err.message}</pre>`;
+    }
+}
+
 dom.selectExample.addEventListener('change', () => changeHandler());
 dom.selectCompiler.addEventListener('change', () => changeHandler(true));
-dom.refreshResult.addEventListener('click', () => changeHandler(true));
+dom.refreshResult.addEventListener('click', runExample);
+dom.compiledImports.addEventListener('change', async () => {
+    dom.compiled.textContent = '';
+    dom.source.textContent = '';
+    const src = dom.compiledImports.value;
+    for (const imprt of [current.build, ...((await current.build).imports)]) {
+        const { path, compiled, source } = await imprt;
+        if (path === src) {
+            dom.compiled.textContent = compiled;
+            dom.source.textContent = source;
+        }
+    }
+    Prism.highlightAll();
+});

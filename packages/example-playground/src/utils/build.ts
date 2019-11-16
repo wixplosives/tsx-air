@@ -69,9 +69,9 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
             return builtModule;
         }
         return {
-            source: await readFileOr(sources, path, () => '// precompiled source'),
+            source: await readFileOr(sources, importPath, () => '// precompiled source'),
             path: importPath,
-            compiled: await readFileOr(fs, path, () => '// precompiled output'),
+            compiled: await readFileOr(fs, importPath, () => '// precompiled output'),
             imports: [],
             module: Promise.resolve(cjs.requireModule(importPath))
         };
