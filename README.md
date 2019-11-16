@@ -1,4 +1,7 @@
 # tsx-air [<-- insert better name here]
+
+[![Build Status](https://travis-ci.com/wixplosives/tsx-air.svg?branch=master)](https://travis-ci.com/wixplosives/tsx-air)
+
 Thoughts on a new system of rendering
 
 ## Motivation

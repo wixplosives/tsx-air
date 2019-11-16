@@ -5,6 +5,11 @@ import { build } from './build';
 import { expect } from 'chai';
 
 describe('build', () => {
+    let filesLoaded: string[] = [];
+    beforeEach(() => {
+        filesLoaded = [];
+    });
+
     const compiler: Compiler = {
         compile: async (source, _path) => {
             return source;
@@ -15,14 +20,8 @@ describe('build', () => {
         '/data.js': `
             export const b='b'`,
         '/src': {
-            'examples':{
-                'ex1':{
-                    'source.js': `
-                        import { Component, Dom } from '../../framework/types/component';
-                        export class TestComp extends Component {
-                        }`
-                },
-                'ex2': {
+            'examples': {
+                'ex1': {
                     'source.js': `
                     import {TSXAir} from '../../framework';
                     export const air = TSXAir;`
@@ -44,7 +43,7 @@ describe('build', () => {
     });
 
     const load: Loader = async path => {
-        console.log(path, mockFs.fileExistsSync(path));
+        filesLoaded.push(path);
         return mockFs.readFileSync(path, 'utf8');
     };
 
@@ -55,7 +54,9 @@ describe('build', () => {
         expect(mod).to.deep.equal({
             b: 'b'
         });
+        expect(filesLoaded).to.deep.equal(['/data.js']);
     });
+    
     it('should evaluate a module with imports', async () => {
         const res = await build(compiler, load, '/src/main');
         expect(res.error).to.equal(undefined);
@@ -65,16 +66,14 @@ describe('build', () => {
                 b: 'b'
             }
         });
+        expect(filesLoaded).to.deep.equal(['/src/main.js', '/src/a.js', '/data.js', '/src/inner/a.js']);
     });
+
     it('should evaluate a module that uses the framework', async () => {
-        const res = await build(compiler, load, '/src/examples/ex2/source');
-        expect(res.error).to.equal(undefined);
-        expect((await res.module as any).air).to.be.instanceOf(Function);
-    });
-    it('should have access to preloaded modules', async () => {
         const res = await build(compiler, load, '/src/examples/ex1/source');
         expect(res.error).to.equal(undefined);
-        expect((await res.module as any).TestComp).to.be.instanceOf(Function);
-        expect(((await res.module as any).TestComp)).to.be.instanceOf(Function);
+        expect((await res.module as any).air).to.be.instanceOf(Function);
+        expect(filesLoaded).to.deep.equal(['/src/examples/ex1/source.js']);
+        expect(filesLoaded).not.to.include('/src/framework.js');
     });
 });
