@@ -172,8 +172,6 @@
   dependencies:
     "@file-services/types" "^2.0.1"
 
-<<<<<<< HEAD
-=======
 "@file-services/utils@^2.1.0":
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@file-services/utils/-/utils-2.1.0.tgz#d17a18dc97d663b3b0119ded6f1d078eb166c6f8"
@@ -181,7 +179,6 @@
   dependencies:
     "@file-services/types" "^2.1.0"
 
->>>>>>> ca8beb09849a18d717c3af195c6acb10a9e604e0
 "@lerna/add@3.18.4":
   version "3.18.4"
   resolved "https://registry.yarnpkg.com/@lerna/add/-/add-3.18.4.tgz#0d97c75b64febc10a9a38546a3019f0f2c24b0e6"
@@ -1123,14 +1120,11 @@
   version "4.14.146"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.146.tgz#de0d2c8610012f12a6a796455054cbc654f8fecf"
   integrity sha512-JzJcmQ/ikHSv7pbvrVNKJU5j9jL9VLf3/gqs048CEnBVVVEv4kve3vLxoPHGvclutS+Il4SBIuQQ087m1eHffw==
-<<<<<<< HEAD
-=======
 
 "@types/mime@*":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.1.tgz#dc488842312a7f075149312905b5e3c0b054c79d"
   integrity sha512-FwI9gX75FgVBJ7ywgnq/P7tw+/o1GUbtP0KzbtusLigAOgIgNISRK0ZPl4qertvXSIE8YbsVJueQ90cDt9YYyw==
->>>>>>> ca8beb09849a18d717c3af195c6acb10a9e604e0
 
 "@types/minimatch@*":
   version "3.0.3"
