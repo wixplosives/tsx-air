@@ -48,7 +48,7 @@ const toString = (def: CompDefinition) => {
                     case 'JSXExpression':
                         return `<!-- ${metadata.sourceText} -->$${metadata.sourceText}<!-- /${metadata.sourceText} -->`;
                     case 'Component':
-                        return `\${${metadata.tag}.factory.toString({${metadata.props.map((i: any) =>
+                        return `\${(${metadata.tag} || exports.${metadata.tag}).factory.toString({${metadata.props.map((i: any) =>
                             `${i.name}:${i.value}`)
                             .join(',')}})}`;
                     case 'JsxAttribute':
