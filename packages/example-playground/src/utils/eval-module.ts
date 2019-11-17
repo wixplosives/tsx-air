@@ -27,6 +27,6 @@ export const evalModule = async (src: string) => {
 
     // tslint:disable-next-line: no-eval
     eval(src);
-    //window.exports = {};
+    // window.exports = {};
     return exp as any;
 };

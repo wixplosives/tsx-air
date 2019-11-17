@@ -136,9 +136,9 @@ export const jsxComponentReplacer: AstNodeReplacer<ts.JsxElement | JsxSelfClosin
                         if (ts.isJsxSpreadAttribute(prop)) {
                             throw new Error('spread in attributes is not handled yet');
                         }
-                        const initializer = prop.initializer
+                        const initializer = prop.initializer;
                         if (!initializer) {
-                            accum[prop.name.getText()] = ts.createTrue()
+                            accum[prop.name.getText()] = ts.createTrue();
                         } else if (ts.isJsxExpression(initializer)) {
                             if (initializer.expression) {
                                 accum[prop.name.getText()] = cloneDeep(initializer.expression);

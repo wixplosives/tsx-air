@@ -8,6 +8,6 @@ export const printAST = (n: ts.Node) => {
         noEmitHelpers: true
     });
 
-    const res = printer.printNode(ts.EmitHint.Unspecified, n, n.getSourceFile() || ts.createSourceFile('temp.tsx', `const a = 'gaga'`, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX));
+    const res = printer.printNode(ts.EmitHint.Unspecified, n, n.getSourceFile() || ts.createSourceFile('temp.tsx', ``, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX));
     return res;
 };
