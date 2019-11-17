@@ -22,5 +22,4 @@ export default {
     style,
     fps,
     compiledImports: imports,
-    monacoLoader
 };

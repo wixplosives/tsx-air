@@ -24,6 +24,7 @@ pre, code {
     background-color: white;
     padding-left: 1em;
     justify-content: center;
+    z-index: 9999;
 }
 
 section:empty {
