@@ -14,6 +14,13 @@ export function errorNode<T extends TsxAirNode>(sourceAstNode: ts.Node, message:
     };
 }
 
+export function asAnalyzerResult<T extends TsxAirNode>(analyzedNode: T): AnalyzerResult<T> {
+    return {
+        tsxAir:analyzedNode,
+        astToTsxAir: new Map([[analyzedNode.sourceAstNode, [analyzedNode]]]) as Map<ts.Node, TsxAirNode[]>
+    };
+}
+
 export function hasError(node: TsxAirNode): node is TsxAirNodeError {
     return node && node.kind === 'error';
 }
@@ -23,7 +30,7 @@ export function isTsxAirNode(x: any): x is TsxAirNode {
 }
 
 export type NodesMap = Map<ts.Node, TsxAirNode[]>;
-export function addToNodesMap(target: NodesMap, added: NodesMap|TsxAirNode) {
+export function addToNodesMap(target: NodesMap, added: NodesMap | TsxAirNode) {
     if (isTsxAirNode(added)) {
         addNodeToMap(target, added);
     } else {

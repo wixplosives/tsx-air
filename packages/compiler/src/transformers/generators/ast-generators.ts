@@ -1,5 +1,3 @@
-// tslint:disable: no-bitwise
-
 import ts from 'typescript';
 import { isArray } from 'util';
 import { JsxRoot, CompDefinition } from '../../analyzers/types';

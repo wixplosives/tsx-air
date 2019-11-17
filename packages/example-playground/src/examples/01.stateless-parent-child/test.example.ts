@@ -1,5 +1,5 @@
-import {  render } from '../../framework';
-import { ParentComp } from './component';
+import { render } from '../../framework';
+import { ParentComp } from './source';
 
 export const runExample = (element: HTMLElement) => {
     const countTo = 100;

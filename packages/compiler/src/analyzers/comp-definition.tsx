@@ -6,7 +6,7 @@ import { scan } from '../astUtils/scanner';
 import { jsxRoots } from './jsxroot';
 import { errorNode, aggregateAstNodeMapping, addToNodesMap } from './types.helpers';
 
-export const compDefinition: Analyzer<ts.Node, CompDefinition> = astNode => {
+export const compDefinition: Analyzer<CompDefinition> = astNode => {
     if (!isCallExpression(astNode) || astNode.expression.getText() !== 'TSXAir') {
         return errorNode<CompDefinition>(astNode, 'Not a component definition', 'internal');
     }
