@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { cObject, generateHydrate } from './ast-generators';
+import { cObject, generateHydrate, cClass } from './ast-generators';
 import { GeneratorTransformer } from './append-node-transformer';
 import { generateToString } from './to-string-generator';
 
@@ -13,13 +13,18 @@ export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
         const comp = comps.find(c => c.sourceAstNode === node);
         if (comp) {
             const info = comp.jsxRoots[0];
-
-            return cObject(
+            return cClass(comp.name || 'untitled', undefined, [
                 {
-                    toString: generateToString(info, comp),
-                    hydrate: generateHydrate(info, comp)
-                });
-
+                    isPublic: true,
+                    isStatic: true,
+                    name: 'factory',
+                    initializer: cObject(
+                        {
+                            toString: generateToString(info, comp),
+                            hydrate: generateHydrate(info, comp)
+                        })
+                }
+            ]);
         }
         return ts.visitEachChild(node, visitor, ctx);
     };

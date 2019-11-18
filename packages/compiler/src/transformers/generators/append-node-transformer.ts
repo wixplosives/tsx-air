@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { cObject } from './ast-generators';
 import { TsxFile, tsNodeToAirNode, AnalyzerResult, TsxAirNode } from '../../analyzers/types';
-import {  analyzeFile } from '../../analyzers';
+import { analyze } from '../../analyzers';
 
 
 export interface GeneratorContext {
@@ -35,8 +35,8 @@ export const appendNodeTransformer: (gen: GeneratorTransformer) => ts.Transforme
 
 
     return (node: ts.SourceFile) => {
-        scanRes = analyzeFile(node);
-        
+        scanRes = analyze(node);
+
         const res = ts.visitEachChild(node, gen(genCtx, ctx), ctx);
         const varHolder = ts.createVariableStatement(undefined, [ts.createVariableDeclaration(varHolderIdentifier, undefined, cObject(appendedNodes))]);
         return ts.updateSourceFileNode(node, res.statements.concat([varHolder]));

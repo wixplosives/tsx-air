@@ -80,6 +80,49 @@ export const cPrimitive = (input: any, options: AstGeneratorsOptions = defaultOp
     return null;
 };
 
+export interface ClassProperty {
+    name: string;
+    isPublic: boolean;
+    isStatic: boolean;
+    initializer: ts.Expression;
+}
+
+export const cClass = (name: string, extendz: string | ts.Expression | undefined, properties: ClassProperty[]) => {
+    return ts.createClassDeclaration(
+        undefined,
+        [ts.createModifier(ts.SyntaxKind.ExportKeyword)],
+        ts.createIdentifier(name),
+        undefined,
+        extendz ? [ts.createHeritageClause(
+            ts.SyntaxKind.ExtendsKeyword,
+            [
+                ts.createExpressionWithTypeArguments(undefined, typeof extendz === 'string' ? ts.createIdentifier(extendz) : extendz)
+            ]
+        )] : undefined,
+        properties.map(prop => {
+            const modifiers: ts.Modifier[] = [];
+            if (prop.isStatic) {
+                modifiers.push(ts.createModifier(ts.SyntaxKind.StaticKeyword));
+            }
+            if (prop.isPublic) {
+                modifiers.push(ts.createModifier(ts.SyntaxKind.PublicKeyword));
+            }
+            return ts.createProperty(
+                undefined,
+                [
+                    ts.createModifier(ts.SyntaxKind.PublicKeyword),
+                    ts.createModifier(ts.SyntaxKind.StaticKeyword)
+                ],
+                ts.createIdentifier(prop.name),
+                undefined,
+                undefined,
+                prop.initializer
+            );
+        })
+
+    )
+}
+
 
 function createSynthesizedNode(kind: ts.SyntaxKind) {
     const node = ts.createNode(kind, -1, -1);
