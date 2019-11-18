@@ -1,15 +1,10 @@
 import { compilers } from '../compilers';
-import Prism from 'prismjs';
-// @ts-ignore
-import 'prismjs/components/prism-jsx.js';
-// @ts-ignore
-import 'prismjs/components/prism-tsx.js';
-import 'prismjs/themes/prism.css';
 import './index.css';
 import { getExamples, buildExample, Example } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
 import { preloader } from './preloader';
+import { showStyle, showCode } from './helpers';
 
 let stop: () => void;
 let current!: Example;
@@ -38,20 +33,17 @@ const changeHandler = async (noScroll = false) => {
         current = loaded;
         loaded.readme.then(t => {
             dom.readme.innerHTML = t;
-            Prism.highlightAll();
         });
-        loaded.style.then(s => {
-            dom.style.textContent = s;
-            Prism.highlightAll();
-        });
-        loaded.build.then(async ({ compiled, source }) => {
-            dom.compiled.textContent = compiled;
-            dom.source.textContent = source;
-            Prism.highlightAll();
+        loaded.style.then(showStyle);
+        loaded.build.then(async ({ compiled, source, path }) => {
+            showCode(path, compiled, source);
+
             let imports = '';
             for (const imprt of [loaded.build, ...((await loaded.build).imports)]) {
                 const src = await imprt;
-                imports = `${imports}<option value="${src.path}">${src.path.replace('/src/', '')}</option>`;
+                if (src.path.match(/^\/src\/examples\//)) {
+                    imports = `${imports}<option value="${src.path}">${src.path.replace('/src/', '')}</option>`;
+                }
             }
             dom.compiledImports.innerHTML = imports;
         }).catch(async err => {
@@ -93,10 +85,7 @@ dom.compiledImports.addEventListener('change', async () => {
     for (const imprt of [current.build, ...((await current.build).imports)]) {
         const { path, compiled, source } = await imprt;
         if (path === src) {
-            dom.compiled.textContent = compiled;
-            dom.source.textContent = source;
+            showCode(path, compiled, source);
         }
     }
-    Prism.highlightAll();
 });
-
