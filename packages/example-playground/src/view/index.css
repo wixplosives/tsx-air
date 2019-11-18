@@ -12,8 +12,7 @@ h1 {
     text-align: center;
 }
 
-pre,
-code {
+pre, code {
     font-family: 'Roboto Mono', monospace;
 }
 
@@ -25,6 +24,7 @@ code {
     background-color: white;
     padding-left: 1em;
     justify-content: center;
+    z-index: 9999;
 }
 
 section:empty {
@@ -50,7 +50,7 @@ section:empty {
     margin: 0.2em;
 }
 
-.selection > * {
+.selection>* {
     margin: 0.5em;
     padding: 0px;
 }
@@ -63,10 +63,10 @@ section:empty {
     box-shadow: 1em 0.3em 0.3em rgba(17, 92, 2, 0.1), -1em 0.5em 0.5em rgba(6, 39, 128, 0.1);
 }
 
-
-.readme{
+.readme {
     padding: 10px;
 }
+
 .example {
     display: flex;
     flex-direction: row;
@@ -98,6 +98,17 @@ section:empty {
 .result {
     flex: 2 2;
     flex-basis: 100%;
+}
+
+.source-file {
+    width: 100%;
+    display: flex;
+    position: relative;
+    justify-content: center;
+}
+
+.source-file select {
+    height: 2em;
 }
 
 .h {

@@ -1,4 +1,3 @@
-import { TsxAirNode } from './types';
 import ts from 'typescript';
 
 export interface AnalyzerResult<T extends TsxAirNode> {

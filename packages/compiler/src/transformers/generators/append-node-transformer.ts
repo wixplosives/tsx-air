@@ -1,8 +1,7 @@
 import ts from 'typescript';
-import { cObject } from './ast-generators';
 import { TsxFile, tsNodeToAirNode, AnalyzerResult, TsxAirNode } from '../../analyzers/types';
 import { analyze } from '../../analyzers';
-
+import { cObject } from './ast-generators';
 
 export interface GeneratorContext {
     appendPrivateVar(wantedName: string, expression: ts.Expression): ts.Expression;

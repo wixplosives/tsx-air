@@ -37,7 +37,8 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
     },
     resolve: {
       extensions: ['.tsx', '.ts', '.js', '.json'],
-      plugins: [new TsconfigPathsPlugin({ configFile: require.resolve('../../tsconfig.base.json') })]
+      plugins: [
+        new TsconfigPathsPlugin({ configFile: require.resolve('../../tsconfig.base.json') })]
     },
     plugins: [
       new HtmlWebpackPlugin({
@@ -50,14 +51,16 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
     },
 
     externals: {
-      typescript: 'ts'
+      typescript: 'ts',
+      'monaco-editor': 'monaco',
     },
 
     devServer: {
       contentBase: [
         resolve(__dirname, 'public'),
         resolve(__dirname, 'src/examples'),
-        resolve(__dirname, '../../node_modules')
+        resolve(__dirname, '../../node_modules'),
+        resolve(__dirname, '../../node_modules/monaco-editor/min')
       ],
       hot: true,
       historyApiFallback: true,
