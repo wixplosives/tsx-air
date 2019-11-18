@@ -120,8 +120,8 @@ export const cClass = (name: string, extendz: string | ts.Expression | undefined
             );
         })
 
-    )
-}
+    );
+};
 
 
 function createSynthesizedNode(kind: ts.SyntaxKind) {
@@ -153,6 +153,13 @@ export const cloneDeep = <T extends ts.Node>(node: T, parent?: ts.Node) => {
     clone.end = -1;
     return clone;
 
+};
+
+export const createChangeBitMask = (names: string[]) => {
+    return cObject(names.reduce((accum, name, currentIndex) => {
+        accum[name] = ts.createBinary(ts.createNumericLiteral((currentIndex + 1).toString()), ts.SyntaxKind.GreaterThanGreaterThanToken, ts.createNumericLiteral('0'));
+        return accum;
+    }, {} as any));
 };
 
 export const generateHydrate = (_node: JsxRoot, parentComp: CompDefinition) => {

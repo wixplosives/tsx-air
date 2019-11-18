@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { cObject, generateHydrate, cClass } from './ast-generators';
+import { cObject, generateHydrate, cClass, createChangeBitMask } from './ast-generators';
 import { GeneratorTransformer } from './append-node-transformer';
 import { generateToString } from './to-string-generator';
 
@@ -23,6 +23,11 @@ export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
                             toString: generateToString(info, comp),
                             hydrate: generateHydrate(info, comp)
                         })
+                }, {
+                    isPublic: true,
+                    isStatic: true,
+                    name: 'changeBitmask',
+                    initializer: createChangeBitMask(comp.usedProps.map(prop => prop.name))
                 }
             ]);
         }
