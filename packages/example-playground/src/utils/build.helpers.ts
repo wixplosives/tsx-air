@@ -2,7 +2,7 @@ import { IFileSystem } from '@file-services/types';
 import { ICommonJsModuleSystem } from '@file-services/commonjs';
 
 export async function preload(fs: IFileSystem, cjs: ICommonJsModuleSystem, filename: string, module: Promise<unknown>) {
-    writeToFs(fs, filename, '');
+    writeToFs(fs, filename, '// Preloaded');
     cjs.loadedModules.set(filename, {
         filename,
         exports: await module

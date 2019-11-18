@@ -23,7 +23,8 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
     });
     writeToFs(sources, path, source);
     try {
-        const compiled = await compiler.compile(source, path);
+        const compiled = await readFileOr(fs, path, () => 
+            compiler.compile(source, path));
 
         // TODO: get the analyze AST from the compile pass
         const { imports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;
@@ -60,17 +61,14 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
         const importPath = cjs.resolveFrom(folder, i.module) || fs.join(folder, i.module);
 
         if (!cjs.loadedModules.has(importPath)) {
-            if (importPath.indexOf('..') === 0) {
-                throw new Error('Invalid import: out of example scope');
-            }
             const builtModule = await build(compiler, load, importPath, modules);
             await builtModule.module;
             return builtModule;
         }
         return {
-            source: await readFileOr(sources, path, () => '// precompiled source'),
+            source: await readFileOr(sources, importPath, () => '// precompiled source'),
             path: importPath,
-            compiled: await readFileOr(fs, path, () => '// precompiled output'),
+            compiled: await readFileOr(fs, importPath, () => '// precompiled output'),
             imports: [],
             module: Promise.resolve(cjs.requireModule(importPath))
         };
@@ -93,7 +91,9 @@ async function createCjs(): Promise<CjsEnv> {
         preload(fs, cjs, '/src/framework/types/component.js', import('../framework/types/component')),
         preload(fs, cjs, '/src/framework/types/factory.js', import('../framework/types/factory')),
         preload(fs, cjs, '/src/framework/runtime.js', import('../framework/runtime')),
-        preload(fs, cjs, '/src/framework/runtime/utils.js', import('../framework/runtime/utils'))
+        preload(fs, cjs, '/src/framework/runtime/utils.js', import('../framework/runtime/utils')),
+        preload(fs, cjs, '/src/framework/api/types.js', import('../framework/api/types')),
+        preload(fs, cjs, '/node_modules/lodash/clamp.js', import('lodash/clamp'))
     ]);
 
     const pendingSources = new Map();

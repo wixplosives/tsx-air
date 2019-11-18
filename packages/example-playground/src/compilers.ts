@@ -23,6 +23,7 @@ export const compilers: Compiler[] = [
         label: 'Manual + TS',
         compile: async (_src, path) => {            
             path = path.replace(/^\/src/,'').replace(/source(\.js|\.ts|\.tsx)?$/,'/compiled');
+            path = path.replace(/\.js*/, '');
             const content = await (await fetch(path)).text();
             return content;
         }
