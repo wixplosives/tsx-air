@@ -9,7 +9,7 @@ interface ParentCompCtx extends Dom {
     childComp1: ChildComp;
 }
 
-class ParentComp extends Component<ParentCompCtx, ParentCompProps> {
+export class ParentComp extends Component<ParentCompCtx, ParentCompProps> {
     public static factory: Factory<ParentComp>;
     public static readonly changeBitmask = {
         name: 1 << 0
@@ -45,7 +45,7 @@ interface ChildCompProps { name: string; }
 interface ChildCompCtx extends Dom { text1: Text; }
 
 // tslint:disable-next-line: max-classes-per-file
-class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
+export class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
     public static factory: Factory<ChildComp>;
     public static readonly changeBitmask = {
         name: 1 << 0
@@ -73,7 +73,7 @@ export const runExample = (element: HTMLElement) => {
     let count = 0;
     let frames = 0;
     const startTime = performance.now();
-    const app = render(element, ParentComp, { name: `Initial count: ${count}` });
+    const app = render(element, ParentComp as any, { name: `Initial count: ${count}` });
     const isViewUpdated = () => {
         const countDisplayed = element.innerText.match(new RegExp(`${count}`, 'g'));
         return (countDisplayed && countDisplayed.length === 2);

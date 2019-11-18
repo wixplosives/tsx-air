@@ -6,7 +6,6 @@ import { Loader } from './examples.index';
 import { asSourceFile } from '@wixc3/tsx-air-compiler/src/astUtils/parser';
 import { createCjsModuleSystem, ICommonJsModuleSystem } from '@file-services/commonjs';
 import { createMemoryFs } from '@file-services/memory';
-import { join } from 'path';
 import { normalizePath, writeToFs, splitFilePath, preload, readFileOr } from './build.helpers';
 
 
@@ -59,7 +58,7 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
 
     async function buildImport(i: Import): Promise<BuiltCode> {
         const { folder } = splitFilePath(path);
-        const importPath = cjs.resolveFrom(folder, i.module) || join(folder, i.module);
+        const importPath = cjs.resolveFrom(folder, i.module) || fs.join(folder, i.module);
 
         if (!cjs.loadedModules.has(importPath)) {
             const builtModule = await build(compiler, load, importPath, modules);
