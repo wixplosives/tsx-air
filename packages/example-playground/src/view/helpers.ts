@@ -45,16 +45,16 @@ export function showCode(path:string, compiled: string, source: string) {
         jsxFactory: 'TSXAir',
         esModuleInterop: true
     });
-    // monaco.languages.registerDefinitionProvider('typescript', {
-    //     provideDefinition: (mdl, pos, token) => {
-    //         console.log(mdl, pos, token);
-    //         const filePath='/src/examples/ex1/com.ts';
-    //         return {
-    //             uri: monaco.Uri.parse('file://' + filePath),
-    //             range: monaco.Range.fromPositions({lineNumber:1, column:1})
-    //         };
-    //     }
-    // });
+    monaco.languages.registerDefinitionProvider('typescript', {
+        provideDefinition: (mdl, pos, token) => {
+            console.log(mdl, pos, token);
+            const filePath='/src/examples/ex1/com.ts';
+            return {
+                uri: monaco.Uri.parse('file://' + filePath),
+                range: monaco.Range.fromPositions({lineNumber:1, column:1})
+            };
+        }
+    });
     const editor = monaco.editor.create(dom.source, {
         model,
         readOnly: false,
@@ -63,9 +63,9 @@ export function showCode(path:string, compiled: string, source: string) {
         roundedSelection: false,
         scrollBeyondLastLine: false,
     });
-    // editor.onDidChangeModelContent(event => {
-    //     console.log(event);
-    // });
+    editor.onDidChangeModelContent(event => {
+        console.log(event);
+    });
 
 }
 
