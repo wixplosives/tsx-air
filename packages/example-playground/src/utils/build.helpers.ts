@@ -48,7 +48,7 @@ export interface BuiltCode {
     path: string;
     compiled: string;
     imports: Array<Promise<BuiltCode>>;
-    module: Promise<unknown>;
+    module: Promise<any>;
     error?: any;
     _loader: Loader;
     _compiler: Compiler;

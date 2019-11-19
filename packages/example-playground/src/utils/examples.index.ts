@@ -3,8 +3,9 @@ import { build } from './build';
 import { Compiler } from '../compilers';
 import { BuiltCode } from './build.helpers';
 
-export const getExamples = async () =>
-    (await (await fetch('/examples')).json());
+export async function getExamples(): Promise<string[]> {
+    return (await (await fetch('/examples')).json());
+}
 
 export interface Example {
     name: string;

@@ -4,6 +4,16 @@ import { Loader } from './examples.index';
 import { asSourceFile } from '@wixc3/tsx-air-compiler/src/astUtils/parser';
 import { normalizePath, writeToFs, splitFilePath, readFileOr, BuiltCode, createCjs, CjsEnv as _CjsEnv, evalModule, CjsEnv } from './build.helpers';
 
+const preloads = {
+    '/src/framework/index.js': import('../framework'),
+    '/src/framework/types/component.js': import('../framework/types/component'),
+    '/src/framework/types/factory.js': import('../framework/types/factory'),
+    '/src/framework/runtime.js': import('../framework/runtime'),
+    '/src/framework/runtime/utils.js': import('../framework/runtime/utils'),
+    '/src/framework/api/types.js': import('../framework/api/types'),
+    '/node_modules/lodash/clamp.js': import('lodash/clamp')
+};
+
 export async function rebuild(built: BuiltCode, overridesSources: Record<string, string>): Promise<BuiltCode> {
     const { _cjsEnv, _loader, _compiler, path } = built;
     for (const [src, source] of Object.entries(overridesSources)) {
@@ -14,15 +24,12 @@ export async function rebuild(built: BuiltCode, overridesSources: Record<string,
     return build(_compiler, _loader, path, _cjsEnv);
 }
 
-const preloads = {
-    '/src/framework/index.js': import('../framework'),
-    '/src/framework/types/component.js': import('../framework/types/component'),
-    '/src/framework/types/factory.js': import('../framework/types/factory'),
-    '/src/framework/runtime.js': import('../framework/runtime'),
-    '/src/framework/runtime/utils.js': import('../framework/runtime/utils'),
-    '/src/framework/api/types.js': import('../framework/api/types'),
-    '/node_modules/lodash/clamp.js': import('lodash/clamp')
-};
+export async function reCompile(built: BuiltCode, newCompiler: Compiler): Promise<BuiltCode> {
+    const { _cjsEnv, _loader, path } = built;
+    const modules = await createCjs(preloads);
+    modules.sources = _cjsEnv.sources;
+    return build(newCompiler, _loader, path, modules);
+}
 
 export async function build(compiler: Compiler, load: Loader, path: string, modules?: CjsEnv): Promise<BuiltCode> {
     modules = modules || await createCjs(preloads);
@@ -92,3 +99,12 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
     }
 }
 
+export async function getSource(built: BuiltCode, path: string): Promise<string> {
+    await built.module;
+    return built._cjsEnv.sources.readFileSync(normalizePath(path), 'utf8');
+}
+
+export async function getCompiled(built: BuiltCode, path: string): Promise<string> {
+    await built.module;
+    return built._cjsEnv.compiledEsm.readFileSync(normalizePath(path), 'utf8');
+}

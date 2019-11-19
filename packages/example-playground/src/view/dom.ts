@@ -10,6 +10,20 @@ const style = document.getElementById('style')!;
 const fps = document.getElementById('fps')!;
 const imports = document.getElementById('compiled-imports')! as HTMLSelectElement;
 
+export interface DOM {
+    selectExample: HTMLSelectElement;
+    selectCompiler: HTMLSelectElement;
+    selectSource: HTMLSelectElement;
+    readme: HTMLElement;
+    result: HTMLElement;
+    refreshResult: HTMLElement;
+    resultRoot: ShadowRoot;
+    source: HTMLElement;
+    compiled: HTMLElement;
+    style: HTMLElement;
+    fps: HTMLElement;
+}
+
 export default {
     readme,
     selectExample,
@@ -21,5 +35,5 @@ export default {
     compiled,
     style,
     fps,
-    compiledImports: imports,
-};
+    selectSource: imports,
+} as DOM;

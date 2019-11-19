@@ -1,8 +1,9 @@
 import { createMemoryFs } from '@file-services/memory';
 import { Loader } from './examples.index';
 import { Compiler } from './../compilers';
-import { build, rebuild } from './build';
+import { build, rebuild, reCompile } from './build';
 import { expect } from 'chai';
+// tslint:disable: no-unused-expression
 
 describe('build', () => {
     let filesLoaded: string[] = [];
@@ -126,6 +127,46 @@ describe('build', () => {
             });
             await modified.module;
             expect(filesLoaded).to.eql(['/data2.js']);
+        });
+    });
+
+    describe('reCompile', () => {
+        const newCompiler: Compiler = {
+            compile: async (source, _path) => {
+                return source + `
+                export const wasRecompiled=true;`;
+            },
+            label: 'reCompiler'
+        };
+
+        it('should recompile the source', async () => {
+            const original = await build(compiler, load, '/src/main.js');
+            await original.module;
+            filesLoaded = [];
+            const recompiled = await reCompile(original, newCompiler);
+            const module = await recompiled.module;
+            expect(module.wasRecompiled).to.be.true;
+        });
+
+        it('should not reload any sources', async () => {
+            const original = await build(compiler, load, '/src/main.js');
+            await original.module;
+            filesLoaded = [];
+            const recompiled = await reCompile(original, newCompiler);
+            await recompiled.module;
+            expect(filesLoaded).to.eql([]);
+        });
+
+        it('should recompile all the imports', async () => {
+            const original = await build(compiler, load, '/src/main.js');
+            await original.module;
+            filesLoaded = [];
+            const recompiled = await reCompile(original, newCompiler);
+            await recompiled.module;
+            await Promise.all(
+                recompiled.imports.map(async i => {
+                    expect((await (await i).module).wasRecompiled).to.be.true;
+                }));
         });
     });
 });
