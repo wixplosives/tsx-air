@@ -1,5 +1,4 @@
 import { NodeMetaData } from './scanner';
-import * as _ from 'lodash';
 import { isString } from 'lodash';
 import ts from 'typescript';
 
@@ -22,7 +21,7 @@ export const sourceWithNotes = (source: string, notes: NodeMetaData[], offset = 
 
 export const sourceWithHighlights = (source: string, notes: NodeMetaData[]) => {
     let result = source;
-    const sorted = notes.filter(({ metadata }) => _.isString(metadata)).sort(
+    const sorted = notes.filter(({ metadata }) => isString(metadata)).sort(
         (a, b) => b.node.getStart() - a.node.getStart()
     );
 

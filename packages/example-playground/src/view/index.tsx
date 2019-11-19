@@ -1,75 +1,90 @@
-import { compilers } from '../compilers';
-import Prism from 'prismjs';
-// @ts-ignore
-import 'prismjs/components/prism-jsx.js';
-// @ts-ignore
-import 'prismjs/components/prism-tsx.js';
-import 'prismjs/themes/prism.css';
+import { compilers, Compiler } from '../compilers';
 import './index.css';
-import { getExamples, buildExample } from '../utils/examples.index';
+import { getExamples, buildExample, Example } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
-import { preloader } from './preloader';
+import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, showSourceCode } from './helpers';
+import { Model } from './index.model';
+import { setup } from './setup';
+import { reCompile, rebuild } from '../utils/build';
+import monaco from 'monaco-editor';
+setup();
 
-let stop: () => void;
+(async () => {
+    const getSelectedExample = await setOptions<string>(dom.selectExample, getExamples());
+    const getSelectedCompiler = await setOptions<Compiler>(dom.selectCompiler, Promise.resolve(compilers), 'label');
+    const currentExample = await buildExample(getSelectedExample(), getSelectedCompiler());
 
-getExamples().then((examples: string[]) => {
-    dom.selectExample.innerHTML =
-        `${examples.map(example => `<option value="${example}">${example}</option>`)
-            .join('\n')}`;
-    dom.selectExample.value = localStorage.getItem('selected') || examples[0];
-    changeHandler();
-});
+    const model: Model = {
+        stop: () => void (0),
+        dom,
+        currentExample,
+        getSelectedExample,
+        getSelectedCompiler,
+        getSelectedSource: await updateSources(dom.selectSource, currentExample)
+    };
+
+    setExample(model);
+
+    dom.selectExample.addEventListener('change', () => {
+        setExample(model);
+        localStorage.removeItem(model.dom.selectSource.id);
+    });
+    dom.selectCompiler.addEventListener('change', () => setCompiler(model));
+    dom.refreshResult.addEventListener('click', () => {
+        model.stop();
+        runExample(model);
+    });
+    dom.selectSource.addEventListener('change', () => {
+        showCompiledCode(model);
+        showSourceCode(model, rebuildSource(model));
+    });
+})();
+
+function rebuildSource(model: Model) {
+    return async function _rebuildSource(newSource: string) {
+        model.stop();
+        model.currentExample.build = rebuild(await model.currentExample.build, {
+            [model.getSelectedSource()]: newSource
+        });
+        showCompiledCode(model);
+        runExample(model);
+    };
+}
 
 
-const changeHandler = async (noScroll = false) => {
-    if (stop !== undefined) { stop(); }
-    dom.style.innerHTML = dom.source.innerHTML = dom.compiled.innerHTML = dom.readme.innerHTML = dom.resultRoot.innerHTML = preloader();
+async function setExample(model: Model) {
+    model.stop();
+    model.currentExample = await buildExample(model.getSelectedExample(), model.getSelectedCompiler());
+    showStyle(model);
+    showReadme(model);
+    model.getSelectedSource = await updateSources(model.dom.selectSource, model.currentExample);
+    showCompiledCode(model);
+    showSourceCode(model, rebuildSource(model));
+    runExample(model);
+}
 
-    localStorage.setItem('selected', dom.selectExample.value);
-    localStorage.setItem('selected-compiler', dom.selectCompiler.value);
-    // tslint:disable-next-line: no-unused-expression
-    noScroll || window.scrollTo(0, 0);
+async function setCompiler(model: Model) {
+    model.stop();
+    localStorage.removeItem(model.dom.selectSource.id);
+    model.currentExample.build = reCompile(await model.currentExample.build, model.getSelectedCompiler());
+    model.getSelectedSource = await updateSources(model.dom.selectSource, model.currentExample);
+    showCompiledCode(model);
+    runExample(model);
+}
 
-    const compiler = compilers[dom.selectCompiler.value as unknown as number];
+async function runExample(model: Model) {
+    await (await model.currentExample.build).module;
     try {
-        const loaded = await buildExample(dom.selectExample.value, compiler);
-        loaded.readme.then(t => {
-            dom.readme.innerHTML = t;
-            Prism.highlightAll();
-        });
-        loaded.style.then(s => {
-            dom.style.textContent = s;
-            Prism.highlightAll();
-        });
-        loaded.build.then(({ compiled, source }) => {
-            dom.compiled.textContent = compiled;
-            dom.source.textContent = source;
-            Prism.highlightAll();
-        }).catch(async err => {
-            dom.compiled.textContent = `🤕
-        ${err.message}
-        🤕`;
-            dom.source.textContent = (await (await loaded).build).source;
-        });
-
-        try {
-            dom.resultRoot.innerHTML = `
-            <style>${await loaded.style}
+        model.dom.resultRoot.innerHTML = `
+            <style>${await model.currentExample.style}
                 .result.root { display:flex; }
             </style>
             <div class="result root"></div>`;
-            stop = (await (await loaded.build).module as any).runExample(dom.resultRoot.querySelector('div')!);
-        } catch (err) {
-            dom.resultRoot.innerHTML = `<div>🤒</div><pre>${err.message}</pre>`;
-        }
-    } catch (e) {
-        dom.compiled.textContent = `🤕
-        ${e.message}
-        🤕`;
+        model.stop = (await (await model.currentExample.build).module as any).runExample(dom.resultRoot.querySelector('div')!);
+        model.stop = model.stop || (() => void (0));
+    } catch (err) {
+        model.dom.resultRoot.innerHTML = `<div>🤒</div><pre>${err.message}</pre>`;
     }
-};
+}
 
-dom.selectExample.addEventListener('change', () => changeHandler());
-dom.selectCompiler.addEventListener('change', () => changeHandler(true));
-dom.refreshResult.addEventListener('click', () => changeHandler(true));

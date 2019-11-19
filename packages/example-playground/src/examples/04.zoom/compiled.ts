@@ -2,23 +2,9 @@ import runtime from '../../framework/runtime';
 import { render } from '../../framework';
 import { Component } from '../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
-import { RefHolder } from '../../framework/api/types';
 import { handleChanges, setStyle } from '../../framework/runtime/utils';
-import { calculateDimensions, calcZoomFrameXY, initialState, Area } from './helper';
+import { calculateDimensions, calcZoomFrameXY, initialState, Area, ZoomCtx, ZoomProps, ZoomState } from './helper';
 
-
-export interface ZoomCtx { root: HTMLDivElement; zoomedIn: HTMLImageElement; zoomedOut: HTMLImageElement; zoomFrame: HTMLDivElement; }
-export interface ZoomProps { url: string; }
-export interface ZoomState {
-    x: number;
-    y: number;
-    original: Area;
-    zoomFrame: Area;
-    zoomedOutSize: Area;
-    zoomedOut: RefHolder<HTMLImageElement>;
-    zoomedIn: RefHolder<HTMLImageElement>;
-    root: RefHolder<HTMLDivElement>;
-}
 
 export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {
     public static factory: Factory<Zoom>;

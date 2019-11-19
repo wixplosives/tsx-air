@@ -2,9 +2,15 @@
 <html>
 
 <head>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon32.ico">
+    <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon64.ico">
+    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon96.ico">
+    <link rel="icon" type="image/png" sizes="128x128" href="/images/favicon128.ico">
     <meta charset="utf-8" />
     <title><%= htmlWebpackPlugin.options.title %></title>
     <script src="/typescript/lib/typescript.js"></script>
+    <script src="/vs/loader.js"></script>
+    <script src="/vs/editor/editor.main.js"></script>
 </head>
 
 <body>
@@ -22,30 +28,28 @@
     <div class="selection-follower"></div>
     <section id="readme" class="readme">
     </section>
+    <section class="half">
+        <h3>Result <button id="refreshResult">🔄</button></h3>
+        <div id="result"></div>
+    </section>
     <div class="example">
+        <div class="source-file">
+            <select id="compiled-imports"></select>
+        </div>
         <section class="half">
             <h3>Source</h3>
-            <pre>
-                <code id="source" class="lang-tsx"></code>
+            <div id="source" style="height:100%; width:100%;"></div>
+        </section>
+        <section class="half">
+            <h3>Compiled</h3>
+            <pre id="compiled" data-lang="text/javascript">
             </pre>
         </section>
         <section class="half">
             <h3>Style</h3>
-            <pre>
-                <code id="style" class="lang-css"></code>
+            <pre id="style" data-lang="text/css">
             </pre>
         </section>
     </div>
-
-    <section class="half">
-        <h3>Result <button id="refreshResult">🔄</button></h3>
-        <div id="result" />
-    </section>
-    <section class="half">
-        <h3>Compiled</h3>
-        <pre>
-            <code id="compiled" class="lang-js"></code>
-        </pre>
-    </section>
 </body>
 </html>

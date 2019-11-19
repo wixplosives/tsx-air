@@ -1,5 +1,4 @@
 import clamp from 'lodash/clamp';
-import { ZoomState } from './compiled';
 import { RefHolder } from '../../framework/api/types';
 
 export function calculateDimensions(main: HTMLElement, zoomedIn: HTMLImageElement, zoomedOut: HTMLImageElement) {
@@ -43,3 +42,17 @@ export const initialState = (_props?: any) => ({
     zoomedOut: {} as RefHolder<HTMLImageElement>,
     root: {} as RefHolder<HTMLDivElement>
 }) as ZoomState;
+
+
+export interface ZoomCtx { root: HTMLDivElement; zoomedIn: HTMLImageElement; zoomedOut: HTMLImageElement; zoomFrame: HTMLDivElement; }
+export interface ZoomProps { url: string; }
+export interface ZoomState {
+    x: number;
+    y: number;
+    original: Area;
+    zoomFrame: Area;
+    zoomedOutSize: Area;
+    zoomedOut: RefHolder<HTMLImageElement>;
+    zoomedIn: RefHolder<HTMLImageElement>;
+    root: RefHolder<HTMLDivElement>;
+}

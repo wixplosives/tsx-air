@@ -1,30 +1,46 @@
-import { IFileSystem } from '@file-services/types';
-import { toCommonJs } from './../compilers';
 import { analyze, TsxFile, Import } from '@wixc3/tsx-air-compiler/src';
 import { Compiler } from '../compilers';
 import { Loader } from './examples.index';
 import { asSourceFile } from '@wixc3/tsx-air-compiler/src/astUtils/parser';
-import { createCjsModuleSystem, ICommonJsModuleSystem } from '@file-services/commonjs';
-import { createMemoryFs } from '@file-services/memory';
-import { join } from 'path';
-import { normalizePath, writeToFs, splitFilePath, preload, readFileOr } from './build.helpers';
+import { normalizePath, writeToFs, splitFilePath, readFileOr, BuiltCode, createCjs, CjsEnv as _CjsEnv, evalModule, CjsEnv } from './build.helpers';
 
+const preloads = {
+    '/src/framework/index.js': import('../framework'),
+    '/src/framework/types/component.js': import('../framework/types/component'),
+    '/src/framework/types/factory.js': import('../framework/types/factory'),
+    '/src/framework/runtime.js': import('../framework/runtime'),
+    '/src/framework/runtime/utils.js': import('../framework/runtime/utils'),
+    '/src/framework/api/types.js': import('../framework/api/types'),
+    '/node_modules/lodash/clamp.js': import('lodash/clamp')
+};
 
-export async function build(compiler: Compiler, load: Loader, path: string, modules?: CjsEnv
-): Promise<BuiltCode> {
-    modules = modules || await createCjs();
-    const { cjs, fs, sources, pendingSources } = modules;
+export async function rebuild(built: BuiltCode, overridesSources: Record<string, string>): Promise<BuiltCode> {
+    const { _cjsEnv, _loader, _compiler, path } = built;
+    for (const [src, source] of Object.entries(overridesSources)) {
+        _cjsEnv.cjs.loadedModules.delete(src);
+        _cjsEnv.compiledEsm.removeSync(src);
+        _cjsEnv.sources.writeFileSync(src, source);
+    }
+    return build(_compiler, _loader, path, _cjsEnv);
+}
+
+export async function reCompile(built: BuiltCode, newCompiler: Compiler): Promise<BuiltCode> {
+    
+    const { _cjsEnv, _loader, path } = built;
+    const modules = await createCjs(preloads);
+    modules.sources = _cjsEnv.sources;
+    return build(newCompiler, _loader, path, modules);
+}
+
+export async function build(compiler: Compiler, load: Loader, path: string, modules?: CjsEnv): Promise<BuiltCode> {
+    modules = modules || await createCjs(preloads);
+    const { cjs, compiledEsm: fs, sources, pendingSources } = modules;
 
     path = normalizePath(path);
-    const source: string = await readFileOr(sources, path, async () => {
-        const loading = pendingSources.get(path) || load(path);
-        pendingSources.set(path, loading);
-        loading.then(() => pendingSources.delete(path));
-        return await loading;
-    });
-    writeToFs(sources, path, source);
+    const source: string = await readFileOr(sources, path, loadSource);
     try {
-        const compiled = await compiler.compile(source, path);
+        const compiled = await readFileOr(fs, path, () =>
+            compiler.compile(source, path));
 
         // TODO: get the analyze AST from the compile pass
         const { imports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;
@@ -33,16 +49,13 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
             source,
             compiled,
             imports: builtImports,
-            module: (async () => {
-                try {
-                    await Promise.all(builtImports);
-                    writeToFs(fs, path, toCommonJs(compiled));
-                    return cjs.requireModule(path);
-                } catch (e) {
-                    console.error(e);
-                }
-            })(),
-            path
+            module: Promise.all(builtImports)
+                .then(() => evalModule(compiled, path, modules!))
+                .catch(e => console.error(e)),
+            path,
+            _loader: load,
+            _compiler: compiler,
+            _cjsEnv: modules!
         };
     } catch (err) {
         return {
@@ -56,56 +69,43 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
         };
     }
 
+    async function loadSource(): Promise<string> {
+        const loading = pendingSources.get(path) || load(path);
+        pendingSources.set(path, loading);
+        loading.then(() => pendingSources.delete(path));
+        const loadedSource = await loading;
+        writeToFs(sources, path, loadedSource);
+        return loadedSource;
+    }
+
     async function buildImport(i: Import): Promise<BuiltCode> {
         const { folder } = splitFilePath(path);
-        const importPath = cjs.resolveFrom(folder, i.module) || join(folder, i.module);
+        const importPath = cjs.resolveFrom(folder, i.module) || fs.join(folder, i.module);
 
         if (!cjs.loadedModules.has(importPath)) {
-            if (importPath.indexOf('..') === 0) {
-                throw new Error('Invalid import: out of example scope');
-            }
             const builtModule = await build(compiler, load, importPath, modules);
             await builtModule.module;
             return builtModule;
         }
         return {
-            source: await readFileOr(sources, path, () => '// precompiled source'),
+            source: await readFileOr(sources, importPath, () => '// precompiled source'),
             path: importPath,
-            compiled: await readFileOr(fs, path, () => '// precompiled output'),
+            compiled: await readFileOr(fs, importPath, () => '// precompiled output'),
             imports: [],
-            module: Promise.resolve(cjs.requireModule(importPath))
+            module: Promise.resolve(cjs.requireModule(importPath)),
+            _loader: load,
+            _compiler: compiler,
+            _cjsEnv: modules!
         };
     }
 }
 
-interface CjsEnv {
-    fs:IFileSystem;
-    cjs:ICommonJsModuleSystem;
-    sources:IFileSystem;
-    pendingSources: Map<string, Promise<string>>;
-}
-async function createCjs(): Promise<CjsEnv> {
-    const fs = createMemoryFs();
-    const cjs = createCjsModuleSystem({ fs });
-    const sources = createMemoryFs();
-
-    await Promise.all([
-        preload(fs, cjs, '/src/framework/index.js', import('../framework')),
-        preload(fs, cjs, '/src/framework/types/component.js', import('../framework/types/component')),
-        preload(fs, cjs, '/src/framework/types/factory.js', import('../framework/types/factory')),
-        preload(fs, cjs, '/src/framework/runtime.js', import('../framework/runtime')),
-        preload(fs, cjs, '/src/framework/runtime/utils.js', import('../framework/runtime/utils'))
-    ]);
-
-    const pendingSources = new Map();
-    return { fs, cjs, sources, pendingSources };
+export async function getSource(built: BuiltCode, path: string): Promise<string> {
+    await built.module;
+    return built._cjsEnv.sources.readFileSync(normalizePath(path), 'utf8');
 }
 
-export interface BuiltCode {
-    source: string;
-    path: string;
-    compiled: string;
-    imports: Array<Promise<BuiltCode>>;
-    module: Promise<unknown>;
-    error?: any;
+export async function getCompiled(built: BuiltCode, path: string): Promise<string> {
+    await built.module;
+    return built._cjsEnv.compiledEsm.readFileSync(normalizePath(path), 'utf8');
 }
