@@ -14,14 +14,13 @@ export async function rebuild(built: BuiltCode, overridesSources: Record<string,
     return build(_compiler, _loader, path, _cjsEnv);
 }
 
-
 const preloads = {
     '/src/framework/index.js': import('../framework'),
-    '/src/framework/types/component.j': import('../framework/types/component'),
-    '/src/framework/types/factory.j': import('../framework/types/factory'),
+    '/src/framework/types/component.js': import('../framework/types/component'),
+    '/src/framework/types/factory.js': import('../framework/types/factory'),
     '/src/framework/runtime.js': import('../framework/runtime'),
-    '/src/framework/runtime/utils.j': import('../framework/runtime/utils'),
-    '/src/framework/api/types.j': import('../framework/api/types'),
+    '/src/framework/runtime/utils.js': import('../framework/runtime/utils'),
+    '/src/framework/api/types.js': import('../framework/api/types'),
     '/node_modules/lodash/clamp.js': import('lodash/clamp')
 };
 
