@@ -1,7 +1,7 @@
 import { createMemoryFs } from '@file-services/memory';
 import { Loader } from './examples.index';
 import { Compiler } from './../compilers';
-import { build } from './build';
+import { build, rebuild } from './build';
 import { expect } from 'chai';
 
 describe('build', () => {
@@ -19,6 +19,8 @@ describe('build', () => {
     const mockFs = createMemoryFs({
         '/data.js': `
             export const b='b'`,
+        '/data2.js': `
+            export const newImport=true`,
         '/src': {
             'examples': {
                 'ex1': {
@@ -56,7 +58,7 @@ describe('build', () => {
         });
         expect(filesLoaded).to.deep.equal(['/data.js']);
     });
-    
+
     it('should evaluate a module with imports', async () => {
         const res = await build(compiler, load, '/src/main');
         expect(res.error).to.equal(undefined);
@@ -76,4 +78,55 @@ describe('build', () => {
         expect(filesLoaded).to.deep.equal(['/src/examples/ex1/source.js']);
         expect(filesLoaded).not.to.include('/src/framework.js');
     });
+
+    describe('rebuild', () => {
+        it('should return a modified build for the root file', async () => {
+            const original = await build(compiler, load, '/src/main');
+            await original.module;
+            const modified = await rebuild(original, {
+                '/src/main.js': 'export const changed=true;'
+            });
+            expect(await modified.module).to.eql({ changed: true });
+        });
+
+        it('should return a modified build for changed dependencies', async () => {
+            const original = await build(compiler, load, '/src/main');
+            await original.module;
+            const modified = await rebuild(original, {
+                '/src/a.js': `export const a='modified'`
+            });
+            expect(await modified.module).to.eql({
+                c: {
+                    a: 'modified',
+                    b: (await original.module as any).c.b
+                }
+            });
+        });
+
+        it('should not load new files in no new imports were added', async () => {
+            const original = await build(compiler, load, '/src/main.js');
+            await original.module;
+            filesLoaded = [];
+            const modified = await rebuild(original, {
+                '/src/main.js': 'export const changed=true;'
+            });
+            await modified.module;
+            expect(filesLoaded).to.eql([]);
+        });
+
+        it('should load newly added dependencies', async () => {
+            const original = await build(compiler, load, '/data.js');
+            await original.module;
+            expect(filesLoaded).to.eql(['/data.js']);
+            filesLoaded = [];
+            const modified = await rebuild(original, {
+                '/data.js': `
+                    import {b} from '/data2';
+                    export const wasModified = b;`
+            });
+            await modified.module;
+            expect(filesLoaded).to.eql(['/data2.js']);
+        });
+    });
 });
+

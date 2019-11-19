@@ -4,6 +4,7 @@ import dom from './dom';
 import { stats } from '../framework';
 import * as _monaco from 'monaco-editor';
 import ts from 'typescript';
+import { rebuild } from '../utils/build';
 let monaco: typeof _monaco;
 // @ts-ignore
 window.require(['vs/editor/editor.api'], (m: typeof _monaco) => { monaco = m; });
@@ -63,10 +64,14 @@ export function showCode(path:string, compiled: string, source: string) {
         roundedSelection: false,
         scrollBeyondLastLine: false,
     });
+    editor.onDidChangeModelContent(
+        () => {
+            // rebuild()
+        }
+    );
     // editor.onDidChangeModelContent(event => {
     //     console.log(event);
     // });
-
 }
 
 export function showStyle(style: string) {

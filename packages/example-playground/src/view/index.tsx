@@ -37,7 +37,6 @@ const changeHandler = async (noScroll = false) => {
         loaded.style.then(showStyle);
         loaded.build.then(async ({ compiled, source, path }) => {
             showCode(path, compiled, source);
-
             let imports = '';
             for (const imprt of [loaded.build, ...((await loaded.build).imports)]) {
                 const src = await imprt;
@@ -46,6 +45,7 @@ const changeHandler = async (noScroll = false) => {
                 }
             }
             dom.compiledImports.innerHTML = imports;
+            changeFile();
         }).catch(async err => {
             dom.compiled.textContent = `🤕
         ${err.message}
@@ -75,10 +75,7 @@ async function runExample() {
     }
 }
 
-dom.selectExample.addEventListener('change', () => changeHandler());
-dom.selectCompiler.addEventListener('change', () => changeHandler(true));
-dom.refreshResult.addEventListener('click', runExample);
-dom.compiledImports.addEventListener('change', async () => {
+const changeFile = async () => {
     dom.compiled.textContent = '';
     dom.source.textContent = '';
     const src = dom.compiledImports.value;
@@ -88,4 +85,9 @@ dom.compiledImports.addEventListener('change', async () => {
             showCode(path, compiled, source);
         }
     }
-});
+};
+
+dom.selectExample.addEventListener('change', () => changeHandler());
+dom.selectCompiler.addEventListener('change', () => changeHandler(true));
+dom.refreshResult.addEventListener('click', runExample);
+dom.compiledImports.addEventListener('change', changeFile);

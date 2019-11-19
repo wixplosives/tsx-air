@@ -1,6 +1,7 @@
 import { Converter } from 'showdown';
-import { BuiltCode, build } from './build';
+import { build } from './build';
 import { Compiler } from '../compilers';
+import { BuiltCode } from './build.helpers';
 
 export const getExamples = async () =>
     (await (await fetch('/examples')).json());
