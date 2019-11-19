@@ -1,5 +1,8 @@
 import { IFileSystem } from '@file-services/types';
-import { ICommonJsModuleSystem } from '@file-services/commonjs';
+import { ICommonJsModuleSystem, createCjsModuleSystem } from '@file-services/commonjs';
+import { createMemoryFs } from '@file-services/memory';
+import { Compiler, toCommonJs } from '../compilers';
+import { Loader } from './examples.index';
 
 export async function preload(fs: IFileSystem, cjs: ICommonJsModuleSystem, filename: string, module: Promise<unknown>) {
     writeToFs(fs, filename, '// Preloaded');
@@ -38,4 +41,43 @@ export async function readFileOr(fs: IFileSystem, path: string, orElse: () => st
         return fs.readFileSync(path, 'utf8');
     }
     return await orElse();
+}
+
+export interface BuiltCode {
+    source: string;
+    path: string;
+    compiled: string;
+    imports: Array<Promise<BuiltCode>>;
+    module: Promise<any>;
+    error?: any;
+    _loader: Loader;
+    _compiler: Compiler;
+    _cjsEnv: CjsEnv;
+}
+
+export interface CjsEnv {
+    compiledEsm: IFileSystem;
+    cjs: ICommonJsModuleSystem;
+    sources: IFileSystem;
+    pendingSources: Map<string, Promise<string>>;
+}
+export async function createCjs(preloads: Record<string, Promise<unknown>>): Promise<CjsEnv> {
+    const commonJs = createMemoryFs();
+    const cjs = createCjsModuleSystem({ fs: commonJs });
+    const sources = createMemoryFs();
+
+    await Promise.all(
+        Object.entries(preloads).map(([filename, module]) =>
+            preload(commonJs, cjs, filename, module)));
+
+    const pendingSources = new Map();
+    return { compiledEsm: commonJs, cjs, sources, pendingSources };
+}
+
+export function evalModule(compiled: string, path: string, { cjs, compiledEsm }:CjsEnv ) {
+    cjs.loadedModules.delete(path);
+    writeToFs(compiledEsm, path, toCommonJs(compiled));
+    const exports = cjs.requireModule(path);
+    writeToFs(compiledEsm, path, compiled);
+    return exports;
 }

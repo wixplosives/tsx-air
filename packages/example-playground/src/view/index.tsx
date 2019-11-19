@@ -1,91 +1,90 @@
-import { compilers } from '../compilers';
+import { compilers, Compiler } from '../compilers';
 import './index.css';
 import { getExamples, buildExample, Example } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
-import { preloader } from './preloader';
-import { showStyle, showCode } from './helpers';
+import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, showSourceCode } from './helpers';
+import { Model } from './index.model';
+import { setup } from './setup';
+import { reCompile, rebuild } from '../utils/build';
+import monaco from 'monaco-editor';
+setup();
 
-let stop: () => void;
-let current!: Example;
+(async () => {
+    const getSelectedExample = await setOptions<string>(dom.selectExample, getExamples());
+    const getSelectedCompiler = await setOptions<Compiler>(dom.selectCompiler, Promise.resolve(compilers), 'label');
+    const currentExample = await buildExample(getSelectedExample(), getSelectedCompiler());
 
-getExamples().then((examples: string[]) => {
-    dom.selectExample.innerHTML =
-        `${examples.map(example => `<option value="${example}">${example}</option>`)
-            .join('\n')}`;
-    dom.selectExample.value = localStorage.getItem('selected') || examples[0];
-    changeHandler();
-});
+    const model: Model = {
+        stop: () => void (0),
+        dom,
+        currentExample,
+        getSelectedExample,
+        getSelectedCompiler,
+        getSelectedSource: await updateSources(dom.selectSource, currentExample)
+    };
 
+    setExample(model);
 
-const changeHandler = async (noScroll = false) => {
-    if (stop !== undefined) { stop(); }
-    dom.style.innerHTML = dom.source.innerHTML = dom.compiled.innerHTML = dom.readme.innerHTML = dom.resultRoot.innerHTML = preloader();
+    dom.selectExample.addEventListener('change', () => {
+        setExample(model);
+        localStorage.removeItem(model.dom.selectSource.id);
+    });
+    dom.selectCompiler.addEventListener('change', () => setCompiler(model));
+    dom.refreshResult.addEventListener('click', () => {
+        model.stop();
+        runExample(model);
+    });
+    dom.selectSource.addEventListener('change', () => {
+        showCompiledCode(model);
+        showSourceCode(model, rebuildSource(model));
+    });
+})();
 
-    localStorage.setItem('selected', dom.selectExample.value);
-    localStorage.setItem('selected-compiler', dom.selectCompiler.value);
-    // tslint:disable-next-line: no-unused-expression
-    noScroll || window.scrollTo(0, 0);
-
-    const compiler = compilers[dom.selectCompiler.value as unknown as number];
-    try {
-        const loaded = await buildExample(dom.selectExample.value, compiler);
-        current = loaded;
-        loaded.readme.then(t => {
-            dom.readme.innerHTML = t;
+function rebuildSource(model: Model) {
+    return async function _rebuildSource(newSource: string) {
+        model.stop();
+        model.currentExample.build = rebuild(await model.currentExample.build, {
+            [model.getSelectedSource()]: newSource
         });
-        loaded.style.then(showStyle);
-        loaded.build.then(async ({ compiled, source, path }) => {
-            showCode(path, compiled, source);
+        showCompiledCode(model);
+        runExample(model);
+    };
+}
 
-            let imports = '';
-            for (const imprt of [loaded.build, ...((await loaded.build).imports)]) {
-                const src = await imprt;
-                if (src.path.match(/^\/src\/examples\//)) {
-                    imports = `${imports}<option value="${src.path}">${src.path.replace('/src/', '')}</option>`;
-                }
-            }
-            dom.compiledImports.innerHTML = imports;
-        }).catch(async err => {
-            dom.compiled.textContent = `🤕
-        ${err.message}
-        🤕`;
-            dom.source.textContent = (await (await loaded).build).source;
-        });
 
-        runExample();
-    } catch (e) {
-        dom.compiled.textContent = `🤕
-        ${e.message}
-        🤕`;
-    }
-};
+async function setExample(model: Model) {
+    model.stop();
+    model.currentExample = await buildExample(model.getSelectedExample(), model.getSelectedCompiler());
+    showStyle(model);
+    showReadme(model);
+    model.getSelectedSource = await updateSources(model.dom.selectSource, model.currentExample);
+    showCompiledCode(model);
+    showSourceCode(model, rebuildSource(model));
+    runExample(model);
+}
 
-async function runExample() {
+async function setCompiler(model: Model) {
+    model.stop();
+    localStorage.removeItem(model.dom.selectSource.id);
+    model.currentExample.build = reCompile(await model.currentExample.build, model.getSelectedCompiler());
+    model.getSelectedSource = await updateSources(model.dom.selectSource, model.currentExample);
+    showCompiledCode(model);
+    runExample(model);
+}
+
+async function runExample(model: Model) {
+    await (await model.currentExample.build).module;
     try {
-        if (stop !== undefined) { stop(); }
-        dom.resultRoot.innerHTML = `
-            <style>${await current.style}
+        model.dom.resultRoot.innerHTML = `
+            <style>${await model.currentExample.style}
                 .result.root { display:flex; }
             </style>
             <div class="result root"></div>`;
-        stop = (await (await current.build).module as any).runExample(dom.resultRoot.querySelector('div')!);
+        model.stop = (await (await model.currentExample.build).module as any).runExample(dom.resultRoot.querySelector('div')!);
+        model.stop = model.stop || (() => void (0));
     } catch (err) {
-        dom.resultRoot.innerHTML = `<div>🤒</div><pre>${err.message}</pre>`;
+        model.dom.resultRoot.innerHTML = `<div>🤒</div><pre>${err.message}</pre>`;
     }
 }
 
-dom.selectExample.addEventListener('change', () => changeHandler());
-dom.selectCompiler.addEventListener('change', () => changeHandler(true));
-dom.refreshResult.addEventListener('click', runExample);
-dom.compiledImports.addEventListener('change', async () => {
-    dom.compiled.textContent = '';
-    dom.source.textContent = '';
-    const src = dom.compiledImports.value;
-    for (const imprt of [current.build, ...((await current.build).imports)]) {
-        const { path, compiled, source } = await imprt;
-        if (path === src) {
-            showCode(path, compiled, source);
-        }
-    }
-});
