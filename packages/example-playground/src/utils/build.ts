@@ -25,6 +25,7 @@ export async function rebuild(built: BuiltCode, overridesSources: Record<string,
 }
 
 export async function reCompile(built: BuiltCode, newCompiler: Compiler): Promise<BuiltCode> {
+    
     const { _cjsEnv, _loader, path } = built;
     const modules = await createCjs(preloads);
     modules.sources = _cjsEnv.sources;

@@ -1,6 +1,6 @@
 import { compilers, Compiler } from '../compilers';
 import './index.css';
-import { getExamples, buildExample } from '../utils/examples.index';
+import { getExamples, buildExample, Example } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
 import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, showSourceCode } from './helpers';
