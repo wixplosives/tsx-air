@@ -36,7 +36,7 @@ describe('cClass', () => {
                 ]
             }, []);
             expectEqualIgnoreWhiteSpace(printAST(cls), `export class MyComp {
-                constructor(props){
+                constructor(props) {
                     this.props = props;
                 }
              }`);
@@ -62,7 +62,7 @@ describe('cClass', () => {
                 initializer: ts.createTrue()
             }]);
             expectEqualIgnoreWhiteSpace(printAST(cls), `export class MyComp {
-                static public propA = true;
+                public static propA = true;
              }`);
         });
         it('should support complex properties', () => {
@@ -76,7 +76,7 @@ describe('cClass', () => {
                 })
             }]);
             expectEqualIgnoreWhiteSpace(printAST(cls), `export class MyComp {
-                static public propA = {
+                public static propA = {
                     a: 3,
                     b: 79
                 };

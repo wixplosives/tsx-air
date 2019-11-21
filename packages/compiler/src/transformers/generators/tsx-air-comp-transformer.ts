@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { cObject, generateHydrate, cClass, createChangeBitMask, cArrow, cFunction, cBitMaskIf, cAccess, cloneDeep, cCall, isTSNode, createBitWiseOr, cAssign } from './ast-generators';
+import { cObject, generateHydrate, cClass, createChangeBitMask, cArrow, cFunction, cBitMaskIf, cAccess, cCall, createBitWiseOr, cAssign } from './ast-generators';
 import { GeneratorTransformer } from './append-node-transformer';
 import { generateToString } from './to-string-generator';
 import { printAST } from '../../dev-utils/print-ast';
@@ -114,7 +114,6 @@ export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
                         initializer: createProccessUpdateForComp(comp, binding)
                     }
                 ]);
-                console.log(printAST(res));
                 return res;
             }
         }

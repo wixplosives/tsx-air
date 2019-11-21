@@ -89,7 +89,7 @@ describe('component node replacer', () => {
         const jsxRootInfo = info.jsxRoots[0];
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxComponentReplacer]);
         const res = printAST(templateAst);
-        expectEqualIgnoreWhiteSpace(res, `\`<div id={props.id}>\${Comp.toString({ name: "gaga", title: props.title })}</div>\``);
+        expectEqualIgnoreWhiteSpace(res, `\`<div id={props.id}>\${Comp.factory.toString({ name: "gaga", title: props.title })}</div>\``);
 
     });
 });
