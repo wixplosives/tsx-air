@@ -1,7 +1,7 @@
 import * as ts from 'typescript';
 import { CompDefinition, Analyzer, CompProps, AnalyzerResult } from './types';
 import { isCallExpression, PropertyAccessExpression } from 'typescript';
-import { uniqBy } from 'lodash';
+import uniqBy from 'lodash/uniqBy';
 import { scan } from '../astUtils/scanner';
 import { jsxRoots } from './jsxroot';
 import { errorNode, aggregateAstNodeMapping, addToNodesMap } from './types.helpers';

@@ -1,102 +1,91 @@
-import { IFileSystem } from '@file-services/types';
-import { compilers } from './../compilers';
-import dom from './dom';
-import { stats } from '../framework';
+import { Example } from './../utils/examples.index';
+import { BuiltCode } from './../utils/build.helpers';
 import * as _monaco from 'monaco-editor';
 import ts from 'typescript';
-let monaco: typeof _monaco;
-// @ts-ignore
-window.require(['vs/editor/editor.api'], (m: typeof _monaco) => { monaco = m; });
-
-
-// @ts-ignore
-window.scrollTo(localStorage.getItem('scrollX'), localStorage.getItem('scrollY'));
-window.addEventListener('scroll', () => {
-    localStorage.setItem('scrollX', '' + window.scrollX);
-    localStorage.setItem('scrollY', '' + window.scrollY);
+import { Model } from './index.model';
+import { flatten, debounce } from 'lodash';
+import { getSource, getCompiled } from '../utils/build';
+const monaco: Promise<typeof _monaco> = new Promise(resolve => {
+    // @ts-ignore
+    window.require(['vs/editor/editor.api'], resolve);
 });
 
+let editor!: _monaco.editor.IStandaloneCodeEditor;
+let model!: _monaco.editor.ITextModel;
+export async function showSourceCode({ dom, currentExample, getSelectedSource }: Model,
+    onEdit: (newSource: string) => Promise<void>) {
 
-stats.startFpsProbe();
-
-setInterval(() => {
-    dom.fps.innerText = 'Fps: ' + stats.getFps() || '';
-    if (Math.random() < 0.0001) {
-        const i = new Image();
-        i.src = '/images/homer.png';
-        i.classList.add('h');
-        i.addEventListener('animationend', () => i.remove());
-        i.onload = () => document.body.appendChild(i);
+    onEdit = debounce(onEdit, 300);
+    const path = getSelectedSource();
+    const source = getSource(await currentExample.build, path);
+    if (!editor) {
+        (await monaco).languages.typescript.typescriptDefaults.setCompilerOptions({
+            jsx: ts.JsxEmit.Preserve,
+            jsxFactory: 'TSXAir',
+            esModuleInterop: true
+        });
+        model = await createFileModel(path + '.tsx', await source);
+        model.onDidChangeContent(() => onEdit(model.getValue()));
+        editor = (await monaco).editor.create(dom.source, {
+            model,
+            readOnly: false,
+            language: 'typescript',
+            lineNumbers: 'on',
+            roundedSelection: false,
+            scrollBeyondLastLine: false,
+        });
+    } else {
+        model.onDidChangeContent(() => undefined);
+        model.setValue('');
+        model.setValue(await source);
+        model.onDidChangeContent(() => onEdit(model.getValue()));
     }
-}, 100);
+}
 
-dom.selectCompiler.innerHTML = `${compilers.map((compiler, i) =>
-    `<option value="${i}">${compiler.label}</option>`).join('\n')}`;
-dom.selectCompiler.value = localStorage.getItem('selected-compiler') || '0';
-
-export function showCode(path:string, compiled: string, source: string) {
-    dom.compiled.textContent = compiled;
-    monaco.editor.colorizeElement(dom.compiled, {});
-
-    const model = createFileModel(path.replace(/\.js$/,'.tsx'), source);
-    dom.source.innerHTML = '';
-    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-        jsx: ts.JsxEmit.Preserve,
-        jsxFactory: 'TSXAir',
-        esModuleInterop: true
+export async function setOptions<T>(select: HTMLSelectElement, options: Promise<any[]>, labelField?: string, valueField?: string) {
+    if (!select.id) {
+        throw new Error('setOptions requires select to have an id');
+    }
+    const ops = await options;
+    select.innerHTML = `${ops.map((option: any, i) =>
+        `<option value="${i}">${labelField ? option[labelField] : option}</option>`).join('\n')}`;
+    select.value = localStorage.getItem(select.id) || '0';
+    select.addEventListener('change', () => {
+        localStorage.setItem(select.id, select.value);
     });
-    // monaco.languages.registerDefinitionProvider('typescript', {
-    //     provideDefinition: (mdl, pos, token) => {
-    //         console.log(mdl, pos, token);
-    //         const filePath='/src/examples/ex1/com.ts';
-    //         return {
-    //             uri: monaco.Uri.parse('file://' + filePath),
-    //             range: monaco.Range.fromPositions({lineNumber:1, column:1})
-    //         };
-    //     }
-    // });
-    const editor = monaco.editor.create(dom.source, {
-        model,
-        readOnly: false,
-        language: 'typescript',
-        lineNumbers: 'off',
-        roundedSelection: false,
-        scrollBeyondLastLine: false,
-    });
-    // editor.onDidChangeModelContent(event => {
-    //     console.log(event);
-    // });
-
+    return () => {
+        const selected = ops[select.value as unknown as number];
+        return valueField ? selected[valueField] : selected as T;
+    };
 }
 
-export function showStyle(style: string) {
-    dom.style.textContent = style;
-    monaco.editor.colorizeElement(dom.style, {});
+export async function showReadme({ dom, currentExample }: Model) {
+    dom.readme.innerHTML = await currentExample.readme;
 }
 
-export function createFileModel(filePath: string, fileContents: string) {
-    return monaco.editor.createModel(fileContents, undefined, monaco.Uri.parse('file://' + filePath));
+export async function showStyle({ dom, currentExample }: Model) {
+    dom.style.textContent = await currentExample.style;
+    (await monaco).editor.colorizeElement(dom.style, {});
 }
 
-function* recursiveFileList(fs: IFileSystem, startPath: string): IterableIterator<string> {
-    const files = fs.readdirSync(startPath);
-    for (const file of files) {
-        const fullPath = fs.join(startPath, file);
-        if (fs.directoryExistsSync(fullPath)) {
-            yield* recursiveFileList(fs, fullPath);
-        } else {
-            yield fullPath;
-        }
+export async function showCompiledCode({ dom, currentExample, getSelectedSource }: Model) {
+    dom.compiled.textContent = await getCompiled(await currentExample.build, getSelectedSource());
+    (await monaco).editor.colorizeElement(dom.compiled, {});
+}
+
+export async function updateSources(target: HTMLSelectElement, example: Example) {
+    async function getImportsPath(build: Promise<BuiltCode> | BuiltCode): Promise<string[]> {
+        build = await build;
+        const imports = flatten(await Promise.all(build.imports.map(getImportsPath)));
+        return [build.path, ...imports];
     }
+    const sources = getImportsPath(example.build).then(
+        f => f.filter(i => i.startsWith('/src/examples'))
+            .map(i => ({ label: i.replace(/^\/src\//, '').replace(/\.js$/, ''), path: i })));
+    return await setOptions<string>(target, sources, 'label', 'path');
 }
 
-export function registerTypeDefinitions(fs: IFileSystem) {
-    for (const filePath of recursiveFileList(fs, '/')) {
-        if (filePath.endsWith('.d.ts')) {
-            monaco.languages.typescript.typescriptDefaults.addExtraLib(
-                fs.readFileSync(filePath, 'utf8'),
-                'file://' + filePath
-            );
-        }
-    }
+export async function createFileModel(filePath: string, fileContents: string) {
+    return (await monaco).editor.createModel(fileContents, undefined, (await monaco).Uri.parse('file://' + filePath));
 }
+

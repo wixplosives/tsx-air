@@ -8,6 +8,7 @@ export interface Compiler {
     compile: (src: string, path: string) => Promise<string>;
     label: string;
 }
+
 export const toCommonJs = (source: string) => ts.transpileModule(source, {
     compilerOptions: {
         jsx: ts.JsxEmit.Preserve,

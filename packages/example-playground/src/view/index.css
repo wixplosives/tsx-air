@@ -107,6 +107,10 @@ section:empty {
     justify-content: center;
 }
 
+#source {
+    min-height: 20em;
+}
+
 .source-file select {
     height: 2em;
 }
