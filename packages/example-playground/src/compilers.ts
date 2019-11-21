@@ -21,8 +21,8 @@ export const toCommonJs = (source: string) => ts.transpileModule(source, {
 export const compilers: Compiler[] = [
     {
         label: 'Manual + TS',
-        compile: async (_src, path) => {            
-            path = path.replace(/^\/src/,'').replace(/source(\.js|\.ts|\.tsx)?$/,'/compiled');
+        compile: async (_src, path) => {
+            path = path.replace(/^\/src/, '').replace(/source(\.js|\.ts|\.tsx)?$/, '/compiled');
             path = path.replace(/\.js*/, '');
             const content = await (await fetch(path)).text();
             return content;
@@ -43,7 +43,7 @@ export const compilers: Compiler[] = [
                     before: transformers.map(item => item.transformer)
                 }
             }).outputText;
-            
+
             return preCompiled;
         }
     },
@@ -73,14 +73,13 @@ export const compilers: Compiler[] = [
                     jsx: ts.JsxEmit.React,
                     jsxFactory: 'TSXAir',
                     target: ts.ScriptTarget.ES2020,
-                    module: ts.ModuleKind.CommonJS,
                     esModuleInterop: true
                 },
                 transformers: {
                     before: [appendNodeTransformer(tsxAirTransformer)]
                 }
             }).outputText;
-            return  compiled;
+            return compiled;
         }
     }
 ]; 

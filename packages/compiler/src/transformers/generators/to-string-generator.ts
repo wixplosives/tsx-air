@@ -130,7 +130,7 @@ export const jsxComponentReplacer: AstNodeReplacer<ts.JsxElement | JsxSelfClosin
         const tagName = openingNode.tagName.getText();
 
         return {
-            expression: cCall([tagName, 'toString'],
+            expression: cCall([tagName, 'factory', 'toString'],
                 [
                     cObject(openingNode.attributes.properties.reduce((accum, prop) => {
                         if (ts.isJsxSpreadAttribute(prop)) {
