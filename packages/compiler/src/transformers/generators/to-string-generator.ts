@@ -1,6 +1,7 @@
 import ts, { JsxSelfClosingElement } from 'typescript';
 import { JsxRoot, CompDefinition } from '../../analyzers/types';
 import { cArrow, cloneDeep, cCall, cObject } from './ast-generators';
+import { nativeAttributeMapping, isJSXHTMLAttribute } from './native-attribute-mapping';
 
 export interface ExpressionData {
     expression: ts.Expression;
@@ -10,7 +11,7 @@ export interface ExpressionData {
 
 export interface AstNodeReplacer<T extends ts.Node = ts.Node> {
     shouldReplace: (node: ts.Node) => node is T;
-    transform: (node: T) => ExpressionData;
+    transform: (node: T) => ExpressionData | string;
 }
 export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: Array<AstNodeReplacer<any>>) => {
     const res = nodeToStringParts(jsx, replacers);
@@ -101,7 +102,18 @@ export const jsxAttributeReplacer: AstNodeReplacer<ts.JsxExpression> = {
         };
     }
 };
-
+export const jsxAttributeNameReplacer: AstNodeReplacer<ts.Identifier> = {
+    shouldReplace(node): node is ts.Identifier {
+        return ts.isIdentifier(node) && ts.isJsxAttribute(node.parent) && !isComponentTag((node.parent.parent.parent as JsxSelfClosingElement).tagName) && !!nativeAttributeMapping[node.getText()];
+    },
+    transform(node) {
+        const mapping = nativeAttributeMapping[node.getText()];
+        if (isJSXHTMLAttribute(mapping)) {
+            return ' ' + mapping.htmlName;
+        }
+        return ' ' + node.getText();
+    }
+};
 export const jsxTextExpressionReplacer: AstNodeReplacer<ts.JsxExpression> = {
     shouldReplace(node): node is ts.JsxExpression {
         return ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent);
@@ -165,6 +177,7 @@ export const generateToString = (node: JsxRoot, parentComp: CompDefinition) => {
         jsxToStringTemplate(node.sourceAstNode, [
             jsxComponentReplacer,
             jsxTextExpressionReplacer,
-            jsxAttributeReplacer
+            jsxAttributeReplacer,
+            jsxAttributeNameReplacer
         ]));
 };
