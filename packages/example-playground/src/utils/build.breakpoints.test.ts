@@ -21,7 +21,7 @@ const mockFs = createMemoryFs({
 
 });
 const load: Loader = async path => mockFs.readFileSync(path, 'utf8');
-
+const newlineRegex = /[\n\r]+\s*/g;
 describe('addBreakpoint', () => {
     it('should recompile the file with the added breakpoint', async () => {
         const withoutBP = await build(compiler, load, '/func');
@@ -29,9 +29,9 @@ describe('addBreakpoint', () => {
         const exportWithoutBreakpoint = (await withoutBP.module).exported;
         const exportWithBreakpoint = (await withBP.module).exported;
 
-        expect(exportWithoutBreakpoint.toString().replace(/\n\s*/g, ''))
+        expect(exportWithoutBreakpoint.toString().replace(newlineRegex, ''))
             .to.equal(`() => {/* */}`);
-        expect(exportWithBreakpoint.toString().replace(/\n\s*/g, ''))
+        expect(exportWithBreakpoint.toString().replace(newlineRegex, ''))
             .to.equal(`() => {debugger;/* */}`);
     });
     it('should keep previously added breakpoints', async () => {
@@ -40,7 +40,7 @@ describe('addBreakpoint', () => {
         const with2BP = await addBreakpoint(withBP, '/func.js', 3);
         const exportWithBreakpoint = (await with2BP.module).exported;
 
-        expect(exportWithBreakpoint.toString().replace(/\n\s*/g, ''))
+        expect(exportWithBreakpoint.toString().replace(newlineRegex, ''))
             .to.equal(`() => {debugger;/* */debugger;}`);
     });
 });
@@ -53,9 +53,9 @@ describe('removeBreakpoint', () => {
         const exportWithBreakpoint = (await withBP.module).exported;
         const exportWithoutBreakpoint = (await withoutBP.module).exported;
 
-        expect(exportWithBreakpoint.toString().replace(/\n\s*/g, ''))
+        expect(exportWithBreakpoint.toString().replace(newlineRegex, ''))
             .to.equal(`() => {debugger;/* */}`);
-        expect(exportWithoutBreakpoint.toString().replace(/\n\s*/g, ''))
+        expect(exportWithoutBreakpoint.toString().replace(newlineRegex, ''))
             .to.equal(`() => {/* */}`);
     });
     it('should keep previously added breakpoints', async () => {
@@ -65,7 +65,7 @@ describe('removeBreakpoint', () => {
         const withOneBPRemoved = await removeBreakpoint(with2BP, '/func.js', 2);
         const exportWithBreakpoint = (await withOneBPRemoved.module).exported;
 
-        expect(exportWithBreakpoint.toString().replace(/\n\s*/g, ''))
+        expect(exportWithBreakpoint.toString().replace(newlineRegex, ''))
             .to.equal(`() => {/* */debugger;}`);
     });
 });

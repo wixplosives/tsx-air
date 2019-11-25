@@ -1,9 +1,9 @@
-import { CompDefinition, JsxAttribute } from './../../analyzers/types';
-import { findJsxComponent } from './../../visitors/jsx';
-import { scan } from './../../astUtils/scanner';
-import { findJsxExpression, findJsxRoot } from '../../visitors/jsx';
-import { transpileNode } from '../../astUtils/marker';
-import { DomBinding } from './component-common';
+import { CompDefinition, JsxAttribute } from '@wixc3/tsx-air-compiler-utils/src/analyzers/types';
+import { findJsxComponent } from '@wixc3/tsx-air-compiler-utils/src/visitors/jsx';
+import { scan } from '@wixc3/tsx-air-compiler-utils/src//astUtils/scanner';
+import { findJsxExpression, findJsxRoot } from '@wixc3/tsx-air-compiler-utils/src/visitors/jsx';
+import { transpileNode } from '@wixc3/tsx-air-compiler-utils/src/astUtils/marker';
+import { DomBinding } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/component-common';
 import ts from 'typescript';
 
 export const compFactory = (dom: DomBinding[], def: CompDefinition) => {
