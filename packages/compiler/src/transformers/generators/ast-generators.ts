@@ -244,12 +244,18 @@ export const cFunction = (params: string[], statements: ts.Statement[]) => {
 
 export const cParams = (params: string[]) => params.map(val => ts.createParameter(undefined, undefined, undefined, val));
 
+export const cNew = (classPath: string[], args: ts.Expression[] = []) => {
+    return ts.createNew(cAccess(...classPath), undefined, args);
+};
 
 export const generateHydrate = (_node: JsxRoot, parentComp: CompDefinition, domBindings: DomBinding[]) => {
 
-    const body = ts.createNew(ts.createIdentifier(parentComp.name!), undefined, [cObject(domBindings.reduce((accum, item) => {
-        accum[item.ctxName] = cloneDeep(parseValue(item.viewLocator));
-        return accum;
-    }, { root: ts.createIdentifier('root') } as any)), ts.createIdentifier('props')]);
+    const body = cNew([parentComp.name!], [
+        cObject(domBindings.reduce((accum, item) => {
+            accum[item.ctxName] = cloneDeep(parseValue(item.viewLocator));
+            return accum;
+        }, { root: ts.createIdentifier('root') } as any)),
+        ts.createIdentifier('props')
+    ]);
     return cArrow(['root', parentComp.propsIdentifier || 'props'], body);
 };

@@ -80,8 +80,11 @@ export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
                 const importedComponent = genCtx.ensureImport('Component', '../../framework/types/component');
                 const binding = generateDomBindings(comp);
                 const info = comp.jsxRoots[0];
-                const res = cClass(comp.name || 'untitled', importedComponent, undefined, [
-                    {
+                const res = cClass(
+                    comp.name!,
+                    importedComponent,
+                    undefined,
+                    [{
                         isPublic: true,
                         isStatic: true,
                         name: 'factory',
@@ -103,8 +106,7 @@ export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
                         isStatic: false,
                         name: '$$processUpdate',
                         initializer: createProccessUpdateForComp(comp, binding)
-                    }
-                ]);
+                    }]);
                 return res;
             }
         }
