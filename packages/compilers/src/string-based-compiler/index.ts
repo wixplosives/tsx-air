@@ -6,6 +6,7 @@ import ts from 'typescript';
 import { compClass } from './component-class';
 import { analyze } from '@wixc3/tsx-air-compiler-utils/src/analyzers';
 import { TsxFile } from '@wixc3/tsx-air-compiler-utils/src/analyzers/types';
+import { NamedCompiler } from '../types';
 
 export const tsxAir = (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     return sourceFile => {
@@ -30,5 +31,10 @@ export const tsxAir = (context: ts.TransformationContext): ts.Transformer<ts.Sou
         }
     };
 };
-
-export default tsxAir;
+const compiler: NamedCompiler = {
+    name: 'String Based Compiler',
+    transformers: {
+        before: [tsxAir]
+    }
+};
+export default compiler;

@@ -5,6 +5,7 @@ import { generateToString } from '@wixc3/tsx-air-compiler-utils/src/transformers
 import { printAST } from '@wixc3/tsx-air-compiler-utils/src/dev-utils/print-ast';
 import { generateDomBindings } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/component-common';
 import { createProccessUpdateForComp } from './generate-process-update';
+import { NamedCompiler } from '../types';
 
 if (typeof window !== 'undefined') {
     (window as any).printAST = printAST;
@@ -58,4 +59,11 @@ export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
     return visitor;
 };
 
-export default appendNodeTransformer(tsxAirTransformer);
+const compiler: NamedCompiler = {
+    name: 'AST Based compiler',
+    transformers: {
+        before: [appendNodeTransformer(tsxAirTransformer)]
+    }
+};
+
+export default compiler;
