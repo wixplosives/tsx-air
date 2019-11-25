@@ -79,17 +79,10 @@ export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
             const compNode = node.declarationList.declarations[0].initializer!;
             const comp = comps.find(c => c.sourceAstNode === compNode);
             if (comp) {
-
+                const importedComponent = genCtx.ensureImport('Component', '../../framework/types/component')
                 const binding = generateDomBindings(comp);
                 const info = comp.jsxRoots[0];
-                const res = cClass(comp.name || 'untitled', undefined, {
-                    params: ['context', 'props', 'state'],
-                    statements: [
-                        cAssign(['this', 'context'], ['context']),
-                        cAssign(['this', 'props'], ['props']),
-                        cAssign(['this', 'state'], ['state'])
-                    ]
-                }, [
+                const res = cClass(comp.name || 'untitled', importedComponent, undefined, [
                     {
                         isPublic: true,
                         isStatic: true,
