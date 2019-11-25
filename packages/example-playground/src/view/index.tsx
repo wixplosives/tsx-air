@@ -1,13 +1,12 @@
 import { compilers, Compiler } from '../compilers';
 import './index.css';
-import { getExamples, buildExample, Example } from '../utils/examples.index';
+import { getExamples, buildExample } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
-import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, showSourceCode } from './helpers';
+import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, showSourceCode, resetView } from './helpers';
 import { Model } from './index.model';
 import { setup } from './setup';
 import { reCompile, rebuild } from '../utils/build';
-import monaco from 'monaco-editor';
 setup();
 
 (async () => {
@@ -52,9 +51,9 @@ function rebuildSource(model: Model) {
     };
 }
 
-
 async function setExample(model: Model) {
     model.stop();
+    resetView(model.dom);
     model.currentExample = await buildExample(model.getSelectedExample(), model.getSelectedCompiler());
     showStyle(model);
     showReadme(model);
