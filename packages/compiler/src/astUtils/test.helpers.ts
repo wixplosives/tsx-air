@@ -1,1 +1,0 @@
-export const normalizeLineBreaks = (s: string) => s.replace(/\r\n/g, '\n');
