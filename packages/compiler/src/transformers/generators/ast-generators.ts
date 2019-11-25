@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { isArray } from 'util';
 import { JsxRoot, CompDefinition } from '../../analyzers/types';
-import { generateDomBindings } from './component-common';
+import { DomBinding } from './component-common';
 import { parseValue } from '../../astUtils/parser';
 
 
@@ -22,6 +22,13 @@ export const cArrow = (params: string[], body: ts.ConciseBody) => {
     );
 };
 
+export const cAccess = (...callPath: string[]) => {
+    let identifier: ts.Expression = ts.createIdentifier(callPath[0]);
+    for (let i = 1; i < callPath.length; i++) {
+        identifier = ts.createPropertyAccess(identifier, callPath[i]);
+    }
+    return identifier;
+};
 
 export const cCall = (callPath: string[], args: ts.Expression[]) => {
     let identifier: ts.Expression = ts.createIdentifier(callPath[0]);
@@ -29,7 +36,7 @@ export const cCall = (callPath: string[], args: ts.Expression[]) => {
         identifier = ts.createPropertyAccess(identifier, callPath[i]);
     }
 
-    return ts.createCall(identifier, undefined, args);
+    return ts.createCall(cAccess(...callPath), undefined, args);
 };
 
 
@@ -80,6 +87,59 @@ export const cPrimitive = (input: any, options: AstGeneratorsOptions = defaultOp
     return null;
 };
 
+export interface ClassProperty {
+    name: string;
+    isPublic: boolean;
+    isStatic: boolean;
+    initializer: ts.Expression;
+}
+
+export interface ClassConstructor {
+    params: string[];
+    statements: ts.Statement[];
+}
+
+export const cClass = (name: string, extendz: string | ts.Expression | undefined, constructorInfo: ClassConstructor | undefined, properties: ClassProperty[]) => {
+    const memebersAst: ts.ClassElement[] = properties.map(prop => {
+        const modifiers: ts.Modifier[] = [];
+        if (prop.isPublic) {
+            modifiers.push(ts.createModifier(ts.SyntaxKind.PublicKeyword));
+        } else {
+            modifiers.push(ts.createModifier(ts.SyntaxKind.PrivateKeyword));
+        }
+
+        if (prop.isStatic) {
+            modifiers.push(ts.createModifier(ts.SyntaxKind.StaticKeyword));
+        }
+
+        return ts.createProperty(
+            undefined,
+            modifiers,
+            ts.createIdentifier(prop.name),
+            undefined,
+            undefined,
+            prop.initializer
+        );
+    });
+    const allMembers = constructorInfo ? [
+        ts.createConstructor(undefined, undefined, cParams(constructorInfo.params), ts.createBlock(constructorInfo.statements)) as ts.ClassElement
+    ].concat(memebersAst) : memebersAst;
+    return ts.createClassDeclaration(
+        undefined,
+        [ts.createModifier(ts.SyntaxKind.ExportKeyword)],
+        ts.createIdentifier(name),
+        undefined,
+        extendz ? [ts.createHeritageClause(
+            ts.SyntaxKind.ExtendsKeyword,
+            [
+                ts.createExpressionWithTypeArguments(undefined, typeof extendz === 'string' ? ts.createIdentifier(extendz) : extendz)
+            ]
+        )] : undefined,
+        allMembers
+
+    );
+};
+
 
 function createSynthesizedNode(kind: ts.SyntaxKind) {
     const node = ts.createNode(kind, -1, -1);
@@ -112,11 +172,90 @@ export const cloneDeep = <T extends ts.Node>(node: T, parent?: ts.Node) => {
 
 };
 
-export const generateHydrate = (_node: JsxRoot, parentComp: CompDefinition) => {
-    const hydratableParts = generateDomBindings(parentComp);
+export const cAssign = (to: string[], from: string[] | ts.Expression) => {
+    if (isTSNode(from)) {
+        return ts.createStatement(
+            ts.createAssignment(cAccess(...to), cloneDeep(from))
+        );
+    }
+    return ts.createStatement(
+        ts.createAssignment(cAccess(...to), cAccess(...from))
+    );
+};
 
-    return cArrow([parentComp.propsIdentifier || 'props'], cObject(hydratableParts.reduce((accum, item) => {
-        accum[item.ctxName] = cloneDeep(parseValue(item.viewLocator));
+
+export interface ImportSpecifierInfo {
+    localName?: string;
+    importedName: string;
+}
+export interface IImportInfo {
+    modulePath: string;
+    exports: ImportSpecifierInfo[];
+    defaultLocalName?: string;
+}
+export const cImport = (info: IImportInfo) => {
+    return ts.createImportDeclaration(undefined, undefined,
+        ts.createImportClause(
+            info.defaultLocalName ? ts.createIdentifier(info.defaultLocalName) : undefined,
+            info.exports.length ? ts.createNamedImports(info.exports.map(exp => ts.createImportSpecifier(exp.localName ? ts.createIdentifier(exp.importedName) : undefined, exp.localName ? ts.createIdentifier(exp.localName) : ts.createIdentifier(exp.importedName)))) : undefined
+        ), cLiteralAst(info.modulePath));
+};
+
+export const createChangeBitMask = (names: string[]) => {
+    return cObject(names.reduce((accum, name, currentIndex) => {
+        accum[name] = ts.createBinary(ts.createNumericLiteral((currentIndex + 1).toString()), ts.SyntaxKind.LessThanLessThanToken, ts.createNumericLiteral('0'));
         return accum;
-    }, {} as any)));
+    }, {} as any));
+};
+
+export const createBitWiseOr = (maskPath: string[], names: string[]) => {
+    let res: ts.Expression = cAccess(...maskPath, names[0]);
+    for (let i = 1; i < names.length; i++) {
+        res = ts.createBinary(res, ts.SyntaxKind.FirstBinaryOperator, cAccess(...maskPath, names[i]));
+    }
+    return res;
+};
+
+export interface CBitMaskIfOptions {
+    changedMaskName: string;
+    maskPath: string[];
+}
+const defaultCBitMaskIfOptions: CBitMaskIfOptions = {
+    changedMaskName: 'changeMap',
+    maskPath: []
+};
+export const cBitMaskIf = (checkedFlag: string, options: CBitMaskIfOptions = defaultCBitMaskIfOptions, statements: ts.Statement[]) => {
+    return CIf(ts.createBinary(
+
+        ts.createIdentifier(options.changedMaskName),
+        ts.createToken(ts.SyntaxKind.AmpersandToken),
+        cAccess(...options.maskPath, checkedFlag)
+    ), statements);
+};
+
+export const CIf = (condition: ts.Expression, statements: ts.Statement[]) => {
+    return ts.createIf(condition, ts.createBlock(statements));
+};
+
+export const cFunction = (params: string[], statements: ts.Statement[]) => {
+    return ts.createFunctionExpression(undefined, undefined, undefined, undefined,
+        cParams(params), undefined, ts.createBlock(statements));
+};
+
+export const cParams = (params: string[]) => params.map(val => ts.createParameter(undefined, undefined, undefined, val));
+
+export const cNew = (classPath: string[], args: ts.Expression[] = []) => {
+    return ts.createNew(cAccess(...classPath), undefined, args);
+};
+
+export const generateHydrate = (_node: JsxRoot, parentComp: CompDefinition, domBindings: DomBinding[]) => {
+
+    const body = cNew([parentComp.name!], [
+        cObject(domBindings.reduce((accum, item) => {
+            accum[item.ctxName] = cloneDeep(parseValue(item.viewLocator));
+            return accum;
+        }, { root: ts.createIdentifier('root') } as any)),
+        ts.createIdentifier('props')
+    ]);
+    return cArrow(['root', parentComp.propsIdentifier || 'props'], body);
 };

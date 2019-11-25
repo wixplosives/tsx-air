@@ -1,5 +1,5 @@
 import { parseValue } from '../../astUtils/parser';
-import { jsxToStringTemplate, jsxAttributeReplacer, jsxTextExpressionReplacer, jsxComponentReplacer } from './to-string-generator';
+import { jsxToStringTemplate, jsxAttributeReplacer, jsxTextExpressionReplacer, jsxComponentReplacer, jsxAttributeNameReplacer } from './to-string-generator';
 import ts from 'typescript';
 import { expect } from 'chai';
 import { analyze } from '../../analyzers';
@@ -50,7 +50,32 @@ describe('replace attribute expression', () => {
         expect(res).to.equal('`<div id="${props.id}">{props.title}</div>`');
     });
 });
+describe('replace attribute name', () => {
+    it('should replace jsx attribute names in native elements', () => {
+        const ast = parseValue(`TSXAir((props)=>{
+            return <div className="gaga"></div>
+        })`);
 
+        const info = analyze(ast).tsxAir as CompDefinition;
+        const jsxRootInfo = info.jsxRoots[0];
+
+        const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeNameReplacer]);
+        const res = printAST(templateAst);
+        expect(res).to.equal('`<div class="gaga"></div>`');
+    });
+    it('should not replace attribute names for components', () => {
+        const ast = parseValue(`TSXAir((props)=>{
+            return <Comp className="gaga"></Comp>
+        })`);
+
+        const info = analyze(ast).tsxAir as CompDefinition;
+        const jsxRootInfo = info.jsxRoots[0];
+
+        const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeNameReplacer]);
+        const res = printAST(templateAst);
+        expect(res).to.equal('`<Comp className="gaga"></Comp>`');
+    });
+});
 describe('jsx text expression replacer', () => {
     it('should replace jsx text expressions and leave other jsx expressions alone', () => {
         const ast = parseValue(`TSXAir((props)=>{
@@ -89,7 +114,7 @@ describe('component node replacer', () => {
         const jsxRootInfo = info.jsxRoots[0];
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxComponentReplacer]);
         const res = printAST(templateAst);
-        expectEqualIgnoreWhiteSpace(res, `\`<div id={props.id}>\${Comp.toString({ name: "gaga", title: props.title })}</div>\``);
+        expectEqualIgnoreWhiteSpace(res, `\`<div id={props.id}>\${Comp.factory.toString({ name: "gaga", title: props.title })}</div>\``);
 
     });
 });

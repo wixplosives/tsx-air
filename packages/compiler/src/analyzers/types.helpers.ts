@@ -2,6 +2,7 @@ import { isArray } from 'util';
 import { TsxErrorType, TsxAirNodeError, TsxAirNode, AnalyzerResult } from './types';
 import ts from 'typescript';
 import { isString, flatten } from 'lodash';
+import { NodeMetaData } from '../astUtils/scanner';
 export function errorNode<T extends TsxAirNode>(sourceAstNode: ts.Node, message: string, type: TsxErrorType = 'code'): AnalyzerResult<T> {
     const tsxAir: TsxAirNodeError = {
         kind: 'error',
@@ -16,7 +17,7 @@ export function errorNode<T extends TsxAirNode>(sourceAstNode: ts.Node, message:
 
 export function asAnalyzerResult<T extends TsxAirNode>(analyzedNode: T): AnalyzerResult<T> {
     return {
-        tsxAir:analyzedNode,
+        tsxAir: analyzedNode,
         astToTsxAir: new Map([[analyzedNode.sourceAstNode, [analyzedNode]]]) as Map<ts.Node, TsxAirNode[]>
     };
 }
@@ -71,4 +72,20 @@ export function aggregateAstNodeMapping(nodes: TsxAirNode[]): NodesMap {
 
     nodes.forEach(walk);
     return agg;
+}
+
+export function isNotNull<T extends TsxAirNode>(input: null | undefined | T): input is T {
+    return !!input;
+}
+
+export function filterResults<T extends TsxAirNode<any>>(result: Array<NodeMetaData<AnalyzerResult<T>>>): T[] {
+
+    const specifiersInfo = result.map(res => {
+        const inner = res.metadata.tsxAir;
+        if (hasError(inner)) {
+            return null;
+        }
+        return inner;
+    });
+    return specifiersInfo.filter(isNotNull);
 }
