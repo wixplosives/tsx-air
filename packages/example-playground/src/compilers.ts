@@ -40,7 +40,7 @@ export const compilers: Compiler[] = [
                     esModuleInterop: true
                 },
                 transformers: {
-                    before: [stringBasedCompiler.transformer]
+                    before: [stringBasedCompiler]
                 }
             }).outputText;
 
