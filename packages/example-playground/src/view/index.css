@@ -115,6 +115,29 @@ section:empty {
     height: 2em;
 }
 
+.error {
+    background: darkred;
+    color: white;
+}
+
+.notes {
+    transition: ease-out;
+}
+
+.hidden {
+    height: 0;
+}
+
+.breakpoints {
+    background: red;
+    background: radial-gradient(circle at 3px 3px, white, red);
+    width: 10px !important;
+    height: 10px !important;
+    left: 0px !important;
+    top: 3px;
+    border-radius: 5px;
+}
+
 .h {
     position: fixed;
     bottom: 0;

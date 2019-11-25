@@ -2,7 +2,8 @@ import { analyze, TsxFile, Import } from '@wixc3/tsx-air-compiler/src';
 import { Compiler } from '../compilers';
 import { Loader } from './examples.index';
 import { asSourceFile } from '@wixc3/tsx-air-compiler/src/astUtils/parser';
-import { normalizePath, writeToFs, splitFilePath, readFileOr, BuiltCode, createCjs, CjsEnv as _CjsEnv, evalModule, CjsEnv } from './build.helpers';
+import { normalizePath, writeToFs, splitFilePath, readFileOr, BuiltCode, createCjs, evalModule, CjsEnv, Snippets, removeBuilt } from './build.helpers';
+import { isEqual, cloneDeep as cloneDp } from 'lodash';
 
 const preloads = {
     '/src/framework/index.js': import('../framework'),
@@ -14,35 +15,53 @@ const preloads = {
     '/node_modules/lodash/clamp.js': import('lodash/clamp')
 };
 
-export async function rebuild(built: BuiltCode, overridesSources: Record<string, string>): Promise<BuiltCode> {
+export async function rebuild(built: BuiltCode, overridesSources: Record<string, string>, injects: Snippets = {}): Promise<BuiltCode> {
     const { _cjsEnv, _loader, _compiler, path } = built;
     for (const [src, source] of Object.entries(overridesSources)) {
-        _cjsEnv.cjs.loadedModules.delete(src);
-        _cjsEnv.compiledEsm.removeSync(src);
+        removeBuilt(_cjsEnv, src);
         _cjsEnv.sources.writeFileSync(src, source);
     }
-    return build(_compiler, _loader, path, _cjsEnv);
+    for (const [src] of [...Object.entries(injects), ...Object.entries(built._injected)]) {
+        if (!isEqual(built._injected[src], injects[src])) {
+            removeBuilt(_cjsEnv, src);
+        }
+    }
+    return build(_compiler, _loader, path, injects, _cjsEnv);
 }
 
 export async function reCompile(built: BuiltCode, newCompiler: Compiler): Promise<BuiltCode> {
-    
-    const { _cjsEnv, _loader, path } = built;
+    const { _cjsEnv, _loader, path, _injected } = built;
     const modules = await createCjs(preloads);
     modules.sources = _cjsEnv.sources;
-    return build(newCompiler, _loader, path, modules);
+    return build(newCompiler, _loader, path, _injected, modules);
 }
 
-export async function build(compiler: Compiler, load: Loader, path: string, modules?: CjsEnv): Promise<BuiltCode> {
+export async function addBreakpoint(built: BuiltCode, path: string, line: number): Promise<BuiltCode> {
+    const injects = cloneDp(built._injected);
+    injects[path] = { ...injects[path], [line]: 'debugger;' };
+    return rebuild(built, {}, injects);
+}
+
+export async function removeBreakpoint(built: BuiltCode, path: string, line: number): Promise<BuiltCode> {
+    const injects = cloneDp(built._injected);
+    if (injects[path]) {
+        delete injects[path][line];
+    }
+    return rebuild(built, {}, injects);
+}
+
+export async function build(compiler: Compiler, load: Loader, path: string,
+    inject: Record<string, Record<number, string>> = {}, modules?: CjsEnv): Promise<BuiltCode> {
     modules = modules || await createCjs(preloads);
     const { cjs, compiledEsm: fs, sources, pendingSources } = modules;
 
     path = normalizePath(path);
     const source: string = await readFileOr(sources, path, loadSource);
+
     try {
         const compiled = await readFileOr(fs, path, () =>
             compiler.compile(source, path));
 
-        // TODO: get the analyze AST from the compile pass
         const { imports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;
         const builtImports = imports.map(buildImport);
         return {
@@ -50,12 +69,13 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
             compiled,
             imports: builtImports,
             module: Promise.all(builtImports)
-                .then(() => evalModule(compiled, path, modules!))
-                .catch(e => console.error(e)),
+                .then(() => evalModule(compiled, path, modules!, inject[path] || {}))
+            ,
             path,
             _loader: load,
             _compiler: compiler,
-            _cjsEnv: modules!
+            _cjsEnv: modules!,
+            _injected: inject
         };
     } catch (err) {
         return {
@@ -65,7 +85,8 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
             // @ts-ignore
             module: async () => { throw new Error(err); },
             path,
-            error: err
+            error: err,
+            _injected: inject
         };
     }
 
@@ -83,7 +104,7 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
         const importPath = cjs.resolveFrom(folder, i.module) || fs.join(folder, i.module);
 
         if (!cjs.loadedModules.has(importPath)) {
-            const builtModule = await build(compiler, load, importPath, modules);
+            const builtModule = await build(compiler, load, importPath, inject, modules);
             await builtModule.module;
             return builtModule;
         }
@@ -95,7 +116,8 @@ export async function build(compiler: Compiler, load: Loader, path: string, modu
             module: Promise.resolve(cjs.requireModule(importPath)),
             _loader: load,
             _compiler: compiler,
-            _cjsEnv: modules!
+            _cjsEnv: modules!,
+            _injected: inject
         };
     }
 }
