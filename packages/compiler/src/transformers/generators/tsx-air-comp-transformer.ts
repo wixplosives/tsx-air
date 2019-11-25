@@ -6,8 +6,6 @@ import { printAST } from '../../dev-utils/print-ast';
 import { generateDomBindings, DomBinding } from './component-common';
 import { CompProps, CompDefinition, JsxRoot, JsxExpression, JsxComponent, isJsxExpression } from '../../analyzers/types';
 
-export const contains = (node: ts.Node, child: ts.Node) => node.getStart() <= child.getStart() && node.getEnd() >= child.getEnd();
-
 if (typeof window !== 'undefined') {
     (window as any).printAST = printAST;
 }
@@ -79,7 +77,7 @@ export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
             const compNode = node.declarationList.declarations[0].initializer!;
             const comp = comps.find(c => c.sourceAstNode === compNode);
             if (comp) {
-                const importedComponent = genCtx.ensureImport('Component', '../../framework/types/component')
+                const importedComponent = genCtx.ensureImport('Component', '../../framework/types/component');
                 const binding = generateDomBindings(comp);
                 const info = comp.jsxRoots[0];
                 const res = cClass(comp.name || 'untitled', importedComponent, undefined, [

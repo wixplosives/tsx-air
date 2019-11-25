@@ -49,11 +49,11 @@ export const appendNodeTransformer: (gen: GeneratorTransformer) => ts.Transforme
             if (existingModule) {
                 const existingImport = existingModule.exports.find(exp => exp.importedName === importedName);
                 if (existingImport) {
-                    return cAccess(existingImport.localName || existingImport.importedName)
+                    return cAccess(existingImport.localName || existingImport.importedName);
                 }
                 addedImports[fromModule].exports.push({
                     importedName
-                })
+                });
                 return cAccess(importedName);
             }
             addedImports[fromModule] = {
@@ -63,14 +63,14 @@ export const appendNodeTransformer: (gen: GeneratorTransformer) => ts.Transforme
                         importedName
                     }
                 ]
-            }
+            };
             return cAccess(importedName);
         },
         ensureDefaultImport(localName, fromModule) {
             const existingModule = addedImports[fromModule];
             if (existingModule) {
                 if (existingModule.defaultLocalName) {
-                    return cAccess(existingModule.defaultLocalName)
+                    return cAccess(existingModule.defaultLocalName);
                 }
                 existingModule.defaultLocalName = localName;
                 return cAccess(localName);
@@ -79,7 +79,7 @@ export const appendNodeTransformer: (gen: GeneratorTransformer) => ts.Transforme
                 modulePath: fromModule,
                 defaultLocalName: localName,
                 exports: []
-            }
+            };
             return cAccess(localName);
         }
     };
@@ -100,7 +100,7 @@ export const appendNodeTransformer: (gen: GeneratorTransformer) => ts.Transforme
         }
         const addImportedModules = Object.keys(addedImports);
         for (const addModuleName of addImportedModules) {
-            allStatements.unshift(cImport(addedImports[addModuleName]))
+            allStatements.unshift(cImport(addedImports[addModuleName]));
         }
         if (appendedStatements.length) {
             allStatements = allStatements.concat(appendedStatements);
