@@ -183,12 +183,23 @@ export const cAssign = (to: string[], from: string[] | ts.Expression) => {
     );
 };
 
-// export const defualtImportSymb = Symbol('default import');
-// export type ImportSpecifier = string | typeof defualtImportSymb;
-// export const cImport = (importNames: ImportSpecifier | ImportSpecifier[], modulePath: string)=>{
-//     return ts.createImportDeclaration(undefined, undefined,
-//         ts.createImportClause())
-// }
+
+export interface ImportSpecifierInfo {
+    localName?: string;
+    importedName: string;
+}
+export interface IImportInfo {
+    modulePath: string;
+    exports: ImportSpecifierInfo[];
+    defaultLocalName?: string;
+}
+export const cImport = (info: IImportInfo) => {
+    return ts.createImportDeclaration(undefined, undefined,
+        ts.createImportClause(
+            info.defaultLocalName ? ts.createIdentifier(info.defaultLocalName) : undefined,
+            info.exports.length ? ts.createNamedImports(info.exports.map(exp => ts.createImportSpecifier(exp.localName ? ts.createIdentifier(exp.importedName) : undefined, exp.localName ? ts.createIdentifier(exp.localName) : ts.createIdentifier(exp.importedName)))) : undefined
+        ), cLiteralAst(info.modulePath));
+};
 
 export const createChangeBitMask = (names: string[]) => {
     return cObject(names.reduce((accum, name, currentIndex) => {

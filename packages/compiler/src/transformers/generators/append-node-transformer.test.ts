@@ -4,7 +4,7 @@ import ts from 'typescript';
 import { printAST } from '../../dev-utils/print-ast';
 import { expectEqualIgnoreWhiteSpace } from '../../dev-utils/expect-equal-ingnore-whitespace';
 import { appendNodeTransformer, GeneratorContext } from './append-node-transformer';
-import { cCall, cLiteralAst } from './ast-generators';
+import { cCall, cLiteralAst, cObject } from './ast-generators';
 
 
 describe('AppendNodeTransformer', () => {
@@ -66,5 +66,27 @@ describe('AppendNodeTransformer', () => {
         };
         console.log(__private_tsx_air__.myStr0)
         `);
+    });
+
+    describe('ensure import', () => {
+        it('should allow adding imports', () => {
+
+            const ast = parseStatement(`console.log('hello')`).getSourceFile();
+            const res = ts.transform(ast, [appendNodeTransformer((genCtx: GeneratorContext, _ctx: ts.TransformationContext) => {
+                const refToNamed = genCtx.ensureImport('namedImport', 'somewhere');
+                const refToDefault = genCtx.ensureDefaultImport('defaultExport', 'somewhere');
+                return _node => cCall(['console', 'log'], [cObject({
+                    refToNamed,
+                    refToDefault,
+                })]);
+            })]);
+            expect(res.diagnostics!.length).to.equal(0);
+            expectEqualIgnoreWhiteSpace(printAST(res.transformed[0]), `import defaultExport, { namedImport } from 'somewhere';
+            console.log({
+                refToNamed: namedImport,
+                refToDefault: defaultExport
+            })
+            `);
+        });
     });
 });

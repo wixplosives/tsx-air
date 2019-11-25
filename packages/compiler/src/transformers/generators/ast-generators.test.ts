@@ -1,6 +1,6 @@
 import { parseValue } from '../../astUtils/parser';
 import { expect } from 'chai';
-import { cloneDeep, cClass, cObject, cAssign } from './ast-generators';
+import { cloneDeep, cClass, cObject, cAssign, cImport } from './ast-generators';
 import ts from 'typescript';
 import { printAST } from '../../dev-utils/print-ast';
 import { expectEqualIgnoreWhiteSpace } from '../../dev-utils/expect-equal-ingnore-whitespace';
@@ -14,6 +14,62 @@ describe('cloneDeep', () => {
 
         expect(clone).to.not.equal(ast);
         expect(clone.expression).to.not.equal(ast.expression);
+    });
+});
+
+
+describe('cImport', () => {
+    it('should create the ast of an import statement', () => {
+
+        const imp = cImport({
+            modulePath: './file',
+            exports: [
+                {
+                    importedName: 'Comp'
+                }
+            ]
+        });
+        expectEqualIgnoreWhiteSpace(printAST(imp), `import { Comp } from './file'`);
+    });
+
+    it('should allow importing with a different local name', () => {
+
+        const imp = cImport({
+            modulePath: './file',
+            exports: [
+                {
+                    importedName: 'Comp',
+                    localName: 'Bomp'
+                }
+            ]
+        });
+        expectEqualIgnoreWhiteSpace(printAST(imp), `import { Comp as Bomp } from './file'`);
+    });
+
+    it('should allow importing default exports', () => {
+
+        const imp = cImport({
+            modulePath: './file',
+            exports: [
+            ],
+            defaultLocalName: 'Zagzag'
+        });
+        expectEqualIgnoreWhiteSpace(printAST(imp), `import Zagzag from './file'`);
+    });
+
+    it('should support combinations', () => {
+        const imp = cImport({
+            modulePath: './file',
+            exports: [{
+                importedName: 'a'
+            }, {
+                importedName: 'b',
+                localName: 'c'
+            }
+            ],
+            defaultLocalName: 'Zagzag'
+        });
+        expectEqualIgnoreWhiteSpace(printAST(imp), `import Zagzag, { a, b as c } from './file'`);
     });
 });
 

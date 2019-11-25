@@ -9,7 +9,7 @@ export type Analyzer<T extends TsxAirNode> = (node: ts.Node) => AnalyzerResult<T
 
 export type TsxAirNodeType = 'CompDefinition' | 'JsxFragment' |
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
-    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error';
+    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier';
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
 
@@ -37,7 +37,13 @@ export interface TsxFile extends TsxAirNode<ts.SourceFile> {
 export interface Import extends TsxAirNode<ts.ImportDeclaration> {
     kind: 'import';
     module: string;
-    imports?: string;
+    imports: ImportSpecifierInfo[];
+    defaultLocalName?: string;
+}
+export interface ImportSpecifierInfo extends TsxAirNode<ts.ImportSpecifier> {
+    kind: 'importSpecifier';
+    localName: string;
+    importedName: string;
 }
 
 export interface CompDefinition extends TsxAirNode<ts.CallExpression> {
@@ -129,4 +135,8 @@ export function isTsxFile(node: any): node is TsxFile {
 
 export function isImport(node: any): node is Import {
     return node && node.kind === 'import';
+}
+
+export function isImportSpecifier(node: any): node is ImportSpecifierInfo {
+    return node && node.kind === 'importSpecifier';
 }
