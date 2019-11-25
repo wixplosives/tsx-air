@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { TsxFile, tsNodeToAirNode, AnalyzerResult, TsxAirNode } from '../../analyzers/types';
+import { TsxFile, tsNodeToAirNode, AnalyzerResult } from '../../analyzers/types';
 import { analyze } from '../../analyzers';
 import { cObject, cAccess, cImport, IImportInfo } from './ast-generators';
 
