@@ -39,7 +39,7 @@ describe('jsxToStringTemplate', () => {
 describe('replace attribute expression', () => {
     it('should replace jsx attributes and leave other jsx expressions alone', () => {
         const ast = parseValue(`TSXAir((props)=>{
-            return <div id={props.id}>{props.title}</div>
+            return <div id={props.shouldBeReplaced}>{props.shouldNotBeReplaced}</div>
         })`);
 
         const info = analyze(ast).tsxAir as CompDefinition;
@@ -47,7 +47,7 @@ describe('replace attribute expression', () => {
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
         const res = printAST(templateAst);
-        expect(res).to.equal('`<div id="${props.id}">{props.title}</div>`');
+        expect(res).to.equal('`<div id="${props.shouldBeReplaced}">{props.shouldNotBeReplaced}</div>`');
     });
 });
 describe('replace attribute name', () => {
@@ -77,9 +77,9 @@ describe('replace attribute name', () => {
     });
 });
 describe('jsx text expression replacer', () => {
-    it('should replace jsx text expressions and leave other jsx expressions alone', () => {
+    it('should replace jsx text expressions and leave other jsx expressions unchanged', () => {
         const ast = parseValue(`TSXAir((props)=>{
-            return <div id={props.id}>{props.title}</div>
+            return <div id={props.shouldNotBeChanged}>{props.shouldChange}</div>
         })`);
 
         const info = analyze(ast).tsxAir as CompDefinition;
@@ -87,7 +87,7 @@ describe('jsx text expression replacer', () => {
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer]);
         const res = printAST(templateAst);
-        expect(res).to.equal('`<div id={props.id}><!-- props.title -->${props.title}<!-- props.title --></div>`');
+        expect(res).to.equal('`<div id={props.shouldNotBeChanged}><!-- props.shouldChange -->${props.shouldChange}<!-- props.shouldChange --></div>`');
     });
 
     it('should handle quates', () => {

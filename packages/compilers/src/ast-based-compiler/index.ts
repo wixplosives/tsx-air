@@ -12,7 +12,7 @@ if (typeof window !== 'undefined') {
 
 
 export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
-    const comps = genCtx.getScanRes().compDefinitions;
+    const comps = genCtx.getAnalayzed().compDefinitions;
     const visitor: ts.Transformer<ts.Node> = node => {
         if (ts.isVariableStatement(node)) {
             const compNode = node.declarationList.declarations[0].initializer!;

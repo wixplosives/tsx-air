@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import ts from 'typescript';
 import { printAST } from '../../dev-utils/print-ast';
 import { expectEqualIgnoreWhiteSpace } from '../../dev-utils/expect-equal-ingnore-whitespace';
-import { appendNodeTransformer, GeneratorContext } from './append-node-transformer';
+import { appendNodeTransformer, FileTransformerAPI } from './append-node-transformer';
 import { cCall, cLiteralAst, cObject } from './ast-generators';
 
 
@@ -11,8 +11,8 @@ describe('AppendNodeTransformer', () => {
     it('should wrap generator transformers providing extra API and not change the ast', () => {
 
         const ast = parseStatement(`console.log('hello')`).getSourceFile();
-        const res = ts.transform(ast, [appendNodeTransformer((genCtx: GeneratorContext, _ctx: ts.TransformationContext) => {
-            expect(genCtx.getScanRes().sourceAstNode).to.equal(ast);
+        const res = ts.transform(ast, [appendNodeTransformer((genCtx: FileTransformerAPI, _ctx: ts.TransformationContext) => {
+            expect(genCtx.getAnalayzed().sourceAstNode).to.equal(ast);
             return node => node;
         })]);
         expect(res.diagnostics!.length).to.equal(0);
@@ -22,7 +22,7 @@ describe('AppendNodeTransformer', () => {
     it('should allow prepending statements', () => {
 
         const ast = parseStatement(`console.log('hello')`).getSourceFile();
-        const res = ts.transform(ast, [appendNodeTransformer((genCtx: GeneratorContext, _ctx: ts.TransformationContext) => {
+        const res = ts.transform(ast, [appendNodeTransformer((genCtx: FileTransformerAPI, _ctx: ts.TransformationContext) => {
             genCtx.prependStatements(
                 ts.createStatement(
                     cCall(['console', 'log'], [cLiteralAst('gaga')])
@@ -39,7 +39,7 @@ describe('AppendNodeTransformer', () => {
     it('should allow appending statements', () => {
 
         const ast = parseStatement(`console.log('hello')`).getSourceFile();
-        const res = ts.transform(ast, [appendNodeTransformer((genCtx: GeneratorContext, _ctx: ts.TransformationContext) => {
+        const res = ts.transform(ast, [appendNodeTransformer((genCtx: FileTransformerAPI, _ctx: ts.TransformationContext) => {
             genCtx.appendStatements(
                 ts.createStatement(
                     cCall(['console', 'log'], [cLiteralAst('gaga')])
@@ -56,7 +56,7 @@ describe('AppendNodeTransformer', () => {
     it('should allow appending private vars', () => {
 
         const ast = parseStatement(`console.log('hello')`).getSourceFile();
-        const res = ts.transform(ast, [appendNodeTransformer((genCtx: GeneratorContext, _ctx: ts.TransformationContext) => {
+        const res = ts.transform(ast, [appendNodeTransformer((genCtx: FileTransformerAPI, _ctx: ts.TransformationContext) => {
             const refToVar = genCtx.appendPrivateVar('myStr', cLiteralAst('gaga'));
             return _node => cCall(['console', 'log'], [refToVar]);
         })]);
@@ -72,7 +72,7 @@ describe('AppendNodeTransformer', () => {
         it('should allow adding imports', () => {
 
             const ast = parseStatement(`console.log('hello')`).getSourceFile();
-            const res = ts.transform(ast, [appendNodeTransformer((genCtx: GeneratorContext, _ctx: ts.TransformationContext) => {
+            const res = ts.transform(ast, [appendNodeTransformer((genCtx: FileTransformerAPI, _ctx: ts.TransformationContext) => {
                 const refToNamed = genCtx.ensureImport('namedImport', 'somewhere');
                 const refToDefault = genCtx.ensureDefaultImport('defaultExport', 'somewhere');
                 return _node => cCall(['console', 'log'], [cObject({

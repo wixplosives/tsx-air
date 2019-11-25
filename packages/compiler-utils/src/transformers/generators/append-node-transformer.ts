@@ -1,20 +1,20 @@
 import ts from 'typescript';
-import { TsxFile, tsNodeToAirNode, AnalyzerResult } from '../../analyzers/types';
+import { TsxFile, TsNodeToAirNode, AnalyzerResult } from '../../analyzers/types';
 import { analyze } from '../../analyzers';
 import { cObject, cAccess, cImport, IImportInfo } from './ast-generators';
 
 
-export interface GeneratorContext {
+export interface FileTransformerAPI {
     prependStatements(...statements: ts.Statement[]): void;
     appendStatements(...statements: ts.Statement[]): void;
     appendPrivateVar(wantedName: string, expression: ts.Expression): ts.Expression;
     ensureImport(importedName: string, fromModule: string): ts.Expression;
     ensureDefaultImport(localName: string, fromModule: string): ts.Expression;
-    getScanRes(): TsxFile;
-    getNodeInfo<T extends ts.Node>(node: T): Array<tsNodeToAirNode<T>> | undefined;
+    getAnalayzed(): TsxFile;
+    tsNodeToAirNodes<T extends ts.Node>(node: T): Array<TsNodeToAirNode<T>> | undefined;
 }
 
-export type GeneratorTransformer = (genCtx: GeneratorContext, ctx: ts.TransformationContext) => ts.Transformer<ts.Node>;
+export type GeneratorTransformer = (genCtx: FileTransformerAPI, ctx: ts.TransformationContext) => ts.Transformer<ts.Node>;
 
 const varHolderIdentifier = '__private_tsx_air__';
 export const appendNodeTransformer: (gen: GeneratorTransformer) => ts.TransformerFactory<ts.SourceFile> = gen => ctx => {
@@ -23,7 +23,7 @@ export const appendNodeTransformer: (gen: GeneratorTransformer) => ts.Transforme
     const prependedStatements: ts.Statement[] = [];
     const addedImports: Record<string, IImportInfo> = {};
     let scanRes: AnalyzerResult<TsxFile>;
-    const genCtx: GeneratorContext = {
+    const genCtx: FileTransformerAPI = {
         appendPrivateVar(wantedName, exp) {
             let counter = 0;
             while (appendedNodes[wantedName + counter]) {
@@ -32,10 +32,10 @@ export const appendNodeTransformer: (gen: GeneratorTransformer) => ts.Transforme
             appendedNodes[wantedName + counter] = exp;
             return ts.createPropertyAccess(ts.createIdentifier(varHolderIdentifier), ts.createIdentifier(wantedName + counter));
         },
-        getScanRes() {
+        getAnalayzed() {
             return scanRes.tsxAir as any;
         },
-        getNodeInfo(node) {
+        tsNodeToAirNodes(node) {
             return scanRes.astToTsxAir.get(node) as any;
         },
         appendStatements(...statements: ts.Statement[]) {

@@ -92,7 +92,7 @@ export interface JsxAttribute extends TsxAirNode<ts.JsxAttributeLike> {
     value: string | JsxExpression | true;
 }
 
-export type tsNodeToAirNode<T extends ts.Node> = T extends ts.JsxAttributeLike ? JsxAttribute :
+export type TsNodeToAirNode<T extends ts.Node> = T extends ts.JsxAttributeLike ? JsxAttribute :
     T extends JsxElm ? JsxComponent | JsxRoot :
     T extends ts.JsxExpression ? JsxExpression :
     T extends ts.JsxFragment ? JsxFragment | JsxRoot :
