@@ -1,8 +1,7 @@
-import { transformers } from '@wixc3/tsx-air-compiler/src';
 import ts from 'typescript';
-import { appendNodeTransformer } from '@wixc3/tsx-air-compiler/src/transformers/generators/append-node-transformer';
-import { fragmentTransformer } from '@wixc3/tsx-air-compiler/src/transformers/generators/jsx-fragment-transformer';
-import { tsxAirTransformer } from '@wixc3/tsx-air-compiler/src/transformers/generators/tsx-air-comp-transformer';
+import astBasedCompiler from '@wixc3/tsx-air-compilers/src/ast-based-compiler';
+import stringBasedCompiler from '@wixc3/tsx-air-compilers/src/string-based-compiler';
+// import { tsxAirTransformer } from '@wixc3/tsx-air-compiler/src/transformers/generators/tsx-air-comp-transformer';
 
 export interface Compiler {
     compile: (src: string, path: string) => Promise<string>;
@@ -30,7 +29,7 @@ export const compilers: Compiler[] = [
         }
     },
     {
-        label: 'Compiler 1',
+        label: 'String based compiler',
         compile: async (src, _exp) => {
             const preCompiled = ts.transpileModule(src, {
                 compilerOptions: {
@@ -41,7 +40,7 @@ export const compilers: Compiler[] = [
                     esModuleInterop: true
                 },
                 transformers: {
-                    before: transformers.map(item => item.transformer)
+                    before: [stringBasedCompiler.transformer]
                 }
             }).outputText;
 
@@ -49,25 +48,7 @@ export const compilers: Compiler[] = [
         }
     },
     {
-        label: 'jsx only',
-        compile: async (src, _exp) => {
-            const compiled = ts.transpileModule(src, {
-                compilerOptions: {
-                    jsx: ts.JsxEmit.React,
-                    jsxFactory: 'TSXAir',
-                    target: ts.ScriptTarget.ES2020,
-                    module: ts.ModuleKind.CommonJS,
-                    esModuleInterop: true
-                },
-                transformers: {
-                    before: [appendNodeTransformer(fragmentTransformer)]
-                }
-            }).outputText;
-            return compiled;
-        }
-    },
-    {
-        label: 'pojo comp',
+        label: 'AST based compiler',
         compile: async (src, _exp) => {
             const compiled = ts.transpileModule(src, {
                 compilerOptions: {
@@ -77,7 +58,7 @@ export const compilers: Compiler[] = [
                     esModuleInterop: true
                 },
                 transformers: {
-                    before: [appendNodeTransformer(tsxAirTransformer)]
+                    before: [astBasedCompiler]
                 }
             }).outputText;
             return compiled;
