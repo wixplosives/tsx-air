@@ -36,8 +36,8 @@ export const transfromerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
             getAnalayzed() {
                 return scanRes.tsxAir as any;
             },
-            tsNodeToAirNodes(node) {
-                return scanRes.astToTsxAir.get(node) as any;
+            tsNodeToAirNodes(n) {
+                return scanRes.astToTsxAir.get(n) as any;
             },
             appendStatements(...statements: ts.Statement[]) {
                 appendedStatements.push(...statements);
@@ -113,7 +113,7 @@ export const transfromerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
 export const getFileTransformationAPI = (file: ts.SourceFile) => {
     const res = contextMap.get(file);
     if (!res) {
-        throw new Error(' context does not exist ')
+        throw new Error(' context does not exist ');
     }
     return res;
-}
+};
