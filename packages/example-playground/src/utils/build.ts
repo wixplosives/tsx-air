@@ -3,7 +3,8 @@ import { Compiler } from '../compilers';
 import { Loader } from './examples.index';
 import { asSourceFile } from '@wixc3/tsx-air-compiler-utils';
 import { normalizePath, writeToFs, splitFilePath, readFileOr, BuiltCode, createCjs, evalModule, CjsEnv, Snippets, removeBuilt } from './build.helpers';
-import { isEqual, cloneDeep as cloneDp } from 'lodash';
+import cloneDp from 'lodash/cloneDeep';
+import isEqual from 'lodash/isEqual';
 
 const preloads = {
     '/src/framework/index.js': import('../framework'),

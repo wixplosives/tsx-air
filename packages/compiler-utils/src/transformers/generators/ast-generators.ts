@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { isArray } from 'lodash';
+import isArray from 'lodash/isArray';
 import { JsxRoot, CompDefinition } from '../../analyzers/types';
 import { DomBinding } from './component-common';
 import { parseValue } from '../../astUtils/parser';

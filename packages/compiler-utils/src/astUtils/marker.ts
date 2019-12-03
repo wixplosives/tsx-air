@@ -1,5 +1,5 @@
 import { NodeMetaData } from './scanner';
-import { isString } from 'lodash';
+import isString from 'lodash/isString';
 import ts from 'typescript';
 
 export const insert = (source: string, index: number, insertStr: string | object) =>

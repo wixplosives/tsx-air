@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { find } from './scanner';
-import { isString } from 'lodash';
+import isString from 'lodash/isString';
 
 export const asSourceFile = (statement: string ) =>  ts.createSourceFile('mock.ts', statement, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 

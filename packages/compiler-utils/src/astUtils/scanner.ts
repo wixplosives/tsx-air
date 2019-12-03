@@ -1,7 +1,6 @@
 import { IFileSystem } from '@file-services/types';
 import { createBaseHost, createLanguageServiceHost } from '@file-services/typescript';
 import ts from 'typescript';
-import * as _ from 'lodash';
 
 export interface NodeMetaData<T = any> {
     metadata: T;
