@@ -26,7 +26,6 @@ const mappedCompilers: Compiler[] = transfomerCompilers.map(compiler => {
                     jsx: ts.JsxEmit.Preserve,
                     jsxFactory: 'TSXAir',
                     target: ts.ScriptTarget.ES2020,
-                    // module: ts.ModuleKind.CommonJS,
                     esModuleInterop: true
                 },
                 transformers: compiler.transformers

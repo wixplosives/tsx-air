@@ -1,4 +1,4 @@
-import { render, TSXAir, store } from '../../framework';
+import { render, TSXAir, store } from '@wixc3/tsx-air-framework';
 
 export const StatefulComp = TSXAir((props: { initialState: string }) => {
     const state = store({ a: props.initialState, b: props.initialState, changeCount: 0 });

@@ -1,4 +1,4 @@
-import { Component, Factory, runtime } from '@wixc3/tsx-air-framework';
+import { Component, Factory, runtime, runtimeUtils, render } from '@wixc3/tsx-air-framework';
 
 /* tslint:disable:rule no-bitwise */
 
@@ -26,12 +26,12 @@ class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, Statefu
             });
         }
 
-        runtime.utils.handleChanges(new Map<number, () => void>(
+        runtimeUtils.handleChanges(new Map<number, () => void>(
             [
-                [StatefulComp.changeBitmask.initialState, noop],
-                [StatefulComp.changeBitmask.a, assignTextContent(this.context.div1, newState.a)],
-                [StatefulComp.changeBitmask.b, assignTextContent(this.context.div2, newState.b)],
-                [StatefulComp.changeBitmask.changeCount, assignTextContent(this.context.div3, `state changed ${newState.changeCount} times`)]
+                [StatefulComp.changeBitmask.initialState, runtimeUtils.noop],
+                [StatefulComp.changeBitmask.a, runtimeUtils.assignTextContent(this.context.div1, newState.a)],
+                [StatefulComp.changeBitmask.b, runtimeUtils.assignTextContent(this.context.div2, newState.b)],
+                [StatefulComp.changeBitmask.changeCount, runtimeUtils.assignTextContent(this.context.div3, `state changed ${newState.changeCount} times`)]
             ]
         ), changeMap);
     }
