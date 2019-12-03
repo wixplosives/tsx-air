@@ -14,6 +14,9 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
         output: {
             filename: mode === 'production' ? 'js/[name].min.js' : 'js/[name].js'
         },
+        optimization: {
+            usedExports: true
+        },
         module: {
             rules: [
                 {

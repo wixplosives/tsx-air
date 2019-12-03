@@ -5,7 +5,7 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "webpack --progress --mode production --devtool false",
+        "build": "webpack --progress --mode production --devtool false --profile",
         "profile": "webpack --profile",
         "clean": "rimraf ./dist",
         "lint": "tslint -p src",
@@ -14,7 +14,9 @@
         "start": "webpack-dev-server --progress --open",
         "test": "mocha \"src/**/*.test.ts?(x)\""
     },
+    "sideEffects": [],
     "dependencies": {
+        "@wixc3/tsx-air-compilers": "^1.0.4",
         "@file-services/commonjs": "^2.1.0",
         "@file-services/memory": "^2.1.1",
         "@file-services/typescript": "^2.0.1",
@@ -24,6 +26,7 @@
         "@types/showdown": "^1.9.3",
         "csstype": "^2.6.7",
         "lodash": "^4.17.15",
+        "monaco-editor": "^0.18.1",
         "node-watch": "^0.6.3",
         "prismjs": "^1.17.1",
         "sanitize.css": "^11.0.0",

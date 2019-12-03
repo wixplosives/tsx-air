@@ -1,6 +1,6 @@
 import { Component, Dom } from '../types/component';
 import { PropsOf, StateOf, Factory } from '../types/factory';
-import { cloneDeep } from 'lodash';
+import cloneDeep from 'lodash/cloneDeep';
 
 type Mutator = (obj: any) => number;
 type StateMutator<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State> ? (state: State) => number : never;

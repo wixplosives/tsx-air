@@ -3,7 +3,7 @@ import { ICommonJsModuleSystem, createCjsModuleSystem } from '@file-services/com
 import { createMemoryFs } from '@file-services/memory';
 import { Compiler, toCommonJs } from '../compilers';
 import { Loader } from './examples.index';
-import { flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
 
 export type FileSnippets = Record<number, string>;
 export type Snippets = Record<string, FileSnippets>;

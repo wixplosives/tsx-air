@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { TsxFile, TsNodeToAirNode, AnalyzerResult } from '../../analyzers/types';
 import { analyze } from '../../analyzers';
-import { cObject, cAccess, cImport, IImportInfo } from './ast-generators';
+import { cObject, cAccess, cImport, ImportDefinition } from './ast-generators';
 
 
 export interface FileTransformerAPI {
@@ -22,7 +22,7 @@ export const transfromerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
         const appendedNodes: Record<string, ts.Expression> = {};
         const appendedStatements: ts.Statement[] = [];
         const prependedStatements: ts.Statement[] = [];
-        const addedImports: Record<string, IImportInfo> = {};
+        const addedImports: Record<string, ImportDefinition> = {};
         let scanRes: AnalyzerResult<TsxFile>;
         const genCtx: FileTransformerAPI = {
             appendPrivateVar(wantedName, exp) {

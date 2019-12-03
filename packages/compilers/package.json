@@ -4,6 +4,7 @@
     "author": "Wix.com",
     "license": "MIT",
     "private": true,
+    "main": "./src/index.ts",
     "scripts": {
         "build": "webpack --progress --mode production --devtool false",
         "clean": "rimraf ./dist",
@@ -14,21 +15,13 @@
         "test": "mocha \"**/*.test.ts?(x)\""
     },
     "dependencies": {
+        "@wixc3/tsx-air-compiler-utils": "^1.0.4",
         "@file-services/memory": "^2.0.1",
         "@file-services/node": "^2.0.2",
         "@file-services/typescript": "^2.0.1",
         "@types/react-syntax-highlighter": "^11.0.1",
         "lodash": "^4.17.15",
-        "monaco-editor": "^0.17.0",
-        "monaco-editor-webpack-plugin": "^1.7.0",
-        "react": "^16.11.0",
-        "react-dom": "^16.11.0",
-        "react-syntax-highlighter": "^11.0.2",
         "sanitize.css": "^11.0.0",
         "tslib": "^1.10.0"
-    },
-    "browser": {
-        "./src/recipes/react.ts": "./src/recipes/react-browser.ts",
-        "./src/recipes/typescript.ts": "./src/recipes/typescript-browser.ts"
     }
 }

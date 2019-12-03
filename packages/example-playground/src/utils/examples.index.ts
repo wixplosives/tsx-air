@@ -1,4 +1,3 @@
-import { Converter } from 'showdown';
 import { build } from './build';
 import { Compiler } from '../compilers';
 import { BuiltCode } from './build.helpers';
@@ -27,14 +26,17 @@ const safeExampleFileLoader = async (example: string, path: string) => {
     return await (await fetch(exampleFilePath)).text();
 };
 
-const convertor = new Converter();
+let convertor: import('showdown').Converter;
 
-export const buildExample = (example: string, compiler: Compiler) => {
+export const buildExample = async (example: string, compiler: Compiler) => {
     const result: Example = {
         name: example,
         style: loadExampleFile(example, 'style.css'),
         readme: loadExampleFile(example, 'readme.md')
-            .then(i => convertor.makeHtml(i))
+            .then(async i => {
+                convertor = convertor || new (await import('showdown')).Converter();
+                return convertor.makeHtml(i);
+            })
             .then(i => `<div>${i}</div>`),
         build: build(compiler, async path => safeExampleFileLoader(example, path), `/src/examples/${example}/source`)
     };
