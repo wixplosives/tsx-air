@@ -7,10 +7,7 @@ const readFile = promisify(_readFile);
 
 const subdir = exports.subdir = (package, path) => join(dirname(require.resolve(join(package, 'package.json'))), path);
 
-getExamples = async () => {
-    console.log(subdir('@wixc3/tsx-air-examples', 'src/examples')); 
-    return await readdir(subdir('@wixc3/tsx-air-examples', 'src/examples'));
-};
+getExamples = async () => await readdir(subdir('@wixc3/tsx-air-examples', 'src/examples'));
 
 exports.serveExamples = app => {
     app.get('/examples', async (req, res) => res.json(await getExamples()));

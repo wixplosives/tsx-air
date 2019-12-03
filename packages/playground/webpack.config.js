@@ -2,7 +2,7 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { join } = require('path');
 const { serveExamples, subdir } = require('./src/utils/examples.indexer');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 
 module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
@@ -63,7 +63,7 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
         devServer: {
             contentBase: [
                 join(__dirname, 'public'),
-                subdir('@wixc3/tsx-air-compilers', 'public'),
+                subdir('@wixc3/tsx-air-examples', 'public'),
                 subdir('@wixc3/tsx-air-examples', 'src/examples'),
                 subdir('typescript','lib'),
                 subdir('monaco-editor', 'min')

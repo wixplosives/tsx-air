@@ -1,6 +1,6 @@
-import { TSXAir, render, delegate, store } from '../../framework';
-import { RefHolder } from '../../framework/api/types';
+
 import { calculateDimensions, Area, calcZoomFrameXY } from './helper';
+import { TSXAir, store, RefHolder, delegate, render } from '@wixc3/tsx-air-framework';
 
 export const Zoom = TSXAir((props: { url: string }) => {
     const state = store({

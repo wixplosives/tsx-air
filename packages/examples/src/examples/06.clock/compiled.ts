@@ -1,11 +1,8 @@
-import { Factory } from './../../framework/types/factory';
-import runtime from '../../framework/runtime';
-import { spreadToElementString, noop, updateSpreadElement, handleChanges } from '../../framework/runtime/utils';
+import { Factory, runtime, runtimeUtils, Component } from '@wixc3/tsx-air-framework';
 // imported to keep the example code compact 
 import { AnimatedDiv } from './source';
-import { Component } from '../../framework/types/component';
 
-/* tslint:disable:rule no-bitwise */
+const  { spreadToElementString, noop, updateSpreadElement, handleChanges } = runtimeUtils;
 
 interface DigitContext { root: HTMLElement; divs: HTMLDivElement[]; }
 interface DigitProps { value: string; lastUpdate?: any; }

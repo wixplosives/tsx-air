@@ -5,7 +5,7 @@ import { Component, Dom } from './types/component';
 import * as delegate from './api/delegate';
 import { setProp } from './runtime/utils';
 
-export { TSXAir } from './api/types';
+export { TSXAir, RefHolder } from './api/types';
 export { delegate };
 export { stats } from './api/debug/stats';
 export { bind } from './api/bind';

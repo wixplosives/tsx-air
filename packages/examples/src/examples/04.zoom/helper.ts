@@ -1,5 +1,5 @@
 import clamp from 'lodash/clamp';
-import { RefHolder } from '../../framework/api/types';
+import { RefHolder } from '@wixc3/tsx-air-framework';
 
 export function calculateDimensions(main: HTMLElement, zoomedIn: HTMLImageElement, zoomedOut: HTMLImageElement) {
     const { naturalWidth, naturalHeight } = zoomedIn;

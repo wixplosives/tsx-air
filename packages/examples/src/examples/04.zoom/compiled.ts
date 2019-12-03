@@ -1,10 +1,5 @@
-import runtime from '../../framework/runtime';
-import { render } from '../../framework';
-import { Component } from '../../framework/types/component';
-import { Factory } from '../../framework/types/factory';
-import { handleChanges, setStyle } from '../../framework/runtime/utils';
-import { calculateDimensions, calcZoomFrameXY, initialState, ZoomCtx, ZoomProps, ZoomState } from './helper';
-
+import { Component, Factory, runtime, render, runtimeUtils } from '@wixc3/tsx-air-framework';
+import { ZoomCtx, ZoomProps, ZoomState, initialState } from './helper';
 
 export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {
     public static factory: Factory<Zoom>;
@@ -21,17 +16,17 @@ export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {
     };
 
     public $$processUpdate(newProps: ZoomProps, newState: ZoomState, changeMap: number): void {
-        handleChanges(new Map([
+        runtimeUtils.handleChanges(new Map([
             [Zoom.changeBitmask.url, () => {
                 this.context.zoomedIn.src = this.context.zoomedOut.src = newProps.url;
             }],
             [Zoom.changeBitmask.x | Zoom.changeBitmask.y | Zoom.changeBitmask.zoomedOutSize | Zoom.changeBitmask.original, () => {
                 const { x, y, zoomedOutSize, original } = newState;
-                setStyle(this.context.zoomedIn, { left: -x / zoomedOutSize.width * original.width, top: -y / zoomedOutSize.height * original.height });
+                runtimeUtils.setStyle(this.context.zoomedIn, { left: -x / zoomedOutSize.width * original.width, top: -y / zoomedOutSize.height * original.height });
             }],
             [Zoom.changeBitmask.x | Zoom.changeBitmask.y | Zoom.changeBitmask.zoomFrame, () => {
                 const { x, y, zoomFrame } = newState;
-                setStyle(this.context.zoomFrame, { top: y, left: x, ...zoomFrame });
+                runtimeUtils.setStyle(this.context.zoomFrame, { top: y, left: x, ...zoomFrame });
             }]
 
         ]), changeMap);
@@ -46,7 +41,6 @@ export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {
     public $afterUnmount() {
         window.removeEventListener('resize', this.updateDimensions);
     }
-
 
     private updateDimensions = () => {
         const { root, zoomedIn, zoomedOut } = this.context;

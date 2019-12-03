@@ -1,4 +1,4 @@
-import { TSXAir, render, store, when } from '../../framework';
+import { TSXAir, render, store, when } from '@wixc3/tsx-air-framework';
 
 export const Thumb = TSXAir((props: { url: string, onClick?: (e:MouseEvent) => void }) => {
     const state = store({
@@ -22,5 +22,5 @@ export const Thumb = TSXAir((props: { url: string, onClick?: (e:MouseEvent) => v
 });
 
 export const runExample = (target: HTMLElement) => {
-    render(target, Thumb, { url: 'https://i.pinimg.com/originals/ba/ea/e4/baeae441e72112a3154f840b70b930ea.jpg' });
+    render(target, Thumb, { url: '/images/prettyboy.jpg' });
 };

@@ -1,4 +1,4 @@
-import { TSXAir, render, store } from '../../framework';
+import { TSXAir, render, store } from '@wixc3/tsx-air-framework';
 import { Thumb } from '../03.thumb/source';
 import { Zoom } from '../04.zoom/source';
 
