@@ -1,5 +1,5 @@
+import runtime from './runtime';
 import { ValueOf } from './types/type-utils';
-import runtime from './runtime/index';
 import { CompCreator as ComponentDef } from './api/types';
 import { Component, Dom } from './types/component';
 import * as delegate from './api/delegate';
@@ -11,6 +11,9 @@ export { stats } from './api/debug/stats';
 export { bind } from './api/bind';
 export { store } from './api/store';
 export { when, always, requestRender } from './api/lifecycle';
+export * from './types';
+export { default as runtime } from './runtime';
+export { utils as runtimeUtils } from './runtime';
 
 class ComponentApi<Props> {
     constructor(readonly $instance: Component<Dom, Props, any>, readonly rootElement: HTMLElement) { }

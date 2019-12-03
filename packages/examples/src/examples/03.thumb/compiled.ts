@@ -1,8 +1,4 @@
-import { handleChanges } from '../../framework/runtime/utils';
-import runtime from '../../framework/runtime';
-import { Component } from '../../framework/types/component';
-import { Factory } from '../../framework/types/factory';
-import { render } from '../../framework';
+import { Component, Factory, runtime, runtimeUtils, render } from '@wixc3/tsx-air-framework';
 
 /* tslint:disable:rule no-bitwise */
 
@@ -20,7 +16,7 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
     };
 
     public $$processUpdate(newProps: ThumbProps, newState: ThumbState, changeMap: number): void {
-        handleChanges(new Map([
+        runtimeUtils.handleChanges(new Map([
             [Thumb.changeBitmask.url, () => {
                 runtime.updateState(this as Thumb, (state: ThumbState) => {
                     // User code

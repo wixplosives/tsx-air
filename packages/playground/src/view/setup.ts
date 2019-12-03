@@ -1,4 +1,4 @@
-import { stats } from '../framework';
+import { stats } from '@wixc3/tsx-air-framework';
 import dom from './dom';
 export const setup = () => {
 

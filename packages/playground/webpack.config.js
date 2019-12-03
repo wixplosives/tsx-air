@@ -1,8 +1,9 @@
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { resolve } = require('path');
-const { serveExamples } = require('./src/utils/examples.indexer');
+const { join } = require('path');
+const { serveExamples, subdir } = require('./src/utils/examples.indexer');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
 
 module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
     return {
@@ -46,9 +47,9 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
         plugins: [
             new HtmlWebpackPlugin({
                 title: 'TsxAir example playground',
-                template: resolve(__dirname, 'src/view/index.html')
+                template: join(__dirname, 'src/view/index.html')
             }),
-            new BundleAnalyzerPlugin()
+            // new BundleAnalyzerPlugin()
         ],
         performance: {
             hints: false
@@ -61,10 +62,11 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
 
         devServer: {
             contentBase: [
-                resolve(__dirname, 'public'),
-                resolve(__dirname, 'src/examples'),
-                resolve(__dirname, '../../node_modules'),
-                resolve(__dirname, '../../node_modules/monaco-editor/min')
+                join(__dirname, 'public'),
+                subdir('@wixc3/tsx-air-compilers', 'public'),
+                subdir('@wixc3/tsx-air-examples', 'src/examples'),
+                subdir('typescript','lib'),
+                subdir('monaco-editor', 'min')
             ],
             hot: true,
             historyApiFallback: true,

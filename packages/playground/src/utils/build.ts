@@ -1,18 +1,12 @@
-import { analyze, TsxFile, Import } from '@wixc3/tsx-air-compiler-utils/src';
+import { analyze, TsxFile, Import, asSourceFile } from '@wixc3/tsx-air-compiler-utils';
 import { Compiler } from '../compilers';
 import { Loader } from './examples.index';
-import { asSourceFile } from '@wixc3/tsx-air-compiler-utils';
 import { normalizePath, writeToFs, splitFilePath, readFileOr, BuiltCode, createCjs, evalModule, CjsEnv, Snippets, removeBuilt } from './build.helpers';
 import cloneDp from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 
 const preloads = {
-    '/src/framework/index.js': import('../framework'),
-    '/src/framework/types/component.js': import('../framework/types/component'),
-    '/src/framework/types/factory.js': import('../framework/types/factory'),
-    '/src/framework/runtime.js': import('../framework/runtime'),
-    '/src/framework/runtime/utils.js': import('../framework/runtime/utils'),
-    '/src/framework/api/types.js': import('../framework/api/types'),
+    '/node_modules/@wixc3/tsx-air-framework/index.js': import('@wixc3/tsx-air-framework'),
     '/node_modules/lodash/clamp.js': import('lodash/clamp')
 };
 

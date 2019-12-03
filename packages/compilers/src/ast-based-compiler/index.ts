@@ -17,7 +17,7 @@ export const tsxAirTransformer: ts.TransformerFactory<ts.Node> = ctx => {
             const compNode = node.declarationList.declarations[0].initializer!;
             const comp = comps.find(c => c.sourceAstNode === compNode);
             if (comp) {
-                const importedComponent = api.ensureImport('Component', '../../framework/types/component');
+                const importedComponent = api.ensureImport('Component', '../../framework');
                 const binding = generateDomBindings(comp);
                 const info = comp.jsxRoots[0];
                 const res = cClass(

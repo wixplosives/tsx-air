@@ -1,8 +1,4 @@
-import { Factory } from '../../framework/types/factory';
-import runtime from '../../framework/runtime';
-import { render } from '../../framework';
-import { assignTextContent, noop, handleChanges } from '../../framework/runtime/utils';
-import { Component } from '../../framework/types/component';
+import { Component, Factory, runtime } from '@wixc3/tsx-air-framework';
 
 /* tslint:disable:rule no-bitwise */
 
@@ -30,7 +26,7 @@ class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, Statefu
             });
         }
 
-        handleChanges(new Map<number, () => void>(
+        runtime.utils.handleChanges(new Map<number, () => void>(
             [
                 [StatefulComp.changeBitmask.initialState, noop],
                 [StatefulComp.changeBitmask.a, assignTextContent(this.context.div1, newState.a)],

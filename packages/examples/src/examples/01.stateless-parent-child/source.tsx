@@ -1,4 +1,4 @@
-import {  render } from '../../framework';
+import { render } from '@wixc3/tsx-air-framework';
 import { ParentComp } from './component';
 
 export const runExample = (element: HTMLElement) => {
