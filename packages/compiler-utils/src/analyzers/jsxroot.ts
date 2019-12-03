@@ -34,12 +34,12 @@ const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string, usedProps: Comp
             return;
         };
 
-        if (ts.isJsxExpression(n)) {
+        if (ts.isJsxExpression(n) && n.expression) {
             const result: JsxExpression = {
                 kind: 'JsxExpression',
                 dependencies: scan(n, findExpressionDependencies).map(i => i.metadata),
                 sourceAstNode: n as ts.JsxExpression,
-                expression: n.expression!.getText()
+                expression: n.expression.getText()
             };
             return result;
         } else {

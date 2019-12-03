@@ -9,7 +9,7 @@ export type Analyzer<T extends TsxAirNode> = (node: ts.Node) => AnalyzerResult<T
 
 export type TsxAirNodeType = 'CompDefinition' | 'JsxFragment' |
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
-    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier';
+    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' | 'funcDefinition';
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
 
@@ -44,6 +44,27 @@ export interface ImportSpecifierInfo extends TsxAirNode<ts.ImportSpecifier> {
     kind: 'importSpecifier';
     localName: string;
     importedName: string;
+}
+export interface RecursiveMap{
+    [key: string]: RecursiveMap;
+}
+
+
+export interface AccesedMembers{
+    accessed: RecursiveMap;
+    modified: RecursiveMap;
+    defined: RecursiveMap;
+}
+
+export interface FuncDefinition extends TsxAirNode<ts.FunctionExpression | ts.ArrowFunction> {
+    kind: 'funcDefinition';
+    name?: string;
+    arguments?: string[];
+    members: AccesedMembers;
+    /** members including internal closures */
+    deepMembers: AccesedMembers;
+    jsxRoots: JsxRoot[];
+    definedFunctions: FuncDefinition[]
 }
 
 export interface CompDefinition extends TsxAirNode<ts.CallExpression> {

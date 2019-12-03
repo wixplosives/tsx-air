@@ -53,5 +53,11 @@ describe('TSXAir component analyzer: Jsx', () => {
             expect(prop.dependencies[0]).to.deep.equal(comp.usedProps[0]);
             expect(prop.sourceAstNode.parent.kind).to.equal(ts.SyntaxKind.JsxAttribute);
         });
+
+        it('should handle jsx text expressions with no with no text', () => {
+            const { comp } = getCompDef(`TSXAir(props => (<span>{/* this expression is here just so we can write a comment */}</span>)`);
+
+            expect(comp.jsxRoots[0].expressions.length).to.equal(0);
+        });
     });
 });
