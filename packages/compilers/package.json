@@ -4,6 +4,7 @@
     "author": "Wix.com",
     "license": "MIT",
     "private": true,
+    "main": "./src/index.ts",
     "scripts": {
         "build": "webpack --progress --mode production --devtool false",
         "clean": "rimraf ./dist",
@@ -14,6 +15,7 @@
         "test": "mocha \"**/*.test.ts?(x)\""
     },
     "dependencies": {
+        "@wixc3/tsx-air-compiler-utils": "^1.0.4",
         "@file-services/memory": "^2.0.1",
         "@file-services/node": "^2.0.2",
         "@file-services/typescript": "^2.0.1",
