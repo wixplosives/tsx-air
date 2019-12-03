@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { cObject, generateHydrate, cClass, createChangeBitMask, cArrow } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/ast-generators';
-import { GeneratorTransformer, appendNodeTransformer } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/append-node-transformer';
+import { transfromerApiProvider, getFileTransformationAPI } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/transformer-api-provider';
 import { generateToString } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/to-string-generator';
 import { printAST } from '@wixc3/tsx-air-compiler-utils/src/dev-utils/print-ast';
 import { generateDomBindings } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/component-common';
@@ -12,14 +12,16 @@ if (typeof window !== 'undefined') {
 }
 
 
-export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
-    const comps = genCtx.getAnalayzed().compDefinitions;
+export const tsxAirTransformer: ts.TransformerFactory<ts.Node> = ctx => {
     const visitor: ts.Transformer<ts.Node> = node => {
         if (ts.isVariableStatement(node)) {
+            const api = getFileTransformationAPI(node.getSourceFile());
+            const comps = api.getAnalayzed().compDefinitions;
+
             const compNode = node.declarationList.declarations[0].initializer!;
             const comp = comps.find(c => c.sourceAstNode === compNode);
             if (comp) {
-                const importedComponent = genCtx.ensureImport('Component', '../../framework/types/component');
+                const importedComponent = api.ensureImport('Component', '../../framework/types/component');
                 const binding = generateDomBindings(comp);
                 const info = comp.jsxRoots[0];
                 const res = cClass(
@@ -62,7 +64,7 @@ export const tsxAirTransformer: GeneratorTransformer = (genCtx, ctx) => {
 const compiler: NamedCompiler = {
     name: 'AST Based compiler',
     transformers: {
-        before: [appendNodeTransformer(tsxAirTransformer)]
+        before: [transfromerApiProvider(tsxAirTransformer)]
     }
 };
 
