@@ -15,6 +15,7 @@
         "test": "mocha \"src/**/*.test.ts?(x)\""
     },
     "dependencies": {
+        "@wixc3/tsx-air-compilers": "^1.0.4",
         "@file-services/commonjs": "^2.1.0",
         "@file-services/memory": "^2.1.1",
         "@file-services/typescript": "^2.0.1",
