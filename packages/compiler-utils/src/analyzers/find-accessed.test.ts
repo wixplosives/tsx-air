@@ -177,7 +177,7 @@ describe('findAccessedMembers', () => {
         };
         expect(findAccessedMembers(ast)).to.eql(expected);
     });
-    it('should ignore internal functions unless flagged as deep', () => {
+    it('should accept filter function to allow ignoring nodes', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = ()=>{
                     const b = aParam.internalProperty;

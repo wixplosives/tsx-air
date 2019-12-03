@@ -1,14 +1,19 @@
 import ts from 'typescript';
 import { AccesedMembers } from './types';
 
-export function findAccessedMembers(node: ts.Node, deep: boolean = false): AccesedMembers {
+/**
+ * 
+ * @param node 
+ * @param filter return true to ignore a node and its children
+ */
+export function findAccessedMembers(node: ts.Node, filter?: (node: ts.Node) => boolean): AccesedMembers {
     const res: AccesedMembers = {
         accessed: {},
         modified: {},
         defined: {}
     };
     const visitor = (n: ts.Node) => {
-        if (!deep && (ts.isArrowFunction(n) || ts.isFunctionDeclaration(n) || ts.isFunctionExpression(n))) {
+        if (filter && filter(n)) {
             return;
         }
         if (isType(n)) {
