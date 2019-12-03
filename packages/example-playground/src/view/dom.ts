@@ -9,6 +9,7 @@ const compiled = document.getElementById('compiled')!;
 const style = document.getElementById('style')!;
 const fps = document.getElementById('fps')!;
 const imports = document.getElementById('compiled-imports')! as HTMLSelectElement;
+const compileNotes = document.getElementById('compile-notes')!;
 
 export interface DOM {
     selectExample: HTMLSelectElement;
@@ -22,6 +23,7 @@ export interface DOM {
     compiled: HTMLElement;
     style: HTMLElement;
     fps: HTMLElement;
+    compileNotes:HTMLElement;
 }
 
 export default {
@@ -36,4 +38,5 @@ export default {
     style,
     fps,
     selectSource: imports,
+    compileNotes
 } as DOM;

@@ -3,7 +3,7 @@ import { render } from '../../framework';
 import { Component } from '../../framework/types/component';
 import { Factory } from '../../framework/types/factory';
 import { handleChanges, setStyle } from '../../framework/runtime/utils';
-import { calculateDimensions, calcZoomFrameXY, initialState, Area, ZoomCtx, ZoomProps, ZoomState } from './helper';
+import { calculateDimensions, calcZoomFrameXY, initialState, ZoomCtx, ZoomProps, ZoomState } from './helper';
 
 
 export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {

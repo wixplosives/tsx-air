@@ -18,6 +18,7 @@
     "@stylable/webpack-plugin": "^2.3.1",
     "@ts-tools/build": "^1.2.1",
     "@ts-tools/node": "^1.1.2",
+    "@ts-tools/robotrix": "^1.0.0",
     "@ts-tools/webpack-loader": "^1.1.0",
     "@types/chai": "^4.2.4",
     "@types/jsdom": "^12.2.4",
@@ -54,8 +55,8 @@
     "tslint-react": "^4.1.0",
     "typescript": "^3.7.2",
     "webpack": "^4.41.2",
+    "webpack-bundle-analyzer": "^3.6.0",
     "webpack-cli": "^3.3.9",
-    "webpack-dev-server": "^3.9.0",
-    "@ts-tools/robotrix": "^1.0.0"
+    "webpack-dev-server": "^3.9.0"
   }
 }
