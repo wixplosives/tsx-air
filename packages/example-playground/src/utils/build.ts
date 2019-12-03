@@ -1,7 +1,7 @@
 import { analyze, TsxFile, Import } from '@wixc3/tsx-air-compiler-utils/src';
 import { Compiler } from '../compilers';
 import { Loader } from './examples.index';
-import { asSourceFile } from '@wixc3/tsx-air-compiler-utils/src/astUtils/parser';
+import { asSourceFile } from '@wixc3/tsx-air-compiler-utils';
 import { normalizePath, writeToFs, splitFilePath, readFileOr, BuiltCode, createCjs, evalModule, CjsEnv, Snippets, removeBuilt } from './build.helpers';
 import { isEqual, cloneDeep as cloneDp } from 'lodash';
 

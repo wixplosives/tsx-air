@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { isArray } from 'util';
+import { isArray } from 'lodash';
 import { JsxRoot, CompDefinition } from '../../analyzers/types';
 import { DomBinding } from './component-common';
 import { parseValue } from '../../astUtils/parser';
@@ -184,16 +184,17 @@ export const cAssign = (to: string[], from: string[] | ts.Expression) => {
 };
 
 
-export interface ImportSpecifierInfo {
+interface ImportSpecifierDef {
     localName?: string;
     importedName: string;
 }
-export interface IImportInfo {
+
+export interface ImportDefinition {
     modulePath: string;
-    exports: ImportSpecifierInfo[];
+    exports: ImportSpecifierDef[];
     defaultLocalName?: string;
 }
-export const cImport = (info: IImportInfo) => {
+export const cImport = (info: ImportDefinition) => {
     return ts.createImportDeclaration(undefined, undefined,
         ts.createImportClause(
             info.defaultLocalName ? ts.createIdentifier(info.defaultLocalName) : undefined,

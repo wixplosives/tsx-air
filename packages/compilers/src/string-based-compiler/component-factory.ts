@@ -1,10 +1,5 @@
-import { CompDefinition, JsxAttribute } from '@wixc3/tsx-air-compiler-utils/src/analyzers/types';
-import { findJsxComponent } from '@wixc3/tsx-air-compiler-utils/src/visitors/jsx';
-import { scan } from '@wixc3/tsx-air-compiler-utils/src//astUtils/scanner';
-import { findJsxExpression, findJsxRoot } from '@wixc3/tsx-air-compiler-utils/src/visitors/jsx';
-import { transpileNode } from '@wixc3/tsx-air-compiler-utils/src/astUtils/marker';
-import { DomBinding } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/component-common';
 import ts from 'typescript';
+import { JsxAttribute, DomBinding, CompDefinition, scan, findJsxRoot, findJsxExpression, findJsxComponent, transpileNode } from '@wixc3/tsx-air-compiler-utils';
 
 export const compFactory = (dom: DomBinding[], def: CompDefinition) => {
     return `${def.name}.factory = {

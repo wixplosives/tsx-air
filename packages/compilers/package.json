@@ -19,16 +19,7 @@
         "@file-services/typescript": "^2.0.1",
         "@types/react-syntax-highlighter": "^11.0.1",
         "lodash": "^4.17.15",
-        "monaco-editor": "^0.17.0",
-        "monaco-editor-webpack-plugin": "^1.7.0",
-        "react": "^16.11.0",
-        "react-dom": "^16.11.0",
-        "react-syntax-highlighter": "^11.0.2",
         "sanitize.css": "^11.0.0",
         "tslib": "^1.10.0"
-    },
-    "browser": {
-        "./src/recipes/react.ts": "./src/recipes/react-browser.ts",
-        "./src/recipes/typescript.ts": "./src/recipes/typescript-browser.ts"
     }
 }
