@@ -4,20 +4,16 @@ import { createMemoryFs } from '@file-services/memory';
 import { Compiler, toCommonJs } from '../compilers';
 import { Loader } from './examples.index';
 import flatMap from 'lodash/flatMap';
-import { resolve, dirname, join } from "path";
+
 export type FileSnippets = Record<number, string>;
 export type Snippets = Record<string, FileSnippets>;
 
-export async function preload(env: CjsEnv, filename: string, module: Promise<unknown>) {
-    if (filename.endsWith('.d.ts')) {
-        writeToFs(env.sources, filename, (await module) as string);
-    } else {
-        writeToFs(env.compiledEsm, filename, '// Preloaded');
-        env.cjs.loadedModules.set(filename, {
-            filename,
-            exports: await module
-        });
-    }
+export async function preload(fs: IFileSystem, cjs: ICommonJsModuleSystem, filename: string, module: Promise<unknown>) {
+    writeToFs(fs, filename, '// Preloaded');
+    cjs.loadedModules.set(filename, {
+        filename,
+        exports: await module
+    });
 }
 
 export function splitFilePath(path: string) {
@@ -73,14 +69,13 @@ export async function createCjs(preloads: Record<string, Promise<unknown>>): Pro
     const commonJs = createMemoryFs();
     const cjs = createCjsModuleSystem({ fs: commonJs });
     const sources = createMemoryFs();
-    const pendingSources = new Map();
-    const ret = { compiledEsm: commonJs, cjs, sources, pendingSources };
 
     await Promise.all(
         Object.entries(preloads).map(([filename, module]) =>
-            preload(ret, filename, module)));
+            preload(commonJs, cjs, filename, module)));
 
-    return ret;
+    const pendingSources = new Map();
+    return { compiledEsm: commonJs, cjs, sources, pendingSources };
 }
 
 export function injectSnippets(code: string, injects: FileSnippets) {
