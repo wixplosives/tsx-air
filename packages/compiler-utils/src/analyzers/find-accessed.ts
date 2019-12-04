@@ -1,13 +1,13 @@
 import ts from 'typescript';
-import { AccesedMembers } from './types';
+import { UsedVariables } from './types';
 
 /**
  * 
  * @param node 
  * @param filter return true to ignore a node and its children
  */
-export function findAccessedMembers(node: ts.Node, filter?: (node: ts.Node) => boolean): AccesedMembers {
-    const res: AccesedMembers = {
+export function findAccessedMembers(node: ts.Node, filter?: (node: ts.Node) => boolean): UsedVariables {
+    const res: UsedVariables = {
         accessed: {},
         modified: {},
         defined: {}
@@ -130,7 +130,7 @@ export function accessToStringArr(node: AccessNodes): { path: string[], nestedAc
     };
 }
 
-export function addToAccessMap(path: string[], isModification: boolean, map: AccesedMembers) {
+export function addToAccessMap(path: string[], isModification: boolean, map: UsedVariables) {
     let modMap = map.modified;
     let accessMap = map.accessed;
 

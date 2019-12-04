@@ -1,28 +1,25 @@
+// tslint:disable: no-unused-expression
 import { parseValue, asSourceFile } from '../astUtils/parser';
 import { expect } from 'chai';
-import { AccesedMembers } from './types';
+import { UsedVariables } from './types';
 import { findAccessedMembers } from './find-accessed';
 import '../dev-utils/global-dev-tools';
-
+import ts from 'typescript';
 
 describe('findAccessedMembers', () => {
-    it('should find defined', () => {
+    it('should find defined variables', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = 'a';
-                const b = 'b';
-            }
-            `);
-        const expected: AccesedMembers = {
-            accessed: {
-            },
-            defined: {
-                aParam: {},
-                a: {},
-                b: {}
-            },
-            modified: {}
-        };
-        expect(findAccessedMembers(ast)).to.eql(expected);
+                let b = 'b';
+                var c = 'c';
+            }`);
+
+        expect(findAccessedMembers(ast).defined).to.eql({
+            aParam: {},
+            a: {},
+            b: {},
+            c: {}
+        });
     });
     it('should find accessed members', () => {
         const ast = parseValue(`(aParam)=>{
@@ -30,100 +27,95 @@ describe('findAccessedMembers', () => {
                 const b = aParam.internalObj.anotherProperty
             }
             `);
-        const expected: AccesedMembers = {
-            accessed: {
-                aParam: {
-                    internalObj: {
-                        property: {},
-                        anotherProperty: {}
-                    }
+
+        expect(findAccessedMembers(ast).accessed).to.eql({
+            aParam: {
+                internalObj: {
+                    property: {},
+                    anotherProperty: {}
                 }
-            },
-            defined: {
-                aParam: {},
-                a: {},
-                b: {}
-            },
-            modified: {}
-        };
-        expect(findAccessedMembers(ast)).to.eql(expected);
+            }
+        });
     });
     it('should find modifed members', () => {
         const ast = parseValue(`(aParam)=>{
                 aParam.internalObject.modifiedProperty = aParam.internalObject.accessedProperty;
             }
             `);
-        const expected: AccesedMembers = {
-            accessed: {
-                aParam: {
-                    internalObject: {
-                        accessedProperty: {},
-                        modifiedProperty: {}
-                    }
-                }
-            },
-            defined: {
-                aParam: {},
-            },
-            modified: {
-                aParam: {
-                    internalObject: {
-                        modifiedProperty: {}
-                    }
+
+        expect(findAccessedMembers(ast).modified).to.eql({
+            aParam: {
+                internalObject: {
+                    modifiedProperty: {}
                 }
             }
-        };
-        expect(findAccessedMembers(ast)).to.eql(expected);
+        });
+        expect(findAccessedMembers(ast).accessed, 'modified members should also be considered as accessed').to.eql({
+            aParam: {
+                internalObject: {
+                    accessedProperty: {},
+                    modifiedProperty: {}
+                }
+            }
+        });
     });
-    it('should ignore types', () => {
+    it('should ignore internal fields of assigned pojo', () => {
+        const ast = asSourceFile(`
+            export const anObject = {
+                title: 'a'
+            }
+            `);
+        const expected: UsedVariables = {
+            accessed: {},
+            defined: {
+                anObject: {}
+            },
+            modified: {}
+        };
+        expect(findAccessedMembers(ast), 'Should not include "title"').to.eql(expected);
+    });
+    it('should ignore typescript types', () => {
         const ast = asSourceFile(`
             interface AnInterface{
                 title: string;
             }
             type a = 'a' | AnInterface;
             export const b: AnInterface = {
-                title: window.location
+                title: 'a'
             }
             `);
-        const expected: AccesedMembers = {
-            accessed: {
-                window: {
-                    location: {}
-                }
-            },
+        const expected: UsedVariables = {
+            accessed: {},
             defined: {
                 b: {}
             },
-            modified: {
-            }
+            modified: {}
         };
-        expect(findAccessedMembers(ast)).to.eql(expected);
+        expect(findAccessedMembers(ast), 'Should not include "AnInterface"').to.eql(expected);
     });
-    it('should mark calls as access', () => {
+    it('should mark method calls as access', () => {
         const ast = parseValue(`(aParam)=>{
                 aParam.internalObject.methodProperty(aParam.internalObject.accessedProperty);
                 aParam.internalObject.methodProperty.name;
             }
             `);
-        const expected: AccesedMembers = {
-            accessed: {
-                aParam: {
-                    internalObject: {
-                        accessedProperty: {},
-                        methodProperty: {
-                            name: {}
-                        }
+
+        expect(findAccessedMembers(ast).accessed.aParam.internalObject.methodProperty, 'methods calls are constiderd as access').not.to.be.undefined;
+        expect(findAccessedMembers(ast).accessed.aParam.internalObject.accessedProperty, 'accesss in call arguments is found').not.to.be.undefined;
+        expect(findAccessedMembers(ast).accessed.aParam.internalObject.methodProperty.name, 'methods can also have fields').not.to.be.undefined;
+
+
+        expect(findAccessedMembers(ast).accessed).to.eql({
+            aParam: {
+                internalObject: {
+                    accessedProperty: {},
+                    methodProperty: {
+                        name: {}
                     }
                 }
-            },
-            defined: {
-                aParam: {},
-            },
-            modified: {
-
             }
-        };
-        expect(findAccessedMembers(ast)).to.eql(expected);
+        });
+
     });
     it('should mark reference by literal strings as access', () => {
         const ast = parseValue(`(aParam)=>{
@@ -131,90 +123,66 @@ describe('findAccessedMembers', () => {
                 const b = aParam.internalObject['property-with-kebab-case'];
             }
             `);
-        const expected: AccesedMembers = {
-            accessed: {
-                aParam: {
-                    ['object-with-kebab-case']: {
-                        internalProperty: {}
-                    },
-                    internalObject: {
-                        ['property-with-kebab-case']: {}
-                    }
-                }
-            },
-            defined: {
-                aParam: {},
-                a: {},
-                b: {}
-            },
-            modified: {
 
+        expect(findAccessedMembers(ast).accessed).to.eql({
+            aParam: {
+                ['object-with-kebab-case']: {
+                    internalProperty: {}
+                },
+                internalObject: {
+                    ['property-with-kebab-case']: {}
+                }
             }
-        };
-        expect(findAccessedMembers(ast)).to.eql(expected);
+        });
     });
     it('should mark reference by parameters as 2 separate access', () => {
         const ast = parseValue(`(aParam)=>{
+                // 'shouldBeIgnored' is ignored because it comes after a dynamic path access 
                 const a = aParam.internalObject[aParam.aKey].shouldBeIgnored;
             }
             `);
-        const expected: AccesedMembers = {
-            accessed: {
-                aParam: {
-                    internalObject: {
-                    },
-                    aKey: {
-                    }
+        expect(findAccessedMembers(ast).accessed).to.eql({
+            aParam: {
+                internalObject: {
+                },
+                aKey: {
                 }
-            },
-            defined: {
-                aParam: {},
-                a: {},
-            },
-            modified: {
-
             }
-        };
-        expect(findAccessedMembers(ast)).to.eql(expected);
+        });
     });
     it('should accept filter function to allow ignoring nodes', () => {
-        const ast = parseValue(`(aParam)=>{
-                const a = ()=>{
-                    const b = aParam.internalProperty;
+        const ast = parseValue(`( externalMethodsParam )=>{
+                const definedInOuterScope = ( internalMethodParam )=>{
+                    const definedInInnerScope = externalMethodsParam.aProp;
                 };
-                const c = function(){
-                    const d = aParam.internalProperty
-                }
-            }
-            `);
-        const expected1: AccesedMembers = {
+            }`);
+
+        expect(findAccessedMembers(ast, ts.isArrowFunction)).to.eql({
             accessed: {
             },
             defined: {
-                aParam: {},
-                a: {},
-                c: {}
+                externalMethodsParam: {},
+                definedInOuterScope: {}
             },
             modified: {
             }
-        };
-        const expected2: AccesedMembers = {
+        });
+
+
+        expect(findAccessedMembers(ast)).to.eql({
             accessed: {
-                aParam: {
-                    internalProperty: {}
+                externalMethodsParam: {
+                    aProp: {}
                 }
             },
             defined: {
-                aParam: {},
-                a: {},
-                b: {},
-                c: {},
-                d: {}
+                externalMethodsParam: {},
+                definedInOuterScope: {},
+                internalMethodParam: {},
+                definedInInnerScope: {}
             },
             modified: {
             }
-        };
-        expect(findAccessedMembers(ast)).to.eql(expected1);
-        expect(findAccessedMembers(ast, true)).to.eql(expected2);
+        });
     });
 });
