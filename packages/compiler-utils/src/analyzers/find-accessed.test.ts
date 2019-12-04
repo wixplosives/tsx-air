@@ -40,8 +40,7 @@ describe('findUsedVariables', () => {
     it('should find modifed members', () => {
         const ast = parseValue(`(aParam)=>{
                 aParam.internalObject.modifiedProperty = aParam.internalObject.accessedProperty;
-            }
-            `);
+            }`);
 
         expect(findUsedVariables(ast).modified).to.eql({
             aParam: {
@@ -59,7 +58,7 @@ describe('findUsedVariables', () => {
             }
         });
     });
-    it('should ignore internal fields of assigned pojo', () => {
+    it('should ignore keys of assigned literals', () => {
         const ast = asSourceFile(`
             export const anObject = {
                 title: 'a'
@@ -103,8 +102,6 @@ describe('findUsedVariables', () => {
         expect(findUsedVariables(ast).accessed.aParam.internalObject.methodProperty, 'methods calls are constiderd as access').not.to.be.undefined;
         expect(findUsedVariables(ast).accessed.aParam.internalObject.accessedProperty, 'accesss in call arguments is found').not.to.be.undefined;
         expect(findUsedVariables(ast).accessed.aParam.internalObject.methodProperty.name, 'methods can also have fields').not.to.be.undefined;
-
-
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
                 internalObject: {
@@ -121,8 +118,7 @@ describe('findUsedVariables', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = aParam['object-with-kebab-case'].internalProperty;
                 const b = aParam.internalObject['property-with-kebab-case'];
-            }
-            `);
+            }`);
 
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
@@ -139,8 +135,7 @@ describe('findUsedVariables', () => {
         const ast = parseValue(`(aParam)=>{
                 // 'shouldBeIgnored' is ignored because it comes after a dynamic path access 
                 const a = aParam.internalObject[aParam.aKey].shouldBeIgnored;
-            }
-            `);
+            }`);
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
                 internalObject: {
@@ -168,7 +163,6 @@ describe('findUsedVariables', () => {
             }
         });
 
-
         expect(findUsedVariables(ast)).to.eql({
             accessed: {
                 externalMethodsParam: {
@@ -181,8 +175,7 @@ describe('findUsedVariables', () => {
                 internalMethodParam: {},
                 definedInInnerScope: {}
             },
-            modified: {
-            }
+            modified: {}
         });
     });
 });
