@@ -1,4 +1,4 @@
-import { Component, Factory, runtime, render, runtimeUtils } from '@wixc3/tsx-air-framework';
+import { Component, Factory, runtime, render, runtimeUtils } from '@tsx-air/framework';
 import { ZoomCtx, ZoomProps, ZoomState, initialState } from './helper';
 
 export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {

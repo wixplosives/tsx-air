@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { CompDefinition, DomBinding, JsxExpression, JsxComponent, CompProps, JsxRoot, printAST, cFunction, cBitMaskIf, cAccess, cAssign, isJsxExpression, createBitWiseOr, cCall, cArrow } from '@wixc3/tsx-air-compiler-utils';
+import { CompDefinition, DomBinding, JsxExpression, JsxComponent, CompProps, JsxRoot, printAST, cFunction, cBitMaskIf, cAccess, cAssign, isJsxExpression, createBitWiseOr, cCall, cArrow } from '@tsx-air/compiler-utils';
 
 if (typeof window !== 'undefined') {
     (window as any).printAST = printAST;

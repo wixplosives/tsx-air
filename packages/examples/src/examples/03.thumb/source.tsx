@@ -1,4 +1,4 @@
-import { TSXAir, render, store, when } from '@wixc3/tsx-air-framework';
+import { TSXAir, render, store, when } from '@tsx-air/framework';
 
 export const Thumb = TSXAir((props: { url: string, onClick?: (e:MouseEvent) => void }) => {
     const state = store({

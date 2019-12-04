@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { createProcessUpdateForComp } from './generate-process-update';
 import { NamedCompiler } from '../types';
-import { printAST, getFileTransformationAPI, cObject, generateDomBindings, cClass, generateToString, generateHydrate, cArrow, createChangeBitMask, transfromerApiProvider } from '@wixc3/tsx-air-compiler-utils';
+import { printAST, getFileTransformationAPI, cObject, generateDomBindings, cClass, generateToString, generateHydrate, cArrow, createChangeBitMask, transfromerApiProvider } from '@tsx-air/compiler-utils';
 
 if (typeof window !== 'undefined') {
     (window as any).printAST = printAST;
@@ -17,7 +17,7 @@ export const tsxAirTransformer: ts.TransformerFactory<ts.Node> = ctx => {
             const compNode = node.declarationList.declarations[0].initializer!;
             const comp = comps.find(c => c.sourceAstNode === compNode);
             if (comp) {
-                const importedComponent = api.ensureImport('Component', '@wixc3/tsx-air-framework');
+                const importedComponent = api.ensureImport('Component', '@tsx-air/framework');
                 const binding = generateDomBindings(comp);
                 const info = comp.jsxRoots[0];
                 const res = cClass(
