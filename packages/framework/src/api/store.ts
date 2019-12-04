@@ -1,4 +1,3 @@
-import { AsyncStore } from './store';
 import { Setter, Getter } from './../types/type-utils';
 
 export interface StoreApi<T> {

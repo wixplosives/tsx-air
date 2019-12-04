@@ -26,7 +26,7 @@ describe('build', () => {
             'examples': {
                 'ex1': {
                     'source.js': `
-                    import {TSXAir} from '../../framework';
+                    import {TSXAir} from '@wixc3/tsx-air-framework';
                     export const air = TSXAir;`
                 }
             },
@@ -76,8 +76,8 @@ describe('build', () => {
         const res = await build(compiler, load, '/src/examples/ex1/source');
         expect(res.error).to.equal(undefined);
         expect((await res.module as any).air).to.be.instanceOf(Function);
-        expect(filesLoaded).to.deep.equal(['/src/examples/ex1/source.js']);
-        expect(filesLoaded).not.to.include('/src/framework.js');
+        expect(filesLoaded).to.eql(['/src/examples/ex1/source.js']);
+        expect(filesLoaded).not.to.include('/@wixc3/tsx-air-framework.js');
     });
 
     describe('rebuild', () => {

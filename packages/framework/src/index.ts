@@ -7,7 +7,6 @@ import { setProp } from './runtime/utils';
 
 export { TSXAir, RefHolder } from './api/types';
 export { delegate };
-export { stats } from './api/debug/stats';
 export { bind } from './api/bind';
 export { store } from './api/store';
 export { when, always, requestRender } from './api/lifecycle';
