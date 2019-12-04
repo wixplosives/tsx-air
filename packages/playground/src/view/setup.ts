@@ -1,4 +1,4 @@
-import { stats } from '@tsx-air/framework';
+import { stats } from '../utils/stats';
 import dom from './dom';
 export const setup = () => {
 
