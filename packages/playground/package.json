@@ -1,5 +1,5 @@
 {
-    "name": "@wixc3/tsx-air-playground",
+    "name": "@tsx-air/playground",
     "version": "0.4.0",
     "author": "Wix.com",
     "license": "MIT",
@@ -16,7 +16,7 @@
     },
     "sideEffects": [],
     "dependencies": {
-        "@wixc3/tsx-air-compilers": "^1.0.4",
+        "@tsx-air/compilers": "^1.0.4",
         "@file-services/commonjs": "^2.1.0",
         "@file-services/memory": "^2.1.1",
         "@file-services/typescript": "^2.0.1",

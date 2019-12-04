@@ -63,8 +63,8 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
         devServer: {
             contentBase: [
                 join(__dirname, 'public'),
-                subdir('@wixc3/tsx-air-examples', 'public'),
-                subdir('@wixc3/tsx-air-examples', 'src/examples'),
+                subdir('@tsx-air/examples', 'public'),
+                subdir('@tsx-air/examples', 'src/examples'),
                 subdir('typescript','lib'),
                 subdir('monaco-editor', 'min')
             ],

@@ -1,5 +1,5 @@
 // No need to import anything you're not going to use
-import { TSXAir } from '@wixc3/tsx-air-framework';
+import { TSXAir } from '@tsx-air/framework';
 
 // Components are TSX functions wrapped by TSXAir
 export const ChildComp = TSXAir((props: { name: string }) => <div className="child">Child: {props.name}</div>);

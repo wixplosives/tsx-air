@@ -1,5 +1,5 @@
 {
-    "name": "@wixc3/tsx-air-examples",
+    "name": "@tsx-air/examples",
     "version": "0.1.1",
     "author": "Wix.com",
     "license": "MIT",
@@ -13,7 +13,7 @@
         "test": "mocha \"**/*.test.ts?(x)\""
     },
     "dependencies": {
-        "@wixc3/tsx-air-compiler-utils": "^1.0.4",
+        "@tsx-air/compiler-utils": "^1.0.4",
         "@file-services/memory": "^2.0.1",
         "@file-services/node": "^2.0.2",
         "@file-services/typescript": "^2.0.1",

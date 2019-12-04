@@ -1,4 +1,4 @@
-import { Component, Factory, runtime, runtimeUtils, render } from '@wixc3/tsx-air-framework';
+import { Component, Factory, runtime, runtimeUtils, render } from '@tsx-air/framework';
 
 /* tslint:disable:rule no-bitwise */
 

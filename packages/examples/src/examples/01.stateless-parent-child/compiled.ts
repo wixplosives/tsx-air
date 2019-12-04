@@ -1,4 +1,4 @@
-import { Factory, runtime, render, Component, Dom } from '@wixc3/tsx-air-framework';
+import { Factory, runtime, render, Component, Dom } from '@tsx-air/framework';
 
 interface ParentCompProps { name: string; }
 interface ParentCompCtx extends Dom {

@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { compilers as transfomerCompilers } from '@wixc3/tsx-air-compilers';
+import { compilers as transfomerCompilers } from '@tsx-air/compilers';
 
 export interface Compiler {
     compile: (src: string, path: string) => Promise<string>;

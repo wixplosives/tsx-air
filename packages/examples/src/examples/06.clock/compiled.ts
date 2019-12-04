@@ -1,4 +1,4 @@
-import { Factory, runtime, runtimeUtils, Component } from '@wixc3/tsx-air-framework';
+import { Factory, runtime, runtimeUtils, Component } from '@tsx-air/framework';
 // imported to keep the example code compact 
 import { AnimatedDiv } from './source';
 

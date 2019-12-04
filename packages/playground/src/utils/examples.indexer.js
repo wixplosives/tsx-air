@@ -7,14 +7,14 @@ const readFile = promisify(_readFile);
 
 const subdir = exports.subdir = (package, path) => join(dirname(require.resolve(join(package, 'package.json'))), path);
 
-getExamples = async () => await readdir(subdir('@wixc3/tsx-air-examples', 'src/examples'));
+getExamples = async () => await readdir(subdir('@tsx-air/examples', 'src/examples'));
 
 exports.serveExamples = app => {
     app.get('/examples', async (req, res) => res.json(await getExamples()));
     app.get('/examples/*', async (req, res) => {
         for (const ext of ['', '.tsx', '.ts', '.js']) {
             try {
-                const resolvedPath = join(subdir('@wixc3/tsx-air-examples', 'src/examples'), req.params[0] + ext);
+                const resolvedPath = join(subdir('@tsx-air/examples', 'src/examples'), req.params[0] + ext);
                 res.write(await readFile(resolvedPath));
                 res.end();
                 return;
