@@ -6,7 +6,7 @@ import { UsedVariables } from './types';
  * @param node 
  * @param filter return true to ignore a node and its children
  */
-export function findAccessedMembers(node: ts.Node, filter?: (node: ts.Node) => boolean): UsedVariables {
+export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boolean): UsedVariables {
     const res: UsedVariables = {
         accessed: {},
         modified: {},

@@ -2,11 +2,11 @@
 import { parseValue, asSourceFile } from '../astUtils/parser';
 import { expect } from 'chai';
 import { UsedVariables } from './types';
-import { findAccessedMembers } from './find-accessed';
+import { findUsedVariables } from './find-accessed';
 import '../dev-utils/global-dev-tools';
 import ts from 'typescript';
 
-describe('findAccessedMembers', () => {
+describe('findUsedVariables', () => {
     it('should find defined variables', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = 'a';
@@ -14,7 +14,7 @@ describe('findAccessedMembers', () => {
                 var c = 'c';
             }`);
 
-        expect(findAccessedMembers(ast).defined).to.eql({
+        expect(findUsedVariables(ast).defined).to.eql({
             aParam: {},
             a: {},
             b: {},
@@ -28,7 +28,7 @@ describe('findAccessedMembers', () => {
             }
             `);
 
-        expect(findAccessedMembers(ast).accessed).to.eql({
+        expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
                 internalObj: {
                     property: {},
@@ -43,14 +43,14 @@ describe('findAccessedMembers', () => {
             }
             `);
 
-        expect(findAccessedMembers(ast).modified).to.eql({
+        expect(findUsedVariables(ast).modified).to.eql({
             aParam: {
                 internalObject: {
                     modifiedProperty: {}
                 }
             }
         });
-        expect(findAccessedMembers(ast).accessed, 'modified members should also be considered as accessed').to.eql({
+        expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql({
             aParam: {
                 internalObject: {
                     accessedProperty: {},
@@ -72,7 +72,7 @@ describe('findAccessedMembers', () => {
             },
             modified: {}
         };
-        expect(findAccessedMembers(ast), 'Should not include "title"').to.eql(expected);
+        expect(findUsedVariables(ast), 'Should not include "title"').to.eql(expected);
     });
     it('should ignore typescript types', () => {
         const ast = asSourceFile(`
@@ -91,7 +91,7 @@ describe('findAccessedMembers', () => {
             },
             modified: {}
         };
-        expect(findAccessedMembers(ast), 'Should not include "AnInterface"').to.eql(expected);
+        expect(findUsedVariables(ast), 'Should not include "AnInterface"').to.eql(expected);
     });
     it('should mark method calls as access', () => {
         const ast = parseValue(`(aParam)=>{
@@ -100,12 +100,12 @@ describe('findAccessedMembers', () => {
             }
             `);
 
-        expect(findAccessedMembers(ast).accessed.aParam.internalObject.methodProperty, 'methods calls are constiderd as access').not.to.be.undefined;
-        expect(findAccessedMembers(ast).accessed.aParam.internalObject.accessedProperty, 'accesss in call arguments is found').not.to.be.undefined;
-        expect(findAccessedMembers(ast).accessed.aParam.internalObject.methodProperty.name, 'methods can also have fields').not.to.be.undefined;
+        expect(findUsedVariables(ast).accessed.aParam.internalObject.methodProperty, 'methods calls are constiderd as access').not.to.be.undefined;
+        expect(findUsedVariables(ast).accessed.aParam.internalObject.accessedProperty, 'accesss in call arguments is found').not.to.be.undefined;
+        expect(findUsedVariables(ast).accessed.aParam.internalObject.methodProperty.name, 'methods can also have fields').not.to.be.undefined;
 
 
-        expect(findAccessedMembers(ast).accessed).to.eql({
+        expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
                 internalObject: {
                     accessedProperty: {},
@@ -124,7 +124,7 @@ describe('findAccessedMembers', () => {
             }
             `);
 
-        expect(findAccessedMembers(ast).accessed).to.eql({
+        expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
                 ['object-with-kebab-case']: {
                     internalProperty: {}
@@ -141,7 +141,7 @@ describe('findAccessedMembers', () => {
                 const a = aParam.internalObject[aParam.aKey].shouldBeIgnored;
             }
             `);
-        expect(findAccessedMembers(ast).accessed).to.eql({
+        expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
                 internalObject: {
                 },
@@ -157,7 +157,7 @@ describe('findAccessedMembers', () => {
                 };
             }`);
 
-        expect(findAccessedMembers(ast, ts.isArrowFunction)).to.eql({
+        expect(findUsedVariables(ast, ts.isArrowFunction)).to.eql({
             accessed: {
             },
             defined: {
@@ -169,7 +169,7 @@ describe('findAccessedMembers', () => {
         });
 
 
-        expect(findAccessedMembers(ast)).to.eql({
+        expect(findUsedVariables(ast)).to.eql({
             accessed: {
                 externalMethodsParam: {
                     aProp: {}
