@@ -1,16 +1,13 @@
 import ts from 'typescript';
-import { cArrow, cFunction, cBitMaskIf, cAccess, cCall, createBitWiseOr, cAssign } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/ast-generators';
-import { printAST } from '@wixc3/tsx-air-compiler-utils/src/dev-utils/print-ast';
-import { DomBinding } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/component-common';
-import { CompProps, CompDefinition, JsxRoot, JsxExpression, JsxComponent, isJsxExpression } from '@wixc3/tsx-air-compiler-utils/src/analyzers/types';
+import { CompDefinition, DomBinding, JsxExpression, JsxComponent, CompProps, JsxRoot, printAST, cFunction, cBitMaskIf, cAccess, cAssign, isJsxExpression, createBitWiseOr, cCall, cArrow } from '@wixc3/tsx-air-compiler-utils';
 
 if (typeof window !== 'undefined') {
     (window as any).printAST = printAST;
 }
 
-export const createProccessUpdateForComp = (comp: CompDefinition, domBindings: DomBinding[]) => {
+export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: DomBinding[]) => {
     return cFunction([comp.propsIdentifier!, 'state', 'changeMap'],
-        comp.usedProps.map(prop => cBitMaskIf(prop.name, {
+        comp.usedProps.map((prop: any) => cBitMaskIf(prop.name, {
             changedMaskName: 'changeMap',
             maskPath: [comp.name!, 'changeBitmask']
         }, [

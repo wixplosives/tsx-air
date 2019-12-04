@@ -1,11 +1,7 @@
 import ts from 'typescript';
-import { cObject, generateHydrate, cClass, createChangeBitMask, cArrow } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/ast-generators';
-import { transfromerApiProvider, getFileTransformationAPI } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/transformer-api-provider';
-import { generateToString } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/to-string-generator';
-import { printAST } from '@wixc3/tsx-air-compiler-utils/src/dev-utils/print-ast';
-import { generateDomBindings } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/component-common';
-import { createProccessUpdateForComp } from './generate-process-update';
+import { createProcessUpdateForComp } from './generate-process-update';
 import { NamedCompiler } from '../types';
+import { printAST, getFileTransformationAPI, cObject, generateDomBindings, cClass, generateToString, generateHydrate, cArrow, createChangeBitMask, transfromerApiProvider } from '@wixc3/tsx-air-compiler-utils';
 
 if (typeof window !== 'undefined') {
     (window as any).printAST = printAST;
@@ -21,7 +17,7 @@ export const tsxAirTransformer: ts.TransformerFactory<ts.Node> = ctx => {
             const compNode = node.declarationList.declarations[0].initializer!;
             const comp = comps.find(c => c.sourceAstNode === compNode);
             if (comp) {
-                const importedComponent = api.ensureImport('Component', '../../framework/types/component');
+                const importedComponent = api.ensureImport('Component', '@wixc3/tsx-air-framework');
                 const binding = generateDomBindings(comp);
                 const info = comp.jsxRoots[0];
                 const res = cClass(
@@ -49,7 +45,7 @@ export const tsxAirTransformer: ts.TransformerFactory<ts.Node> = ctx => {
                         isPublic: true,
                         isStatic: false,
                         name: '$$processUpdate',
-                        initializer: createProccessUpdateForComp(comp, binding)
+                        initializer: createProcessUpdateForComp(comp, binding)
                     }]);
                 return res;
             }

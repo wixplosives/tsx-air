@@ -1,7 +1,8 @@
 import { isArray } from 'util';
 import { TsxErrorType, TsxAirNodeError, TsxAirNode, AnalyzerResult } from './types';
 import ts from 'typescript';
-import { isString, flatten } from 'lodash';
+import isString from 'lodash/isString';
+import flatten from 'lodash/flatten';
 import { NodeMetaData } from '../astUtils/scanner';
 export function errorNode<T extends TsxAirNode>(sourceAstNode: ts.Node, message: string, type: TsxErrorType = 'code'): AnalyzerResult<T> {
     const tsxAir: TsxAirNodeError = {
