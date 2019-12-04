@@ -24,7 +24,6 @@ describe('TSXAir component analyzer: Jsx', () => {
         });
 
         it('should find dynamic expression and their dependencies', () => {
-
             const { comp } = getCompDef(`const Comp = TSXAir(props => { 
                 return <div>{props.name}</div>;})`);
 
@@ -32,6 +31,47 @@ describe('TSXAir component analyzer: Jsx', () => {
             expect(dynamicExpression.dependencies).to.have.length(1);
             expect(dynamicExpression.dependencies[0]).to.deep.equal(comp.usedProps[0]);
             expect(dynamicExpression.expression).to.equal('props.name');
+        });
+
+        describe('variables', () => {
+            it('should find and agregate used variables', () => {
+                const { comp } = getCompDef(`const Comp = TSXAir(props => { 
+                    return <div>{props.expression}</div>;})`);
+
+                const expression = comp.jsxRoots[0].expressions[0];
+                const expectedUsedVars = {
+                    accessed: {
+                        props: {
+                            expression: {}
+                        }
+                    },
+                    defined: {},
+                    modified: {}
+                };
+
+                expect(expression.variables, 'expression access not found').to.eql(expectedUsedVars);
+                expect(expression.agregatedVariables, 'expression access not found').to.eql(expectedUsedVars);
+                expect(comp.agregatedVariables, 'expression access not aggregated').to.eql(expectedUsedVars);
+                expect(comp.variables, 'comp has only one variable (defines props)').to.eql({ accessed: {}, defined: { props: {} }, modified: {} });
+            });
+
+            it('should aggregate defined and used variable', () => {
+                const { comp } = getCompDef(`const Comp = TSXAir(props => { 
+                    props.wasModified = true;
+                return <div>{props.expression0}{props.expression1}</div>;})`);
+               
+                expect(comp.variables, 'comp has only one variable (defines props)').to.eql({ accessed: {}, defined: { props: {} }, modified: {} });
+                expect(comp.agregatedVariables).to.equal({
+                    accessed: {
+                        props: {
+                            expression0: {},
+                            expression1: {}
+                        }
+                    },
+                    defined: { props: {} },
+                    modified: { wasModified: {} }
+                });
+            });
         });
 
         it('should find static expressions', () => {
