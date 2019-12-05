@@ -1,6 +1,4 @@
-import { bitMask } from '@wixc3/tsx-air-compiler-utils/src/transformers/helpers';
-import { CompDefinition, CompProps, JsxExpression, isJsxExpression } from '@wixc3/tsx-air-compiler-utils/src/analyzers/types';
-import { DomBinding } from '@wixc3/tsx-air-compiler-utils/src/transformers/generators/component-common';
+import { CompDefinition, DomBinding, bitMask, CompProps, isJsxExpression, JsxExpression } from '@tsx-air/compiler-utils';
 
 export const compClass = (dom: DomBinding[], def: CompDefinition) => {
     const mask = bitMask(def);

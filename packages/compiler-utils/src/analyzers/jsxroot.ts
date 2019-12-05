@@ -1,4 +1,5 @@
-import { flatMap, uniqBy } from 'lodash';
+import flatMap from 'lodash/flatMap';
+import uniqBy from 'lodash/uniqBy';
 import { Visitor } from './../astUtils/scanner';
 import { findJsxRoot, findJsxExpression, getComponentTag } from './../visitors/jsx';
 import { scan, ScannerApi } from '../astUtils/scanner';
