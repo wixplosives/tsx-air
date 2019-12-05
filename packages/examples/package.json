@@ -1,6 +1,6 @@
 {
-    "name": "@tsx-air/compilers",
-    "version": "1.0.4",
+    "name": "@tsx-air/examples",
+    "version": "0.1.1",
     "author": "Wix.com",
     "license": "MIT",
     "private": true,

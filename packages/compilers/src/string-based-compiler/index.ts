@@ -2,7 +2,7 @@ import { compFactory } from './component-factory';
 import ts from 'typescript';
 import { compClass } from './component-class';
 import { NamedCompiler } from '../types';
-import { TsxFile, analyze, generateDomBindings, cloneDeep, parseValue } from '@wixc3/tsx-air-compiler-utils';
+import { TsxFile, analyze, generateDomBindings, cloneDeep, parseValue } from '@tsx-air/compiler-utils';
 
 export const tsxAir = (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     return sourceFile => {

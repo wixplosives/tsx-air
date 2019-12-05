@@ -1,0 +1,21 @@
+{
+    "name": "@tsx-air/framework",
+    "version": "0.0.1",
+    "author": "Wix.com",
+    "license": "MIT",
+    "private": true,
+    "main": "./src/index.ts",
+    "scripts": {
+        "build": "webpack --progress --mode production --devtool false --profile",
+        "profile": "webpack --profile",
+        "clean": "rimraf ./dist",
+        "lint": "tslint -p src",
+        "prebuild": "yarn clean",
+        "start:server": "node server.js",
+        "start": "webpack-dev-server --progress --open",
+        "test": "mocha \"src/**/*.test.ts?(x)\""
+    },
+    "dependencies": {
+        "lodash": "^4.17.15"
+    }
+}
