@@ -25,11 +25,12 @@ describe('findUsedVariables', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = aParam.internalObj.property
                 const b = aParam.internalObj.anotherProperty
-            }
-            `);
+                const c = { val: aParam.field }
+            }`);
 
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
+                field:{},
                 internalObj: {
                     property: {},
                     anotherProperty: {}
