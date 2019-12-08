@@ -1,5 +1,5 @@
-import { render } from '../../framework';
-import { ParentComp } from './source';
+import { render } from '@tsx-air/framework';
+import { ParentComp } from './index.source';
 
 export const runExample = (element: HTMLElement) => {
     const countTo = 100;

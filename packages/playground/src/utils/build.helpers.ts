@@ -4,42 +4,33 @@ import { createMemoryFs } from '@file-services/memory';
 import { Compiler, toCommonJs } from '../compilers';
 import { Loader } from './examples.index';
 import flatMap from 'lodash/flatMap';
+import { dirname, basename, extname } from 'path';
 
 export type FileSnippets = Record<number, string>;
 export type Snippets = Record<string, FileSnippets>;
 
 export async function preload(fs: IFileSystem, cjs: ICommonJsModuleSystem, filename: string, module: Promise<unknown>) {
-    writeToFs(fs, filename, '// Preloaded');
+    writeToFs(fs, asJs(filename), '// Preloaded');
     cjs.loadedModules.set(filename, {
         filename,
         exports: await module
     });
 }
 
-export function splitFilePath(path: string) {
-    const mp = path.split('/').filter(i => i);
-    const folder = '/' + mp.slice(0, -1).join('/');
-    const file = mp[mp.length - 1];
-    return { folder, file };
-}
 export function writeToFs(fs: IFileSystem, path: string, code: string) {
-    const { file, folder } = splitFilePath(path);
     try {
         fs.writeFileSync(path, code);
     }
     catch {
-        fs.populateDirectorySync(folder, {
-            [file]: code
+        fs.populateDirectorySync(dirname(path), {
+            [basename(path)]: code
         });
     }
 }
 
-export function normalizePath(path: string): string {
-    return path.replace(/\.js$/, '') + '.js';
-}
-
 export async function readFileOr(fs: IFileSystem, path: string, orElse: () => string | Promise<string>) {
-    if (fs.fileExistsSync(path)) {
+    path = fs.resolve(path);
+    if (path && fs.fileExistsSync(path)) {
         return fs.readFileSync(path, 'utf8');
     }
     return await orElse();
@@ -59,6 +50,7 @@ export interface BuiltCode {
 }
 
 export interface CjsEnv {
+    compiledCjs: IFileSystem;
     compiledEsm: IFileSystem;
     cjs: ICommonJsModuleSystem;
     sources: IFileSystem;
@@ -66,16 +58,17 @@ export interface CjsEnv {
 }
 
 export async function createCjs(preloads: Record<string, Promise<unknown>>): Promise<CjsEnv> {
-    const commonJs = createMemoryFs();
-    const cjs = createCjsModuleSystem({ fs: commonJs });
+    const compiledEsm = createMemoryFs();
+    const compiledCjs = createMemoryFs();
     const sources = createMemoryFs();
+    const cjs = createCjsModuleSystem({ fs: compiledEsm });
 
     await Promise.all(
         Object.entries(preloads).map(([filename, module]) =>
-            preload(commonJs, cjs, filename, module)));
+            preload(compiledEsm, cjs, filename, module)));
 
     const pendingSources = new Map();
-    return { compiledEsm: commonJs, cjs, sources, pendingSources };
+    return { compiledEsm, compiledCjs, cjs, sources, pendingSources };
 }
 
 export function injectSnippets(code: string, injects: FileSnippets) {
@@ -83,14 +76,16 @@ export function injectSnippets(code: string, injects: FileSnippets) {
         (line, num) => injects[num + 1] ? [injects[num + 1], line] : line).join('\n');
 }
 
-export function evalModule(compiled: string, path: string, { cjs, compiledEsm }: CjsEnv, inject: FileSnippets) {
-    cjs.loadedModules.delete(path);
+export function evalModule(compiled: string, path: string, env: CjsEnv, inject: FileSnippets) {
+    const { cjs, compiledCjs, compiledEsm } = env;
+    const jsPath = asJs(path);
+    cjs.loadedModules.delete(jsPath);
     try {
         const modifiedCode = injectSnippets(compiled, inject);
         const asCommonJs = toCommonJs(modifiedCode);
-        writeToFs(compiledEsm, path, asCommonJs);
-        const exports = cjs.requireModule(path);
-        writeToFs(compiledEsm, path, compiled);
+        writeToFs(compiledCjs, jsPath, asCommonJs);
+        const exports = cjs.requireModule(jsPath);
+        writeToFs(compiledEsm, jsPath, compiled);
         return exports;
     } catch (e) {
         console.error(e);
@@ -98,8 +93,23 @@ export function evalModule(compiled: string, path: string, { cjs, compiledEsm }:
 }
 
 export function removeBuilt(env: CjsEnv, path: string) {
+    env.cjs.loadedModules.delete(asJs(path));
     env.cjs.loadedModules.delete(path);
     // tslint:disable-next-line: no-unused-expression
-    env.compiledEsm.fileExistsSync(path) && env.compiledEsm.removeSync(path);
+    env.compiledEsm.fileExistsSync(asJs(path)) && env.compiledEsm.removeSync(asJs(path));
+    // tslint:disable-next-line: no-unused-expression
+    env.compiledCjs.fileExistsSync(asJs(path)) && env.compiledCjs.removeSync(asJs(path));
 }
 
+export const withoutExt = (path: string) => { 
+    if (['tsx', 'ts', 'js', 'json'].includes(extname(path))) {
+        return path.replace(new RegExp(`${extname(path)}$`), ''); 
+    }
+    return path;
+};
+export const asJs = (path: string) => `${withoutExt(path)}.js`;
+export const asTs = (path: string) => `${withoutExt(path)}.ts`;
+export const asTsx = (path: string) => `${withoutExt(path)}.tsx`;
+export const isJs = (path: string) => extname(path) === 'js';
+export const isTs = (path: string) => extname(path) === 'ts';
+export const isTsx = (path: string) => extname(path) === 'tsx';

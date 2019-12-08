@@ -18,9 +18,7 @@
             "args": [
                 "**/*.test.ts?(x)",
                 "--timeout",
-                "999999",
-                "${file}"
-
+                "999999"
             ],
             "internalConsoleOptions": "openOnSessionStart"
         }

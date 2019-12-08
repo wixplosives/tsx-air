@@ -12,6 +12,7 @@ const compiler: Compiler = {
     },
     label: 'copier'
 };
+
 const mockFs = createMemoryFs({
     '/main.js': `let val=false;
             export const wasInjected=val;`,
@@ -20,7 +21,7 @@ const mockFs = createMemoryFs({
     };`
 
 });
-const load: Loader = async path => mockFs.readFileSync(path, 'utf8');
+const load: Loader = async path => mockFs.readFileSync(`${path}.js`, 'utf8');
 const newlineRegex = /[\n\r]+\s*/g;
 describe('addBreakpoint', () => {
     it('should recompile the file with the added breakpoint', async () => {

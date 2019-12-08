@@ -1,4 +1,4 @@
-import { Factory, runtime, render, Component, Dom } from '@tsx-air/framework';
+import { Factory, runtime, Component, Dom } from '@tsx-air/framework';
 
 interface ParentCompProps { name: string; }
 interface ParentCompCtx extends Dom {
@@ -63,35 +63,4 @@ ChildComp.factory = {
         text1: root.childNodes[2] as Text,
     }, props, {}),
     initialState: (_: any) => ({})
-};
-
-export const runExample = (element: HTMLElement) => {
-    const countTo = 100;
-    let count = 0;
-    let frames = 0;
-    const startTime = performance.now();
-    const app = render(element, ParentComp as any, { name: `Initial count: ${count}` });
-    const isViewUpdated = () => {
-        const countDisplayed = element.innerText.match(new RegExp(`${count}`, 'g'));
-        return (countDisplayed && countDisplayed.length === 2);
-    };
-    const summery = () => {
-        const duration = Math.round(performance.now() - startTime);
-        return `It took ${frames} frames (${duration}mSec) to update the view ${countTo} times.
-                That's ${(frames / countTo).toFixed(2)} frames/update at ${(frames / duration * 1000).toFixed(2)} FPS`;
-    };
-
-    const framesCounter = () => {
-        frames++;
-        if (isViewUpdated()) {
-            app.updateProps({ name: `Updated ${++count} times` });
-        }
-        if (count <= countTo) {
-            requestAnimationFrame(framesCounter);
-        } else {
-            app.updateProps({ name: summery() });
-        }
-    };
-
-    framesCounter();
 };

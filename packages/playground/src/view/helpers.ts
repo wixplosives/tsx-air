@@ -4,7 +4,7 @@ import ts from 'typescript';
 import { Model } from './index.model';
 import flatten from 'lodash/flatten';
 import debounce from 'lodash/debounce';
-import { getSource, getCompiled, addBreakpoint, removeBreakpoint } from '../utils/build';
+import { getSource, getCompiledEsm, addBreakpoint, removeBreakpoint } from '../utils/build';
 import { DOM } from './dom';
 import * as view from './breakpoints';
 import * as _monaco from 'monaco-editor';
@@ -75,7 +75,7 @@ let viewer!: _monaco.editor.IStandaloneCodeEditor;
 let viewerModel!: _monaco.editor.ITextModel;
 export async function showCompiledCode({ dom, currentExample, getSelectedSource }: Model) {
     const path = getSelectedSource();
-    const compiledCode = getCompiled(await currentExample.build, path);
+    const compiledCode = getCompiledEsm(await currentExample.build, path);
     if (!viewer) {
         viewerModel = await createFileModel(path, await compiledCode);
         viewer = (await monaco).editor.create(dom.compiled, {

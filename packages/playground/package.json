@@ -1,5 +1,6 @@
 {
     "name": "@tsx-air/playground",
+    "main": "src/index.ts",
     "version": "0.4.0",
     "author": "Wix.com",
     "license": "MIT",

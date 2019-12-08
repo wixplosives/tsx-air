@@ -1,9 +1,10 @@
 import { analyze, TsxFile, Import, asSourceFile } from '@tsx-air/compiler-utils';
 import { Compiler } from '../compilers';
 import { Loader } from './examples.index';
-import { normalizePath, writeToFs, splitFilePath, readFileOr, BuiltCode, createCjs, evalModule, CjsEnv, Snippets, removeBuilt } from './build.helpers';
+import { writeToFs, readFileOr, BuiltCode, createCjs, evalModule, CjsEnv, Snippets, removeBuilt, asTsx, asJs } from './build.helpers';
 import cloneDp from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
+import { dirname } from 'path';
 
 
 const preloads = {
@@ -14,8 +15,11 @@ const preloads = {
 export async function rebuild(built: BuiltCode, overridesSources: Record<string, string>, injects: Snippets = {}): Promise<BuiltCode> {
     const { _cjsEnv, _loader, _compiler, path } = built;
     for (const [src, source] of Object.entries(overridesSources)) {
-        removeBuilt(_cjsEnv, src);
-        _cjsEnv.sources.writeFileSync(src, source);
+        const oldVersion = _cjsEnv.sources.readFileSync(asTsx(src), { encoding: 'utf8' });
+        if (oldVersion !== source) {
+            removeBuilt(_cjsEnv, src);
+            _cjsEnv.sources.writeFileSync(asTsx(src), source);
+        }
     }
     for (const [src] of [...Object.entries(injects), ...Object.entries(built._injected)]) {
         if (!isEqual(built._injected[src], injects[src])) {
@@ -34,12 +38,14 @@ export async function reCompile(built: BuiltCode, newCompiler: Compiler): Promis
 
 export async function addBreakpoint(built: BuiltCode, path: string, line: number): Promise<BuiltCode> {
     const injects = cloneDp(built._injected);
+    path = asJs(path);
     injects[path] = { ...injects[path], [line]: 'debugger;' };
     return rebuild(built, {}, injects);
 }
 
 export async function removeBreakpoint(built: BuiltCode, path: string, line: number): Promise<BuiltCode> {
     const injects = cloneDp(built._injected);
+    path = asJs(path);
     if (injects[path]) {
         delete injects[path][line];
     }
@@ -49,14 +55,12 @@ export async function removeBreakpoint(built: BuiltCode, path: string, line: num
 export async function build(compiler: Compiler, load: Loader, path: string,
     inject: Record<string, Record<number, string>> = {}, modules?: CjsEnv): Promise<BuiltCode> {
     modules = modules || await createCjs(preloads);
-    const { cjs, compiledEsm: fs, sources, pendingSources } = modules;
-
-    path = normalizePath(path);
-    const source: string = await readFileOr(sources, path, loadSource);
+    const { cjs, compiledEsm, sources, pendingSources } = modules;
+    const source: string = await readFileOr(sources, asTsx(path), loadSource);
 
     try {
-        const compiled = await readFileOr(fs, path, () =>
-            compiler.compile(source, path));
+        const compiled = await readFileOr(compiledEsm, asJs(path), () =>
+            compiler.compile(source, asTsx(path)));
 
         const { imports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;
         const builtImports = imports.map(buildImport);
@@ -65,7 +69,7 @@ export async function build(compiler: Compiler, load: Loader, path: string,
             compiled,
             imports: builtImports,
             module: Promise.all(builtImports)
-                .then(() => evalModule(compiled, path, modules!, inject[path] || {}))
+                .then(() => evalModule(compiled, path, modules!, inject[asJs(path)] || {}))
             ,
             path,
             _loader: load,
@@ -91,13 +95,13 @@ export async function build(compiler: Compiler, load: Loader, path: string,
         pendingSources.set(path, loading);
         loading.then(() => pendingSources.delete(path));
         const loadedSource = await loading;
-        writeToFs(sources, path, loadedSource);
+        writeToFs(sources, asTsx(path), loadedSource);
         return loadedSource;
     }
 
     async function buildImport(i: Import): Promise<BuiltCode> {
-        const { folder } = splitFilePath(path);
-        const importPath = cjs.resolveFrom(folder, i.module) || fs.join(folder, i.module);
+        const folder = dirname(path);
+        const importPath = cjs.resolveFrom(folder, i.module) || compiledEsm.join(folder, i.module);
 
         if (!cjs.loadedModules.has(importPath)) {
             const builtModule = await build(compiler, load, importPath, inject, modules);
@@ -107,7 +111,7 @@ export async function build(compiler: Compiler, load: Loader, path: string,
         return {
             source: await readFileOr(sources, importPath, () => '// precompiled source'),
             path: importPath,
-            compiled: await readFileOr(fs, importPath, () => '// precompiled output'),
+            compiled: await readFileOr(compiledEsm, importPath, () => '// precompiled output'),
             imports: [],
             module: Promise.resolve(cjs.requireModule(importPath)),
             _loader: load,
@@ -120,10 +124,15 @@ export async function build(compiler: Compiler, load: Loader, path: string,
 
 export async function getSource(built: BuiltCode, path: string): Promise<string> {
     await built.module;
-    return built._cjsEnv.sources.readFileSync(normalizePath(path), 'utf8');
+    return built._cjsEnv.sources.readFileSync(asTsx(path), 'utf8');
 }
 
-export async function getCompiled(built: BuiltCode, path: string): Promise<string> {
+export async function getCompiledEsm(built: BuiltCode, path: string): Promise<string> {
     await built.module;
-    return built._cjsEnv.compiledEsm.readFileSync(normalizePath(path), 'utf8');
+    return built._cjsEnv.compiledEsm.readFileSync(asJs(path), 'utf8');
+}
+
+export async function getCompiledCjs(built: BuiltCode, path: string): Promise<string> {
+    await built.module;
+    return built._cjsEnv.compiledCjs.readFileSync(asJs(path), 'utf8');
 }

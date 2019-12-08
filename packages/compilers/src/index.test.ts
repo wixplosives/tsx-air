@@ -1,15 +1,13 @@
 import { expect } from 'chai';
 import { compilers } from '.';
 
-
 describe('compilers', () => {
     it('each compiler should have a unique name', () => {
-        expect(compilers.length).to.be.greaterThan(0);
-        const nameSet: Set<string> = new Set();
-        for (const compiler of compilers) {
-            nameSet.add(compiler.name);
-            expect(compiler.name.length).to.be.greaterThan(0);
+        const usedNames: Set<string> = new Set();
+        for (const { name} of compilers) {
+            expect(usedNames, `${name} is not unique`).not.to.include(name);
+            usedNames.add(name);
+            expect(name.trim()).not.to.eql('');
         }
-        expect(nameSet.size, 'compiler names are not unique').to.equal(compilers.length);
     });
 });
