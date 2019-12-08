@@ -1,16 +1,17 @@
 import { IFileSystem } from '@file-services/types';
 import { ICommonJsModuleSystem, createCjsModuleSystem } from '@file-services/commonjs';
 import { createMemoryFs } from '@file-services/memory';
-import { Compiler, toCommonJs } from '../compilers';
+import { Compiler } from '../compilers';
 import { Loader } from './examples.index';
 import flatMap from 'lodash/flatMap';
 import { dirname, basename, extname } from 'path';
+import { toCommonJs } from '@tsx-air/compiler-utils';
 
 export type FileSnippets = Record<number, string>;
 export type Snippets = Record<string, FileSnippets>;
 
 export async function preload(fs: IFileSystem, cjs: ICommonJsModuleSystem, filename: string, module: Promise<unknown>) {
-    writeToFs(fs, asJs(filename), '// Preloaded');
+    writeToFs(fs, filename, '// Preloaded');
     cjs.loadedModules.set(filename, {
         filename,
         exports: await module
@@ -61,11 +62,11 @@ export async function createCjs(preloads: Record<string, Promise<unknown>>): Pro
     const compiledEsm = createMemoryFs();
     const compiledCjs = createMemoryFs();
     const sources = createMemoryFs();
-    const cjs = createCjsModuleSystem({ fs: compiledEsm });
+    const cjs = createCjsModuleSystem({ fs: compiledCjs });
 
     await Promise.all(
         Object.entries(preloads).map(([filename, module]) =>
-            preload(compiledEsm, cjs, filename, module)));
+            preload(compiledCjs, cjs, filename, module)));
 
     const pendingSources = new Map();
     return { compiledEsm, compiledCjs, cjs, sources, pendingSources };
@@ -101,9 +102,11 @@ export function removeBuilt(env: CjsEnv, path: string) {
     env.compiledCjs.fileExistsSync(asJs(path)) && env.compiledCjs.removeSync(asJs(path));
 }
 
-export const withoutExt = (path: string) => { 
-    if (['tsx', 'ts', 'js', 'json'].includes(extname(path))) {
-        return path.replace(new RegExp(`${extname(path)}$`), ''); 
+const validExt = new Set(['.tsx', '.ts', '.js', '.json']);
+export const withoutExt = (path: string) => {
+    const ext = extname(path);
+    if (validExt.has(ext)) {
+        return path.replace(new RegExp(`${extname(path)}$`), '');
     }
     return path;
 };

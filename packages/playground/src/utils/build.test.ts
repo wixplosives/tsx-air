@@ -4,7 +4,6 @@ import { Loader } from './examples.index';
 import { Compiler } from './../compilers';
 import { build, rebuild, reCompile } from './build';
 import { expect } from 'chai';
-import { asJs } from './build.helpers';
 // tslint:disable: no-unused-expression
 
 describe('build', () => {
@@ -50,17 +49,17 @@ describe('build', () => {
 
     const load: Loader = async path => {
         filesLoaded.push(path);
-        return mockFs.readFileSync(asJs(path), 'utf8');
+        return mockFs.readFileSync(path + '.js', 'utf8');
     };
 
     it('should evaluate a module with no imports', async () => {
         const res = await build(compiler, load, '/data');
         const mod = await res.module;
         expect(res.error).to.equal(undefined);
+        expect(filesLoaded).to.deep.equal(['/data']);
         expect(mod).to.deep.equal({
             b: 'b'
         });
-        expect(filesLoaded).to.deep.equal(['/data']);
     });
 
     it('should evaluate a module with imports', async () => {
