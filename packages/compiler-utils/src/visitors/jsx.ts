@@ -1,11 +1,13 @@
 import { Visitor } from '../astUtils/scanner';
-import { isJsxSelfClosingElement, isJsxElement, isJsxFragment, isJsxExpression, JsxOpeningElement, isStringLiteral, JsxAttribute, Node, isJsxText } from 'typescript';
+import { isJsxSelfClosingElement, isJsxElement, isJsxExpression, JsxOpeningElement, isStringLiteral, JsxAttribute, Node, isJsxText } from 'typescript';
+import { isTSJSXRoot } from '../analyzers/types';
+
+
+
 
 export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
     if (
-        isJsxElement(node) ||
-        isJsxSelfClosingElement(node) ||
-        isJsxFragment(node)
+        isTSJSXRoot(node)
     ) {
         ignoreChildren();
         return {
@@ -18,9 +20,7 @@ export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
 
 export const findJsxNode: Visitor = node => {
     if (
-        isJsxElement(node) ||
-        isJsxSelfClosingElement(node) ||
-        isJsxFragment(node)
+        isTSJSXRoot(node)
     ) {
         return '/* Jsx */';
     }

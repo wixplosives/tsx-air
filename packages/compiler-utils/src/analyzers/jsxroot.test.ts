@@ -51,7 +51,7 @@ describe('TSXAir component analyzer: Jsx', () => {
 
                 expect(expression.variables, 'expression access not found').to.eql(expectedUsedVars);
                 expect(expression.agregatedVariables, 'expression access not found').to.eql(expectedUsedVars);
-                expect(comp.agregatedVariables, 'expression access not aggregated').to.eql(expectedUsedVars);
+                expect(comp.agregatedVariables, 'expression access is aggregated').to.eql({ ...expectedUsedVars, defined: { props: {} } });
                 expect(comp.variables, 'comp has only one variable (defines props)').to.eql({ accessed: {}, defined: { props: {} }, modified: {} });
             });
 
@@ -59,18 +59,60 @@ describe('TSXAir component analyzer: Jsx', () => {
                 const { comp } = getCompDef(`const Comp = TSXAir(props => { 
                     props.wasModified = true;
                 return <div>{props.expression0}{props.expression1}</div>;})`);
-               
-                expect(comp.variables, 'comp has only one variable (defines props)').to.eql({ accessed: {}, defined: { props: {} }, modified: {} });
-                expect(comp.agregatedVariables).to.equal({
+
+                expect(comp.variables, 'comp has only one variable (defines props)').to.eql({
+                    accessed: {
+                        props: { wasModified: {} }
+                    },
+                    defined: { props: {} },
+                    modified: {
+                        props: { wasModified: {} }
+                    }
+                });
+                expect(comp.agregatedVariables).to.eql({
                     accessed: {
                         props: {
                             expression0: {},
-                            expression1: {}
+                            expression1: {},
+                            wasModified: {}
                         }
                     },
                     defined: { props: {} },
-                    modified: { wasModified: {} }
+                    modified: {
+                        props: { wasModified: {} }
+                    }
                 });
+            });
+
+            it('should find variables used inside component nodes', () => {
+                const { comp } = getCompDef(`const Comp = TSXAir(props => { 
+                return <div>
+                    <AComp title={props.title}>{props.children}</AComp>
+                </div>;})`);
+
+                const expectedCompVariables = {
+                    accessed: {
+                        props: {
+                            title: {},
+                            children: {}
+                        }
+                    },
+                    defined: {},
+                    modified: {}
+                };
+                const expectedChildrenVariables = {
+                    accessed: {
+                        props: {
+                            children: {}
+                        }
+                    },
+                    defined: {},
+                    modified: {}
+                };
+                expect(comp.jsxRoots[0].components[0].agregatedVariables, 'Component jsx node aggregated variables').to.eql(expectedCompVariables);
+                expect(comp.jsxRoots[0].components[0].variables, 'Component jsx node variables').to.eql(expectedCompVariables);
+                expect(comp.jsxRoots[0].components[0].children!.variables, 'Component children variables').to.eql(expectedChildrenVariables);
+                expect(comp.jsxRoots[0].components[0].children!.agregatedVariables, 'Component children aggregated variables').to.eql(expectedChildrenVariables);
             });
         });
 

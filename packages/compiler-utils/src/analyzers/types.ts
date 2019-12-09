@@ -65,6 +65,7 @@ export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     propsIdentifier?: string;
     usedProps: CompProps[];
     jsxRoots: JsxRoot[];
+    functions: FuncDefinition[];
 }
 
 export interface CompProps extends TsxAirNode<ts.Identifier | ts.PropertyAccessExpression> {
@@ -166,3 +167,12 @@ export interface UsedVariables {
     modified: RecursiveMap;
     defined: RecursiveMap;
 }
+
+
+export function isTSJSXRoot(node: ts.Node): node is ts.JsxElement | ts.JsxSelfClosingElement | ts.JsxFragment {
+    return ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || isJsxFragment(node);
+}
+export function isTSFunction(node: ts.Node): node is ts.ArrowFunction | ts.FunctionExpression {
+    return ts.isArrowFunction(node) || ts.isFunctionExpression(node);
+}
+
