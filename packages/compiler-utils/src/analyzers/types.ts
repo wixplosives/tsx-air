@@ -9,7 +9,7 @@ export type Analyzer<T extends TsxAirNode> = (node: ts.Node) => AnalyzerResult<T
 
 export type TsxAirNodeType = 'CompDefinition' | 'JsxFragment' |
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
-    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier';
+    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' | 'funcDefinition';
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
 
@@ -28,7 +28,13 @@ export interface TsxAirNode<T extends ts.Node = ts.Node> {
     errors?: TsxAirError[];
 }
 
-export interface TsxFile extends TsxAirNode<ts.SourceFile> {
+export interface NodeWithVariables<T extends ts.Node = ts.Node> extends TsxAirNode<T> {
+    variables: UsedVariables;
+    /** members including internal closures */
+    agregatedVariables: UsedVariables;
+}
+
+export interface TsxFile extends NodeWithVariables<ts.SourceFile> {
     kind: 'file';
     compDefinitions: CompDefinition[];
     imports: Import[];
@@ -45,13 +51,21 @@ export interface ImportSpecifierInfo extends TsxAirNode<ts.ImportSpecifier> {
     localName: string;
     importedName: string;
 }
+export interface FuncDefinition extends NodeWithVariables<ts.FunctionExpression | ts.ArrowFunction> {
+    kind: 'funcDefinition';
+    name?: string;
+    arguments?: string[];
+    jsxRoots: JsxRoot[];
+    definedFunctions: FuncDefinition[];
+}
 
-export interface CompDefinition extends TsxAirNode<ts.CallExpression> {
+export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     kind: 'CompDefinition';
     name?: string;
     propsIdentifier?: string;
     usedProps: CompProps[];
     jsxRoots: JsxRoot[];
+    functions: FuncDefinition[];
 }
 
 export interface CompProps extends TsxAirNode<ts.Identifier | ts.PropertyAccessExpression> {
@@ -59,26 +73,26 @@ export interface CompProps extends TsxAirNode<ts.Identifier | ts.PropertyAccessE
     name: string;
 }
 
-export interface JsxRoot extends TsxAirNode<JsxElm> {
+export interface JsxRoot extends NodeWithVariables<JsxElm> {
     kind: 'JsxRoot';
     expressions: JsxExpression[];
     components: JsxComponent[];
 }
 
-export interface JsxFragment extends TsxAirNode<ts.JsxFragment> {
+export interface JsxFragment extends NodeWithVariables<ts.JsxFragment> {
     kind: 'JsxFragment';
     expressions: JsxExpression[];
     components: JsxComponent[];
     items: JsxRoot[];
 }
 
-export interface JsxExpression extends TsxAirNode<ts.JsxExpression> {
+export interface JsxExpression extends NodeWithVariables<ts.JsxExpression> {
     kind: 'JsxExpression';
     dependencies: CompProps[];
     expression: string;
 }
 
-export interface JsxComponent extends TsxAirNode<JsxElm> {
+export interface JsxComponent extends NodeWithVariables<JsxElm> {
     kind: 'JsxComponent';
     name: string;
     props: JsxAttribute[];
@@ -140,3 +154,25 @@ export function isImport(node: any): node is Import {
 export function isImportSpecifier(node: any): node is ImportSpecifierInfo {
     return node && node.kind === 'importSpecifier';
 }
+
+
+
+export interface RecursiveMap {
+    [key: string]: RecursiveMap;
+}
+
+
+export interface UsedVariables {
+    accessed: RecursiveMap;
+    modified: RecursiveMap;
+    defined: RecursiveMap;
+}
+
+
+export function isTSJSXRoot(node: ts.Node): node is ts.JsxElement | ts.JsxSelfClosingElement | ts.JsxFragment {
+    return ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || isJsxFragment(node);
+}
+export function isTSFunction(node: ts.Node): node is ts.ArrowFunction | ts.FunctionExpression {
+    return ts.isArrowFunction(node) || ts.isFunctionExpression(node);
+}
+
