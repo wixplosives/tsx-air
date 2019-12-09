@@ -13,13 +13,16 @@
         "test": "mocha \"**/*.test.ts?(x)\""
     },
     "dependencies": {
-        "@tsx-air/compiler-utils": "^1.0.4",
-        "@file-services/memory": "^2.0.1",
-        "@file-services/node": "^2.0.2",
-        "@file-services/typescript": "^2.0.1",
-        "@types/react-syntax-highlighter": "^11.0.1",
         "lodash": "^4.17.15",
         "sanitize.css": "^11.0.0",
         "tslib": "^1.10.0"
+    },
+    "devDependencies": {
+        "@file-services/overlay": "^2.1.0",
+        "@file-services/webpack": "^2.1.0",
+        "@file-services/memory": "^2.1.0",
+        "@file-services/node": "^2.1.0",
+        "@file-services/typescript": "^2.1.0",
+        "@tsx-air/compiler-utils": "^1.0.4"
     }
 }

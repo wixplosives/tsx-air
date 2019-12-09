@@ -109,7 +109,7 @@
     "@file-services/types" "^2.0.1"
     "@file-services/utils" "^2.0.1"
 
-"@file-services/memory@^2.1.1":
+"@file-services/memory@^2.1.0", "@file-services/memory@^2.1.1":
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/@file-services/memory/-/memory-2.1.1.tgz#a8e46abb260ff44eb722269db55716584051a6c8"
   integrity sha512-nvqb7ZfZkfQeM2W8rGx5N3oykEn/f28y4fO8KpWbCFva+SA6CZQdLkbfDybdtU3gtjZ13dec6j9S/RvKvGeAFw==
@@ -125,6 +125,22 @@
   dependencies:
     "@file-services/types" "^2.0.1"
     "@file-services/utils" "^2.0.1"
+
+"@file-services/node@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@file-services/node/-/node-2.1.0.tgz#a67cf9507bc569bc94da9dd125f76f99cb832ea8"
+  integrity sha512-nHX5ozu70F02irFF6+RaF6y4rS/HOArUya1jkgA6AnsNiEnv83ejZoIxJwr4PXaveyZIQmfVHtA2iWX2sn0X7A==
+  dependencies:
+    "@file-services/types" "^2.1.0"
+    "@file-services/utils" "^2.1.0"
+
+"@file-services/overlay@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@file-services/overlay/-/overlay-2.1.0.tgz#c91a270463709d3abfe884ed4d26a86bc0214ee1"
+  integrity sha512-IK9jD1CVH+NCV4U+d1vS5fwUORDHpO7xhOkQwMUHcUMdeoBMxo3K1MDICwAH4L4V4Ln+eJY3V+dzAVRQwAe4vA==
+  dependencies:
+    "@file-services/types" "^2.1.0"
+    "@file-services/utils" "^2.1.0"
 
 "@file-services/posix-path@^1.0.3":
   version "1.0.3"
@@ -158,6 +174,13 @@
   dependencies:
     "@file-services/types" "^2.0.1"
 
+"@file-services/typescript@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@file-services/typescript/-/typescript-2.1.0.tgz#0386b3ab61e4f793f9f2679cc2153487e0f92338"
+  integrity sha512-bjKPtss0X7jBWU4OUAOHXiBwzA4zeYUvDOm+yaqhYUVyszhuEYi1vjcas6Q0Fqlr7qZEbU1dTd06bOZMMg47EA==
+  dependencies:
+    "@file-services/types" "^2.1.0"
+
 "@file-services/utils@^2.0.1":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@file-services/utils/-/utils-2.0.1.tgz#66d3f3acbd552c280ba77c1609b9775bd5ae7155"
@@ -169,6 +192,13 @@
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@file-services/utils/-/utils-2.1.0.tgz#d17a18dc97d663b3b0119ded6f1d078eb166c6f8"
   integrity sha512-i4avLTrOdrf//EtNECX1n/Im2+P+Rksh9KqrUY8nNzOTzmwCCUqaE67pMyzJpUQU2O6k4doDC8+2YzScmjVJIQ==
+  dependencies:
+    "@file-services/types" "^2.1.0"
+
+"@file-services/webpack@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@file-services/webpack/-/webpack-2.1.0.tgz#699774cb881691ee62b6f12f327fbd2d194a169b"
+  integrity sha512-fY3uoc2qRcTdLwOgYewxuxBQFw0t0GpWSKeMastukcsHxcnWhT7XyYSGVTXG+4/6um4NeIjjeRJhkCRyUnvIWw==
   dependencies:
     "@file-services/types" "^2.1.0"
 
