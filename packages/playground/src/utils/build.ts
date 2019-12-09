@@ -1,7 +1,7 @@
 import { analyze, TsxFile, Import, asSourceFile } from '@tsx-air/compiler-utils';
 import { Compiler } from '../compilers';
 import { Loader } from './examples.index';
-import { writeToFs, readFileOr, BuiltCode, createCjs, evalModule, CjsEnv, Snippets, removeBuilt, asTsx, asJs } from './build.helpers';
+import { writeToFs, readFileOr, BuiltCode, createCjs, evalModule, CjsEnv, Snippets, removeBuilt, asTsx, asJs, withoutExt } from './build.helpers';
 import cloneDp from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 import { dirname } from 'path';
@@ -53,11 +53,11 @@ export async function removeBreakpoint(built: BuiltCode, path: string, line: num
 }
 
 export async function build(compiler: Compiler, load: Loader, path: string,
-    inject: Record<string, Record<number, string>> = {}, modules?: CjsEnv): Promise<BuiltCode> {
+    inject: Record<string, Record<number, string>> = {}, modules?: CjsEnv): Promise<BuiltCode> {        
     modules = modules || await createCjs(preloads);
+    path = withoutExt(path);
     const { cjs, compiledEsm, sources, pendingSources } = modules;
     const source: string = await readFileOr(sources, asTsx(path), loadSource);
-
     try {
         const compiled = await readFileOr(compiledEsm, asJs(path), () =>
             compiler.compile(source, asTsx(path)));
@@ -91,7 +91,7 @@ export async function build(compiler: Compiler, load: Loader, path: string,
     }
 
     async function loadSource(): Promise<string> {
-        const loading = pendingSources.get(path) || load(path);
+        const loading = pendingSources.get(path) || load(withoutExt(path));
         pendingSources.set(path, loading);
         loading.then(() => pendingSources.delete(path));
         const loadedSource = await loading;
