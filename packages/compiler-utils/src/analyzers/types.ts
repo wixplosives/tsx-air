@@ -9,7 +9,7 @@ export type Analyzer<T extends TsxAirNode> = (node: ts.Node) => AnalyzerResult<T
 
 export type TsxAirNodeType = 'CompDefinition' | 'JsxFragment' |
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
-    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' | 'funcDefinition';
+    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' | 'funcDefinition' | 'storeDefinition';
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
 
@@ -59,6 +59,13 @@ export interface FuncDefinition extends NodeWithVariables<ts.FunctionExpression 
     definedFunctions: FuncDefinition[];
 }
 
+
+
+export interface StoreDefinition extends NodeWithVariables<ts.CallExpression | ts.ArrowFunction> {
+    kind: 'storeDefinition';
+    name: string;
+    keys: string[];
+}
 export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     kind: 'CompDefinition';
     name?: string;
@@ -66,6 +73,7 @@ export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     usedProps: CompProps[];
     jsxRoots: JsxRoot[];
     functions: FuncDefinition[];
+    stores: StoreDefinition[];
 }
 
 export interface CompProps extends TsxAirNode<ts.Identifier | ts.PropertyAccessExpression> {

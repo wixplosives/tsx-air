@@ -40,22 +40,36 @@ describe('findUsedVariables', () => {
     });
     it('should find modifed members', () => {
         const ast = parseValue(`(aParam)=>{
-                aParam.internalObject.modifiedProperty = aParam.internalObject.accessedProperty;
+                aParam.replacedProperty = aParam.internalObject.accessedProperty;
+                aParam.addedToProperty += 'a';
+                aParam.removedFromProperty -= 3;
+                aParam.devidedProperty /= 3;
+                aParam.multipliedProperty *= 3;
+                aParam.increasedProperty++;
+                ++aParam.increasedPropertyPre;
+                aParam.decreasedProperty--;
+                --aParam.decreasedPropertyPre;
             }`);
-
-        expect(findUsedVariables(ast).modified).to.eql({
+        const expectedModified = {
             aParam: {
-                internalObject: {
-                    modifiedProperty: {}
-                }
+                replacedProperty: {},
+                addedToProperty: {},
+                removedFromProperty: {},
+                devidedProperty: {},
+                multipliedProperty: {},
+                increasedProperty: {},
+                increasedPropertyPre: {},
+                decreasedProperty: {},
+                decreasedPropertyPre: {}
             }
-        });
+        };
+        expect(findUsedVariables(ast).modified).to.eql(expectedModified);
         expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql({
             aParam: {
                 internalObject: {
                     accessedProperty: {},
-                    modifiedProperty: {}
-                }
+                },
+                ...expectedModified.aParam
             }
         });
     });

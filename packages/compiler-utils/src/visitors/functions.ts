@@ -14,3 +14,4 @@ export const findFunction: Visitor = (node, { ignoreChildren }) => {
     }
     return undefined;
 };
+

@@ -7,6 +7,7 @@ import { jsxRoots } from './jsxroot';
 import { errorNode, aggregateAstNodeMapping, addToNodesMap } from './types.helpers';
 import { findUsedVariables } from './find-used-variables';
 import { functions } from './func-definition';
+import { stores } from './store-definition';
 
 
 export const compDefinition: Analyzer<CompDefinition> = astNode => {
@@ -35,7 +36,8 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
         variables,
         sourceAstNode: astNode,
         jsxRoots: jsxRoots(astNode, propsIdentifier, usedProps),
-        functions: functions(compFunc.body)
+        functions: functions(compFunc.body),
+        stores: stores(compFunc.body)
     };
     const astToTsxAir = aggregateAstNodeMapping(tsxAir.jsxRoots);
     addToNodesMap(astToTsxAir, tsxAir);
