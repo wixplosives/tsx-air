@@ -5,8 +5,8 @@ import { ExampleSuite } from '../../test.utils';
 const suite: ExampleSuite = {
     suite(getPage: (testTsx: string) => Promise<Page>) {
         return describe('01.stateless-parent-child', () => {
-            it.only('should create a parent component with the correct name', async () => {
-                const page = await getPage('./index.suite.boilerplate.js');
+            it('should create a parent component with the correct name', async () => {
+                const page = await getPage('./index.suite.boilerplate.ts');
                 const foundParent = await page.$$('.parent');
                 expect(foundParent, 'there can be only one (parent)').to.have.length(1);
                 expect(await page.$eval('.parent', (i: Element) => i.textContent)).to.equal('Parent: test');

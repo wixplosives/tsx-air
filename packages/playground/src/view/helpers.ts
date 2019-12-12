@@ -1,10 +1,10 @@
 import { Example } from './../utils/examples.index';
-import { BuiltCode } from './../utils/build.helpers';
+import { BuiltCode } from '../../../builder/src/build.helpers';
 import ts from 'typescript';
 import { Model } from './index.model';
 import flatten from 'lodash/flatten';
 import debounce from 'lodash/debounce';
-import { getSource, getCompiledEsm, addBreakpoint, removeBreakpoint } from '../utils/build';
+import { getSource, getCompiledEsm, addBreakpoint, removeBreakpoint } from '../../../builder/src/build';
 import { DOM } from './dom';
 import * as view from './breakpoints';
 import * as _monaco from 'monaco-editor';

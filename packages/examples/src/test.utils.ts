@@ -1,7 +1,6 @@
-import { createCjsModuleSystem } from '@file-services/commonjs';
+import { BuildTools } from '../../builder/src/types';
 import { createMemoryFs } from '@file-services/memory';
-import { Loader } from './../../playground/src/utils/examples.index';
-import { Compiler, build } from '@tsx-air/playground';
+import { Compiler, build, Loader, asJs } from '@tsx-air/playground';
 import { promisify } from 'util';
 import { Page, Browser } from 'puppeteer';
 import { join } from 'path';
@@ -10,7 +9,7 @@ import { createOverlayFs } from '@file-services/overlay';
 // @ts-ignore
 import webpack from 'webpack';
 import nodeFs from '@file-services/node';
-
+import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 const readFile = promisify(nodeFs.readFile) as unknown as (path: string, options: any) => Promise<string>;
 
 export interface ExampleSuite {
@@ -20,7 +19,7 @@ export interface ExampleSuite {
 
 const isSource = /\.source\.tsx?$/;
 
-function getBuildingTools(examplePath: string) {
+function getBuildingTools(examplePath: string): BuildTools {
     const compiler: Compiler = {
         label: 'manually compiled',
         compile: async (src, path) => {
@@ -49,21 +48,19 @@ type GetPage = (testHtml: string) => Promise<Page>;
 
 export function getExampleManuallyCompiledPage(
     examplePath: string,
-    browser: Promise<Browser>,
-    pages: Set<Promise<Page>>
+    browser: Browser,
+    pages: Set<Page>
 ): GetPage {
     const { loader, compiler } = getBuildingTools(examplePath);
     return async function getPage(testBoilerplatePath: string) {
         const boilerplate = await build(compiler, loader, testBoilerplatePath);
         await boilerplate.module;
-        const cjs = createCjsModuleSystem({ fs: nodeFs });
-        const TsconfigPathsPlugin = cjs.requireModule('tsconfig-paths-webpack-plugin') as any;
-        const configFile = cjs.resolveFrom(__dirname, './tsconfig.json');
         const wp = webpack({
-            entry: join(examplePath, 'index.suite.boilerplate.js'),
+            entry: join(examplePath, asJs(testBoilerplatePath)),
             mode: 'production',
             output: {
-                filename: 'bundle.js'
+                filename: 'bundle.js',
+                path: '/'
             },
             module: {
                 rules: [
@@ -72,7 +69,7 @@ export function getExampleManuallyCompiledPage(
                         exclude: /node_modules/,
                         loader: '@ts-tools/webpack-loader',
                         options: {
-                            configFilePath: require.resolve('./src/tsconfig.json')
+                            configFilePath: require.resolve('./tsconfig.json')
                         }
                     },
                     {
@@ -84,36 +81,41 @@ export function getExampleManuallyCompiledPage(
             },
             resolve: {
                 extensions: ['.tsx', '.ts', '.js', '.json'],
-                plugins: [new TsconfigPathsPlugin({ configFile })]
+                plugins: [new TsconfigPathsPlugin({ configFile: require.resolve('../../../tsconfig.base.json') })]
             },
         });
         wp.inputFileSystem = boilerplate._cjsEnv.compiledEsm;
-        wp.inputFileSystem = createWebpackFs(createOverlayFs(nodeFs, boilerplate._cjsEnv.compiledEsm));
-        // wp.inputFileSystem.resolve = (...args:any[]) => {
-        //     console.log(args);
-        //     rf(...args);
-        // }
-        wp.outputFileSystem = createMemoryFs();
-        wp.run((_: any, stats: any) => {
-            const info = stats.toJson();
-
-            if (stats.hasErrors()) {
-                console.error(info.errors);
-            } else {
-                console.log(wp.outputFileSystem.readFileSync('/bundle.js', 'utf8'));
-            }
-
-            if (stats.hasWarnings()) {
-                console.warn(info.warnings);
-            }
-
-        });
+        wp.inputFileSystem = createWebpackFs(createOverlayFs(boilerplate._cjsEnv.compiledEsm, nodeFs));
+        wp.inputFileSystem.readJson = (src: string) => JSON.parse(nodeFs.readFileSync(src, 'utf8'));
+        wp.outputFileSystem = createWebpackFs(createMemoryFs());
+        wp.run = promisify(wp.run);
+        console.log((await wp.run()).toJson());
+        // wp.run((err: any, stats: any) => {
+        //     if (err) {
+        //         console.error(err);
+        //     }
+        // console.log('done:', wp.outputFileSystem.readFileSync('/bundle.js', 'utf8'));
+        //     const info = stats.toJson();
+        //     if (stats.hasErrors()) {
+        //         console.error(info.errors);
+        //     } else {
+        //         console.log(wp.outputFileSystem.readFileSync('/bundle.js', 'utf8'));
+        //     }
+        //     if (stats.hasWarnings()) {
+        //         console.warn(info.warnings);
+        //     }
+        // });
         // const boilerplateBundle = await bundle();
-        const page = (await browser).newPage();
+        console.log('done:', wp.outputFileSystem.readFileSync('/bundle.js', 'utf8'));
+
+        const page = await browser.newPage();
         pages.add(page);
-        await (await page).addScriptTag({
-            content: 'boilerplateBundle'
+        await page.addScriptTag({
+            content: wp.outputFileSystem.readFileSync('/bundle.js', 'utf8')
         });
         return page;
     };
 }
+
+// export async function compileAndBundle(entryPath: string, { compiler, loader }: BuildTools): Promise<string> {
+// }

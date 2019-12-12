@@ -1,6 +1,6 @@
-import { build } from './build';
-import { Compiler } from '../compilers';
-import { BuiltCode } from './build.helpers';
+import { build } from '../../../builder/src/build';
+import { BuiltCode } from '../../../builder/src/build.helpers';
+import { Compiler } from '../../../builder/src/types';
 
 export async function getExamples(): Promise<string[]> {
     return (await (await fetch('/examples')).json());
@@ -12,8 +12,6 @@ export interface Example {
     readme: Promise<string>;
     build: Promise<BuiltCode>;
 }
-
-export type Loader = (path: string) => Promise<string>;
 
 const loadExampleFile = async (example: string, file: string) =>
     await (await fetch(`/examples/${example}/${file}`)).text();
@@ -38,7 +36,8 @@ export const buildExample = async (example: string, compiler: Compiler) => {
                 return convertor.makeHtml(i);
             })
             .then(i => `<div>${i}</div>`),
-        build: build(compiler, async path => safeExampleFileLoader(example, path), `/src/examples/${example}/source`)
+        build: build(compiler, async (path:string) => 
+            safeExampleFileLoader(example, path), `/src/examples/${example}/source`)
     };
     return result;
 };

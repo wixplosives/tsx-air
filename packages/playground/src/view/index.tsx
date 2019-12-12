@@ -6,7 +6,7 @@ import './helpers';
 import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, showSourceCode, resetView } from './helpers';
 import { Model } from './index.model';
 import { setup } from './setup';
-import { reCompile, rebuild } from '../utils/build';
+import { reCompile, rebuild } from '../../../builder/src/build';
 setup();
 
 (async () => {

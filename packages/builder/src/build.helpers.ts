@@ -1,11 +1,10 @@
 import { IFileSystem } from '@file-services/types';
 import { ICommonJsModuleSystem, createCjsModuleSystem } from '@file-services/commonjs';
 import { createMemoryFs } from '@file-services/memory';
-import { Compiler } from '../compilers';
-import { Loader } from './examples.index';
 import flatMap from 'lodash/flatMap';
 import { dirname, basename, extname } from 'path';
 import { toCommonJs } from '@tsx-air/compiler-utils';
+import { BuildTools } from './types';
 
 export type FileSnippets = Record<number, string>;
 export type Snippets = Record<string, FileSnippets>;
@@ -44,8 +43,7 @@ export interface BuiltCode {
     imports: Array<Promise<BuiltCode>>;
     module: Promise<any>;
     error?: any;
-    _loader: Loader;
-    _compiler: Compiler;
+    _usedBuildToold: BuildTools;
     _cjsEnv: CjsEnv;
     _injected: Snippets;
 }
