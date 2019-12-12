@@ -1,4 +1,4 @@
-import { compilers, Compiler } from '../compilers';
+import { compilers } from '../compilers';
 import './index.css';
 import { getExamples, buildExample } from '../utils/examples.index';
 import dom from './dom';
@@ -6,7 +6,7 @@ import './helpers';
 import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, showSourceCode, resetView } from './helpers';
 import { Model } from './index.model';
 import { setup } from './setup';
-import { reCompile, rebuild } from '../../../builder/src/build';
+import { Compiler, rebuild, reCompile } from '@tsx-air/builder';
 setup();
 
 (async () => {

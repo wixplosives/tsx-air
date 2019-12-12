@@ -1,11 +1,11 @@
 import { build, rebuild, reCompile } from './build';
 import { expect } from 'chai';
 import { Compiler } from './types';
-import { trivialCompiler as compiler, DebugableLoader, jsLoaderFrom, trimCode } from './test.utils';
+import { trivialCompiler as compiler, DebuggableLoader, jsLoaderFrom, trimCode } from './test.utils';
 // tslint:disable: no-unused-expression
 
 describe('build', () => {
-    let loader: DebugableLoader;
+    let loader: DebuggableLoader;
     beforeEach(() => {
         loader = jsLoaderFrom({
             '/data.js': `

@@ -1,6 +1,5 @@
-import { BuildTools } from '../../builder/src/types';
+import { Compiler, BuildTools, Loader, asJs, build } from '@tsx-air/builder';
 import { createMemoryFs } from '@file-services/memory';
-import { Compiler, build, Loader, asJs } from '@tsx-air/playground';
 import { promisify } from 'util';
 import { Page, Browser } from 'puppeteer';
 import { join } from 'path';

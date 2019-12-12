@@ -1,6 +1,4 @@
-import { build } from '../../../builder/src/build';
-import { BuiltCode } from '../../../builder/src/build.helpers';
-import { Compiler } from '../../../builder/src/types';
+import { BuiltCode, Compiler, build } from '@tsx-air/builder';
 
 export async function getExamples(): Promise<string[]> {
     return (await (await fetch('/examples')).json());

@@ -1,11 +1,11 @@
 import { injectSnippets, BuiltCode } from './build.helpers';
 import { build, addBreakpoint, removeBreakpoint } from './build';
 import { expect } from 'chai';
-import { DebugableLoader, jsLoaderFrom, trivialCompiler, trimCode } from './test.utils';
+import { DebuggableLoader, jsLoaderFrom, trivialCompiler, trimCode } from './test.utils';
 // tslint:disable: no-unused-expression
 
 describe('breakpoints', () => {
-    let loader: DebugableLoader;
+    let loader: DebuggableLoader;
     const exportedCode = async (b: BuiltCode) =>
         trimCode((await b.module).exported.toString(), true);
 

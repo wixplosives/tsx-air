@@ -10,13 +10,13 @@ export const trivialCompiler: Compiler = {
     label: 'copier'
 };
 
-export interface DebugableLoader extends Loader {
+export interface DebuggableLoader extends Loader {
     loaded: string[];
     fs: IMemFileSystem;
 }
 
-export function jsLoaderFrom(content: IDirectoryContents): DebugableLoader {
-    const load: DebugableLoader = async path => {
+export function jsLoaderFrom(content: IDirectoryContents): DebuggableLoader {
+    const load: DebuggableLoader = async path => {
         load.loaded.push(path);
         return trimCode(load.fs.readFileSync(`${path}.js`, 'utf8'));
     };
