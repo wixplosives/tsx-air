@@ -22,7 +22,7 @@ export interface BuiltCode {
     imports: Array<Promise<BuiltCode>>;
     module: Promise<any>;
     error?: any;
-    _usedBuildToold: BuildTools;
+    _usedBuildTools: BuildTools;
     _cjsEnv: CjsEnv;
     _injected: Snippets;
 }
