@@ -1,7 +1,8 @@
 import { render } from '@tsx-air/framework';
 import { ParentComp } from './index.source';
 
-export default function (window:any) {
-    render(window.document.body, ParentComp, { name: `Test` });
-    console.log('hello');
+console.log('hello');
+
+export default function (w: any) {
+    render(w, ParentComp, { name: `Test` });
 }

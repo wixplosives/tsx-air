@@ -5,6 +5,7 @@ import { join } from 'path';
 // @ts-ignore
 import webpack from 'webpack';
 import nodeFs from '@file-services/node';
+import ts from 'typescript';
 const readFile = promisify(nodeFs.readFile) as unknown as (path: string, options: any) => Promise<string>;
 
 export interface ExampleSuite {
@@ -21,10 +22,26 @@ function getBuildingTools(examplePath: string): BuildTools {
             try {
                 if (isSource.test(path)) {
                     const compiledPath = join(examplePath, path.replace(isSource, '.compiled.ts'));
-                    return await readFile(compiledPath, { encoding: 'utf8' });
+                    return ts.transpileModule(await readFile(compiledPath, { encoding: 'utf8' }), {
+                        compilerOptions: {
+                            jsx: ts.JsxEmit.Preserve,
+                            jsxFactory: 'TSXAir',
+                            target: ts.ScriptTarget.ES2020,
+                            module: ts.ModuleKind.ES2015,
+                            esModuleInterop: true
+                        }
+                    }).outputText;
                 }
             } catch { /* use the provided src */ }
-            return src;
+            return ts.transpileModule(src, {
+                compilerOptions: {
+                    jsx: ts.JsxEmit.Preserve,
+                            jsxFactory: 'TSXAir',
+                            target: ts.ScriptTarget.ES2020,
+                            module: ts.ModuleKind.ES2015,
+                            esModuleInterop: true
+                }
+            }).outputText;
         }
     };
 
@@ -43,7 +60,7 @@ type GetPage = (testHtml: string) => Promise<Page>;
 
 export function getExampleManuallyCompiledPage(
     examplePath: string,
-    browser: ()=>Browser,
+    browser: () => Browser,
     pages: Set<Page>
 ): GetPage {
     const { loader, compiler } = getBuildingTools(examplePath);
