@@ -4,10 +4,8 @@ import { createMemoryFs } from '@file-services/memory';
 import flatMap from 'lodash/flatMap';
 import { dirname, basename, extname } from 'path';
 import { toCommonJs } from '@tsx-air/compiler-utils';
-import { BuildTools } from './types';
+import { CjsEnv, FileSnippets } from './types';
 
-export type FileSnippets = Record<number, string>;
-export type Snippets = Record<string, FileSnippets>;
 
 export async function preload(fs: IFileSystem, cjs: ICommonJsModuleSystem, filename: string, module: Promise<unknown>) {
     writeToFs(fs, filename, '// Preloaded');
@@ -34,26 +32,6 @@ export async function readFileOr(fs: IFileSystem, path: string, orElse: () => st
         return fs.readFileSync(path, 'utf8');
     }
     return await orElse();
-}
-
-export interface BuiltCode {
-    source: string;
-    path: string;
-    compiled: string;
-    imports: Array<Promise<BuiltCode>>;
-    module: Promise<any>;
-    error?: any;
-    _usedBuildToold: BuildTools;
-    _cjsEnv: CjsEnv;
-    _injected: Snippets;
-}
-
-export interface CjsEnv {
-    compiledCjs: IFileSystem;
-    compiledEsm: IFileSystem;
-    cjs: ICommonJsModuleSystem;
-    sources: IFileSystem;
-    pendingSources: Map<string, Promise<string>>;
 }
 
 export async function createCjs(preloads: Record<string, Promise<unknown>>): Promise<CjsEnv> {
@@ -87,7 +65,8 @@ export function evalModule(compiled: string, path: string, env: CjsEnv, inject: 
         writeToFs(compiledEsm, jsPath, compiled);
         return exports;
     } catch (e) {
-        console.error(e);
+        // tslint:disable-next-line: no-console
+        console.error(`Error evaluating ${path}:`, e);
     }
 }
 

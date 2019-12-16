@@ -1,7 +1,8 @@
-import { injectSnippets, BuiltCode } from './build.helpers';
+import { injectSnippets } from './build.helpers';
 import { build, addBreakpoint, removeBreakpoint } from './build';
 import { expect } from 'chai';
 import { DebuggableLoader, jsLoaderFrom, trivialCompiler, trimCode } from './test.utils';
+import { BuiltCode } from './types';
 // tslint:disable: no-unused-expression
 
 describe('breakpoints', () => {

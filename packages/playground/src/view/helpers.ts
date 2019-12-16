@@ -1,13 +1,12 @@
 import { Example } from './../utils/examples.index';
-import { BuiltCode } from '../../../builder/src/build.helpers';
 import ts from 'typescript';
 import { Model } from './index.model';
 import flatten from 'lodash/flatten';
 import debounce from 'lodash/debounce';
-import { getSource, getCompiledEsm, addBreakpoint, removeBreakpoint } from '../../../builder/src/build';
 import { DOM } from './dom';
 import * as view from './breakpoints';
 import * as _monaco from 'monaco-editor';
+import { getSource, getCompiledEsm, removeBreakpoint, addBreakpoint, BuiltCode } from '@tsx-air/builder';
 const monaco: Promise<typeof _monaco> = new Promise(resolve => {
     // @ts-ignore
     window.require(['vs/editor/editor.api'], resolve);

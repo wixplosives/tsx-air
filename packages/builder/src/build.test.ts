@@ -1,3 +1,4 @@
+import { BuiltCode } from '@tsx-air/builder';
 import { build, rebuild, reCompile } from './build';
 import { expect } from 'chai';
 import { Compiler } from './types';
@@ -150,7 +151,7 @@ describe('build', () => {
             const recompiled = await reCompile(original, newCompiler);
             await recompiled.module;
             await Promise.all(
-                recompiled.imports.map(async i => {
+                recompiled.imports.map(async (i:BuiltCode) => {
                     expect((await (await i).module).wasRecompiled).to.be.true;
                 }));
         });

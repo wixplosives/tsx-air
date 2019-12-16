@@ -1,8 +1,8 @@
 import ts from 'typescript';
-import { compilers as transfomerCompilers } from '@tsx-air/compilers';
+import { transformerCompilers } from '@tsx-air/compilers';
 import { Compiler } from '../../builder/src/types';
 
-const mappedCompilers: Compiler[] = transfomerCompilers.map(compiler => {
+const mappedCompilers: Compiler[] = transformerCompilers.map(compiler => {
     return {
         label: compiler.name,
         compile: async (src: string) => {
@@ -21,8 +21,8 @@ const mappedCompilers: Compiler[] = transfomerCompilers.map(compiler => {
 const manualCompiler: Compiler = {
     label: 'Manual + TS',
     compile: async (_src, path) => {
-        path = path.replace(/^\/src/, '').replace(/source(\.js|\.ts|\.tsx)?$/, '/compiled');
-        path = path.replace(/\.js*/, '');
+        path = path.replace(/^\/src/, '').replace(/\.source/, '.compiled');
+        path = path.replace(/\.(js|ts|tsx)+$/, '');
         const content = await (await fetch(path)).text();
         return content;
     }

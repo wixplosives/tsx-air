@@ -18,7 +18,7 @@ const safeExampleFileLoader = async (example: string, path: string) => {
     if (path.indexOf(`/src/examples/${example}/`) !== 0) {
         throw new Error(`Invalid source path: ${path} is out of ${example} sources`);
     }
-    const exampleFilePath = path.replace(/^\/src/, '').replace(/\.js$/, '');
+    const exampleFilePath = path.replace(/^\/src/, '').replace(/\.(js|tsx|ts)$/, '');
     return await (await fetch(exampleFilePath)).text();
 };
 
@@ -35,7 +35,7 @@ export const buildExample = async (example: string, compiler: Compiler) => {
             })
             .then(i => `<div>${i}</div>`),
         build: build(compiler, async (path:string) => 
-            safeExampleFileLoader(example, path), `/src/examples/${example}/source`)
+            safeExampleFileLoader(example, path), `/src/examples/${example}/runner`)
     };
     return result;
 };
