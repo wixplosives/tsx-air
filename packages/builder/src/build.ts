@@ -4,6 +4,7 @@ import cloneDp from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 import { dirname } from 'path';
 import { Compiler, Loader, BuiltCode, CjsEnv, Snippets } from './types';
+import { browserify } from './browserify';
 
 
 const preloads = {
@@ -136,4 +137,9 @@ export async function getCompiledEsm(built: BuiltCode, path: string): Promise<st
 export async function getCompiledCjs(built: BuiltCode, path: string): Promise<string> {
     await built.module;
     return built._cjsEnv.compiledCjs.readFileSync(asJs(path), 'utf8');
+}
+
+export async function getBrowserified(built: BuiltCode, path: string): Promise<string> {
+    await built.module;
+    return browserify(built._cjsEnv.compiledEsm, path, __dirname);
 }
