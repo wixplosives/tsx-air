@@ -36,6 +36,8 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
                 if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
                     isModification = true;
                 }
+            } else if (ts.isPostfixUnaryExpression(accessParent) || ts.isPrefixUnaryExpression(accessParent)) {
+                isModification = true;
             }
             const paths = accessToStringArr(n);
 
