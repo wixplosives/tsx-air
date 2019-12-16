@@ -1,4 +1,4 @@
-import { Compiler, BuildTools, Loader, asJs, build, getBrowserified } from '@tsx-air/builder';
+import { Compiler, BuildTools, Loader, build, getBrowserified } from '@tsx-air/builder';
 import { promisify } from 'util';
 import { Page, Browser } from 'puppeteer';
 import { join } from 'path';
@@ -43,13 +43,13 @@ type GetPage = (testHtml: string) => Promise<Page>;
 
 export function getExampleManuallyCompiledPage(
     examplePath: string,
-    browser: Browser,
+    browser: ()=>Browser,
     pages: Set<Page>
 ): GetPage {
     const { loader, compiler } = getBuildingTools(examplePath);
     return async function getPage(testBoilerplatePath: string) {
-        const boilerplate = await getBrowserified(await build(compiler, loader, testBoilerplatePath), testBoilerplatePath);
-        const page = await browser.newPage();
+        const boilerplate = await getBrowserified(await build(compiler, loader, testBoilerplatePath), examplePath);
+        const page = await browser().newPage();
         pages.add(page);
         await page.addScriptTag({
             content: boilerplate

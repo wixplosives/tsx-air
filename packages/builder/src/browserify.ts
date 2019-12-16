@@ -7,7 +7,7 @@ import nodeFs from '@file-services/node';
 import webpack from 'webpack';
 import { join } from 'path';
 
-export async function browserify(fs: IFileSystem, entry: string, dirname:string) {
+export async function browserify(fs: IFileSystem, entry: string, dirname: string): Promise<string> {
     const wp = webpack({
         entry: join(dirname, entry),
         mode: 'production',
@@ -19,12 +19,12 @@ export async function browserify(fs: IFileSystem, entry: string, dirname:string)
 
     wp.inputFileSystem = createOverlayFs(nodeFs, fs, dirname);
     const output = createMemoryFs();
-    const readFile = promisify(output.readFile) as unknown as (path: string, options: any) => Promise<string>;
+    const readFile = promisify(output.readFile);
     wp.outputFileSystem = createWebpackFs(output);
     const run = promisify(wp.run).bind(wp);
     const res = await run();
     if (res.hasErrors()) {
         throw new Error(JSON.stringify(res.toJson().errors));
     }
-    return readFile('/bundle.js', 'utf8');
+    return (await readFile('/bundle.js')).toString();
 }

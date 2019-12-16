@@ -141,5 +141,5 @@ export async function getCompiledCjs(built: BuiltCode, path: string): Promise<st
 
 export async function getBrowserified(built: BuiltCode, path: string): Promise<string> {
     await built.module;
-    return browserify(built._cjsEnv.compiledEsm, path, __dirname);
+    return browserify(built._cjsEnv.compiledEsm, built.path, path);
 }
