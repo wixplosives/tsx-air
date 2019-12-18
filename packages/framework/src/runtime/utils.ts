@@ -77,3 +77,10 @@ export function setStyle(element: HTMLElement, style: object) {
     }
     element.setAttribute('style', stl);
 }
+
+
+export function createFromString(str: string): HTMLElement {
+    const factory = document.createElement('div');
+    factory.innerHTML = str;
+    return factory.children[0] as HTMLElement;
+}
