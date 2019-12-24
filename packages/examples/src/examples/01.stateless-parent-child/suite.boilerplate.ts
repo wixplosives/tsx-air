@@ -1,8 +1,5 @@
 import { render } from '@tsx-air/framework';
 import { ParentComp } from './index.source';
 
-console.log('hello');
-
-export default function (w: any) {
-    render(w, ParentComp, { name: `Test` });
-}
+const element = document.querySelector('div');
+const app = render(element!, ParentComp, { name: `Test` });
