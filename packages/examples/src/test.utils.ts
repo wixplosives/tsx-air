@@ -1,11 +1,11 @@
+import { TestServer } from './testserver';
 import { Compiler, BuildTools, Loader, build, getBrowserified } from '@tsx-air/builder';
 import { promisify } from 'util';
 import { Page, Browser } from 'puppeteer';
 import { join } from 'path';
-// @ts-ignore
-import webpack from 'webpack';
 import nodeFs from '@file-services/node';
 import ts from 'typescript';
+import { request, IncomingMessage } from 'http';
 const readFile = promisify(nodeFs.readFile) as unknown as (path: string, options: any) => Promise<string>;
 
 export interface ExampleSuite {
@@ -36,10 +36,10 @@ function getBuildingTools(examplePath: string): BuildTools {
             return ts.transpileModule(src, {
                 compilerOptions: {
                     jsx: ts.JsxEmit.Preserve,
-                            jsxFactory: 'TSXAir',
-                            target: ts.ScriptTarget.ES2020,
-                            module: ts.ModuleKind.ES2015,
-                            esModuleInterop: true
+                    jsxFactory: 'TSXAir',
+                    target: ts.ScriptTarget.ES2020,
+                    module: ts.ModuleKind.ES2015,
+                    esModuleInterop: true
                 }
             }).outputText;
         }
@@ -55,22 +55,44 @@ function getBuildingTools(examplePath: string): BuildTools {
     return { compiler, loader };
 }
 
-
 type GetPage = (testHtml: string) => Promise<Page>;
 
 export function getExampleManuallyCompiledPage(
     examplePath: string,
-    browser: () => Browser,
-    pages: Set<Page>
+    getBrowser: () => Browser,
+    getServer: () => TestServer
 ): GetPage {
     const { loader, compiler } = getBuildingTools(examplePath);
     return async function getPage(testBoilerplatePath: string) {
+        const [server, browser] = [getServer(), getBrowser()];
         const boilerplate = await getBrowserified(await build(compiler, loader, testBoilerplatePath), examplePath);
-        const page = await browser().newPage();
-        pages.add(page);
-        await page.addScriptTag({
-            content: boilerplate
-        });
+        server.addEndpoint('/index.html', `<html>
+            <body>
+                <div></div>
+                <script src="/boilerplate.js"></script>
+            </body>
+        </html>`);
+        server.addEndpoint('/boilerplate.js', boilerplate);
+        const page = await browser.newPage();
+        const url = `${await server.baseUrl}/index.html`;
+        await page.goto(url);
         return page;
     };
 }
+
+export const get = (url: string) => new Promise((resolve, reject) => {
+    request(url, {
+        method: 'GET'
+    }, (res: IncomingMessage) => {
+        if (res.statusCode! >= 400) {
+            reject(res.statusCode);
+        } else {
+            res.setEncoding('utf8');
+            let rawData = '';
+            res.on('data', (chunk: string) => { rawData += chunk; });
+            res.on('end', () => {
+                resolve(rawData);
+            });
+        }
+    }).end();
+});
