@@ -1,10 +1,8 @@
 import { createMemoryFs } from '@file-services/memory';
 import { expect } from 'chai';
 import { browserify } from './browserify';
-// tslint:disable-next-line: no-eval
-const execute = (code: string, window: any = {}) => eval(`(window) => {${code};
-    return window;}`)(window);
-    
+import { execute } from './test.utils';
+   
 describe('browserify', () => {
     it('should package esm files to a single browserified file', async () => {
         const fs = createMemoryFs({
