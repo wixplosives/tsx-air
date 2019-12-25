@@ -18,22 +18,18 @@
     "sideEffects": [],
     "dependencies": {
         "@file-services/memory": "^2.1.1",
-        "@file-services/node": "^2.1.0",
+        "@file-services/node": "^2.1.1",
         "@file-services/overlay": "^2.1.0",
         "@file-services/types": "^2.1.0",
-        "@file-services/webpack": "^2.1.0",
-        "@stylable/schema-extract": "^2.3.1",
+        "@file-services/webpack": "^2.1.1",
         "@tsx-air/compilers": "^1.0.4",
+        "lodash": "^4.17.15",
+        "tslib": "^1.10.0"
+    },
+    "devDependencies": {
         "@types/express": "^4.17.2",
         "@types/lodash": "^4.14.144",
         "@types/showdown": "^1.9.3",
-        "@types/webpack": "^4.41.0",
-        "lodash": "^4.17.15",
-        "monaco-editor": "^0.18.1",
-        "node-watch": "^0.6.3",
-        "prismjs": "^1.17.1",
-        "sanitize.css": "^11.0.0",
-        "showdown": "^1.9.0",
-        "tslib": "^1.10.0"
+        "@types/webpack": "^4.41.0"
     }
 }
