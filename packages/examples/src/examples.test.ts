@@ -5,25 +5,26 @@ import { after } from 'mocha';
 import { getExampleManuallyCompiledPage } from './test.utils';
 const examples = [exp1];
 
+
 describe('Examples: manually compiled code', () => {
     let browser: Browser;
     let server: TestServer;
 
     before(async () => {
         [browser, server] = await Promise.all([
-            launch({ headless: false, devtools: true }),
+            launch({ headless: !process.env.DEBUG, devtools: !!process.env.DEBUG }),
             createTestServer()
         ]);
     });
 
     afterEach(async () => {
         server.reset();
-        (await browser.pages()).forEach(p=>{
-            p.close();
-        });
+        // (await browser.pages()).forEach(p => {
+        //     p.close().catch(e => console.error(e));
+        // });
     });
     after(() => browser.close());
     after(() => server.close());
-    
+
     examples.map(({ suite, path }) => suite(getExampleManuallyCompiledPage(path, () => browser, () => server)));
 });

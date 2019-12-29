@@ -1,17 +1,17 @@
+import { createMemoryFs } from '@file-services/memory';
+import nodeFs from '@file-services/node';
+import { createOverlayFs } from '@file-services/overlay';
+import { IFileSystem } from '@file-services/types';
+import { createWebpackFs } from '@file-services/webpack';
+import { join } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { promisify } from 'util';
-import { createWebpackFs } from '@file-services/webpack';
-import { createMemoryFs } from '@file-services/memory';
-import { IFileSystem } from '@file-services/types';
-import { createOverlayFs } from '@file-services/overlay';
-import nodeFs from '@file-services/node';
 import webpack from 'webpack';
-import { join } from 'path';
 
 export async function browserify(fs: IFileSystem, entry: string, dirname: string): Promise<string> {
     const wp = webpack({
         entry: join(dirname, entry),
-        mode: 'production',
+        mode: !process.env.DEBUG?'production':'development',
         output: {
             filename: 'bundle.js',
             path: '/'
@@ -40,11 +40,12 @@ export async function browserify(fs: IFileSystem, entry: string, dirname: string
         performance: {
             hints: false
         },
+        devtool: !process.env.DEBUG ? 'nosources-source-map' : 'inline-source-map' ,
     });
 
     wp.inputFileSystem = createOverlayFs(nodeFs, fs, dirname);
     // @ts-ignore
-    wp.inputFileSystem.readJson = (path: string, cb: (err: Error | null, val: object|null)=>void) => {
+    wp.inputFileSystem.readJson = (path: string, cb: (err: Error | null, val: object | null) => void) => {
         try {
             const s = wp.inputFileSystem.readFileSync(path).toString();
             cb(null, JSON.parse(s));

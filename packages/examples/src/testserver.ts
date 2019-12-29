@@ -8,7 +8,7 @@ export interface TestServer {
     baseUrl: string;
 }
 
-export async function createTestServer(preferredPort=12357): Promise<TestServer> {
+export async function createTestServer(preferredPort = 12357): Promise<TestServer> {
     const serverWorker = new Worker(require.resolve('./testserver.worker'), { workerData: { preferredPort } });
     const baseUrl: string = await new Promise((resolve, reject) => {
         serverWorker.once('message', m => {
@@ -26,13 +26,17 @@ export async function createTestServer(preferredPort=12357): Promise<TestServer>
             ...m, id
         };
         serverWorker.postMessage(msg);
-        serverWorker.once('message', (message: any) => {
-            if (message.type === 'done' && message.id === id) {
-                resolve();
-            } else {
-                reject(message);
-            }
-        });
+        const waitUntilDone = (message: any) => {
+            if (message.id === id) {
+                serverWorker.off('message', waitUntilDone);
+                if (message.type === 'done') {
+                    resolve();
+                } else {
+                    reject(message);
+                }
+            } 
+        };
+        serverWorker.on('message', waitUntilDone);
     }) as Promise<T>;
 
     return {

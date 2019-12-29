@@ -14,7 +14,7 @@ const express = require('express');
         }
     });
 
-    const server = await new Promise(async resolve => {
+    await new Promise(async resolve => {
         let s;
         s = app.listen(port, () => {
             resolve(s);
@@ -39,11 +39,10 @@ const express = require('express');
                 urls = {};
                 parentPort.postMessage({ type: 'done', id: message.id });
                 break;
-            case 'stop':
-                server.close();
-                process.exit(0);
             default:
                 parentPort.postMessage({
+                    id: message.id,
+                    type: 'error',
                     error: `Unsupported message type ${message.type}`
                 });
         }

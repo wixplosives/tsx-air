@@ -38,6 +38,20 @@ describe('test server: createServer', () => {
         }
     });
 
+    it('should handle multiple calls', async () => {
+        server = await createTestServer();
+        try {
+            await Promise.all([
+                server.addEndpoint('/1', ''),
+                server.addEndpoint('/2', ''),
+                server.addEndpoint('/3', ''),
+                server.addEndpoint('/4', '')
+            ]);
+        } catch (e) {
+            fail('server error');
+        }
+    });
+
     describe('test helpers', () => {
         describe('threadedGet', () => {
             it('should GET a value from server endpoint', async () => {

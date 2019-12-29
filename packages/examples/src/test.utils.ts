@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { TestServer } from './testserver';
 import { Compiler, BuildTools, Loader, staticBuild } from '@tsx-air/builder';
 import { promisify } from 'util';
-import { Page, Browser } from 'puppeteer';
+import { Page, Browser, launch } from 'puppeteer';
 import { join } from 'path';
 import nodeFs from '@file-services/node';
 import ts from 'typescript';
@@ -10,6 +10,7 @@ import { request, IncomingMessage } from 'http';
 import { fail } from 'assert';
 import { Worker } from 'worker_threads';
 import isString from 'lodash/isString';
+import { readFileSync } from 'fs';
 const readFile = promisify(nodeFs.readFile) as unknown as (path: string, options: any) => Promise<string>;
 
 export interface ExampleSuite {
@@ -19,14 +20,14 @@ export interface ExampleSuite {
 
 const isSource = /\.source\.tsx?$/;
 
-function getBuildingTools(examplePath: string): BuildTools {
+function getBuildingTools(): BuildTools {
     const compiler: Compiler = {
         label: 'manually compiled',
         compile: async (src, path) => {
             try {
                 if (isSource.test(path)) {
-                    const compiledPath = join(examplePath, path.replace(isSource, '.compiled.ts'));
-                    return ts.transpileModule(await readFile(compiledPath, { encoding: 'utf8' }), {
+                    const compiledPath = path.replace(isSource, '.compiled.ts');
+                    return ts.transpileModule(readFileSync(compiledPath, { encoding: 'utf8' }), {
                         compilerOptions: {
                             jsx: ts.JsxEmit.Preserve,
                             jsxFactory: 'TSXAir',
@@ -36,7 +37,10 @@ function getBuildingTools(examplePath: string): BuildTools {
                         }
                     }).outputText;
                 }
-            } catch { /* use the provided src */ }
+            } catch (e) {
+                console.error(e);
+                /* use the provided src */
+            }
             return ts.transpileModule(src, {
                 compilerOptions: {
                     jsx: ts.JsxEmit.Preserve,
@@ -50,7 +54,7 @@ function getBuildingTools(examplePath: string): BuildTools {
     };
 
     const loader: Loader = async (path: string) => {
-        path = join(examplePath, path.replace('/src/', ''));
+        // path = join(examplePath, path.replace('/src/', ''));
         return readFile(`${path}.tsx`, 'utf8')
             .catch(() => readFile(`${path}.ts`, 'utf8'))
             .catch(() => readFile(`${path}.js`, 'utf8'));
@@ -66,30 +70,35 @@ export function getExampleManuallyCompiledPage(
     getBrowser: () => Browser,
     getServer: () => TestServer
 ): GetPage {
-    const { loader, compiler } = getBuildingTools(examplePath);
+    const { loader, compiler } = getBuildingTools();
     return async function getPage(testBoilerplatePath: string) {
-        const [server, browser] = [getServer(), getBrowser()];
+        const [browser, server] = [getBrowser(), getServer()];
         try {
+            const server = getServer();
             // const builtCode = await build(compiler, loader, testBoilerplatePath);
             const boilerplate = await staticBuild(compiler, loader, examplePath, testBoilerplatePath);
-            server.addEndpoint('/index.html', `<html>
-                <body>
-                    <div></div>
-                    <script src="/boilerplate.js"></script>
-                </body>
-            </html>`);
-            server.addEndpoint('/boilerplate.js', boilerplate);
+            await Promise.all([
+                server.addEndpoint('/index.html', `<html>
+                    <body>
+                        <div></div>
+                        <script src="/boilerplate.js"></script>
+                    </body>
+                </html>`),
+                server.addEndpoint('/boilerplate.js', boilerplate)
+            ]);
         } catch (e) {
-            fail(e);
+            throw new Error('Error running test server\n'+e);
         }
-        const page = await browser.newPage();
+        const page = browser.newPage();
         const url = `${await server.baseUrl}/index.html`;
         const pageErrors: Error[] = [];
-        page.on('pageerror', (e: Error) => {
+        (await page).on('pageerror', (e: Error) => {
             pageErrors.push(e);
         });
-        await page.goto(url);
-        expect(pageErrors, 'Page contains errors').to.eql([]);
+        await (await page).goto(url);
+        if (pageErrors.length) {
+            throw new Error('Test boilerplate page contains the following errors\n\tTip: use "DEBUG=true yarn test" to debug in browser\n\n' + pageErrors.join('\'n'));
+        }
         return page;
     };
 }
@@ -111,9 +120,9 @@ export const get = (url: string) => new Promise((resolve, reject) => {
     }).end();
 });
 
-export async function threadedGet(url: string): Promise<{result:string, time:number}> {
+export async function threadedGet(url: string): Promise<{ result: string, time: number }> {
     const _id = Date.now() + '+' + Math.random();
-    const getter = new Worker(require.resolve('./testclient.get.worker'));
+    const getter = new Worker(require.resolve('./threaded.get.worker'));
     return new Promise((resolve, reject) => {
         getter.on('message', (m: any) => {
             const { id, result } = m;
@@ -130,7 +139,7 @@ export async function threadedGet(url: string): Promise<{result:string, time:num
     });
 }
 
-export function block(duration:number) {
+export function block(duration: number) {
     // The main thread is now blocked
     const start = Date.now();
     while (Date.now() - start < duration) {
