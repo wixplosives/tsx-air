@@ -32,7 +32,6 @@ export async function createTestServer(preferredPort=12357): Promise<TestServer>
             } else {
                 reject(message);
             }
-            console.log(msg.processed);
         });
     }) as Promise<T>;
 

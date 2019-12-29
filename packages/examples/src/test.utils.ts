@@ -1,11 +1,15 @@
+import { expect } from 'chai';
 import { TestServer } from './testserver';
-import { Compiler, BuildTools, Loader, build, getBrowserified } from '@tsx-air/builder';
+import { Compiler, BuildTools, Loader, staticBuild } from '@tsx-air/builder';
 import { promisify } from 'util';
 import { Page, Browser } from 'puppeteer';
 import { join } from 'path';
 import nodeFs from '@file-services/node';
 import ts from 'typescript';
 import { request, IncomingMessage } from 'http';
+import { fail } from 'assert';
+import { Worker } from 'worker_threads';
+import isString from 'lodash/isString';
 const readFile = promisify(nodeFs.readFile) as unknown as (path: string, options: any) => Promise<string>;
 
 export interface ExampleSuite {
@@ -65,17 +69,27 @@ export function getExampleManuallyCompiledPage(
     const { loader, compiler } = getBuildingTools(examplePath);
     return async function getPage(testBoilerplatePath: string) {
         const [server, browser] = [getServer(), getBrowser()];
-        const boilerplate = await getBrowserified(await build(compiler, loader, testBoilerplatePath), examplePath);
-        server.addEndpoint('/index.html', `<html>
-            <body>
-                <div></div>
-                <script src="/boilerplate.js"></script>
-            </body>
-        </html>`);
-        server.addEndpoint('/boilerplate.js', boilerplate);
+        try {
+            // const builtCode = await build(compiler, loader, testBoilerplatePath);
+            const boilerplate = await staticBuild(compiler, loader, examplePath, testBoilerplatePath);
+            server.addEndpoint('/index.html', `<html>
+                <body>
+                    <div></div>
+                    <script src="/boilerplate.js"></script>
+                </body>
+            </html>`);
+            server.addEndpoint('/boilerplate.js', boilerplate);
+        } catch (e) {
+            fail(e);
+        }
         const page = await browser.newPage();
         const url = `${await server.baseUrl}/index.html`;
+        const pageErrors: Error[] = [];
+        page.on('pageerror', (e: Error) => {
+            pageErrors.push(e);
+        });
         await page.goto(url);
+        expect(pageErrors, 'Page contains errors').to.eql([]);
         return page;
     };
 }
@@ -96,3 +110,32 @@ export const get = (url: string) => new Promise((resolve, reject) => {
         }
     }).end();
 });
+
+export async function threadedGet(url: string): Promise<{result:string, time:number}> {
+    const _id = Date.now() + '+' + Math.random();
+    const getter = new Worker(require.resolve('./testclient.get.worker'));
+    return new Promise((resolve, reject) => {
+        getter.on('message', (m: any) => {
+            const { id, result } = m;
+            if (id === _id) {
+                if (isString(result)) {
+                    resolve(m);
+                } else {
+                    reject(m);
+                }
+                getter.terminate();
+            }
+        });
+        getter.postMessage({ type: 'get', url, id: _id });
+    });
+}
+
+export function block(duration:number) {
+    // The main thread is now blocked
+    const start = Date.now();
+    while (Date.now() - start < duration) {
+        // block for [duration] mSec
+    }
+    const end = Date.now();
+    return [start, end];
+}
