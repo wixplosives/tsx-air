@@ -1,13 +1,10 @@
-import { expect } from 'chai';
 import { TestServer } from './testserver';
 import { Compiler, BuildTools, Loader, staticBuild } from '@tsx-air/builder';
 import { promisify } from 'util';
-import { Page, Browser, launch } from 'puppeteer';
-import { join } from 'path';
+import { Page, Browser } from 'puppeteer';
 import nodeFs from '@file-services/node';
 import ts from 'typescript';
 import { request, IncomingMessage } from 'http';
-import { fail } from 'assert';
 import { Worker } from 'worker_threads';
 import isString from 'lodash/isString';
 import { readFileSync } from 'fs';
@@ -74,8 +71,6 @@ export function getExampleManuallyCompiledPage(
     return async function getPage(testBoilerplatePath: string) {
         const [browser, server] = [getBrowser(), getServer()];
         try {
-            const server = getServer();
-            // const builtCode = await build(compiler, loader, testBoilerplatePath);
             const boilerplate = await staticBuild(compiler, loader, examplePath, testBoilerplatePath);
             await Promise.all([
                 server.addEndpoint('/index.html', `<html>

@@ -1,7 +1,7 @@
 import { TestServer, createTestServer } from './testserver';
 import { launch, Browser } from 'puppeteer';
 import exp1 from './examples/01.stateless-parent-child/suite';
-import { after } from 'mocha';
+import { after, afterEach } from 'mocha';
 import { getExampleManuallyCompiledPage } from './test.utils';
 const examples = [exp1];
 
@@ -19,9 +19,9 @@ describe('Examples: manually compiled code', () => {
 
     afterEach(async () => {
         server.reset();
-        // (await browser.pages()).forEach(p => {
-        //     p.close().catch(e => console.error(e));
-        // });
+        (await browser.pages()).forEach(p => {
+            p.close().catch(() => '');
+        });
     });
     after(() => browser.close());
     after(() => server.close());
