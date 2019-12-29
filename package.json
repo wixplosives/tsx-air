@@ -9,7 +9,7 @@
     "build": "lerna run build --stream --parallel",
     "lint": "lerna run lint --stream --parallel",
     "pretest": "yarn lint",
-    "test": "QUICK=true;lerna run test --stream --parallel",
+    "test": "lerna run test --stream --parallel",
     "typecheck": "tsc -p tsconfig.test.json --noEmit"
   },
   "devDependencies": {

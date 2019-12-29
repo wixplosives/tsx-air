@@ -9,18 +9,35 @@
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
         },
-
         {
             "type": "node",
             "request": "launch",
-            "name": "Mocha Current",
+            "name": "test examples",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
-                "**/*.test.ts?(x)",
+                "packages/examples/**/*.test.ts?(x)",
                 "--timeout",
                 "999999"
             ],
-            "internalConsoleOptions": "openOnSessionStart"
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "test build",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/builder/**/*.test.ts?(x)",
+                "--timeout",
+                "999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
         }
     ]
 }
