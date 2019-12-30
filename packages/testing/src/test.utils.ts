@@ -1,9 +1,9 @@
 import { createMemoryFs } from '@file-services/memory';
-import { Loader } from './types';
 import { IDirectoryContents } from '@file-services/types';
 import { IMemFileSystem } from '@file-services/memory';
 import { Compiler } from '@tsx-air/compilers';
 import ts from 'typescript';
+import { Loader } from '@tsx-air/builder';
 
 export const trivialCompiler: Compiler = {
     transformers: undefined as unknown as ts.CustomTransformers,
