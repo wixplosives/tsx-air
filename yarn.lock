@@ -940,8 +940,10 @@
     "@ts-tools/transpile" "^2.0.0"
     loader-utils "^1.2.3"
 
-"@ts-tools/webpack-loader@file:../ts-tools/packages/webpack-loader":
-  version "1.1.0"
+"@ts-tools/webpack-loader@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@ts-tools/webpack-loader/-/webpack-loader-1.1.2.tgz#6e24385ac441df2c43e73d57dbf20a7037cb061a"
+  integrity sha512-lPtjxSJ7m20Bny3+1zRMbNv59D5YQzls0UDM3GM+GeDqNtl5Sm+p7zFpL2LsuoeDQ6OBA4Y2W47UpvZ4QukplQ==
   dependencies:
     "@ts-tools/transpile" "^2.0.0"
     loader-utils "^1.2.3"
