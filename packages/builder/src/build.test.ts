@@ -1,8 +1,8 @@
 import { BuiltCode } from './types';
-import { build, rebuild, reCompile, staticBuild } from './build';
+import { build, rebuild, reCompile } from './build';
 import { expect } from 'chai';
 import { Compiler } from './types';
-import { trivialCompiler as compiler, DebuggableLoader, jsLoaderFrom, trimCode, execute } from './test.utils';
+import { trivialCompiler as compiler, DebuggableLoader, jsLoaderFrom, trimCode } from './test.utils';
 // tslint:disable: no-unused-expression
 
 describe('build', () => {
@@ -67,17 +67,17 @@ describe('build', () => {
         expect(loader.loaded).not.to.include('/@tsx-air/framework');
     });
 
-    describe('staticBuild', () => {
-        it('should return a string packaged browserified code', async () => {
+    // describe('staticBuild', () => {
+    //     it('should return a string packaged browserified code', async () => {
             
-            const res = await staticBuild(compiler, loader, 'src/examples/ex1/source');
-            // console.log(loader.loaded);
-            const evaluated = execute(res);
-            expect(evaluated).to.eql({
+    //         const res = await staticBuild(compiler, loader, 'src/examples/ex1/', 'source');
+    //         // console.log(loader.loaded);
+    //         const evaluated = execute(res);
+    //         expect(evaluated).to.eql({
                 
-            });
-        });
-    });
+    //         });
+    //     });
+    // });
 
     describe('rebuild', () => {
         it('should return a modified build for the root file', async () => {

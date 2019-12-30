@@ -1,40 +1,59 @@
 import { createMemoryFs } from '@file-services/memory';
 import { expect } from 'chai';
+import { path as base } from '../fixtures';
 import { browserify } from './browserify';
 import { execute } from './test.utils';
-   
-describe('browserify', () => {
-    it('should package esm files to a single browserified file', async () => {
-        const fs = createMemoryFs({
+import { join } from 'path';
+import ts, { visitEachChild } from 'typescript';
 
-            'main.js': `
-                import data from './data';
-                window.wasBrowserified = data.wasImported;`,
-            'data.js': `export default { wasImported: true };`
-            // }
+describe('static.build', () => {
+    it('should package simple.ts into a single js file', async () => {
+        const built = await browserify({
+            base,
+            entry: 'simple.ts',
+            output: join(__dirname, '../tmp/bundle.js'),
+            outputFs: createMemoryFs()
         });
-        const result = execute(await browserify(fs, 'main.js', __dirname));
-        expect(result).to.eql({ wasBrowserified: true });
-    });
-    it(`should resolve modules from node_modules`, async () => {
-        const fs = createMemoryFs({
-            'main.js': `
-                import { isFunction } from 'lodash';
-                window.wasBrowserified = isFunction(()=>true);`,
-        });
-        const result = execute(await browserify(fs, 'main.js', __dirname));
-        expect(result).to.eql({ wasBrowserified: true });
-    });
-    it(`should resolve modules from other packages in the monorepo`, async () => {
-        const fs = createMemoryFs({
-            'main.js': `
-                import { render } from '@tsx-air/framework';
-                import { isFunction } from 'lodash';
-                window.wasBrowserified = isFunction(render);`,
-        });
-
-        const result = execute(await browserify(fs, 'main.js', __dirname));
-        expect(result).to.eql({ wasBrowserified: true });
+        expect(execute(built)).to.eql({ wasExported: true });
     });
 
+    it('should package with.imports.ts into a single js file', async () => {
+        const built = await browserify({
+            base,
+            entry: 'with.imports.ts',
+            output: join(__dirname, '../tmp/bundle.js'),
+            outputFs: createMemoryFs()
+        });
+        expect(execute(built).imports).to.eql({
+            local: true,
+            packageDependency: true,
+            monorepoPackage: true
+        });
+    });
+
+    it('should transform the sources', async () => {
+        const built = await browserify({
+            base,
+            entry: 'simple.ts',
+            output: join(__dirname, '../tmp/bundle.js'),
+            outputFs: createMemoryFs(),
+            loaderOptions: {
+                // NOTE: if cached, will not be re-transpiled!
+                cache: false,
+                transformers: {
+                    before: [ctx => node => {
+                        const visitor: ts.Visitor = (n: ts.Node) => {
+                            if (ts.isIdentifier(n) && n.text === 'wasExported') {
+                                return ts.createIdentifier('wasTransformed');
+                            }
+                            return visitEachChild(n, visitor, ctx);
+
+                        };
+                        return visitEachChild(node, visitor, ctx);
+                    }]
+                }
+            }
+        });
+        expect(execute(built)).to.eql({ wasTransformed: true });
+    });
 });

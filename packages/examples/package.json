@@ -7,12 +7,13 @@
     "main": "./src/index.ts",
     "scripts": {
         "build": "webpack --progress --mode production --devtool false",
-        "clean": "rimraf ./dist",
+        "clean": "rimraf ./dist ./tmp",
         "lint": "tslint -p src",
         "prebuild": "yarn clean",
         "test": "mocha \"**/*.test.ts?(x)\""
     },
     "dependencies": {
+        "@ts-tools/webpack-loader": "file:///home/omry/projects/wix/ts-tools/packages/webpack-loader",
         "lodash": "^4.17.15",
         "sanitize.css": "^11.0.0",
         "tslib": "^1.10.0"
