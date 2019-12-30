@@ -13,12 +13,12 @@
         "test": "mocha \"**/*.test.ts?(x)\""
     },
     "dependencies": {
-        "@ts-tools/webpack-loader": "file:///home/omry/projects/wix/ts-tools/packages/webpack-loader",
         "lodash": "^4.17.15",
         "sanitize.css": "^11.0.0",
         "tslib": "^1.10.0"
     },
     "devDependencies": {
+        "@ts-tools/webpack-loader": "^1.1.1",
         "@file-services/memory": "^2.1.0",
         "@file-services/node": "^2.1.0",
         "@file-services/overlay": "^2.1.0",

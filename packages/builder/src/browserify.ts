@@ -64,7 +64,8 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
     });
 
     wp.inputFileSystem = createOverlayFs(nodeFs, inputFs, base);
-    // @ts-ignore
+    // @ts-ignore 
+    // TsconfigPathsPlugin relays on an undocumented method: readJson
     wp.inputFileSystem.readJson = (path: string, cb: (err: Error | null, val: object | null) => void) => {
         try {
             const s = wp.inputFileSystem.readFileSync(path).toString();

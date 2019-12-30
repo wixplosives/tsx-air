@@ -1,0 +1,120 @@
+import { createTestServer, TestServer } from './testserver';
+import { expect } from 'chai';
+import { fail } from 'assert';
+import { get, threadedGet, block } from '../utils';
+import { base } from '../../../fixtures';
+
+
+before(function () {
+    this.bail = false;
+});
+
+describe('test server', () => {
+    let server: TestServer;
+    afterEach(() => {
+        server?.close();
+    });
+
+    describe('createServer', () => {
+        it('should have a baseUrl on localhost:port', async () => {
+            server = await createTestServer();
+            expect(server.baseUrl).to.match(/http:\/\/localhost\:\d{5}$/);
+        });
+
+        it('should find free ports for multiple servers', async () => {
+            server = await createTestServer(12222);
+            const server2 = await createTestServer(12222);
+            expect(server.baseUrl).not.to.eql(server2.baseUrl);
+            server2.close();
+        });
+    });
+
+    describe('setRoot', () => {
+        it('should serve GET endpoint hat matches files in the root', async () => {
+            server = await createTestServer();
+            await server.setRoot(base);
+            expect(await get(await server.baseUrl + '/from.fs')).to.eql('ok');
+        });
+        it('should respond with 404 error for missing files', async () => {
+            server = await createTestServer();
+            await server.setRoot(base);
+            await shouldFail(server.baseUrl + '/no.such.file', 'Server served missing file');
+        });
+    });
+
+    it('should serve GET endpoint set by addEndpoint', async () => {
+        server = await createTestServer();
+        await server.addEndpoint('/endpoint', 'added');
+        expect(await get(await server.baseUrl + '/endpoint')).to.eql('added');
+    });
+
+
+
+    it('should prioritize endpoints set by addEndpoint over setRoot', async () => {
+        server = await createTestServer();
+        await server.setRoot(base);
+        await server.addEndpoint('/from.fs', 'nope');
+        expect(await get(await server.baseUrl + '/from.fs')).to.eql('nope');
+    });
+
+    describe('reset', () => {
+        it('should clear all endpoints', async () => {
+            server = await createTestServer();
+            await server.addEndpoint('/endpoint', 'added');
+            expect(await get(await server.baseUrl + '/endpoint')).to.eql('added');
+            await server.reset();
+            await shouldFail(server.baseUrl + '/endpoint', 'Endpoint active after server reset');
+        });
+
+        it('should clear the base path', async () => {
+            server = await createTestServer();
+            await server.setRoot(base);
+            expect(await get(await server.baseUrl + '/from.fs')).to.eql('ok');
+            await server.reset();
+            await shouldFail(server.baseUrl + '/from.fs', 'Endpoint active after server reset');
+        });
+    });
+
+    it('should handle multiple calls', async () => {
+        server = await createTestServer();
+        try {
+            await Promise.all([
+                server.addEndpoint('/1', '1'),
+                server.addEndpoint('/2', '2'),
+                server.addEndpoint('/3', '3'),
+                server.addEndpoint('/4', '4')
+            ]);
+        } catch (e) {
+            fail('server error');
+        }
+        expect(
+            await Promise.all([
+                get(server.baseUrl + '/1'),
+                get(server.baseUrl + '/2'),
+                get(server.baseUrl + '/3'),
+                get(server.baseUrl + '/4'),
+            ])).to.eql(['1', '2', '3', '4']);
+    });
+
+    it('should respond when the main thread is busy (ie debugger breakpoint)', async () => {
+        server = await createTestServer();
+        await server.addEndpoint('/got', 'ok');
+        const done = threadedGet(server.baseUrl + '/got');
+        const [start, end] = block(100);
+        const { result, time } = await done;
+
+        expect(result).to.eql('ok');
+        expect(time, 'server responded BEFORE or AFTER main thread was blocked').to.be.within(start, end);
+    });
+});
+
+async function shouldFail(url: string, message: string) {
+    let error = 'no error';
+    try {
+        await get(url);
+    } catch (err) {
+        error = err;
+    } finally {
+        expect(error, message).to.equal(404);
+    }
+}

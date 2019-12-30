@@ -1,8 +1,8 @@
-import { TestServer, createTestServer } from './testserver';
+import { TestServer, createTestServer } from './testing/server/testserver';
 import { launch, Browser } from 'puppeteer';
 import exp1 from './examples/01.stateless-parent-child/suite';
 import { after, afterEach } from 'mocha';
-import { getExampleManuallyCompiledPage } from './test.utils';
+import { getExampleManuallyCompiledPage } from './testing/utils';
 const examples = [exp1];
 
 

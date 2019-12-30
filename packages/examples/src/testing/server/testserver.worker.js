@@ -3,14 +3,24 @@ const express = require('express');
 
 (async (port) => {
     let urls = {};
+    let root;
     const app = express();
     app.get('*', (req, res) => {
         if (urls[req.path]) {
             res.send(urls[req.path]);
             res.end();
         } else {
-            res.sendStatus(404);
-            res.end();
+            if (root) {
+                const { createReadStream } = require('fs');
+                const { join } = require('path');
+                createReadStream(join(root, req.path), { encoding: 'utf8' }).on('error', () => {
+                    res.sendStatus(404);
+                    res.end();
+                }).pipe(res);
+            } else {
+                res.sendStatus(404);
+                res.end();
+            }
         }
     });
 
@@ -35,8 +45,13 @@ const express = require('express');
                 urls[message.url] = message.content;
                 parentPort.postMessage({ type: 'done', id: message.id });
                 break;
+            case 'root':
+                root = message.path;
+                parentPort.postMessage({ type: 'done', id: message.id });
+                break;
             case 'clear':
                 urls = {};
+                root = undefined;
                 parentPort.postMessage({ type: 'done', id: message.id });
                 break;
             default:

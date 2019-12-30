@@ -1,7 +1,8 @@
 import { Worker } from 'worker_threads';
 
-type AddEndPoint = (url: string, content: string) => Promise<void>;
+export type AddEndPoint = (url: string, content: string) => Promise<void>;
 export interface TestServer {
+    setRoot: (path: string) => Promise<void>;
     addEndpoint: AddEndPoint;
     reset: () => Promise<void>;
     close: () => Promise<number>;
@@ -34,12 +35,13 @@ export async function createTestServer(preferredPort = 12357): Promise<TestServe
                 } else {
                     reject(message);
                 }
-            } 
+            }
         };
         serverWorker.on('message', waitUntilDone);
     }) as Promise<T>;
 
     return {
+        setRoot: async (path: string) => post({ type: 'root', path }),
         addEndpoint: async (url: string, content: string) => post({ type: 'set', url, content }),
         reset: () => post({ type: 'clear' }),
         close: async () => serverWorker.terminate(),

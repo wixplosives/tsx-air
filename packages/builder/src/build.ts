@@ -1,8 +1,8 @@
 import { analyze, TsxFile, Import, asSourceFile } from '@tsx-air/compiler-utils';
-import { writeToFs, readFileOr, createCjs, evalModule, removeBuilt, asTsx, asJs, withoutExt, asTs } from './build.helpers';
+import { writeToFs, readFileOr, createCjs, evalModule, removeBuilt, asTsx, asJs, withoutExt } from './build.helpers';
 import cloneDp from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
-import { dirname, join } from 'path';
+import { dirname } from 'path';
 import { Compiler, Loader, BuiltCode, CjsEnv, Snippets } from './types';
 
 const preloads = {

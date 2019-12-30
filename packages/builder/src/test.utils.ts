@@ -26,8 +26,8 @@ export function jsLoaderFrom(content: IDirectoryContents): DebuggableLoader {
 }
 
 export const trimCode = (code: string, dropNewLines = false) =>
-    dropNewLines ? code.replace(/\s+/gm, ' ') :
-        code.replace(/^[ \t]*/mg, '').replace(/[ \t]+/g, ' ');
+    (dropNewLines ? code.replace(/\s+/gm, ' ') :
+        code.replace(/^[ \t]*/mg, '').replace(/[ \t]+/g, ' ')).trim();
 
 // tslint:disable-next-line: no-eval
 export const execute = (code: string, window: any = {}) => eval(`(window) => {${code};

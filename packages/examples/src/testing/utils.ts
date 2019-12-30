@@ -1,10 +1,9 @@
-import { TestServer } from './testserver';
+import { TestServer } from './server/testserver';
 import { Page, Browser } from 'puppeteer';
 import ts from 'typescript';
 import { request, IncomingMessage } from 'http';
 import { Worker } from 'worker_threads';
 import isString from 'lodash/isString';
-import { readFileSync } from 'fs';
 import { join } from 'path';
 import { browserify } from '@tsx-air/builder/src';
 
@@ -15,22 +14,22 @@ export interface ExampleSuite {
 
 const isSource = /\.source\.tsx?$/;
 
-const useManuallyCompiledForSources: ts.TransformerFactory<ts.SourceFile> = ctx => node => {
+const useManuallyCompiledForSources: ts.TransformerFactory<ts.SourceFile> = _ => node => {
     const { fileName } = node;
     if (isSource.test(fileName)) {
-        const replacement = fileName.replace(isSource, '.compiled.ts');
-        const content = readFileSync(replacement, { encoding: 'utf8' });
-        const compOptions = ctx.getCompilerOptions();
-        console.log(`Replacing on the fly: ${fileName} => ${replacement}`);
-        const newNode =  ts.createSourceFile(
-            fileName,
-            content,
-            compOptions.target || ts.ScriptTarget.ESNext,
-            true,
-            ts.ScriptKind.TS
+        const reExported = ts.getMutableClone(node);
+        reExported.statements = ts.createNodeArray(
+            [
+                ts.createExportDeclaration(
+                    undefined,
+                    undefined,
+                    undefined,
+                    ts.createStringLiteral(fileName.replace(isSource, '.compiled'))
+                )
+            ]
+
         );
-        console.log(newNode.getFullText());
-        return newNode;
+        return reExported;
     }
     return node;
 };
@@ -42,13 +41,12 @@ export function getExampleManuallyCompiledPage(
     getBrowser: () => Browser,
     getServer: () => TestServer
 ): GetPage {
-    // const { loader, compiler } = getBuildingTools();
     return async function getPage(testBoilerplatePath: string) {
         const [browser, server] = [getBrowser(), getServer()];
         const boilerplate = await browserify({
             base: examplePath,
             entry: testBoilerplatePath,
-            output: join(__dirname, '../tmp/builerplate.js'),
+            output: join(__dirname, '../.tmp/builerplate.js'),
             debug: !!process.env.DEBBUG,
             loaderOptions: {
                 transformers: {
@@ -104,7 +102,7 @@ export const get = (url: string) => new Promise((resolve, reject) => {
 
 export async function threadedGet(url: string): Promise<{ result: string, time: number }> {
     const _id = Date.now() + '+' + Math.random();
-    const getter = new Worker(require.resolve('./threaded.get.worker'));
+    const getter = new Worker(require.resolve('./server/threaded.get.worker'));
     return new Promise((resolve, reject) => {
         getter.on('message', (m: any) => {
             const { id, result } = m;
@@ -130,3 +128,4 @@ export function block(duration: number) {
     const end = Date.now();
     return [start, end];
 }
+
