@@ -3,7 +3,8 @@ import { writeToFs, readFileOr, createCjs, evalModule, removeBuilt, asTsx, asJs,
 import cloneDp from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 import { dirname } from 'path';
-import { Compiler, Loader, BuiltCode, CjsEnv, Snippets } from './types';
+import { Loader, BuiltCode, CjsEnv, Snippets } from './types';
+import { Compiler } from '@tsx-air/compilers';
 
 const preloads = {
     '/node_modules/@tsx-air/framework/index.js': import('@tsx-air/framework'),

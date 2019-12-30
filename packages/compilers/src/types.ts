@@ -1,6 +1,6 @@
 import ts from 'typescript';
 
-export interface NamedCompiler {
-    name: string;
+export interface Compiler {
     transformers: ts.CustomTransformers;
+    label: string;
 }

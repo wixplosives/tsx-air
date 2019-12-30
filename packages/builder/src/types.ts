@@ -1,14 +1,12 @@
 import { IFileSystem } from '@file-services/types';
 import { ICommonJsModuleSystem } from '@file-services/commonjs';
+import { Compiler } from 'packages/compilers/src/types';
+
 export type Loader = (path: string) => Promise<string>;
-export interface Compiler {
-    compile: (src: string, path: string) => Promise<string>;
-    label: string;
-}
 
 export interface BuildTools {
-    compiler:Compiler;
-    loader:Loader;
+    compiler: Compiler;
+    loader: Loader;
 }
 
 

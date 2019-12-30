@@ -1,7 +1,7 @@
 import { compFactory } from './component-factory';
 import ts from 'typescript';
 import { compClass } from './component-class';
-import { NamedCompiler } from '../types';
+import { Compiler } from '../types';
 import { TsxFile, analyze, generateDomBindings, cloneDeep, parseValue } from '@tsx-air/compiler-utils';
 
 export const tsxAir = (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
@@ -27,8 +27,8 @@ export const tsxAir = (context: ts.TransformationContext): ts.Transformer<ts.Sou
         }
     };
 };
-const compiler: NamedCompiler = {
-    name: 'String Based Compiler',
+const compiler: Compiler = {
+    label: 'String Based Compiler',
     transformers: {
         before: [tsxAir]
     }

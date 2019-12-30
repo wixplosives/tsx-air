@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { Page } from 'puppeteer';
 import { ExampleSuite } from '../../testing/utils';
+import  _ from '../../testing/chai.extensions';
 
 const suite: ExampleSuite = {
     suite(getPage: (testTsx: string) => Promise<Page>) {

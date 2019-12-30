@@ -1,12 +1,12 @@
 import { createMemoryFs } from '@file-services/memory';
-import { Compiler, Loader } from './types';
+import {  Loader } from './types';
 import { IDirectoryContents } from '@file-services/types';
 import { IMemFileSystem } from '@file-services/memory';
+import { Compiler } from '@tsx-air/compilers';
+import ts from 'typescript';
 
 export const trivialCompiler: Compiler = {
-    compile: async (source, _path) => {
-        return source;
-    },
+    transformers: undefined as unknown as ts.CustomTransformers,
     label: 'copier'
 };
 

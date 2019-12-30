@@ -1,8 +1,8 @@
 import { BuiltCode } from './types';
 import { build, rebuild, reCompile } from './build';
 import { expect } from 'chai';
-import { Compiler } from './types';
 import { trivialCompiler as compiler, DebuggableLoader, jsLoaderFrom, trimCode } from './test.utils';
+import { Compiler } from '@tsx-air/compilers';
 // tslint:disable: no-unused-expression
 
 describe('build', () => {

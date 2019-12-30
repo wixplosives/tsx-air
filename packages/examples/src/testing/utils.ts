@@ -14,7 +14,7 @@ export interface ExampleSuite {
 
 const isSource = /\.source\.tsx?$/;
 
-const useManuallyCompiledForSources: ts.TransformerFactory<ts.SourceFile> = _ => node => {
+export const useManuallyCompiledForSources: ts.TransformerFactory<ts.SourceFile> = _ => node => {
     const { fileName } = node;
     if (isSource.test(fileName)) {
         const reExported = ts.getMutableClone(node);
@@ -34,9 +34,10 @@ const useManuallyCompiledForSources: ts.TransformerFactory<ts.SourceFile> = _ =>
     return node;
 };
 
-type GetPage = (testHtml: string) => Promise<Page>;
+export type GetPage = (testHtml: string) => Promise<Page>;
 
-export function getExampleManuallyCompiledPage(
+export function getCompiledPage(
+    transformers: ts.CustomTransformers,
     examplePath: string,
     getBrowser: () => Browser,
     getServer: () => TestServer
@@ -49,9 +50,7 @@ export function getExampleManuallyCompiledPage(
             output: join(__dirname, '../.tmp/builerplate.js'),
             debug: !!process.env.DEBBUG,
             loaderOptions: {
-                transformers: {
-                    before: [useManuallyCompiledForSources]
-                },
+                transformers,
                 cache: false
             }
         });
@@ -81,6 +80,16 @@ export function getExampleManuallyCompiledPage(
         }
         return page;
     };
+}
+
+
+export function getExampleManuallyCompiledPage(
+    examplePath: string,
+    getBrowser: () => Browser,
+    getServer: () => TestServer
+): GetPage {
+    return getCompiledPage({ before: [useManuallyCompiledForSources] },
+        examplePath, getBrowser, getServer);
 }
 
 export const get = (url: string) => new Promise((resolve, reject) => {
