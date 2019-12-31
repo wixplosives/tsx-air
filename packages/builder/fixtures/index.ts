@@ -1,4 +1,4 @@
-import { join } from "path";
+import { join } from 'path';
 
 export const base = __dirname;
 export const browserify = join(base, 'browserify');

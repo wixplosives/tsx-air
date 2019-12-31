@@ -1,164 +1,113 @@
-import { BuiltCode } from './types';
 import { build, rebuild, reCompile } from './build';
 import { expect } from 'chai';
-import { Compiler } from '@tsx-air/compilers';
 import { build as fixtures } from '../fixtures';
-import { DebuggableLoader, jsLoaderFromPath, trimCode, trivialCompiler } from '@tsx-air/testing';
+import { DebuggableLoader, jsLoaderFromPath, createMockpiler } from '@tsx-air/testing';
 // tslint:disable: no-unused-expression
+
+const compiler = createMockpiler('compiled');
+const recompiler = createMockpiler('wasReCompiled');
 
 describe('build', () => {
     let loader: DebuggableLoader;
     beforeEach(() => {
         loader = jsLoaderFromPath(fixtures, false);
-
-        // {
-        //     '/data.js': `
-        //     export const b='b'`,
-        //     '/data2.js': `
-        //     export const newImport=true`,
-        //     '/src': {
-        //         'examples': {
-        //             'ex1': {
-        //                 'source.js': `
-        //                 import {TSXAir} from '@tsx-air/framework';
-        //                 export const air = TSXAir;`
-        //             }
-        //         },
-        //         'main.js': `
-        //         import {a} from './a';
-        //         import {b} from '../data'
-        //         export const c = {a,b};`,
-        //         'a.js': `
-        //         import {val} from './inner/a';
-        //         export const a=val`,
-        //         'inner': {
-        //             'a.js': `
-        //         import {b} from '../../data';
-        //         export const val = 'a'+b;`
-        //         }
-        //     }
-        // }
     });
 
     it('should evaluate a module with no imports', async () => {
-        const res = await build(trivialCompiler, loader, '/no.imports');
+        const res = await build(compiler, loader, '/no.imports');
         const mod = await res.module;
         expect(res.error).to.equal(undefined);
         expect(loader.loaded).to.deep.equal(['/no.imports']);
         expect(mod).to.deep.equal({
-            wasBuilt: true
+            wasBuilt: true,
+            compiled:true
         });
     });
 
-    it.only('should evaluate a module with imports', async () => {
-        const res = await build(trivialCompiler, loader, '/with.imports');
+    it('should evaluate a module with imports', async () => {
+        const res = await build(compiler, loader, '/with.imports');
         expect(res.error).to.equal(undefined);
         expect(await res.module).to.deep.equal({
-           localImports: 'work',
-           framework: 'is a function'
+            compiled: true,
+            localImports: 'work',
+            deep: true,
+            framework: 'is a function'
         });
-        
-        expect(loader.loaded).not.to.include('/@tsx-air/framework');
-        expect(loader.loaded).to.include(['/with.imports', '/imported']);
-    });
 
-    it('should evaluate a module that uses the framework', async () => {
-        const res = await build(trivialCompiler, loader, '/src/examples/ex1/source');
-        expect(res.error).to.equal(undefined);
-        expect((await res.module as any).air).to.be.instanceOf(Function);
-        expect(loader.loaded).to.eql(['/src/examples/ex1/source']);
-        expect(loader.loaded).not.to.include('/@tsx-air/framework');
+        expect(loader.loaded, 'Framework should have been preloaded').not.to.include('/@tsx-air/framework');
+        expect(loader.loaded).to.have.all.members(['/with.imports', '/imported', '/deep.import']);
     });
 
     describe('rebuild', () => {
         it('should return a modified build for the root file', async () => {
-            const original = await build(trivialCompiler, loader, '/src/main');
+            const original = await build(compiler, loader, '/with.imports');
             await original.module;
             const modified = await rebuild(original, {
-                '/src/main.js': 'export const changed=true;'
+                '/with.imports': 'export const changed=true;'
             });
-            expect(await modified.module).to.eql({ changed: true });
+            expect(await modified.module).to.eql({ 
+                compiled: true,
+                changed: true
+            });
         });
 
         it('should return a modified build for changed dependencies', async () => {
-            const original = await build(trivialCompiler, loader, '/src/main');
+            const original = await build(compiler, loader, '/with.imports');
             await original.module;
             const modified = await rebuild(original, {
-                '/src/a.js': `export const a='modified'`
+                '/imported': `export const modified=true`
             });
             expect(await modified.module).to.eql({
-                c: {
-                    a: 'modified',
-                    b: (await original.module as any).c.b
-                }
+                compiled: true,
+                modified: true,
+                framework: 'is a function'
             });
         });
 
-        it('should not load new files in no new imports were added', async () => {
-            const original = await build(trivialCompiler, loader, '/src/main');
+        it('should load ONLY newly imported files', async () => {
+            const original = await build(compiler, loader, '/with.imports');
             await original.module;
+            // we only care about rebuild
             loader.loaded = [];
             const modified = await rebuild(original, {
-                '/src/main.js': 'export const changed=true;'
-            });
+                '/with.imports': `
+                    export * from './deep.import';
+                    export * from './new.import';`});
             await modified.module;
-            expect(loader.loaded).to.eql([]);
-        });
-
-        it('should load newly added dependencies', async () => {
-            const original = await build(trivialCompiler, loader, '/data');
-            await original.module;
-            expect(loader.loaded).to.eql(['/data']);
-            loader.loaded = [];
-            const modified = await rebuild(original, {
-                '/data.js': trimCode(`
-                    import {b} from '/data2';
-                    export const wasModified = b;`)
-            });
-            await modified.module;
-            expect(loader.loaded).to.eql(['/data2']);
+            expect(loader.loaded).to.eql(['/new.import']);
         });
     });
 
     describe('reCompile', () => {
-        const newCompiler: Compiler = {
-            transformers: {
-                before: [
-
-                ]
-            },
-            label: 'reCompiler'
-        };
-
         it('should recompile the source', async () => {
-            const original = await build(trivialCompiler, loader, '/src/main');
+            const original = await build(compiler, loader, '/with.imports');
             await original.module;
             loader.loaded = [];
-            const recompiled = await reCompile(original, newCompiler);
+            const recompiled = await reCompile(original, recompiler);
             const module = await recompiled.module;
-            expect(module.wasRecompiled).to.be.true;
+            expect(module).to.eql({
+                wasReCompiled: true,
+                localImports: 'work',
+                deep: true,
+                framework: 'is a function'
+            });
+            expect(loader.loaded, 'Sources should not have re-loaded').to.eql([]);
         });
 
-        it('should not reload any sources', async () => {
-            const original = await build(trivialCompiler, loader, '/src/main');
-            await original.module;
-            loader.loaded = [];
-            const recompiled = await reCompile(original, newCompiler);
-            await recompiled.module;
-            expect(loader.loaded).to.eql([]);
-        });
 
-        it('should recompile all the imports', async () => {
-            const original = await build(trivialCompiler, loader, '/src/main');
+        it('should recompile all source imports', async () => {
+            const original = await build(compiler, loader, '/with.imports');
             await original.module;
             loader.loaded = [];
-            const recompiled = await reCompile(original, newCompiler);
+            const recompiled = await reCompile(original, recompiler);
             await recompiled.module;
-            await Promise.all(
-                recompiled.imports.map(async (i: Promise<BuiltCode>) => {
-                    expect((await (await i).module).wasRecompiled).to.be.true;
-                }));
-        });
+            for (const imported of recompiled.imports) {
+               if ((await imported).path.indexOf('node_modules') === -1) {
+                   expect((await (await imported).module).wasReCompiled).to.be.true;
+               } else {
+                   expect((await (await imported).module).wasReCompiled).to.be.undefined;
+               }
+            }
     });
 });
 

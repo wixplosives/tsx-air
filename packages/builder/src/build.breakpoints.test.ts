@@ -1,19 +1,19 @@
-import { base } from './../../testing/fixtures/index';
+import { breakpoints } from '../fixtures';
 import { injectSnippets } from './build.helpers';
 import { build, addBreakpoint, removeBreakpoint } from './build';
 import { expect } from 'chai';
 import { BuiltCode } from './types';
-import { DebuggableLoader, trimCode, trivialCompiler, jsLoaderFromPath } from '@tsx-air/testing';
-import { join } from 'path';
+import { DebuggableLoader, trimCode, createMockpiler, jsLoaderFromPath } from '@tsx-air/testing';
 // tslint:disable: no-unused-expression
 
 describe('breakpoints', () => {
     let loader: DebuggableLoader;
+    const trivialCompiler = createMockpiler();
     const exportedCode = async (b: BuiltCode) =>
         trimCode((await b.module).exported.toString(), true);
 
     beforeEach(() => {
-        loader = jsLoaderFromPath(join(base, 'build/breakpoints'));
+        loader = jsLoaderFromPath(breakpoints, false);
     });
 
     describe('addBreakpoint', () => {
@@ -64,25 +64,25 @@ describe('breakpoints', () => {
         it('should not include injected snippets on the compiled fs', async () => {
             const res = await build(trivialCompiler, loader, '/main', { '/main.js': { 2: `val=true;` } });
             await res.module;
-            expect(res.compiled).to.eql(trimCode(
-                `let val=false;
-            export const wasInjected=val;`));
+            expect(res.compiled).to.be.similarText(
+                `let val = false;
+            export const wasInjected = val;`);
         });
     });
 
     describe('injectSnippets', () => {
         it('should inject snippets into code', () => {
-            const code = trimCode(`1
+            const code = `1
             2
             3
-            4`);
-            expect(injectSnippets(code, { 2: '1.5', 3: '2.5' })).to.eql(
-                trimCode(`1
+            4`;
+            expect(injectSnippets(code, { 2: '1.5', 3: '2.5' })).to.be.similarText(
+                `1
                 1.5
                 2
                 2.5
                 3
-                4`));
+                4`);
         });
     });
 });

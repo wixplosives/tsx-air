@@ -1,3 +1,4 @@
+import { ReExport } from './../../compiler-utils/src/analyzers/types';
 import { analyze, TsxFile, Import, asSourceFile, compilerOptions } from '@tsx-air/compiler-utils';
 import { writeToFs, readFileOr, createCjs, evalModule, removeBuilt, asTsx, asJs, withoutExt } from './build.helpers';
 import cloneDp from 'lodash/cloneDeep';
@@ -62,13 +63,14 @@ export async function build(compiler: Compiler, load: Loader, path: string,
         const compiled = await readFileOr(compiledEsm, asJs(path), () => {
             const res =  ts.transpileModule(source, {
                 compilerOptions,
-                fileName: asTsx(path)
+                fileName: asTsx(path),
+                transformers: compiler.transformers
             }).outputText;
             return res;
         });
 
-        const { imports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;
-        const builtImports = imports.map(buildImport);
+        const { imports, reExports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;        
+        const builtImports = [...imports, ...reExports].map(buildImport);
         return {
             source,
             compiled,
@@ -105,7 +107,7 @@ export async function build(compiler: Compiler, load: Loader, path: string,
         return loadedSource;
     }
 
-    async function buildImport(i: Import): Promise<BuiltCode> {
+    async function buildImport(i: Import|ReExport): Promise<BuiltCode> {
         const folder = dirname(path);
         const importPath = cjs.resolveFrom(folder, i.module) || compiledEsm.join(folder, i.module);
 
