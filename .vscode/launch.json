@@ -27,6 +27,21 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "test compilers",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/compilers/**/*.test.ts?(x)",
+                "--timeout",
+                "999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "test build",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
