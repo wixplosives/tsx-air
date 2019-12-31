@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { transformerCompilers } from '.';
-import { testing } from '@tsx-air/examples';
+import { validateCompilerWithExamples } from '@tsx-air/testing';
 
 describe('compilers', () => {
     it('each compiler should have a unique name', () => {
@@ -13,6 +13,6 @@ describe('compilers', () => {
     });
 
     for (const compiler of transformerCompilers) {
-        testing.validateCompilerWithExamples(compiler);
+        validateCompilerWithExamples(compiler);
     }
 });
