@@ -6,9 +6,11 @@ import { createTestServer, TestServer } from '../net';
 import { getCompiledPage } from '../utils';
 
 export function testCompilerWithExamples(compiler: Compiler, extraSuites:ExampleSuite[]=[]) {
-    describe(`Examples: ${compiler.label}`, () => {
+    describe(`Examples: ${compiler.label}`, function() {
         let browser: Browser;
         let server: TestServer;
+        this.bail(false);
+        this.timeout(5000);
 
         before(async () => {
             [browser, server] = await Promise.all([
