@@ -1,7 +1,9 @@
-import { expect } from 'chai';
+import { expect, use } from 'chai';
 import { Page } from 'puppeteer';
 import { ExampleSuite } from '../../testing/utils';
-import  _ from '../../testing/chai.extensions';
+import plugin from '../../testing/chai.extensions';
+
+use(plugin);
 
 const suite: ExampleSuite = {
     suite(getPage: (testTsx: string) => Promise<Page>) {

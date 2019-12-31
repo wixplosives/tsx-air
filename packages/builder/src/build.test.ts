@@ -131,9 +131,10 @@ describe('build', () => {
 
     describe('reCompile', () => {
         const newCompiler: Compiler = {
-            compile: async (source, _path) => {
-                return source + `
-                export const wasRecompiled=true;`;
+            transformers: {
+                before:[
+
+                ]
             },
             label: 'reCompiler'
         };

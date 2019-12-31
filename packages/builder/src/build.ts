@@ -1,10 +1,11 @@
-import { analyze, TsxFile, Import, asSourceFile } from '@tsx-air/compiler-utils';
+import { analyze, TsxFile, Import, asSourceFile, compilerOptions } from '@tsx-air/compiler-utils';
 import { writeToFs, readFileOr, createCjs, evalModule, removeBuilt, asTsx, asJs, withoutExt } from './build.helpers';
 import cloneDp from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 import { dirname } from 'path';
 import { Loader, BuiltCode, CjsEnv, Snippets } from './types';
 import { Compiler } from '@tsx-air/compilers';
+import ts from 'typescript';
 
 const preloads = {
     '/node_modules/@tsx-air/framework/index.js': import('@tsx-air/framework'),
@@ -58,8 +59,12 @@ export async function build(compiler: Compiler, load: Loader, path: string,
     const { cjs, compiledEsm, sources, pendingSources } = modules;
     const source: string = await readFileOr(sources, asTsx(path), loadSource);
     try {
-        const compiled = await readFileOr(compiledEsm, asJs(path), () =>
-            compiler.compile(source, asTsx(path)));
+        const compiled = await readFileOr(compiledEsm, asJs(path), () => {
+            return ts.transpileModule(source, {
+                compilerOptions,
+                fileName: asTsx(path)
+            }).outputText;
+        });
 
         const { imports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;
         const builtImports = imports.map(buildImport);
