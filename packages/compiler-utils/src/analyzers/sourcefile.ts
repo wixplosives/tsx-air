@@ -1,4 +1,4 @@
-import { TsxFile, Analyzer, isCompDefinition, isImport } from './types';
+import { TsxFile, Analyzer, isCompDefinition, isImport, isReExport } from './types';
 import ts from 'typescript';
 import { analyze } from '.';
 import { isTsxAirNode, addToNodesMap, hasError, NodesMap, errorNode } from './types.helpers';
@@ -24,7 +24,8 @@ export const sourceFile: Analyzer<TsxFile> = node => {
             kind: 'file',
             compDefinitions: nodesOfInterest.filter(isCompDefinition),
             sourceAstNode: node,
-            imports: nodesOfInterest.filter(isImport)
+            imports: nodesOfInterest.filter(isImport),
+            reExports: nodesOfInterest.filter(isReExport)
         };
         return {
             tsxAir, astToTsxAir

@@ -9,7 +9,8 @@ export type Analyzer<T extends TsxAirNode> = (node: ts.Node) => AnalyzerResult<T
 
 export type TsxAirNodeType = 'CompDefinition' | 'JsxFragment' |
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
-    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier';
+    'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' |
+    'exportSpecifier' | 'reExport';
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
 
@@ -32,6 +33,7 @@ export interface TsxFile extends TsxAirNode<ts.SourceFile> {
     kind: 'file';
     compDefinitions: CompDefinition[];
     imports: Import[];
+    reExports: ReExport[];
 }
 
 export interface Import extends TsxAirNode<ts.ImportDeclaration> {
@@ -39,11 +41,28 @@ export interface Import extends TsxAirNode<ts.ImportDeclaration> {
     module: string;
     imports: ImportSpecifierInfo[];
     defaultLocalName?: string;
+    nameSpace?: string;
+}
+
+interface Specifier {
+    localName: string;
+    externalName: string;
 }
 export interface ImportSpecifierInfo extends TsxAirNode<ts.ImportSpecifier> {
     kind: 'importSpecifier';
-    localName: string;
-    importedName: string;
+}
+export interface ImportSpecifierInfo extends Specifier {
+}
+
+export interface ExportSpecifierInfo extends TsxAirNode<ts.ExportSpecifier> {
+    kind: 'exportSpecifier';
+}
+export interface ExportSpecifierInfo extends Specifier { }
+
+export interface ReExport extends TsxAirNode<ts.ExportDeclaration> {
+    kind: 'reExport';
+    module: string;
+    exports?: ExportSpecifierInfo[];
 }
 
 export interface CompDefinition extends TsxAirNode<ts.CallExpression> {
@@ -106,37 +125,45 @@ export function isJsxAttribute(node: any): node is JsxAttribute {
 }
 
 export function isJsxComponent(node: any): node is JsxComponent {
-    return node && node.kind === 'JsxComponent';
+    return node?.kind === 'JsxComponent';
 }
 
 export function isJsxExpression(node: any): node is JsxExpression {
-    return node && node.kind === 'JsxExpression';
+    return node?.kind === 'JsxExpression';
 }
 
 export function isJsxFragment(node: any): node is JsxFragment {
-    return node && node.kind === 'JsxFragment';
+    return node?.kind === 'JsxFragment';
 }
 
 export function isJsxRoot(node: any): node is JsxRoot {
-    return node && node.kind === 'JsxRoot';
+    return node?.kind === 'JsxRoot';
 }
 
 export function isCompProps(node: any): node is CompProps {
-    return node && node.kind === 'CompProps';
+    return node?.kind === 'CompProps';
 }
 
 export function isCompDefinition(node: any): node is CompDefinition {
-    return node && node.kind === 'CompDefinition';
+    return node?.kind === 'CompDefinition';
 }
 
 export function isTsxFile(node: any): node is TsxFile {
-    return node && node.kind === 'file';
+    return node?.kind === 'file';
 }
 
 export function isImport(node: any): node is Import {
-    return node && node.kind === 'import';
+    return node?.kind === 'import';
 }
 
 export function isImportSpecifier(node: any): node is ImportSpecifierInfo {
-    return node && node.kind === 'importSpecifier';
+    return node?.kind === 'importSpecifier';
+}
+
+export function isReExport(node: any): node is ReExport {
+    return node?.kind === 'reExport';
+}
+
+export function isExportSpecifier(node: any): node is ExportSpecifierInfo {
+    return node?.kind === 'exportSpecifier';
 }

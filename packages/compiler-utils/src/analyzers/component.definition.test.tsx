@@ -1,6 +1,6 @@
 import {  parseStatement } from '../astUtils/parser';
 import { expect } from 'chai';
-import { compDefinition } from './comp-definition';
+import { compDefinition } from './component.definition';
 import ts from 'typescript';
 import { find } from '../astUtils/scanner';
 import { CompDefinition } from './types';

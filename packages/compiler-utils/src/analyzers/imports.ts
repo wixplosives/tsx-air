@@ -9,13 +9,15 @@ export const importStatement: Analyzer<Import> = sourceAstNode => {
         const specifiers = scan(sourceAstNode, importSpecifierStatement);
         const specifiersInfo = filterResults(specifiers);
         let defaultLocalName: string | undefined;
+        let nameSpace: string | undefined;
         if (sourceAstNode.importClause) {
             const imports = sourceAstNode.importClause;
             const bindings = imports.namedBindings;
             if (sourceAstNode.importClause.name) {
                 defaultLocalName = sourceAstNode.importClause.name.getText();
-            } else if (bindings && ts.isNamespaceImport(bindings)) {
-                defaultLocalName = bindings.name.getText();
+            } 
+            if (bindings && ts.isNamespaceImport(bindings)) {
+                nameSpace = bindings.name.getText();
             }
         }
 
@@ -23,6 +25,7 @@ export const importStatement: Analyzer<Import> = sourceAstNode => {
             kind: 'import',
             imports: specifiersInfo,
             defaultLocalName,
+            nameSpace,
             module: module.substr(1, module.length - 2),
             sourceAstNode
         });
@@ -37,7 +40,7 @@ export const importSpecifierStatement: Analyzer<ImportSpecifierInfo> = sourceAst
         return asAnalyzerResult<ImportSpecifierInfo>({
             kind: 'importSpecifier',
             sourceAstNode,
-            importedName,
+            externalName: importedName,
             localName
         });
     }

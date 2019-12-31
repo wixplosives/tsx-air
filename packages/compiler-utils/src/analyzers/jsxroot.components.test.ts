@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { getCompDef } from './comp-definition.test';
+import { getCompDef } from './component.definition.test';
 import { CompDefinition, JsxExpression, JsxComponent, isJsxAttribute } from './types';
 // tslint:disable: no-unused-expression
 

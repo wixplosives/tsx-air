@@ -80,7 +80,6 @@ export function isNotNull<T extends TsxAirNode>(input: null | undefined | T): in
 }
 
 export function filterResults<T extends TsxAirNode<any>>(result: Array<NodeMetaData<AnalyzerResult<T>>>): T[] {
-
     const specifiersInfo = result.map(res => {
         const inner = res.metadata.tsxAir;
         if (hasError(inner)) {
