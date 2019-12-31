@@ -1,8 +1,9 @@
 import { launch, Browser, Page } from 'puppeteer';
-import { expect } from 'chai';
-import './chai.extensions';
+import { expect, use } from 'chai';
+import plugin from './chai.extensions';
 
 describe('chai extensions', () => {
+    use(plugin);
     describe('puppeteer matchers', () => {
         let browser: Browser;
         let page: Page;

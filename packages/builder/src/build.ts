@@ -60,10 +60,11 @@ export async function build(compiler: Compiler, load: Loader, path: string,
     const source: string = await readFileOr(sources, asTsx(path), loadSource);
     try {
         const compiled = await readFileOr(compiledEsm, asJs(path), () => {
-            return ts.transpileModule(source, {
+            const res =  ts.transpileModule(source, {
                 compilerOptions,
                 fileName: asTsx(path)
             }).outputText;
+            return res;
         });
 
         const { imports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;

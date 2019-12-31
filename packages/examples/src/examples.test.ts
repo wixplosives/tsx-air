@@ -1,10 +1,4 @@
-import { validateCompilerWithExamples, useManuallyCompiledForSources } from '@tsx-air/testing';
+import { validateCompilerWithExamples } from '@tsx-air/testing';
+import { manuallyCompiled } from './manual.compiler';
 
-validateCompilerWithExamples(
-    {
-        label: 'manually compiled examples',
-        transformers: {
-            before: [useManuallyCompiledForSources]
-        }
-    }
-);
+validateCompilerWithExamples(manuallyCompiled);

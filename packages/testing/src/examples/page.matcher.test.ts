@@ -1,8 +1,8 @@
-import { createTestServer, TestServer } from './server/testserver';
-import { htmlMatch } from '.';
+import { createTestServer, TestServer } from '../net';
+import { htmlMatch } from '..';
 import { launch, Page, Browser } from 'puppeteer';
 import { expect } from 'chai';
-import { base } from '../fixtures';
+import { base } from '../../fixtures';
 
 describe('htmlMatch', () => {
     let server: TestServer;

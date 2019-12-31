@@ -1,8 +1,9 @@
 import { createTestServer, TestServer } from './testserver';
 import { expect } from 'chai';
 import { fail } from 'assert';
-import { get, threadedGet, block } from '../utils';
+import { get, threadedGet } from './client';
 import { base } from '../../fixtures';
+import { block } from './block.thread';
 
 
 before(function () {

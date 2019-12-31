@@ -1,8 +1,10 @@
+import { base } from './../../testing/fixtures/index';
 import { injectSnippets } from './build.helpers';
 import { build, addBreakpoint, removeBreakpoint } from './build';
 import { expect } from 'chai';
-import { DebuggableLoader, jsLoaderFrom, trivialCompiler, trimCode } from './test.utils';
 import { BuiltCode } from './types';
+import { DebuggableLoader, trimCode, trivialCompiler, jsLoaderFromPath } from '@tsx-air/testing';
+import { join } from 'path';
 // tslint:disable: no-unused-expression
 
 describe('breakpoints', () => {
@@ -11,14 +13,7 @@ describe('breakpoints', () => {
         trimCode((await b.module).exported.toString(), true);
 
     beforeEach(() => {
-        loader = jsLoaderFrom({
-            'main.js':
-                `let val=false;
-                export const wasInjected=val;`,
-            'func.js': `export const exported=() => {
-                    /* */
-                };`
-        });
+        loader = jsLoaderFromPath(join(base, 'build/breakpoints'));
     });
 
     describe('addBreakpoint', () => {

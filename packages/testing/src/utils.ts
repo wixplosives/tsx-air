@@ -1,40 +1,12 @@
-import { TestServer } from './server/testserver';
-import { Page, Browser } from 'puppeteer';
+import { TestServer } from './net';
+import { Browser } from 'puppeteer';
 import ts from 'typescript';
 import { request, IncomingMessage } from 'http';
 import { Worker } from 'worker_threads';
 import isString from 'lodash/isString';
 import { join } from 'path';
-import { browserify } from '@tsx-air/builder/src';
-
-export interface ExampleSuite {
-    suite: (getPage: (testTsx: string) => Promise<Page>) => Mocha.Suite;
-    path: string;
-}
-
-const isSource = /\.source\.tsx?$/;
-
-export const useManuallyCompiledForSources: ts.TransformerFactory<ts.SourceFile> = _ => node => {
-    const { fileName } = node;
-    if (isSource.test(fileName)) {
-        const reExported = ts.getMutableClone(node);
-        reExported.statements = ts.createNodeArray(
-            [
-                ts.createExportDeclaration(
-                    undefined,
-                    undefined,
-                    undefined,
-                    ts.createStringLiteral(fileName.replace(isSource, '.compiled'))
-                )
-            ]
-
-        );
-        return reExported;
-    }
-    return node;
-};
-
-export type GetPage = (testHtml: string) => Promise<Page>;
+import { browserify } from '@tsx-air/builder';
+import { GetPage } from '@tsx-air/examples';
 
 export function getCompiledPage(
     transformers: ts.CustomTransformers,
@@ -82,16 +54,6 @@ export function getCompiledPage(
     };
 }
 
-
-export function getExampleManuallyCompiledPage(
-    examplePath: string,
-    getBrowser: () => Browser,
-    getServer: () => TestServer
-): GetPage {
-    return getCompiledPage({ before: [useManuallyCompiledForSources] },
-        examplePath, getBrowser, getServer);
-}
-
 export const get = (url: string) => new Promise((resolve, reject) => {
     request(url, {
         method: 'GET'
@@ -137,4 +99,3 @@ export function block(duration: number) {
     const end = Date.now();
     return [start, end];
 }
-

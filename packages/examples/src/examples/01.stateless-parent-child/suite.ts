@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Page } from 'puppeteer';
-import { ExampleSuite } from '@tsx-air/testing';
+import { ExampleSuite } from '../..';
 
 const suite: ExampleSuite = {
     suite(getPage: (testTsx: string) => Promise<Page>) {

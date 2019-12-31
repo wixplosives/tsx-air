@@ -1,11 +1,11 @@
 import { launch, Browser } from 'puppeteer';
 import { after, afterEach } from 'mocha';
 import { Compiler } from '@tsx-air/compilers';
-import { shouldBeCompiled } from '@tsx-air/examples';
-import { getCompiledPage } from './utils';
-import { createTestServer, TestServer } from './server/testserver';
+import { shouldBeCompiled, ExampleSuite } from '@tsx-air/examples';
+import { createTestServer, TestServer } from '../net';
+import { getCompiledPage } from '../utils';
 
-export function validateCompilerWithExamples(compiler: Compiler) {
+export function testCompilerWithExamples(compiler: Compiler, extraSuites:ExampleSuite[]=[]) {
     describe(`Examples: ${compiler.label}`, () => {
         let browser: Browser;
         let server: TestServer;
@@ -26,6 +26,7 @@ export function validateCompilerWithExamples(compiler: Compiler) {
         after(() => browser.close());
         after(() => server.close());
 
-        shouldBeCompiled.map(({ suite, path }) => suite(getCompiledPage(compiler.transformers, path, () => browser, () => server)));
+        [...shouldBeCompiled, ...extraSuites].map(
+            ({ suite, path }) => suite(getCompiledPage(compiler.transformers, path, () => browser, () => server)));
     });
 }

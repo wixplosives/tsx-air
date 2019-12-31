@@ -1,5 +1,5 @@
-import { trimCode } from '@tsx-air/builder/src/test.utils';
 import { ElementHandle } from 'puppeteer';
+import { trimCode } from '../general.utils';
 
 export default function plugin(chai: any, utils: Chai.ChaiUtils) {
     utils.addMethod(chai.Assertion.prototype, 'similarText', function (this: Chai.AssertionPrototype, text: string) {

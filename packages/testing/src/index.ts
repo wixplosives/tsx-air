@@ -1,8 +1,9 @@
 import { use } from 'chai';
-import plugin from './chai.extensions';
+import plugin from './examples/chai.extensions';
 use(plugin);
 
-export { ExampleSuite, GetPage, useManuallyCompiledForSources } from './utils';
-export { validateCompilerWithExamples } from './with.transformer';
-export * from './server/testserver';
-export * from './page.matcher';
+export * from './net';
+export { testCompilerWithExamples as validateCompilerWithExamples } from './examples/with.transformer';
+export * from './examples/page.matcher';
+export * from './general.utils';
+export * from './build.utils';

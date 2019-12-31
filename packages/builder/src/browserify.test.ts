@@ -1,12 +1,12 @@
 import { createMemoryFs } from '@file-services/memory';
 import { expect } from 'chai';
-import { path as base } from '../fixtures';
+import { browserify as base } from '../fixtures';
 import { browserify } from './browserify';
-import { execute } from './test.utils';
 import { join } from 'path';
 import ts, { visitEachChild } from 'typescript';
+import { execute } from '@tsx-air/testing';
 
-describe('static.build', () => {
+describe('browserify', () => {
     it('should package simple.ts into a single js file', async () => {
         const built = await browserify({
             base,
