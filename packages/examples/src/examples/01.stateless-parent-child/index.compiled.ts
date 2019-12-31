@@ -26,7 +26,7 @@ export class ParentComp extends Component<ParentCompCtx, ParentCompProps> {
 ParentComp.factory = {
     unique: Symbol('ParentComp'),
     toString: props => `<div class="parent">
-      Hello <!-- start props.name -->${props.name}<!-- end props.name --> from parent
+      Parent: <!-- start props.name -->${props.name}<!-- end props.name -->
       ${ChildComp.factory.toString(props)}
     </div>`,
     hydrate: (root, props) => new ParentComp(
@@ -57,7 +57,7 @@ export class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
 
 ChildComp.factory = {
     unique: Symbol('ChildComp'),
-    toString: (props: { name: string }) => `<div class="child">Greetings <!-- start props.name -->${props.name}<!-- end props.name --> from child</div>`,
+    toString: (props: { name: string }) => `<div class="child">Child: <!-- start props.name -->${props.name}<!-- end props.name --></div>`,
     hydrate: (root, props) => new ChildComp({
         root,
         text1: root.childNodes[2] as Text,

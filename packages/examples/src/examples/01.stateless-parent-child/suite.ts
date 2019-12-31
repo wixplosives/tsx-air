@@ -1,9 +1,6 @@
-import { expect, use } from 'chai';
+import { expect } from 'chai';
 import { Page } from 'puppeteer';
-import { ExampleSuite } from '../../testing/utils';
-import plugin from '../../testing/chai.extensions';
-
-use(plugin);
+import { ExampleSuite } from '@tsx-air/testing';
 
 const suite: ExampleSuite = {
     suite(getPage: (testTsx: string) => Promise<Page>) {
@@ -15,10 +12,10 @@ const suite: ExampleSuite = {
                     expect(page).to.have.one('.parent > .child'),
                     expect(page).to.have.one('.parent > *'),
                     expect(page.$('.parent')).to.have.text(`
-                        Hello Test from parent
-                        Greetings Test from child`),
+                        Parent: Test
+                        Child: Test`),
                     expect(page).to.have.one('.child'),
-                    expect(page.$('.child')).to.have.text('Greetings Test from child'),
+                    expect(page.$('.child')).to.have.text('Child: Test'),
                 ]);
             });
         });

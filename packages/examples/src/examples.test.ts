@@ -1,5 +1,4 @@
-import { validateCompilerWithExamples } from './testing';
-import { useManuallyCompiledForSources } from './testing/utils';
+import { validateCompilerWithExamples, useManuallyCompiledForSources } from '@tsx-air/testing';
 
 validateCompilerWithExamples(
     {
