@@ -64,8 +64,9 @@ export function evalModule(compiled: string, path: string, env: CjsEnv, inject: 
         writeToFs(compiledEsm, jsPath, compiled);
         return exports;
     } catch (e) {
-        // tslint:disable-next-line: no-console
-        console.error(`Error evaluating ${path}:`, e);
+        const err = new Error(`Error evaluating ${path}:\n${e}`);
+        err.stack = e.stack;
+        throw err;
     }
 }
 

@@ -8,7 +8,7 @@ const readFile = promisify(_readFile);
 const subdir = exports.subdir = (package, path) => join(dirname(require.resolve(join(package, 'package.json'))), path);
 const examples = subdir('@tsx-air/examples', 'src/examples');
 
-getExamples = async () => (await (await readdir(examples, 'src/examples')))
+getExamples = async () => (await (await readdir(examples)))
     .filter(i => statSync(join(examples, i)).isDirectory());
 
 exports.serveExamples = app => {

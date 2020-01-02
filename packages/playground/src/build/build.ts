@@ -15,9 +15,14 @@ export async function build(compiler: Compiler, load: Loader, path: string,
     inject: Record<string, Record<number, string>> = {}, modules?: CjsEnv): Promise<BuiltCode> {
     modules = modules || await createCjs(preloads);
     if (compiler instanceof ManuallyCompiled) {
-        compiler.contentSwapper = src =>
-            modules?.compiledEsm.readFileSync(src.replace(isSource, '.compiled.tsx'), { encoding: 'utf8' });
+        compiler.contentSwapper = src => {
+            const alternative = src.replace(isSource, '.compiled.tsx');
+            return isSource.test(src) ?
+                modules?.sources.readFileSync(alternative, { encoding: 'utf8' })
+                : undefined;
+        };
     }
+
     path = withoutExt(path);
     const { cjs, compiledEsm, sources } = modules;
     const source: string = await readFileOr(sources, asTsx(path), loadSource);
@@ -27,8 +32,8 @@ export async function build(compiler: Compiler, load: Loader, path: string,
                 compilerOptions,
                 fileName: asTsx(path),
                 transformers: compiler.transformers
-            }).outputText;
-            return res;
+            });
+            return res.outputText;
         });
 
         const { imports, reExports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;
@@ -47,13 +52,16 @@ export async function build(compiler: Compiler, load: Loader, path: string,
             _cjsEnv: modules!,
             _injected: inject
         };
-    } catch (err) {
+    } catch (e) {
+        const err = new Error(`Error building ${path}:\n${e}`);
+        err.stack = e.stack;
+
         return {
             source,
-            compiled: err,
+            compiled: err.message,
             imports: [],
             // @ts-ignore
-            module: async () => { throw new Error(err); },
+            module: () => { throw err; },
             path,
             error: err,
             _injected: inject,
@@ -66,8 +74,8 @@ export async function build(compiler: Compiler, load: Loader, path: string,
     async function loadSource(): Promise<string> {
         const loading = load(withoutExt(path));
         const loadedSources = await loading;
-        Object.entries(loadedSources).forEach(([key, value]) => {
-            writeToFs(sources, asTsx(key), value);
+        Object.entries(loadedSources).forEach(([filePath, content]) => {
+            writeToFs(sources, asTsx(filePath), content);
         });
         return loadedSources[path];
     }
