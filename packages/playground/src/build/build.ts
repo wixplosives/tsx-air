@@ -1,3 +1,4 @@
+import { ManuallyCompiled, isSource } from './../../../examples/src/manual.compiler';
 import { analyze, TsxFile, Import, asSourceFile, compilerOptions, ReExport } from '@tsx-air/compiler-utils';
 import { writeToFs, readFileOr, createCjs, evalModule, asTsx, asJs, withoutExt } from './build.helpers';
 import { dirname } from 'path';
@@ -13,6 +14,10 @@ export const preloads = {
 export async function build(compiler: Compiler, load: Loader, path: string,
     inject: Record<string, Record<number, string>> = {}, modules?: CjsEnv): Promise<BuiltCode> {
     modules = modules || await createCjs(preloads);
+    if (compiler instanceof ManuallyCompiled) {
+        compiler.contentSwapper = src =>
+            modules?.compiledEsm.readFileSync(src.replace(isSource, '.compiled.tsx'), { encoding: 'utf8' });
+    }
     path = withoutExt(path);
     const { cjs, compiledEsm, sources } = modules;
     const source: string = await readFileOr(sources, asTsx(path), loadSource);
@@ -51,7 +56,10 @@ export async function build(compiler: Compiler, load: Loader, path: string,
             module: async () => { throw new Error(err); },
             path,
             error: err,
-            _injected: inject
+            _injected: inject,
+            _usedBuildTools: {
+                loader: load, compiler
+            },
         };
     }
 

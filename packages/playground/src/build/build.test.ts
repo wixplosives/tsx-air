@@ -8,7 +8,7 @@ const compiler = createMockpiler('compiled');
 
 describe('build', () => {
     let loader: DebuggableLoader;
-    beforeEach(() => {
+    beforeEach(async () => {
         loader = jsLoaderFromPath(fixtures, false);
     });
 

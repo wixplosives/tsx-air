@@ -22,11 +22,18 @@ function useManuallyCompiledForSources(getAlternativeContent: ContentSwapper): t
     };
 }
 
-export function getManuallyCompiled(getContent: ContentSwapper): Compiler {
-    return {
-        label: 'manually compiled examples',
-        transformers: {
-            before: [useManuallyCompiledForSources(getContent)]
+export class ManuallyCompiled implements Compiler {
+    public get transformers(): ts.CustomTransformers {
+        if (this.contentSwapper) {
+            return {
+                before: [useManuallyCompiledForSources(this.contentSwapper)]
+            };
+        } else {
+            throw new Error(`ManuallyCompiled contentSwapper must be defined`);
         }
-    };
+    }
+    public readonly label = 'Manually compiled';
+
+    constructor(public contentSwapper?: ContentSwapper) {
+    }
 }

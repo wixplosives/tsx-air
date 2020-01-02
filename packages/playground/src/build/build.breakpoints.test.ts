@@ -1,4 +1,4 @@
-import breakpoints from '../../fixtures';
+import { breakpoints } from '../../fixtures';
 import { injectSnippets } from './build.helpers';
 import { build } from './build';
 import { expect } from 'chai';

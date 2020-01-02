@@ -68,6 +68,21 @@
             "env": {
                 "DEBUG":"true"
             }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "test playground",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/playground/**/*.test.ts?(x)",
+                "--timeout",
+                "999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
         }
     ]
 }

@@ -15,14 +15,14 @@ export function jsLoaderFromPath(path: string, strictExt = true): DebuggableLoad
         const filePath = join(path, `${url}`);
         if (existsSync(filePath)) {
             return {
-                [path]: trimCode(readFileSync(filePath, { encoding: 'utf8' }))
+                [url]: trimCode(readFileSync(filePath, { encoding: 'utf8' }))
             };
         }
         if (!strictExt) {
             for (const withExt of [asTsx, asTs, asJs]) {
                 if (existsSync(withExt(filePath))) {
                     return {
-                        [path]: trimCode(readFileSync(withExt(filePath), { encoding: 'utf8' }))
+                        [url]: trimCode(readFileSync(withExt(filePath), { encoding: 'utf8' }))
                     };
                 }
             }

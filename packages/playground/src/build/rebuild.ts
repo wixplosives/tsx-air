@@ -1,6 +1,6 @@
 import { Compiler } from '@tsx-air/compilers';
 import { asTsx, asJs, removeBuilt, createCjs } from './build.helpers';
-import cloneDp  from 'lodash/cloneDeep';
+import cloneDp from 'lodash/cloneDeep';
 import { BuiltCode, Snippets } from './types';
 import isEqual from 'lodash/isEqual';
 import { build, preloads } from './build';

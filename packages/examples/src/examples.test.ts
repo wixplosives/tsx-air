@@ -1,9 +1,9 @@
 import { readFileSync } from 'fs';
 import { validateCompilerWithExamples } from '@tsx-air/testing';
-import { getManuallyCompiled, isSource } from './manual.compiler';
+import { isSource, ManuallyCompiled } from './manual.compiler';
 
 
-const manuallyCompiled = getManuallyCompiled(
+const manuallyCompiled = new ManuallyCompiled(
     src => {
         try {
             return isSource.test(src) ?
