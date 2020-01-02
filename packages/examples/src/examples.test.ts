@@ -4,9 +4,15 @@ import { getManuallyCompiled, isSource } from './manual.compiler';
 
 
 const manuallyCompiled = getManuallyCompiled(
-    src =>  isSource(src) ? 
-        readFileSync(src, {encoding:'utf8'})
-    : undefined;
-    
-)
+    src => {
+        try {
+            return isSource.test(src) ?
+                readFileSync(src.replace(isSource, '.compiled.ts'), { encoding: 'utf8' })
+                : undefined;
+        } catch (e) {
+            throw new Error(`Error reading manually compiled of ${src}: ` + e);
+        }
+    }
+);
+
 validateCompilerWithExamples(manuallyCompiled);
