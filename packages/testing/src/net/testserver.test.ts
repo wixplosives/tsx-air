@@ -1,8 +1,8 @@
 import { createTestServer, TestServer } from './testserver';
 import { expect } from 'chai';
 import { fail } from 'assert';
-import { get, threadedGet } from './client';
-import { base } from '../../fixtures';
+import { get, threadedGet } from './http.client';
+import  fixtures  from '../../fixtures';
 import { block } from './block.thread';
 
 
@@ -33,12 +33,12 @@ describe('test server', () => {
     describe('setRoot', () => {
         it('should serve GET endpoint hat matches files in the root', async () => {
             server = await createTestServer();
-            await server.setRoot(base);
+            await server.setRoot(fixtures);
             expect(await get(await server.baseUrl + '/from.fs')).to.eql('ok');
         });
         it('should respond with 404 error for missing files', async () => {
             server = await createTestServer();
-            await server.setRoot(base);
+            await server.setRoot(fixtures);
             await shouldFail(server.baseUrl + '/no.such.file', 'Server served missing file');
         });
     });
@@ -53,7 +53,7 @@ describe('test server', () => {
 
     it('should prioritize endpoints set by addEndpoint over setRoot', async () => {
         server = await createTestServer();
-        await server.setRoot(base);
+        await server.setRoot(fixtures);
         await server.addEndpoint('/from.fs', 'nope');
         expect(await get(await server.baseUrl + '/from.fs')).to.eql('nope');
     });
@@ -69,7 +69,7 @@ describe('test server', () => {
 
         it('should clear the base path', async () => {
             server = await createTestServer();
-            await server.setRoot(base);
+            await server.setRoot(fixtures);
             expect(await get(await server.baseUrl + '/from.fs')).to.eql('ok');
             await server.reset();
             await shouldFail(server.baseUrl + '/from.fs', 'Endpoint active after server reset');

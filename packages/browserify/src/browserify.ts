@@ -7,7 +7,7 @@ import { createWebpackFs } from '@file-services/webpack';
 import { createMemoryFs } from '@file-services/memory';
 import webpack from 'webpack';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { ITypeScriptLoaderOptions} from '@ts-tools/webpack-loader';
+import { ITypeScriptLoaderOptions } from '@ts-tools/webpack-loader';
 
 export interface BrowserifyOptions {
     base: string;
@@ -15,7 +15,7 @@ export interface BrowserifyOptions {
     output: string;
     outputFs?: IFileSystem;
     debug?: boolean;
-    configFilePath?:string;
+    configFilePath?: string;
     loaderOptions?: ITypeScriptLoaderOptions;
 }
 
@@ -32,8 +32,8 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         entry: join(base, entry),
         mode: !debug ? 'production' : 'development',
         output: {
-           filename: basename(output),
-           path: dirname(output)
+            filename: basename(output),
+            path: dirname(output)
         },
         module: {
             rules: [

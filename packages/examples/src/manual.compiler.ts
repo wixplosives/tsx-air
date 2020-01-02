@@ -1,33 +1,32 @@
+import { asSourceFile, cloneDeep } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { Compiler } from '@tsx-air/compilers';
 
-const isSource = /\.source\.tsx?$/;
+export const isSource = /\.source\.tsx?$/;
+export type ContentSwapper = (src: string) => string | undefined;
 
-const useManuallyCompiledForSources: ts.TransformerFactory<ts.SourceFile> = _ => node => {
-    const { fileName } = node;
-    if (isSource.test(fileName)) {
-        const reExported = ts.getMutableClone(node);
-        reExported.statements = ts.createNodeArray(
-            [
-                ts.createExportDeclaration(
-                    undefined,
-                    undefined,
-                    undefined,
-                    ts.createStringLiteral(fileName.replace(isSource, '.compiled'))
-                )
-            ]
+function useManuallyCompiledForSources(getAlternativeContent: ContentSwapper): ts.TransformerFactory<ts.SourceFile> {
+    return _ => node => {
+        const { fileName } = node;
+        const replacementContent = getAlternativeContent(fileName);
+        if (replacementContent) {
+            const compiled = asSourceFile(replacementContent);
+            const reExported = ts.getMutableClone(node);
+            reExported.statements =
+                ts.createNodeArray(
+                    compiled.statements.map(s => cloneDeep(s, reExported))
+                );
+            return reExported;
+        }
+        return node;
+    };
+}
 
-        );
-        return reExported;
-    }
-    return node;
-};
-
-
-export const manuallyCompiled: Compiler =
-{
-    label: 'manually compiled examples',
-    transformers: {
-        before: [useManuallyCompiledForSources]
-    }
-};
+export function getManuallyCompiled(getContent: ContentSwapper): Compiler {
+    return {
+        label: 'manually compiled examples',
+        transformers: {
+            before: [useManuallyCompiledForSources(getContent)]
+        }
+    };
+}

@@ -2,13 +2,12 @@ import { IFileSystem } from '@file-services/types';
 import { ICommonJsModuleSystem } from '@file-services/commonjs';
 import { Compiler } from 'packages/compilers/src/types';
 
-export type Loader = (path: string) => Promise<string>;
+export type Loader = (path: string) => Promise<Record<string,string>>;
 
 export interface BuildTools {
     compiler: Compiler;
     loader: Loader;
 }
-
 
 export type FileSnippets = Record<number, string>;
 export type Snippets = Record<string, FileSnippets>;
@@ -30,5 +29,4 @@ export interface CjsEnv {
     compiledEsm: IFileSystem;
     cjs: ICommonJsModuleSystem;
     sources: IFileSystem;
-    pendingSources: Map<string, Promise<string>>;
 }

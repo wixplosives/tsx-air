@@ -6,7 +6,9 @@ import debounce from 'lodash/debounce';
 import { DOM } from './dom';
 import * as view from './breakpoints';
 import * as _monaco from 'monaco-editor';
-import { getSource, getCompiledEsm, removeBreakpoint, addBreakpoint, BuiltCode } from '@tsx-air/builder';
+import { getSource, getCompiledEsm } from '../build/build';
+import { removeBreakpoint, addBreakpoint } from '../build/rebuild';
+import { BuiltCode } from '../build/types';
 const monaco: Promise<typeof _monaco> = new Promise(resolve => {
     // @ts-ignore
     window.require(['vs/editor/editor.api'], resolve);
@@ -87,7 +89,8 @@ export async function showCompiledCode({ dom, currentExample, getSelectedSource 
             contextmenu: false,
             hideCursorInOverviewRuler: true,
             glyphMargin: true,
-            cursorStyle:''
+            cursorStyle: 'line',
+            cursorWidth: 0
         });
         viewer.onMouseDown(async e => {
             const { Range } = await monaco;

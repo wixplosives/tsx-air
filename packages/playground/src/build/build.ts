@@ -1,67 +1,24 @@
-import { ReExport } from './../../compiler-utils/src/analyzers/types';
-import { analyze, TsxFile, Import, asSourceFile, compilerOptions } from '@tsx-air/compiler-utils';
-import { writeToFs, readFileOr, createCjs, evalModule, removeBuilt, asTsx, asJs, withoutExt } from './build.helpers';
-import cloneDp from 'lodash/cloneDeep';
-import isEqual from 'lodash/isEqual';
+import { analyze, TsxFile, Import, asSourceFile, compilerOptions, ReExport } from '@tsx-air/compiler-utils';
+import { writeToFs, readFileOr, createCjs, evalModule, asTsx, asJs, withoutExt } from './build.helpers';
 import { dirname } from 'path';
-import { Loader, BuiltCode, CjsEnv, Snippets } from './types';
 import { Compiler } from '@tsx-air/compilers';
 import ts from 'typescript';
+import { BuiltCode, Loader, CjsEnv } from './types';
 
-const preloads = {
+export const preloads = {
     '/node_modules/@tsx-air/framework/index.js': import('@tsx-air/framework'),
     '/node_modules/lodash/clamp.js': import('lodash/clamp')
 };
-
-export async function rebuild(built: BuiltCode, overridesSources: Record<string, string>, injects: Snippets = {}): Promise<BuiltCode> {
-    const { _cjsEnv, _usedBuildTools: { loader, compiler }, path } = built;
-    for (const [src, source] of Object.entries(overridesSources)) {
-        const oldVersion = _cjsEnv.sources.readFileSync(asTsx(src), { encoding: 'utf8' });
-        if (oldVersion !== source) {
-            removeBuilt(_cjsEnv, src);
-            _cjsEnv.sources.writeFileSync(asTsx(src), source);
-        }
-    }
-    for (const [src] of [...Object.entries(injects), ...Object.entries(built._injected)]) {
-        if (!isEqual(built._injected[src], injects[src])) {
-            removeBuilt(_cjsEnv, src);
-        }
-    }
-    return build(compiler, loader, path, injects, _cjsEnv);
-}
-
-export async function reCompile(built: BuiltCode, newCompiler: Compiler): Promise<BuiltCode> {
-    const { _cjsEnv, _usedBuildTools: { loader }, path, _injected } = built;
-    const modules = await createCjs(preloads);
-    modules.sources = _cjsEnv.sources;
-    return build(newCompiler, loader, path, _injected, modules);
-}
-
-export async function addBreakpoint(built: BuiltCode, path: string, line: number): Promise<BuiltCode> {
-    const injects = cloneDp(built._injected);
-    path = asJs(path);
-    injects[path] = { ...injects[path], [line]: 'debugger;' };
-    return rebuild(built, {}, injects);
-}
-
-export async function removeBreakpoint(built: BuiltCode, path: string, line: number): Promise<BuiltCode> {
-    const injects = cloneDp(built._injected);
-    path = asJs(path);
-    if (injects[path]) {
-        delete injects[path][line];
-    }
-    return rebuild(built, {}, injects);
-}
 
 export async function build(compiler: Compiler, load: Loader, path: string,
     inject: Record<string, Record<number, string>> = {}, modules?: CjsEnv): Promise<BuiltCode> {
     modules = modules || await createCjs(preloads);
     path = withoutExt(path);
-    const { cjs, compiledEsm, sources, pendingSources } = modules;
+    const { cjs, compiledEsm, sources } = modules;
     const source: string = await readFileOr(sources, asTsx(path), loadSource);
     try {
         const compiled = await readFileOr(compiledEsm, asJs(path), () => {
-            const res =  ts.transpileModule(source, {
+            const res = ts.transpileModule(source, {
                 compilerOptions,
                 fileName: asTsx(path),
                 transformers: compiler.transformers
@@ -69,7 +26,7 @@ export async function build(compiler: Compiler, load: Loader, path: string,
             return res;
         });
 
-        const { imports, reExports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;        
+        const { imports, reExports } = analyze(asSourceFile(compiled)).tsxAir as TsxFile;
         const builtImports = [...imports, ...reExports].map(buildImport);
         return {
             source,
@@ -99,15 +56,15 @@ export async function build(compiler: Compiler, load: Loader, path: string,
     }
 
     async function loadSource(): Promise<string> {
-        const loading = pendingSources.get(path) || load(withoutExt(path));
-        pendingSources.set(path, loading);
-        loading.then(() => pendingSources.delete(path));
-        const loadedSource = await loading;
-        writeToFs(sources, asTsx(path), loadedSource);
-        return loadedSource;
+        const loading = load(withoutExt(path));
+        const loadedSources = await loading;
+        Object.entries(loadedSources).forEach(([key, value]) => {
+            writeToFs(sources, asTsx(key), value);
+        });
+        return loadedSources[path];
     }
 
-    async function buildImport(i: Import|ReExport): Promise<BuiltCode> {
+    async function buildImport(i: Import | ReExport): Promise<BuiltCode> {
         const folder = dirname(path);
         const importPath = cjs.resolveFrom(folder, i.module) || compiledEsm.join(folder, i.module);
 

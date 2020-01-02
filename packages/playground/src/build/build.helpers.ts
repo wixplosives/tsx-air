@@ -44,8 +44,7 @@ export async function createCjs(preloads: Record<string, Promise<unknown>>): Pro
         Object.entries(preloads).map(([filename, module]) =>
             preload(compiledCjs, cjs, filename, module)));
 
-    const pendingSources = new Map();
-    return { compiledEsm, compiledCjs, cjs, sources, pendingSources };
+    return { compiledEsm, compiledCjs, cjs, sources };
 }
 
 export function injectSnippets(code: string, injects: FileSnippets) {
@@ -87,6 +86,7 @@ export const withoutExt = (path: string) => {
     }
     return path;
 };
+
 export const asJs = (path: string) => `${withoutExt(path)}.js`;
 export const asTs = (path: string) => `${withoutExt(path)}.ts`;
 export const asTsx = (path: string) => `${withoutExt(path)}.tsx`;

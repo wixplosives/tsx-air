@@ -6,3 +6,5 @@ export const shouldBeCompiled = [
 
 export const manuallyCompiledOnly = [
 ];
+
+export const base = __dirname;

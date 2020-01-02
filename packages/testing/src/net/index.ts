@@ -1,2 +1,2 @@
 export { TestServer, createTestServer } from './testserver';
-export { get, threadedGet } from './client';
+export { get, threadedGet } from './http.client';

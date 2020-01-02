@@ -1,23 +1,6 @@
 import ts from 'typescript';
-import { transformerCompilers } from '@tsx-air/compilers';
-import { Compiler } from '../../builder/src/types';
+import { transformerCompilers, Compiler } from '@tsx-air/compilers';
 
-const mappedCompilers: Compiler[] = transformerCompilers.map(compiler => {
-    return {
-        label: compiler.name,
-        compile: async (src: string) => {
-            return ts.transpileModule(src, {
-                compilerOptions: {
-                    jsx: ts.JsxEmit.Preserve,
-                    jsxFactory: 'TSXAir',
-                    target: ts.ScriptTarget.ES2020,
-                    esModuleInterop: true
-                },
-                transformers: compiler.transformers
-            }).outputText;
-        }
-    };
-});
 const manualCompiler: Compiler = {
     label: 'Manual + TS',
     compile: async (_src, path) => {
@@ -30,5 +13,5 @@ const manualCompiler: Compiler = {
 
 export const compilers: Compiler[] = [
     manualCompiler,
-    ...mappedCompilers
+    ...transformerCompilers
 ]; 

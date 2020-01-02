@@ -6,7 +6,8 @@ import './helpers';
 import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, showSourceCode, resetView } from './helpers';
 import { Model } from './index.model';
 import { setup } from './setup';
-import { Compiler, rebuild, reCompile } from '@tsx-air/builder';
+import { rebuild, reCompile } from '../build/rebuild';
+import { Compiler } from '@tsx-air/compilers';
 setup();
 
 (async () => {
@@ -86,4 +87,3 @@ async function runExample(model: Model) {
         model.dom.resultRoot.innerHTML = `<div>🤒</div><pre>${err.message}</pre>`;
     }
 }
-

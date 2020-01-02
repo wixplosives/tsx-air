@@ -1,9 +1,11 @@
-import { breakpoints } from '../fixtures';
+import breakpoints from '../../fixtures';
 import { injectSnippets } from './build.helpers';
-import { build, addBreakpoint, removeBreakpoint } from './build';
+import { build } from './build';
 import { expect } from 'chai';
+import { trimCode, createMockpiler } from '@tsx-air/testing';
 import { BuiltCode } from './types';
-import { DebuggableLoader, trimCode, createMockpiler, jsLoaderFromPath } from '@tsx-air/testing';
+import { addBreakpoint, removeBreakpoint } from './rebuild';
+import { DebuggableLoader, jsLoaderFromPath } from './test.utils';
 // tslint:disable: no-unused-expression
 
 describe('breakpoints', () => {
