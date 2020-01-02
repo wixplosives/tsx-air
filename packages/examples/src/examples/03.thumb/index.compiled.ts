@@ -80,8 +80,3 @@ Thumb.factory = {
         return new Thumb(context, props, state);
     }
 };
-
-
-export const runExample = (target: HTMLElement) => {
-    render(target, Thumb as any, { url: '/images/prettyboy.jpg'});
-};

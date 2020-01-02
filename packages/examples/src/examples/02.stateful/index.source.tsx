@@ -27,6 +27,3 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
     </div>;
 });
 
-export const runExample = (target: HTMLElement) => {
-    render(target, StatefulComp, { initialState: 'Click me!' });
-};

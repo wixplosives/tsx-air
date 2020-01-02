@@ -79,7 +79,3 @@ StatefulComp.factory = {
         }, props, state || initialState(props)
     )
 };
-
-export const runExample = (target: HTMLElement) => {
-    render(target, StatefulComp as any, { initialState: 'Click me!' });
-};

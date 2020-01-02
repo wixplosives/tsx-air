@@ -90,8 +90,3 @@ Zoom.factory = {
     },
     initialState
 } as Factory<Zoom>;
-
-
-export const runExample = (target: HTMLElement) => {
-    render(target, Zoom as any, { url: '/images/bunny.jpg' });
-};

@@ -20,7 +20,3 @@ export const Thumb = TSXAir((props: { url: string, onClick?: (e:MouseEvent) => v
         {state.imageLoaded ? state.img : <div className="preloader" />}
     </div>;
 });
-
-export const runExample = (target: HTMLElement) => {
-    render(target, Thumb, { url: '/images/prettyboy.jpg' });
-};

@@ -1,6 +1,6 @@
 import { TSXAir, render, store } from '@tsx-air/framework';
-import { Thumb } from '../03.thumb/source';
-import { Zoom } from '../04.zoom/source';
+import { Thumb } from '../03.thumb/index.source';
+import { Zoom } from '../04.zoom/index.source';
 
 export const Gallery = TSXAir((props: { urls: string[] }) => {
     const state = store({
