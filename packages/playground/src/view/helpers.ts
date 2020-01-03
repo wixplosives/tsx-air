@@ -10,7 +10,8 @@ import { getSource, getCompiledEsm } from '../build/build';
 import { removeBreakpoint, addBreakpoint } from '../build/rebuild';
 import { BuiltCode } from '../build/types';
 const monaco: Promise<typeof _monaco> = new Promise(resolve => {
-    globalThis.require(['vs/editor/editor.api'], resolve);
+    // @ts-ignore
+    window.require(['vs/editor/editor.api'], resolve);
 });
 
 let editor!: _monaco.editor.IStandaloneCodeEditor;

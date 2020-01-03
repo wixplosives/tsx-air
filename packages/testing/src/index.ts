@@ -6,4 +6,4 @@ export * from './net';
 export { testCompilerWithExamples as validateCompilerWithExamples } from './examples/with.transformer';
 export * from './examples/page.matcher';
 export * from './general.utils';
-export * from './mock.compilers';
+export * from './mockpiler';
