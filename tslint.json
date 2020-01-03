@@ -9,7 +9,6 @@
     "tslint-no-focused-test"
   ],
   "rules": {
-    "no-unused-expression":false,
     "no-empty-interface": false,
     "no-focused-test": true,
     "no-bitwise": false,

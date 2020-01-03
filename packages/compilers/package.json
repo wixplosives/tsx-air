@@ -8,7 +8,7 @@
     "scripts": {
         "build": "webpack --progress --mode production --devtool false",
         "clean": "rimraf ./dist",
-        "lint": "tslint -p src",
+        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
         "prebuild": "yarn clean",
         "test": "mocha \"**/*.test.ts?(x)\""
     },

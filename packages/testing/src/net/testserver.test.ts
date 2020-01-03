@@ -5,12 +5,11 @@ import { get, threadedGet } from './http.client';
 import  fixtures  from '../../fixtures';
 import { block } from './block.thread';
 
-
-before(function () {
-    this.bail = false;
-});
-
 describe('test server', () => {
+    before(function () {
+        this.timeout(3000);
+    });
+
     let server: TestServer;
     afterEach(() => {
         server?.close();

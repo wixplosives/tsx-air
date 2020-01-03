@@ -1,7 +1,7 @@
 import clamp from 'lodash/clamp';
 import { RefHolder } from '@tsx-air/framework';
 
-export function calculateDimensions(main: HTMLElement, zoomedIn: HTMLImageElement, zoomedOut: HTMLImageElement) {
+    export function calculateDimensions(main: HTMLElement, zoomedIn: HTMLImageElement, zoomedOut: HTMLImageElement) {
     const { naturalWidth, naturalHeight } = zoomedIn;
     const { width, height } = main.getClientRects()[0];
     const [rW, rH] = [width / naturalWidth, height / naturalHeight];

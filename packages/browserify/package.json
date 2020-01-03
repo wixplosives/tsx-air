@@ -9,7 +9,7 @@
         "build": "webpack --progress --mode production --devtool false --profile",
         "profile": "webpack --profile",
         "clean": "rimraf ./dist",
-        "lint": "tslint -p src",
+        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
         "prebuild": "yarn clean",
         "start:server": "node server.js",
         "start": "webpack-dev-server --progress",
