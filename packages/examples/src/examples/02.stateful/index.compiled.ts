@@ -1,4 +1,4 @@
-import { Component, Factory, runtime, runtimeUtils, render } from '@tsx-air/framework';
+import { Component, Factory, runtime, runtimeUtils } from '@tsx-air/framework';
 
 /* tslint:disable:rule no-bitwise */
 
@@ -9,7 +9,7 @@ interface StatefulCompProps { initialState: string; }
 // All the component scope vars [possibly only those who are bound to the view]
 interface StatefulCompState { a: string; b: string; changeCount: number; }
 
-class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
+export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
     public static factory: Factory<StatefulComp>;
     public static readonly changeBitmask = {
         initialState: 1 << 0,

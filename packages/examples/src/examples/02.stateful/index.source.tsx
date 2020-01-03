@@ -1,4 +1,4 @@
-import { render, TSXAir, store } from '@tsx-air/framework';
+import { TSXAir, store } from '@tsx-air/framework';
 
 export const StatefulComp = TSXAir((props: { initialState: string }) => {
     const state = store({ a: props.initialState, b: props.initialState, changeCount: 0 });
@@ -26,4 +26,3 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
         */}
     </div>;
 });
-

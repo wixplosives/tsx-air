@@ -31,3 +31,5 @@ export const runExample = (element: HTMLElement) => {
 
     framesCounter();
 };
+
+export {ParentComp as Component};

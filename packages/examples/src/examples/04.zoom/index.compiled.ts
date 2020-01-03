@@ -1,5 +1,5 @@
-import { Component, Factory, runtime, render, runtimeUtils } from '@tsx-air/framework';
-import { ZoomCtx, ZoomProps, ZoomState, initialState } from './helper';
+import { Component, Factory, runtime, runtimeUtils } from '@tsx-air/framework';
+import { ZoomCtx, ZoomProps, ZoomState, initialState, calcZoomFrameXY, calculateDimensions } from './helper';
 
 export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {
     public static factory: Factory<Zoom>;

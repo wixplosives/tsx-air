@@ -6,8 +6,20 @@ import { join } from 'path';
 import fetch from 'node-fetch';
 
 describe('examples index API', () => {
+    const minimalExamplesSet = [
+        '01.stateless-parent-child',
+        '02.stateful',
+        '03.thumb',
+        '04.zoom'
+    ];
+    const minimalExampleSources = [
+        '/runner', '/index.source', '/index.compiled'
+    ];
     let server: Worker;
     let loaded: string[] = [];
+    const loading: Set<Promise<any>> = new Set();
+    const slowUrls: Array<{ url: string, duration: number }> = [];
+    const tooooSlow = 200;
     before(done => {
         let port = 13123;
         server = new Worker(join(__dirname, 'example.indexer.express.js'), {
@@ -18,8 +30,18 @@ describe('examples index API', () => {
             done();
         });
         (globalThis as any).fetch = (url: string) => {
-            loaded.push(url);
-            return fetch(`http://localhost:${port}${url}`);
+            const start = Date.now();
+            const req = fetch(`http://localhost:${port}${url}`);
+            req.then(() => {
+                loaded.push(url);
+                loading.delete(req);
+                const duration = Date.now() - start;
+
+                if (duration > tooooSlow) {
+                    slowUrls.push({ url, duration });
+                }
+            });
+            return req;
         };
     });
     beforeEach(() => {
@@ -28,13 +50,14 @@ describe('examples index API', () => {
     after(() => {
         server.terminate();
     });
+    afterEach(() => {
+        expect(loading.size, 'Some resources are still loading').to.equal(0);
+        expect(slowUrls).to.eql([]);
+    });
 
     describe('getExamples', () => {
         it('should fetch the list of examples', async () => {
-            expect(await getExamples()).to.include.all.members([
-                '01.stateless-parent-child',
-                '02.stateful', '03.thumb', '04.zoom', '05.static-gallery'
-            ]);
+            expect(await getExamples()).to.include.all.members(minimalExamplesSet);
             expect(loaded).to.have.length(1);
         });
     });
@@ -49,11 +72,20 @@ describe('examples index API', () => {
                 '/examples/01.stateless-parent-child/index.compiled'
             ]);
         });
-        it('should build the example module', async () => {
-            const example = await buildExample('01.stateless-parent-child', manualCompiler);
-            const  module  = await await (await example.build).module;
-            expect(await (await example.build).error).to.be.undefined;
-            expect(module.runExample).to.be.a('function');
+
+        describe('examples', () => {
+            minimalExamplesSet.forEach(exampleName => {
+                it(`should be able to build "${exampleName}"`, async () => {
+                    const example = await buildExample(exampleName, manualCompiler);
+                    const module = await await (await example.build).module;
+                    expect(await (await example.build).error, `Error building ${exampleName}`).to.be.undefined;
+                    expect(module.runExample, `${exampleName}/runner#runExample is not a function`).to.be.a('function');
+                    expect(module.Component).to.haveOwnProperty('factory');
+                    expect(loaded, 'Some minimal example resources were not loaded')
+                        .to.include.all.members(minimalExampleSources
+                            .map(r => `/examples/${exampleName}${r}`));
+                });
+            });
         });
     });
 });

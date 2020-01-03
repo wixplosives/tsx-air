@@ -4,3 +4,5 @@ import { render } from '@tsx-air/framework';
 export const runExample = (target: HTMLElement) => {
     render(target, StatefulComp, { initialState: 'Click me!' });
 };
+
+export { StatefulComp as Component };

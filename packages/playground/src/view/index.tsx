@@ -85,5 +85,6 @@ async function runExample(model: Model) {
         model.stop = model.stop || (() => void (0));
     } catch (err) {
         model.dom.resultRoot.innerHTML = `<div>🤒</div><pre>${err.message}</pre>`;
+        throw err;
     }
 }
