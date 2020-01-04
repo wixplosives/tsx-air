@@ -30,7 +30,7 @@ describe('htmlMatch', () => {
     describe('htmlMatch', () => {
         it('should fail if nothing was tested for', async () => {
             try {
-                //@ts-ignore
+                // @ts-ignore
                 await htmlMatch(page, { name: 'NothingTested1' });
                 expect.fail('NothingTested1 should have thrown');
             } catch (err) {
