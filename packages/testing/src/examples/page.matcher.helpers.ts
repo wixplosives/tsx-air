@@ -1,4 +1,4 @@
-import { HTMLMatcher, isRange, Count, isText, isHTMLMatcher } from './page.matcher.types';
+import { HTMLMatcher, isRange, Count, isText, isHTMLMatcher, Text } from './page.matcher.types';
 import { expect } from 'chai';
 
 export function withAncestors(matcher: HTMLMatcher): HTMLMatcher {
@@ -35,7 +35,7 @@ export function buildFullQuery(matcher: HTMLMatcher): string {
 }
 
 export function expectCount(actual: any, expected: Count, message?: string) {
-    expect(actual).to.be.a('number');
+    expect(actual).to.be.a('number', message);
     if (isRange(expected)) {
         if (expected.above !== undefined && expected.below !== undefined) {
             expect(actual, message).to.be.within(expected.above, expected.below);
@@ -47,13 +47,13 @@ export function expectCount(actual: any, expected: Count, message?: string) {
             }
         }
     } else {
-        expect(expected, 'invalid numeric range: must be  number, or have above or below properties').to.be.a('number');
+        expect(expected, `${message ? message + ': ' : ''}range must be a number or have above/below`).to.be.a('number');
         expect(actual, message).to.equal(expected);
     }
 }
 
 export function expectText(actual: any, expected: Text | string, message?: string) {
-    expect(actual).to.be.a('string');
+    expect(actual, message).to.be.a('string');
     if (isText(expected)) {
         let compare = actual as string;
         const applyReplace = (regEx: RegExp, replacement: string) => {
@@ -69,40 +69,37 @@ export function expectText(actual: any, expected: Text | string, message?: strin
             }
         };
         switch (expected.ignoreLineBreaks) {
-            case 'double':
-                applyReplace(/\n+/gm, '\n');
-                break;
-            case 'leading':
-                applyReplace(/^\n+/g, '');
-                break;
-            case 'trailing':
-                applyReplace(/\n+$/g, '');
-                break;
             case true:
+                applyReplace(/^\n+/g, '');
+                applyReplace(/\n+$/g, '');
                 applyReplace(/\n+/g, ' ');
                 break;
             default:
         }
         switch (expected.ignoreWhiteSpace) {
             case 'leading':
-                applyReplace(/^\s+/g, '');
+                applyReplace(/^[ \t]+/mg, '');
                 break;
             case 'trailing':
-                applyReplace(/\s+$/g, '');
+                applyReplace(/[ \t]+$/gm, '');
                 break;
             case true:
-                applyReplace(/\s+/g, ' ');
+                applyReplace(/[ \t]+/gm, ' ');
+                applyReplace(/^[ \t]/gm, '');
+                applyReplace(/[ \t]+$/gm, '');
                 break;
             default:
+        }
+        if (expected.equals !== undefined) {
+            expect(compare, message).to.equal(expected.equals);
+        }
+        if (expected.contains !== undefined) {
+            expect(compare, message).to.contain(expected.contains);
+        }
+        if (expected.doesNotContain !== undefined) {
+            expect(compare, message).not.to.contain(expected.doesNotContain);
         }
     } else {
         expect(actual, message).to.equal(expected);
     }
-}
-
-export function isTrivialMatcher(matcher: HTMLMatcher): boolean {
-    return Object.values({ ...matcher, 
-        cssQuery: undefined,
-        name: undefined
-    }).every(i => i === undefined);
 }

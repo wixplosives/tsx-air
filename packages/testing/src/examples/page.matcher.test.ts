@@ -17,38 +17,76 @@ describe('htmlMatch', () => {
         page = await (await (await browser).newPage());
         await page.goto(server.baseUrl + '/match.html');
     });
-    afterEach(async () => {
-        try {
-            (await (await browser).pages()).forEach(i => i.close().catch(() => void (0)));
-        } catch { /* ignore */ }
+    afterEach(() => {
+        browser.then(b => b.pages()).then(p => p.forEach(i => i.close().catch(() => null)));
     });
     after(() => {
         server.close();
         browser.then(i => {
-            console.log('Closing browser');
-            i.close();
+            i.close().catch(() => null);
         });
     });
 
     describe('htmlMatch', () => {
-        it('should match by simple css query', async () => {
-            const matches = await htmlMatch(page, { cssQuery: 'body' });
-            expect(matches).to.have.length.above(0);
+        it('should fail if nothing was tested for', async () => {
             try {
-                await htmlMatch(page, { name: 'Missing', cssQuery: 'missing' });
-                expect.fail('HTML should not match query');
+                //@ts-ignore
+                await htmlMatch(page, { name: 'NothingTested1' });
+                expect.fail('NothingTested1 should have thrown');
             } catch (err) {
-                expect(() => { throw err; }).to.throw(/"Missing" scope instances count: expected 0 to be above 0/);
+                expect(() => { throw err; }).to.throw('NothingTested1: nothing was checked');
+            }
+            try {
+                await htmlMatch(page, { name: 'NothingTested2', cssQuery: '*' });
+                expect.fail('NothingTested2 should have thrown');
+            } catch (err) {
+                expect(() => { throw err; }).to.throw('NothingTested2: nothing was checked');
+            }
+            try {
+                await htmlMatch(page, { name: 'NothingTested3', cssQuery: '', children: [], decedents: [] });
+                expect.fail('NothingTested3 should have thrown');
+            } catch (err) {
+                expect(() => { throw err; }).to.throw('NothingTested3: nothing was checked');
             }
         });
-        it('should match by text', async () => {
-            const matches = await htmlMatch(page, {
-                cssQuery: '.child.one',
-                textContent: '[content from child one]'
-            });
-            expect(matches).to.have.length.above(0);
 
+        it('should match by simple css query', async () => {
+            await htmlMatch(page, { cssQuery: 'body', pageInstances: 1 });
+            try {
+                await htmlMatch(page, { name: 'Missing', cssQuery: 'missing', pageInstances: { above: 0 } });
+                expect.fail('HTML should not match query');
+            } catch (err) {
+                expect(() => { throw err; }).to.throw(`Missing: page instances: expected 0 to be above 0`);
+            }
         });
+
+        it('should match by text', async () => {
+            await htmlMatch(page, {
+                cssQuery: '.child.three',
+                textContent: '[content of child three]'
+            });
+            await htmlMatch(page, {
+                cssQuery: '.root',
+                textContent: { contains: 'child three', doesNotContain: 'MISSING' }
+            });
+            await htmlMatch(page, {
+                cssQuery: '.child:not(img)',
+                textContent: { contains: '[' }
+            });
+            try {
+                await htmlMatch(page, {
+                    name: 'Text missing from some children',
+                    cssQuery: '.child',
+                    textContent: {
+                        contains: 'three'
+                    }
+                });
+                expect.fail('Not all .child contain that text');
+            } catch (e) {
+                expect(() => { throw e; }).to.throw(`Text missing from some children`);
+            }
+        });
+
         it('should match by simple children and defendants', async () => {
             await Promise.all([
                 htmlMatch(page, {

@@ -31,7 +31,7 @@ export type ChildrenDescriptor = Count | HTMLMatcher;
 
 export interface Text {
     ignoreWhiteSpace?: boolean | 'leading' | 'trailing';
-    ignoreLineBreaks?: boolean | 'leading' | 'trailing' | 'double';
+    ignoreLineBreaks?: boolean;
     equals?: string;
     contains?: string;
     doesNotContain?: string;

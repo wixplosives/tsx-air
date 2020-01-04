@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { FrameBase, ElementHandle } from 'puppeteer';
-import { isHTMLMatcher, isCount, HTMLMatcher } from './page.matcher.types';
-import { expectCount, buildFullQuery, withAncestors, isTrivialMatcher } from './page.matcher.helpers';
+import { isHTMLMatcher, isCount, HTMLMatcher, isText } from './page.matcher.types';
+import { expectCount, buildFullQuery, withAncestors, expectText } from './page.matcher.helpers';
 
 export interface Check extends Promise<void> {
     scopeQuery: string;
@@ -20,31 +20,34 @@ export async function htmlMatch(page: FrameBase, matcher: HTMLMatcher): Promise<
     if (!(matcher._ancestor || matcher._directParent)) {
         matcher = withAncestors(matcher);
     }
-    const match = buildFullQuery(matcher);
-    if (isTrivialMatcher(matcher)) {
-        matcher.scopeInstances = { above: 0 };
+    const { cssQuery, pageInstances, scopeInstances, textContent } = matcher;
+    const name = matcher.name ? matcher.name + ': ' : '';
+    const scopeQuery = buildFullQuery(matcher);
+    if (isText(textContent) || typeof matcher.textContent === 'string') {
+        pending.push(new Promise((resolve, reject) => {
+            check(cssQuery, { cssQuery, pageInstances }, found => Promise.all(found.map(elm =>
+                (elm.evaluate(t => t.textContent).then(t => expectText(t, textContent!, name)))
+            )).then(()=>resolve()).catch(reject));
+        }));
     }
 
-    if (isCount(matcher.pageInstances)) {
-        const { cssQuery, pageInstances } = matcher;
-        check(matcher.cssQuery, { cssQuery, pageInstances }, ({ length }) => expectCount(length, pageInstances!));
+    if (isCount(pageInstances)) {
+        check(cssQuery, { cssQuery, pageInstances }, ({ length }) => expectCount(length, pageInstances!, `${name}page instances`));
     } else {
-        expect(matcher.pageInstances, 'Invalid pageInstances value').to.equal(undefined);
+        expect(pageInstances, `Matcher error: ${name}invalid pageInstances value`).to.equal(undefined);
     }
-    if (isCount(matcher.scopeInstances)) {
-        const { cssQuery, scopeInstances } = matcher;
-        check(match, { cssQuery, scopeInstances }, ({ length }) => expectCount(length, scopeInstances!, `"${matcher.name}" scope instances count`));
+    if (isCount(scopeInstances)) {
+        check(scopeQuery, { cssQuery, scopeInstances }, ({ length }) => expectCount(length, scopeInstances!, `${name}scope instances`));
     } else {
-        expect(matcher.scopeInstances, `"${matcher.name}": scope instances count: `).to.equal(undefined);
+        expect(scopeInstances, `Matcher error: ${name}invalid scope instances value`).to.equal(undefined);
     }
     if (matcher.children) {
         matcher.children.forEach(childrenDescriptor =>
             pending.push(Promise.resolve(
                 (async () => {
                     if (isCount(childrenDescriptor)) {
-                        const { cssQuery } = matcher;
                         const children = [childrenDescriptor];
-                        check(match + '>*', { cssQuery, children }, ({ length }) => expectCount(length, childrenDescriptor));
+                        check(scopeQuery + '>*', { cssQuery, children }, ({ length }) => expectCount(length, childrenDescriptor));
                         return;
                     }
                     if (isHTMLMatcher(childrenDescriptor)) {
@@ -53,7 +56,7 @@ export async function htmlMatch(page: FrameBase, matcher: HTMLMatcher): Promise<
                         );
                         return;
                     }
-                    expect.fail('Invalid children matcher');
+                    throw new Error(`${name}invalid children matcher`);
                 })()
             ))
         );
@@ -63,9 +66,8 @@ export async function htmlMatch(page: FrameBase, matcher: HTMLMatcher): Promise<
             pending.push(Promise.resolve(
                 (async () => {
                     if (isCount(decedentsDescriptor)) {
-                        const { cssQuery } = matcher;
                         const decedents = [decedentsDescriptor];
-                        check(match + ' *', { cssQuery, decedents }, ({ length }) => expectCount(length, decedentsDescriptor));
+                        check(scopeQuery + ' *', { cssQuery, decedents }, ({ length }) => expectCount(length, decedentsDescriptor));
                         return;
                     }
                     if (isHTMLMatcher(decedentsDescriptor)) {
@@ -74,12 +76,19 @@ export async function htmlMatch(page: FrameBase, matcher: HTMLMatcher): Promise<
                         );
                         return;
                     }
-                    expect.fail('Invalid defendants matcher');
+                    throw new Error(`${name}invalid defendants matcher`);
                 })()
             ))
         );
     }
+
     await Promise.all(pending);
+    const sourceMatcher: Check = Promise.all(checks).then(() => void (0)) as Check;
+    sourceMatcher.matcher = matcher;
+    sourceMatcher.scopeQuery = scopeQuery;
+    await sourceMatcher;
+
+    expect(checks).to.have.length.above(0, `${name}nothing was checked`);
     await Promise.all(checks);
-    return checks;
+    return [sourceMatcher, ...checks];
 }
