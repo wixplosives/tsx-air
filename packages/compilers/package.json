@@ -6,13 +6,16 @@
     "private": true,
     "main": "./src/index.ts",
     "scripts": {
-        "build": "webpack --progress --mode production --devtool false",
+        "build": "yarn build:cjs && yarn build:esm",
+        "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
+        "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "clean": "rimraf ./dist",
         "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
         "prebuild": "yarn clean",
         "test": "mocha \"**/*.test.ts?(x)\""
     },
     "dependencies": {
+        "typescript": "^3.7.4",
         "lodash": "^4.17.15",
         "tslib": "^1.10.0"
     }

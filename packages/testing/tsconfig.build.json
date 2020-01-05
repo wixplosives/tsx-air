@@ -5,12 +5,15 @@
             "@tsx-air/*": [
                 "node_modules/@tsx-air/*/src"
             ]
-        }
+        },
+        "allowJs": true
     },
     "exclude": [
         "**/*.test.ts"
     ],
     "include": [
-        "src/**/*.ts"
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.js"
     ]
 }

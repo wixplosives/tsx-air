@@ -23,5 +23,8 @@
         "dist/cjs",
         "dist/esm",
         "src"
-    ]
+    ],
+    "dependencies": {
+        "typescript": "^3.7.4"
+    }
 }

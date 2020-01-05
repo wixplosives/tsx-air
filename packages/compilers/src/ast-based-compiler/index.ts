@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { createProcessUpdateForComp } from './generate-process-update';
-import { Compiler } from '../types';
 import { printAST, getFileTransformationAPI, cObject, generateDomBindings, cClass, generateToString, generateHydrate, cArrow, createChangeBitMask, transfromerApiProvider } from '@tsx-air/compiler-utils';
+import { Compiler } from '@tsx-air/types';
 
 if (typeof window !== 'undefined') {
     (window as any).printAST = printAST;

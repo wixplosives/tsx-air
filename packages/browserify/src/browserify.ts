@@ -23,7 +23,10 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
     const { base, entry, output,
         outputFs = nodeFs,
         debug = false, loaderOptions = {},
-        configFilePath = require.resolve('../../../tsconfig.json')
+        configFilePath = require.resolve(__dirname.includes('/dist/')
+            ? '../../../../tsconfig.json'
+            : '../../../tsconfig.json'
+        )
     } = options;
 
     const inputFs = createMemoryFs();
@@ -55,7 +58,10 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         },
         resolve: {
             extensions: ['.tsx', '.ts', '.js', '.json'],
-            plugins: [new TsconfigPathsPlugin({ configFile: require.resolve('../../../tsconfig.json') })]
+            plugins: [new TsconfigPathsPlugin({
+                configFile: require.resolve(__dirname.includes('/dist/')
+                    ? '../../../../tsconfig.json'
+                    : '../../../tsconfig.json'})]
         },
         performance: {
             hints: false
