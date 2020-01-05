@@ -7,7 +7,7 @@ import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, sho
 import { Model } from './index.model';
 import { setup } from './setup';
 import { rebuild, reCompile } from '../build/rebuild';
-import { Compiler } from '@tsx-air/compilers';
+import { Compiler } from '@tsx-air/types';
 setup();
 
 (async () => {

@@ -1,10 +1,4 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "types": [
-      "node"
-    ],
-    "jsx": "react",
-    "jsxFactory": "TSXAir"
-  }
+  "exclude": ["**/*.test.ts"]
 }

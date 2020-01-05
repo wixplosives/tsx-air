@@ -1,6 +1,6 @@
 import { IFileSystem } from '@file-services/types';
 import { ICommonJsModuleSystem } from '@file-services/commonjs';
-import { Compiler } from 'packages/compilers/src/types';
+import { Compiler } from '@tsx-air/types';
 
 export type Loader = (path: string) => Promise<Record<string,string>>;
 

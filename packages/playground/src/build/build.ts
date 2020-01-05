@@ -2,7 +2,7 @@ import { ManuallyCompiled, isSource } from './../../../examples/src/manual.compi
 import { analyze, TsxFile, Import, asSourceFile, compilerOptions, ReExport } from '@tsx-air/compiler-utils';
 import { writeToFs, readFileOr, createCjs, evalModule, asTsx, asJs, withoutExt } from './build.helpers';
 import { dirname } from 'path';
-import { Compiler } from '@tsx-air/compilers';
+import { Compiler } from '@tsx-air/types';
 import ts from 'typescript';
 import { BuiltCode, Loader, CjsEnv } from './types';
 
