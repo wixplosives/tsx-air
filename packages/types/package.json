@@ -1,5 +1,5 @@
 {
-    "name": "types",
+    "name": "@tsx-air/types",
     "version": "0.1.0",
     "description": "Common types for @tsx-air",
     "main": "cjs/index.js",
@@ -15,8 +15,5 @@
         "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
         "prebuild": "yarn clean",
         "test": "mocha \"src/**/*.test.ts?(x)\""
-    },
-    "devDependencies": {
-        "@ts-tools/build": "^1.2.3"
     }
 }

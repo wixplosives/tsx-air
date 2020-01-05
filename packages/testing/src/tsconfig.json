@@ -2,13 +2,5 @@
     "extends": "../../../tsconfig.base.json",
     "compilerOptions": {
         "types": ["node"],
-    },
-    "files": [
-        "index.ts",
-        "net/index.ts",
-        "html/index.ts",
-        "test.with.examples.ts",
-        "chai.extensions.ts"        
-    ],
-    "exclude": ["*.test.ts"]
+    }
 }

@@ -4,6 +4,5 @@
         "types": [
             "node"
         ],
-    },
-    "files": ["index.ts"]
+    }
 }
