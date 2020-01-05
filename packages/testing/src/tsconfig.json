@@ -3,19 +3,12 @@
     "compilerOptions": {
         "types": ["node"],
     },
-    // "files": [
-    //     "index.ts",
-    //     "net/index.ts",
-    //     "html/index.ts",
-    //     "test.with.examples.ts",
-    //     "chai.extensions.ts"        
-    // ],
-    // "include": ["src/**/*.ts"],
-    // "include": ["src/*.ts"],
-    // "exclude": ["*.test.ts"]
-    "exclude": [
-        "packages/*/cjs",
-        "packages/*/esm",
-        "packages/*/dist"
+    "files": [
+        "index.ts",
+        "net/index.ts",
+        "html/index.ts",
+        "test.with.examples.ts",
+        "chai.extensions.ts"        
     ],
+    "exclude": ["*.test.ts"]
 }
