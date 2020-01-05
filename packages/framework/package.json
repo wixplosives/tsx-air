@@ -2,18 +2,26 @@
     "name": "@tsx-air/framework",
     "version": "0.0.1",
     "description": "Standing for the future super awesome TSXAir framework",
-    "main": "cjs/index.js",
-    "module": "esm/index.js",
-    "types": "esm/index.d.ts",
     "repository": "https://github.com/wixplosives/tsx-air/tree/master/packages/framework",
+    "main": "dist/cjs/index.js",
+    "module": "dist/esm/index.js",
+    "types": "dist/esm/index.d.ts",
     "author": "Wix.com",
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "ts-build ./src --esm",
-        "clean": "rimraf ./esm",
+        "build": "yarn build:cjs && yarn build:esm",
+        "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
+        "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
+        "clean": "rimraf ./dist",
         "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
         "prebuild": "yarn clean",
         "test": "mocha \"src/**/*.test.ts?(x)\""
-    }
+    },
+    "sideEffects": false,
+    "files": [
+        "dist/cjs",
+        "dist/esm",
+        "src"
+    ]
 }

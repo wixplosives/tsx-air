@@ -1,7 +1,7 @@
+import { shouldCompileExamples } from '@tsx-air/testing';
+import { shouldBeCompiled, manuallyCompiledOnly } from './examples/index';
 import { readFileSync } from 'fs';
-import { validateCompilerWithExamples } from '@tsx-air/testing';
 import { isSource, ManuallyCompiled } from './manual.compiler';
-
 
 const manuallyCompiled = new ManuallyCompiled(
     src => {
@@ -15,4 +15,4 @@ const manuallyCompiled = new ManuallyCompiled(
     }
 );
 
-validateCompilerWithExamples(manuallyCompiled);
+shouldCompileExamples(manuallyCompiled, [...shouldBeCompiled, ...manuallyCompiledOnly]);

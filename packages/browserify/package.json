@@ -1,19 +1,26 @@
 {
     "name": "@tsx-air/browserify",
-    "main": "cjs/index.js",
-    "module": "esm/index.js",
-    "types": "esm/index.d.ts",
+    "main": "dist/cjs/index.js",
+    "module": "dist/esm/index.js",
+    "types": "dist/esm/index.d.ts",
     "version": "0.1.0",
     "author": "Wix.com",
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "ts-build ./src --config-name build.config.json --esm --cjs",
-        "clean": "rimraf ./esm ./cjs",
+        "build": "yarn build:cjs && yarn build:esm",
+        "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
+        "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
+        "clean": "rimraf ./dist",
         "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
         "prebuild": "yarn clean",
         "test": "mocha \"src/**/*.test.ts?(x)\""
     },
+    "files": [
+        "dist/cjs",
+        "dist/esm",
+        "src"
+    ],
     "sideEffects": false,
     "dependencies": {
         "@file-services/memory": "^2.1.1",

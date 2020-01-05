@@ -10,7 +10,9 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "ts-build src --config-name tsconfig.build.json --out-dir dist --esm --cjs",
+        "build": "yarn build:cjs && yarn build:esm",
+        "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
+        "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "clean": "rimraf ./dist",
         "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
         "prebuild": "yarn clean",

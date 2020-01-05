@@ -1,6 +1,6 @@
-import { isArray } from 'util';
 import { TsxErrorType, TsxAirNodeError, TsxAirNode, AnalyzerResult } from './types';
 import ts from 'typescript';
+import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 import flatten from 'lodash/flatten';
 import { NodeMetaData } from '../astUtils/scanner';
