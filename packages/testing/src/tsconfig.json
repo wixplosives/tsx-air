@@ -2,7 +2,20 @@
     "extends": "../../../tsconfig.base.json",
     "compilerOptions": {
         "types": ["node"],
-        "jsx": "react",
-        "jsxFactory": "TSXAir"
-    }
+    },
+    // "files": [
+    //     "index.ts",
+    //     "net/index.ts",
+    //     "html/index.ts",
+    //     "test.with.examples.ts",
+    //     "chai.extensions.ts"        
+    // ],
+    // "include": ["src/**/*.ts"],
+    // "include": ["src/*.ts"],
+    // "exclude": ["*.test.ts"]
+    "exclude": [
+        "packages/*/cjs",
+        "packages/*/esm",
+        "packages/*/dist"
+    ],
 }

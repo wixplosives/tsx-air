@@ -5,54 +5,8 @@ import { request, IncomingMessage } from 'http';
 import { Worker } from 'worker_threads';
 import isString from 'lodash/isString';
 import { join } from 'path';
-import { browserify } from '@tsx-air/browserify/src';
+import { browserify } from '@tsx-air/browserify';
 import { GetPage } from '@tsx-air/examples';
-
-export function getCompiledPage(
-    transformers: ts.CustomTransformers,
-    examplePath: string,
-    getBrowser: () => Browser,
-    getServer: () => TestServer
-): GetPage {
-    return async function getPage(testBoilerplatePath: string) {
-        const [browser, server] = [getBrowser(), getServer()];
-        const boilerplate = await browserify({
-            base: examplePath,
-            entry: testBoilerplatePath,
-            output: join(__dirname, '../.tmp/builerplate.js'),
-            debug: !!process.env.DEBBUG,
-            loaderOptions: {
-                transformers,
-                cache: false
-            }
-        });
-        try {
-            // compiler, loader, examplePath, testBoilerplatePath);
-            await Promise.all([
-                server.addEndpoint('/index.html', `<html>
-                    <body>
-                        <div></div>
-                        <script src="/boilerplate.js"></script>
-                    </body>
-                </html>`),
-                server.addEndpoint('/boilerplate.js', boilerplate)
-            ]);
-        } catch (e) {
-            throw new Error('Error running test server\n' + e);
-        }
-        const page = browser.newPage();
-        const url = `${await server.baseUrl}/index.html`;
-        const pageErrors: Error[] = [];
-        (await page).on('pageerror', (e: Error) => {
-            pageErrors.push(e);
-        });
-        await (await page).goto(url);
-        if (pageErrors.length) {
-            throw new Error('Test boilerplate page contains the following errors\n\tTip: use "DEBUG=true yarn test" to debug in browser\n\n' + pageErrors.join('\'n'));
-        }
-        return page;
-    };
-}
 
 export const get = (url: string) => new Promise((resolve, reject) => {
     request(url, {

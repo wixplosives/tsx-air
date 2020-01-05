@@ -1,5 +1,5 @@
-import { Compiler } from '@tsx-air/compilers';
 import ts from 'typescript';
+import { Compiler } from '@tsx-air/types';
 
 export function createMockpiler(injectExport?:string): Compiler {
     return {

@@ -914,6 +914,15 @@
     chalk "^3.0.0"
     commander "^4.0.0"
 
+"@ts-tools/build@^1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@ts-tools/build/-/build-1.2.3.tgz#4d29c8f9dcd2cde289cb5fe6c4e626ad067ef4dc"
+  integrity sha512-QERkxaTdtuaoZSBrmWLapc0KId762KiJbgqX6fAku2fCP6TR1n/gb7TwG7ex9NB9jIfKm9hJwuQZON/W0GqidA==
+  dependencies:
+    "@ts-tools/transpile" "^2.0.0"
+    chalk "^3.0.0"
+    commander "^4.0.1"
+
 "@ts-tools/node@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@ts-tools/node/-/node-1.1.2.tgz#c26513361ea4262b9f63e10fcb75ee7735254743"

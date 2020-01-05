@@ -1,0 +1,22 @@
+{
+    "name": "types",
+    "version": "0.1.0",
+    "description": "Common types for @tsx-air",
+    "main": "cjs/index.js",
+    "module": "esm/index.js",
+    "types": "esm/index.d.ts",
+    "repository": "https://github.com/wixplosives/tsx-air/tree/master/packages/types",
+    "author": "Wix.com",
+    "license": "MIT",
+    "private": true,
+    "scripts": {
+        "build": "ts-build ./src --esm",
+        "clean": "rimraf ./esm",
+        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
+        "prebuild": "yarn clean",
+        "test": "mocha \"src/**/*.test.ts?(x)\""
+    },
+    "devDependencies": {
+        "@ts-tools/build": "^1.2.3"
+    }
+}
