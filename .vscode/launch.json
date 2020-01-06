@@ -42,10 +42,10 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "test build",
+            "name": "test browserify",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
-                "packages/builder/**/*.test.ts?(x)",
+                "packages/browserify/**/*.test.ts?(x)",
                 "--timeout",
                 "999999"
             ],

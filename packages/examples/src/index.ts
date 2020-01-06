@@ -1,3 +1,3 @@
-export { shouldBeCompiled, manuallyCompiledOnly } from './examples';
+export { shouldBeCompiled, manuallyCompiledOnly, base as exampleSrcPath } from './examples';
 export * from './manual.compiler';
 

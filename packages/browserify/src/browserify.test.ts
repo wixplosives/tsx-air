@@ -1,10 +1,11 @@
 import { createMemoryFs } from '@file-services/memory';
 import { expect } from 'chai';
 import fixtures from '../fixtures';
-import { browserify } from './browserify';
+import { browserify, browserifyPath } from './browserify';
 import { join } from 'path';
 import ts, { visitEachChild } from 'typescript';
 import { execute } from '@tsx-air/testing';
+import { exampleSrcPath } from '@tsx-air/examples';
 
 describe('browserify', () => {
     it('should package simple.ts into a single js file', async () => {
@@ -16,8 +17,21 @@ describe('browserify', () => {
         });
         expect(execute(built)).to.eql({ wasExported: true });
     });
+    
+    it('should use the tsconfig provided', async () => {
+        const built = await browserify({
+            base: fixtures,
+            entry: 'simple.ts',
+            output: join(fixtures, '../tmp/bundle.js'),
+            outputFs: createMemoryFs()
+        });
+        expect(execute(built)).to.eql({ wasExported: true });
+    });
 
     it('should package with.imports.ts into a single js file', async () => {
+        expect(exampleSrcPath).to.be.oneOf(
+            [join(browserifyPath, '../examples/dist/src/examples'),
+            join(browserifyPath, '../examples/src/examples')]);
         const built = await browserify({
             base: fixtures,
             entry: 'with.imports.ts',
@@ -27,7 +41,8 @@ describe('browserify', () => {
         expect(execute(built).imports).to.eql({
             local: true,
             packageDependency: true,
-            monorepoPackage: true
+            monorepoPackage: true,
+            exampleSrcPath
         });
     });
 
@@ -38,8 +53,6 @@ describe('browserify', () => {
             output: join(fixtures, '../tmp/bundle.js'),
             outputFs: createMemoryFs(),
             loaderOptions: {
-                // NOTE: if cached, will not be re-transpiled!
-                cache: false,
                 transformers: {
                     before: [ctx => node => {
                         const visitor: ts.Visitor = (n: ts.Node) => {

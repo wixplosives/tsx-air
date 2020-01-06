@@ -1,7 +1,6 @@
 import { nodeFs } from '@file-services/node';
 import { IFileSystem } from '@file-services/types';
 import { join, basename, dirname } from 'path';
-import { createOverlayFs } from '@file-services/overlay';
 import { promisify } from 'util';
 import { createWebpackFs } from '@file-services/webpack';
 import { createMemoryFs } from '@file-services/memory';
@@ -19,17 +18,12 @@ export interface BrowserifyOptions {
     loaderOptions?: ITypeScriptLoaderOptions;
 }
 
+export const browserifyPath = dirname(require.resolve(join('@tsx-air/browserify', 'package.json')));
+
 export async function browserify(options: BrowserifyOptions): Promise<string> {
     const { base, entry, output,
         outputFs = nodeFs,
-        debug = false, loaderOptions = {},
-        configFilePath = require.resolve(__dirname.includes('/dist/')
-            ? '../../../../tsconfig.json'
-            : '../../../tsconfig.json'
-        )
-    } = options;
-
-    const inputFs = createMemoryFs();
+        debug = false, loaderOptions = {} } = options;
 
     const wp = webpack({
         entry: join(base, entry),
@@ -46,7 +40,8 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
                     loader: '@ts-tools/webpack-loader',
                     options: {
                         ...loaderOptions,
-                        configFilePath
+                        // configLookup:false,
+                        // configFileName: 'tsconfig.browserify.json'
                     }
                 },
                 {
@@ -59,9 +54,8 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         resolve: {
             extensions: ['.tsx', '.ts', '.js', '.json'],
             plugins: [new TsconfigPathsPlugin({
-                configFile: require.resolve(__dirname.includes('/dist/')
-                    ? '../../../../tsconfig.json'
-                    : '../../../tsconfig.json'})]
+                configFile: join(browserifyPath, '../../tsconfig.json')
+            })]
         },
         performance: {
             hints: false
@@ -69,25 +63,37 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         devtool: !debug ? false : 'inline-source-map'
     });
 
-    wp.inputFileSystem = createOverlayFs(nodeFs, inputFs, base);
-    // @ts-ignore 
-    // TsconfigPathsPlugin relays on an undocumented method: readJson
-    wp.inputFileSystem.readJson = (path: string, cb: (err: Error | null, val: object | null) => void) => {
-        try {
-            const s = wp.inputFileSystem.readFileSync(path).toString();
-            cb(null, JSON.parse(s));
-        } catch (e) {
-            cb(e, null);
-        }
-    };
+    // const rf = promisify(nodeFs.readFile);
+    // const wf = promisify(nodeFs.writeFile);
+    // const baseRsConfig = rf(join(browserifyPath, '../../tsconfig.json')).then(content => {
+    //     return wf(join(base, 'tsconfig.base.browserify.json'), content);
+    // });
+
+    // const tsConfig = wf(join(base, 'tsconfig.browserify.json'), JSON.stringify({
+    //     extends: join(base, 'tsconfig.base.browserify.json'),
+    //     compilerOptions: {
+    //         paths: {
+    //             '@tsx-air/*': [
+    //                 'node_modules/@tsx-air/*/src'
+    //             ]
+    //         },
+    //         include: [
+    //             '*.ts',
+    //             '*.tsx'
+    //         ]
+    //     }
+    // }));
 
     wp.outputFileSystem = createWebpackFs(outputFs || createMemoryFs());
     // @ts-ignore
     const readFile = promisify(wp.outputFileSystem.readFile);
     const run = promisify(wp.run).bind(wp);
+    // await baseRsConfig;
+    // await tsConfig;
     const res = await run();
     if (res.hasErrors()) {
-        throw new Error(JSON.stringify(res.toJson().errors));
+        throw new Error(`Error browserifying ${join(base, entry)}
+        ${ res.toString()} `);
     }
     return (await readFile(output)).toString();
 }

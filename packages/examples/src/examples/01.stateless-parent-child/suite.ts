@@ -1,5 +1,5 @@
 import { Page } from 'puppeteer';
-import { ExampleSuite } from '../..';
+import { ExampleSuite } from '@tsx-air/types';
 import { htmlMatch } from '@tsx-air/testing';
 
 const suite: ExampleSuite = {

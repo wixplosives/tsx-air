@@ -1,6 +1,6 @@
 import { asSourceFile, cloneDeep } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { Compiler } from '@tsx-air/compilers';
+import { Compiler } from '@tsx-air/types';
 
 export const isSource = /\.source\.tsx?$/;
 export type ContentSwapper = (src: string) => string | undefined;

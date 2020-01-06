@@ -1,29 +1,29 @@
 const { workerData, parentPort } = require('worker_threads');
-const express = require('express');
+const { createServer } = require('http');
 
 (async (port) => {
     let urls = {};
     let root;
-    const app = express();
-    app.get('*', (req, res) => {
-        if (urls[req.path]) {
-            res.send(urls[req.path]);
+    const app = createServer((req, res)=>{
+        if (urls[req.url]) {
+            res.writeHead(200);
+            res.write(urls[req.url]);
             res.end();
         } else {
             if (root) {
                 const { createReadStream } = require('fs');
                 const { join } = require('path');
-                createReadStream(join(root, req.path), { encoding: 'utf8' }).on('error', () => {
-                    res.sendStatus(404);
+                createReadStream(join(root, req.url), { encoding: 'utf8' }).on('error', () => {
+                    res.writeHead(404);
                     res.end();
                 }).pipe(res);
             } else {
-                res.sendStatus(404);
+                res.writeHead(404);
                 res.end();
             }
         }
     });
-
+    
     await new Promise(async resolve => {
         let s;
         s = app.listen(port, () => {
