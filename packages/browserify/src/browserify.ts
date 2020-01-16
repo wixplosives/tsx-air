@@ -63,27 +63,6 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         devtool: !debug ? false : 'inline-source-map'
     });
 
-    // const rf = promisify(nodeFs.readFile);
-    // const wf = promisify(nodeFs.writeFile);
-    // const baseRsConfig = rf(join(browserifyPath, '../../tsconfig.json')).then(content => {
-    //     return wf(join(base, 'tsconfig.base.browserify.json'), content);
-    // });
-
-    // const tsConfig = wf(join(base, 'tsconfig.browserify.json'), JSON.stringify({
-    //     extends: join(base, 'tsconfig.base.browserify.json'),
-    //     compilerOptions: {
-    //         paths: {
-    //             '@tsx-air/*': [
-    //                 'node_modules/@tsx-air/*/src'
-    //             ]
-    //         },
-    //         include: [
-    //             '*.ts',
-    //             '*.tsx'
-    //         ]
-    //     }
-    // }));
-
     wp.outputFileSystem = createWebpackFs(outputFs || createMemoryFs());
     // @ts-ignore
     const readFile = promisify(wp.outputFileSystem.readFile);
