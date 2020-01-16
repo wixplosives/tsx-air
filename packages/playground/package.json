@@ -21,7 +21,6 @@
         "@file-services/memory": "^2.1.1",
         "@file-services/typescript": "^2.1.1",
         "@tsx-air/compilers": "^1.0.4",
-        "@types/express": "^4.17.2",
         "@types/lodash": "^4.14.144",
         "@types/showdown": "^1.9.3",
         "csstype": "^2.6.7",

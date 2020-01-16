@@ -22,7 +22,6 @@
         "src/chai.extensions.ts"
     ],
     "dependencies": {
-        "express": "^4.17.1",
         "lodash": "^4.17.15",
         "tslib": "^1.10.0"
     },
