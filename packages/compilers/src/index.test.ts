@@ -1,6 +1,5 @@
 import { expect } from 'chai';
-import { transformerCompilers } from '.';
-import { shouldCompileExamples } from '@tsx-air/testing';
+import { transformerCompilers, shouldCompileExamples } from '.';
 import { shouldBeCompiled } from '@tsx-air/examples';
 
 describe('compilers', () => {

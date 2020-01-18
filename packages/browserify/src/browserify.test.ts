@@ -17,7 +17,7 @@ describe('browserify', () => {
         });
         expect(execute(built)).to.eql({ wasExported: true });
     });
-    
+
     it('should use the tsconfig provided', async () => {
         const built = await browserify({
             base: fixtures,
@@ -29,9 +29,6 @@ describe('browserify', () => {
     });
 
     it('should package with.imports.ts into a single js file', async () => {
-        expect(exampleSrcPath).to.be.oneOf(
-            [join(browserifyPath, '../examples/dist/src/examples'),
-            join(browserifyPath, '../examples/src/examples')]);
         const built = await browserify({
             base: fixtures,
             entry: 'with.imports.ts',
@@ -41,8 +38,24 @@ describe('browserify', () => {
         expect(execute(built).imports).to.eql({
             local: true,
             packageDependency: true,
-            monorepoPackage: true,
-            exampleSrcPath
+            monorepoPackage: true
+        });
+    });
+
+    it('should package import.examples.ts into a single js file', async () => {
+        expect(exampleSrcPath).to.be.oneOf(
+            [join(browserifyPath, '../examples/dist/src/examples'),
+            join(browserifyPath, '../examples/src/examples')]);
+        const built = await browserify({
+            base: fixtures,
+            entry: 'import.examples.ts',
+            configFilePath: join(fixtures, 'tsconfig.json'),
+            output: join(fixtures, '../tmp/bundle.js'),
+            outputFs: createMemoryFs()
+        });
+        expect(execute(built)).to.eql({
+            // TODO discuss with Avi: should be with full path
+            exampleSrcPath: '/src/examples'
         });
     });
 

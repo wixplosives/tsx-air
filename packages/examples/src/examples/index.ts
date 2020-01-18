@@ -1,8 +1,7 @@
-import stateless from './01.stateless-parent-child/suite';
 import { join } from 'path';
 
 export const shouldBeCompiled = [
-    stateless
+    '01.stateless-parent-child'
 ];
 
 export const manuallyCompiledOnly = [

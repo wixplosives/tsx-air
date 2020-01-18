@@ -3,13 +3,16 @@
     "compilerOptions": {
         "paths": {
             "@tsx-air/*": [
-                "node_modules/@tsx-air/*/src"
+                "node_modules/@tsx-air/*/src",
+                "../*/src",
             ]
         }
     },
     "exclude": [
         "**/*.test.ts",
-        "src/examples/*/**/*"
+        "src/examples/*/**/*",
+        "dist/**/*",
+        "node_modules"
     ],
     "include": [
         "src/**/*.ts"

@@ -23,7 +23,7 @@ export const browserifyPath = dirname(require.resolve(join('@tsx-air/browserify'
 export async function browserify(options: BrowserifyOptions): Promise<string> {
     const { base, entry, output,
         outputFs = nodeFs,
-        debug = false, loaderOptions = {} } = options;
+        debug = false, loaderOptions = {}, configFilePath } = options;
 
     const wp = webpack({
         entry: join(base, entry),
@@ -41,7 +41,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
                     options: {
                         ...loaderOptions,
                         // configLookup:false,
-                        // configFileName: 'tsconfig.browserify.json'
+                        configFilePath
                     }
                 },
                 {

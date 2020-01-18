@@ -1,13 +1,14 @@
+import { exampleSrcPath } from '@tsx-air/examples';
 import { launch, Browser } from 'puppeteer';
 import { after, afterEach } from 'mocha';
 import { Compiler, GetPage } from '@tsx-air/types';
-import { ExampleSuite } from '@tsx-air/types';
-import { createTestServer, TestServer } from './net';
+import { createTestServer, TestServer, loadSuite } from '@tsx-air/testing';
 import ts from 'typescript';
 import { browserify } from '@tsx-air/browserify';
-import { join } from 'path';
+import { join, basename } from 'path';
 
-export function shouldCompileExamples(compiler: Compiler, examples: ExampleSuite[]) {
+export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]) {
+    const examples = examplePaths.map(loadSuite);
     describe(`Examples: ${compiler.label}`, function () {
         let browser: Browser;
         let server: TestServer;
@@ -45,8 +46,8 @@ export function getCompiledPage(
     return async function getPage(testBoilerplatePath: string) {
         const [browser, server] = [getBrowser(), getServer()];
         const boilerplate = await browserify({
-            base: examplePath,
-            entry: testBoilerplatePath,
+            base: join(exampleSrcPath, basename(examplePath)),
+            entry:  testBoilerplatePath,
             output: join(__dirname, '../.tmp/builerplate.js'),
             debug: !!process.env.DEBBUG,
             loaderOptions: {

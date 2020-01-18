@@ -6,7 +6,7 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "webpack --progress --mode production --devtool false --profile",
+        "build": "echo ok",
         "profile": "webpack --profile",
         "clean": "rimraf ./dist",
         "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)' -e 'src/**/*.d.ts'",

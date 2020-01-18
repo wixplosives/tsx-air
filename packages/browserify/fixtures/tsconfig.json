@@ -1,5 +1,6 @@
 {
     "extends": "../../../tsconfig.json",
+    "types": ["node"],
     "compilerOptions": {
         "paths": {
             "@tsx-air/*": [
@@ -7,10 +8,6 @@
             ]
         }
     },
-    "exclude": [
-        "*"
-    ],
-    "include": [
-        
-    ]
+    "include": ["*.ts", "**/*.ts"],
+    "exclude": ["/**/dist/**/*", "/**/examples/*", "/**/examples/**/*", "node_modules"]
 }

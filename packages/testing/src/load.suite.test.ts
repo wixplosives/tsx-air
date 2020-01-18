@@ -1,0 +1,16 @@
+import { exampleSrcPath } from '../../examples/src';
+import { expect } from 'chai';
+import { join } from 'path';
+import { loadSuite } from './load.suite';
+
+describe('loadSuite', () => {
+    it('should fail if the example is not found', ()=>{
+        expect(() => loadSuite('Missing example')).to.throw(/^(Invalid example path: did not find) \".*(Missing example)[\/\\]suite.ts/);        
+    });
+
+    it('should load a test suite of an example', ()=>{
+        const suite = loadSuite('01.stateless-parent-child');
+        expect(suite.path).to.equal(join(exampleSrcPath, '01.stateless-parent-child'));
+        expect(suite.suite).to.be.a('function');
+    });
+});

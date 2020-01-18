@@ -2,7 +2,6 @@ import { trimCode } from './general.utils';
 import { use } from 'chai';
 use(plugin);
 
-
 export default function plugin(chai: any, utils: Chai.ChaiUtils) {
     utils.addMethod(chai.Assertion.prototype, 'similarText', function (this: Chai.AssertionPrototype, text: string) {
         const target: string = trimCode(this._obj);

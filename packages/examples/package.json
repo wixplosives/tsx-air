@@ -15,21 +15,18 @@
         "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "build:examples": "cpy 'src/examples/*/**/*' './dist' --parents",
         "clean": "rimraf ./dist",
-        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
+        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)' -e 'src/examples/TODO*/**/*'",
         "prebuild": "yarn clean",
         "test": "mocha \"src/**/*.test.ts?(x)\""
     },
     "sideEffects": false,
     "files": [
-        "dist/cjs",
-        "dist/esm",
+        "dist",
         "src"
     ],
     "dependencies": {
-        "typescript": "^3.7.4"
-    },
-    "devDependencies": {
-        "concurrently": "^5.0.2",
-        "cpy-cli": "^3.0.0"
+        "@file-services/commonjs": "^2.1.2",
+        "@file-services/memory": "^2.1.1",
+        "@file-services/overlay": "^2.1.0"
     }
 }

@@ -65,6 +65,6 @@
     "packages"
   ],
   "exclude": [
-    "packages/*/dist"
+    "packages/*/dist/**/*"
   ],
 }

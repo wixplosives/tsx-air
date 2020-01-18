@@ -14,7 +14,7 @@
         "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
         "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "clean": "rimraf ./dist",
-        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
+        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)' -e '**/*.d.ts'",
         "prebuild": "yarn clean",
         "test": "mocha \"src/**/*.test.ts?(x)\""
     },
@@ -22,12 +22,10 @@
         "src/chai.extensions.ts"
     ],
     "dependencies": {
-        "lodash": "^4.17.15",
-        "tslib": "^1.10.0"
+        "lodash": "^4.17.15"
     },
     "files": [
-        "dist/cjs",
-        "dist/esm",
+        "dist",
         "src"
     ]
 }

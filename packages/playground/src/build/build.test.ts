@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import fixtures from '../../fixtures';
 import { createMockpiler } from '@tsx-air/testing';
 import { DebuggableLoader, jsLoaderFromPath } from './test.utils';
+import * as _ from '@tsx-air/testing';
 
 const compiler = createMockpiler('compiled');
 

@@ -19,8 +19,7 @@
         "test": "mocha \"src/**/*.test.ts?(x)\""
     },
     "files": [
-        "dist/cjs",
-        "dist/esm",
+        "dist",
         "src"
     ]
 }
