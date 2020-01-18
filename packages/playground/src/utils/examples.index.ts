@@ -1,8 +1,8 @@
 import { withoutExt, asTsx } from './../build/build.helpers';
 import { build } from '../build/build';
 import { BuiltCode } from '../build/types';
-import { Compiler } from '@tsx-air/compilers';
 import { join } from 'path';
+import { Compiler } from '@tsx-air/types';
 
 export async function getExamples(): Promise<string[]> {
     return (await (await globalThis.fetch('/examples')).json());

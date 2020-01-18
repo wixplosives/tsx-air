@@ -68,10 +68,10 @@ describe('examples index API', () => {
             await (await example.build).module;
             expect(loaded).to.include.all.members([
                 '/examples/01.stateless-parent-child/runner',
+                '/examples/01.stateless-parent-child/style.css',
+                '/examples/01.stateless-parent-child/readme.md',
                 '/examples/01.stateless-parent-child/index.source',
                 '/examples/01.stateless-parent-child/index.compiled',
-                '/examples/01.stateless-parent-child/style.css',
-                '/examples/01.stateless-parent-child/readme.md'
             ]);
         });
 
