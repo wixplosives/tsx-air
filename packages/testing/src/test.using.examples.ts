@@ -1,3 +1,4 @@
+import { safely } from '@tsx-air/utils';
 import { exampleSrcPath } from '@tsx-air/examples';
 import { launch, Browser } from 'puppeteer';
 import { after, afterEach } from 'mocha';
@@ -47,7 +48,7 @@ export function getCompiledPage(
         const [browser, server] = [getBrowser(), getServer()];
         const boilerplate = await browserify({
             base: join(exampleSrcPath, basename(examplePath)),
-            entry:  testBoilerplatePath,
+            entry: testBoilerplatePath,
             output: join(__dirname, '../.tmp/builerplate.js'),
             debug: !!process.env.DEBBUG,
             loaderOptions: {
@@ -55,9 +56,9 @@ export function getCompiledPage(
                 cache: false
             }
         });
-        try {
+        await safely(async () => {
             // compiler, loader, examplePath, testBoilerplatePath);
-            await Promise.all([
+            Promise.all([
                 server.addEndpoint('/index.html', `<html>
                     <body>
                         <div></div>
@@ -66,9 +67,7 @@ export function getCompiledPage(
                 </html>`),
                 server.addEndpoint('/boilerplate.js', boilerplate)
             ]);
-        } catch (e) {
-            throw new Error('Error running test server\n' + e);
-        }
+        }, 'Error running test server');
         const page = browser.newPage();
         const url = `${await server.baseUrl}/index.html`;
         const pageErrors: Error[] = [];

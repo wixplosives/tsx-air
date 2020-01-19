@@ -4,14 +4,15 @@ import { ExampleSuite } from '@tsx-air/types';
 import { join } from 'path';
 import { expect } from 'chai';
 import { exampleSrcPath } from '@tsx-air/examples';
+import { safely } from '@tsx-air/utils';
 
 export function loadSuite(example: string): ExampleSuite {
     const examplePath = join(exampleSrcPath, example);
     const suitePath = join(examplePath, 'suite');
-    const content = safeDo(
+    const content = safely(
         () => readFileSync(`${suitePath}.ts`, { encoding: 'utf8' }),
         `Invalid example path: did not find "${suitePath}.ts"`);
-    const moduleAsJs = safeDo(
+    const moduleAsJs = safely(
         () => ts.transpileModule(content, {
             fileName: `${suitePath}.ts`,
             compilerOptions: {
@@ -23,7 +24,7 @@ export function loadSuite(example: string): ExampleSuite {
         }).outputText,
         `Error transpiling "${suitePath}.ts"`);
 
-    const suite = safeDo(() => {
+    const suite = safely(() => {
         // tslint:disable-next-line: no-eval
         const evl = eval(`(exports, require)=>{${moduleAsJs}; return exports;}`);
         const s = evl({}, require).default;
@@ -35,14 +36,4 @@ export function loadSuite(example: string): ExampleSuite {
         suite,
         path: examplePath
     };
-}
-
-function safeDo<T>(fn: () => T, errorMessage: string): T {
-    try {
-        return fn();
-    } catch (err) {
-        const newErr = new Error(errorMessage);
-        newErr.stack = err.stack;
-        throw newErr;
-    }
 }

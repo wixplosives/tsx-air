@@ -1,18 +1,15 @@
+import { safely } from '@tsx-air/utils';
 import { shouldCompileExamples } from '@tsx-air/testing';
 import { shouldBeCompiled, manuallyCompiledOnly } from '.';
 import { readFileSync } from 'fs';
 import { isSource, ManuallyCompiled } from './manual.compiler';
 
 const manuallyCompiled = new ManuallyCompiled(
-    src => {
-        try {
-            return isSource.test(src) ?
-                readFileSync(src.replace(isSource, '.compiled.ts'), { encoding: 'utf8' })
-                : undefined;
-        } catch (e) {
-            throw new Error(`Error reading manually compiled of ${src}: ` + e);
-        }
-    }
+    src => safely(() => isSource.test(src) ?
+        readFileSync(src.replace(isSource, '.compiled.ts'), { encoding: 'utf8' })
+        : undefined,
+        `Error reading manually compiled version of ${src}`
+    )
 );
 
 shouldCompileExamples(manuallyCompiled, [...shouldBeCompiled, ...manuallyCompiledOnly]);

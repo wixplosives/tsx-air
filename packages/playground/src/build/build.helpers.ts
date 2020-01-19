@@ -1,3 +1,4 @@
+import { safely } from '@tsx-air/utils';
 import { IFileSystem } from '@file-services/types';
 import { ICommonJsModuleSystem, createCjsModuleSystem } from '@file-services/commonjs';
 import { createMemoryFs } from '@file-services/memory';
@@ -57,18 +58,14 @@ export function evalModule(compiled: string, path: string, env: CjsEnv, inject: 
     const { cjs, compiledCjs, compiledEsm } = env;
     const jsPath = asJs(path);
     cjs.loadedModules.delete(jsPath);
-    try {
+    return safely(()=>{
         const modifiedCode = injectSnippets(compiled, inject);
         const asCommonJs = toCommonJs(modifiedCode);
         writeToFs(compiledCjs, jsPath, asCommonJs);
         const exports = cjs.requireModule(jsPath);
         writeToFs(compiledEsm, jsPath, compiled);
         return exports;
-    } catch (e) {
-        const err = new Error(`Error evaluating ${path}:\n${e}`);
-        err.stack = e.stack;
-        throw err;
-    }
+    }, `Error evaluating ${path}`);
 }
 
 export function removeBuilt(env: CjsEnv, path: string) {
