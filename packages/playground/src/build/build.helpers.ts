@@ -11,7 +11,8 @@ export async function preload(fs: IFileSystem, cjs: ICommonJsModuleSystem, filen
     writeToFs(fs, filename, '// Preloaded');
     cjs.loadedModules.set(filename, {
         filename,
-        exports: await module
+        exports: await module,
+        id: filename
     });
 }
 
