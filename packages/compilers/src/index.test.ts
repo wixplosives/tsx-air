@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { transformerCompilers, shouldCompileExamples } from '.';
+import { shouldCompileExamples } from '@tsx-air/testing';
 import { shouldBeCompiled } from '@tsx-air/examples';
+import { transformerCompilers } from '.';
 
 describe('compilers', () => {
     it('each compiler should have a unique name', () => {

@@ -1,4 +1,4 @@
-import { shouldCompileExamples } from '@tsx-air/compilers';
+import { shouldCompileExamples } from '@tsx-air/testing';
 import { shouldBeCompiled, manuallyCompiledOnly } from '.';
 import { readFileSync } from 'fs';
 import { isSource, ManuallyCompiled } from './manual.compiler';
