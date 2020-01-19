@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { Worker } from 'worker_threads';
 import { getExamples, buildExample } from './examples.index';
 import { join } from 'path';
-import fetch from 'node-fetch';
+import { get } from '@tsx-air/testing';
 
 describe('examples index API', () => {
     const minimalExamplesSet = [
@@ -31,7 +31,7 @@ describe('examples index API', () => {
         });
         (globalThis as any).fetch = (url: string) => {
             const start = Date.now();
-            const req = fetch(`http://localhost:${port}${url}`);
+            const req = get(`http://localhost:${port}${url}`);
             req.then(() => {
                 loaded.push(url);
                 loading.delete(req);
@@ -41,7 +41,10 @@ describe('examples index API', () => {
                     slowUrls.push({ url, duration });
                 }
             });
-            return req;
+            return req.then(r => ({
+                    text: async () => r,
+                    json: async () => JSON.parse(r)
+            }));
         };
     });
     beforeEach(() => {
@@ -66,6 +69,7 @@ describe('examples index API', () => {
         it('should load example files', async () => {
             const example = await buildExample('01.stateless-parent-child', manualCompiler);
             await (await example.build).module;
+            expect((await example.build).error).to.equal(undefined, 'Errors while building example');
             expect(loaded).to.include.all.members([
                 '/examples/01.stateless-parent-child/runner',
                 '/examples/01.stateless-parent-child/style.css',

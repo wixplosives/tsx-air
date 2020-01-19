@@ -1,4 +1,4 @@
-import { ManuallyCompiled, isSource } from './../../../examples/src/manual.compiler';
+import { ManuallyCompiled, isSource } from '@tsx-air/examples';
 import { analyze, TsxFile, Import, asSourceFile, compilerOptions, ReExport } from '@tsx-air/compiler-utils';
 import { writeToFs, readFileOr, createCjs, evalModule, asTsx, asJs, withoutExt } from './build.helpers';
 import { dirname } from 'path';

@@ -2,7 +2,7 @@ import * as delegate from './api/delegate';
 export * from './api/types';
 export { delegate };
 export { bind } from './api/bind';
-export { store } from './api/store';
+export { store, StoreFactory } from './api/store';
 export { when, always, requestRender } from './api/lifecycle';
 export * from './types';
 export { default as runtime } from './runtime';
