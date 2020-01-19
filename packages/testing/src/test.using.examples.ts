@@ -1,15 +1,17 @@
-import { exampleSrcPath } from '@tsx-air/examples';
 import { launch, Browser } from 'puppeteer';
 import { after, afterEach } from 'mocha';
 import { Compiler, GetPage } from '@tsx-air/types';
 import { createTestServer, TestServer, loadSuite } from '@tsx-air/testing';
 import ts from 'typescript';
 import { browserify } from '@tsx-air/browserify';
-import { join, basename } from 'path';
+import { join, basename, dirname } from 'path';
+import { expect } from 'chai';
+
+const exampleSrcPath = join(dirname(require.resolve('@tsx-air/examples/package.json')), 'src', 'examples');
 
 export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]) {
     const examples = examplePaths.map(loadSuite);
-    describe(`Examples: ${compiler.label}`, function () {
+    describe(`${compiler.label}: compiling examples`, function () {
         let browser: Browser;
         let server: TestServer;
         this.bail(false);
@@ -32,7 +34,19 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
         after(() => server.close());
 
         examples.map(
-            ({ suite, path }) => suite(getCompiledPage(compiler.transformers, path, () => browser, () => server)));
+            ({ suite, path }) =>
+                describe(basename(path), () => {
+                    beforeEach(async function () {
+                        try {
+                            const getPage = getCompiledPage(compiler.transformers, path, () => browser, () => server);
+                            this.page = await getPage('./suite.boilerplate.ts');
+                            this.server = server;
+                        } catch {
+                            expect.fail('Failed to compile example');
+                        }
+                    });                    
+                    suite.apply(this);
+                }));
     });
 }
 
@@ -47,7 +61,7 @@ export function getCompiledPage(
         const [browser, server] = [getBrowser(), getServer()];
         const boilerplate = await browserify({
             base: join(exampleSrcPath, basename(examplePath)),
-            entry:  testBoilerplatePath,
+            entry: testBoilerplatePath,
             output: join(__dirname, '../.tmp/builerplate.js'),
             debug: !!process.env.DEBBUG,
             loaderOptions: {
@@ -79,6 +93,7 @@ export function getCompiledPage(
         if (pageErrors.length) {
             throw new Error('Test boilerplate page contains the following errors\n\tTip: use "DEBUG=true yarn test" to debug in browser\n\n' + pageErrors.join('\'n'));
         }
+
         return page;
     };
 }

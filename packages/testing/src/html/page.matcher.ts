@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ElementHandle } from 'puppeteer';
+import { ElementHandle, FrameBase } from 'puppeteer';
 import { isHTMLMatcher, isCount, HTMLMatcher, isText } from './page.matcher.types';
 import { expectCount, buildFullQuery, withAncestors, expectText } from './page.matcher.helpers';
 
@@ -8,11 +8,11 @@ export interface Check extends Promise<void> {
     matcher: HTMLMatcher;
 }
 
-export async function htmlMatch(page: ElementHandle, matcher: HTMLMatcher): Promise<Check[]> {
+export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMatcher): Promise<Check[]> {
     const pending: Array<Promise<void>> = [];
     const checks: Check[] = [];
     const check = (query: string|undefined, checkMatcher: HTMLMatcher, fn: (found: ElementHandle[]) => void) => {
-        const checkFor: Check = (query ? page.$$(query).then(fn) : fn([page])) as Check;
+        const checkFor: Check = (query ? page.$$(query).then(fn) : fn([page as unknown as ElementHandle])) as Check;
         checkFor.scopeQuery = query || '';
         checkFor.matcher = checkMatcher || withAncestors(matcher);
         checks.push(checkFor);

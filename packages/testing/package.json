@@ -10,10 +10,10 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "yarn build:cjs && yarn build:esm",
-        "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
-        "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
-        "clean": "rimraf ./dist",
+        "build": "concurrently 'yarn build:cjs' 'yarn build:esm'",
+        "build:cjs": "tsc -p ./tsconfig.build.json --module commonjs --outDir dist/cjs",
+        "build:esm": "tsc -p ./tsconfig.build.json --module esnext --outDir dist/esm",
+        "clean": "rimraf ./dist ./.tmp",
         "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)' -e '**/*.d.ts'",
         "prebuild": "yarn clean",
         "test": "mocha 'src/**/*.test.ts?(x)' --timeout 4000"

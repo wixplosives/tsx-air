@@ -10,7 +10,7 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "yarn build:cjs && yarn build:esm",
+        "build": "concurrently 'yarn build:cjs' 'yarn build:esm'",
         "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
         "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "clean": "rimraf ./dist",
@@ -19,12 +19,7 @@
         "test": "mocha \"src/**/*.test.ts?(x)\""
     },
     "files": [
-        "dist/cjs",
-        "dist/esm",
+        "dist",
         "src"
-    ],
-    "dependencies": {
-        "lodash": "^4.17.15",
-        "typescript": "^3.7.4"
-    }
+    ]
 }

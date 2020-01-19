@@ -1,4 +1,4 @@
-import { Setter, Getter } from './../types/type-utils';
+import { Setter, Getter } from '../types/type-utils';
 
 export interface StoreApi<T> {
     $set: Setter<T>;
