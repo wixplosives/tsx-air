@@ -1,4 +1,4 @@
-import { exampleSrcPath } from '../../examples/src';
+import { exampleSrcPath } from '@tsx-air/examples';
 import { expect } from 'chai';
 import { join } from 'path';
 import { loadSuite } from './load.suite';

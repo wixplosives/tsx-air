@@ -25,7 +25,7 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
                     exclude: /node_modules/,
                     loader: '@ts-tools/webpack-loader',
                     options: {
-                        configFilePath: require.resolve('./tsconfig.json')
+                        configFilePath: require.resolve('./tsconfig.dev.json')
                     }
                 },
                 {
@@ -42,7 +42,7 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
         },
         resolve: {
             extensions: ['.tsx', '.ts', '.js', '.json'],
-            plugins: [new TsconfigPathsPlugin({ configFile: require.resolve('./tsconfig.json') })]
+            plugins: [new TsconfigPathsPlugin({ configFile: require.resolve('./tsconfig.dev.json') })]
         },
         plugins: [
             new HtmlWebpackPlugin({
