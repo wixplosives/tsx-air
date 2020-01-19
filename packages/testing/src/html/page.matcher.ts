@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { FrameBase, ElementHandle } from 'puppeteer';
+import { ElementHandle } from 'puppeteer';
 import { isHTMLMatcher, isCount, HTMLMatcher, isText } from './page.matcher.types';
 import { expectCount, buildFullQuery, withAncestors, expectText } from './page.matcher.helpers';
 
@@ -8,13 +8,13 @@ export interface Check extends Promise<void> {
     matcher: HTMLMatcher;
 }
 
-export async function htmlMatch(page: FrameBase, matcher: HTMLMatcher): Promise<Check[]> {
+export async function htmlMatch(page: ElementHandle, matcher: HTMLMatcher): Promise<Check[]> {
     const pending: Array<Promise<void>> = [];
     const checks: Check[] = [];
-    const check = (query: string, checkMatcher: HTMLMatcher, fn: (found: Array<ElementHandle<Element>>) => void) => {
-        const checkFor: Check = page.$$(query).then(fn) as Check;
-        checkFor.scopeQuery = query;
-        checkFor.matcher = checkMatcher;
+    const check = (query: string|undefined, checkMatcher: HTMLMatcher, fn: (found: ElementHandle[]) => void) => {
+        const checkFor: Check = (query ? page.$$(query).then(fn) : fn([page])) as Check;
+        checkFor.scopeQuery = query || '';
+        checkFor.matcher = checkMatcher || withAncestors(matcher);
         checks.push(checkFor);
     };
     if (!(matcher._ancestor || matcher._directParent)) {
@@ -27,7 +27,7 @@ export async function htmlMatch(page: FrameBase, matcher: HTMLMatcher): Promise<
         pending.push(new Promise((resolve, reject) => {
             check(cssQuery, { cssQuery, pageInstances }, found => Promise.all(found.map(elm =>
                 (elm.evaluate(t => t.textContent).then(t => expectText(t, textContent!, name)))
-            )).then(()=>resolve()).catch(reject));
+            )).then(() => resolve()).catch(reject));
         }));
     }
 

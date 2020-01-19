@@ -1,12 +1,14 @@
 import ts from 'typescript';
 import { readFileSync } from 'fs';
 import { ExampleSuite } from '@tsx-air/types';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { expect } from 'chai';
-import { exampleSrcPath } from '@tsx-air/examples';
+// import { exampleSrcPath } from '@tsx-air/examples';
 
 export function loadSuite(example: string): ExampleSuite {
-    const examplePath = join(exampleSrcPath, example);
+    const examplePath =
+        //join(exampleSrcPath, example);
+        join(dirname(require.resolve('@tsx-air/examples/package.json')), 'src', 'examples', example);
     const suitePath = join(examplePath, 'suite');
     const content = safeDo(
         () => readFileSync(`${suitePath}.ts`, { encoding: 'utf8' }),

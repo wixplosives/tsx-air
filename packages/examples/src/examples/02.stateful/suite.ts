@@ -1,16 +1,34 @@
 import { Page } from 'puppeteer';
-import { ExampleSuite } from '../..';
 import { htmlMatch } from '@tsx-air/testing';
 
-const suite: ExampleSuite = {
-    suite(getPage: (testTsx: string) => Promise<Page>) {
-        return describe('01.stateless-parent-child', () => {
-            it('should create a parent component with the correct name', async () => {
-                const page = await getPage('./suite.boilerplate.ts');
+export default function (getPage: (testTsx: string) => Promise<Page>) {
+    return describe('02.stateful', () => {
+        it('should have 2 buttons', async () => {
+            const page = await getPage('./suite.boilerplate.ts');
+            await htmlMatch(page, {
+                cssQuery: '.btn',
+                pageInstances: 2,
+                textContent: {
+                    contains: 'button'
+                }
             });
         });
-    },
-    path: __dirname
-};
-
-export default suite;
+        describe('interactions', () => {
+            it('should respond to buttons being clicked', async () => {
+                const page = await getPage('./suite.boilerplate.ts');
+                const buttons = await page.$$('.btn');
+                await buttons[0].click();
+                await buttons[0].click();
+                await buttons[0].click();
+                await buttons[1].click();
+                await page.waitFor(50);
+                await htmlMatch(buttons[0], {
+                    textContent: 'button!!!'
+                });
+                await htmlMatch(buttons[1], {
+                    textContent:'button*'
+                });
+            }); 
+        });
+    });
+}

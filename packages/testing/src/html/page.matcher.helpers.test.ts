@@ -64,6 +64,10 @@ describe('page.matcher.helpers', () => {
             expectText('simple', 'simple');
             expect(() => expectText('simple', 'hard', 'Always')).to.throw(`Always: expected 'simple' to equal 'hard'`);
         });
+        it('simple text equality with whitespace', () => {
+            expectText(`
+            simple`, 'simple');
+        });
         it('should ignoreWhiteSpace when provided', () => {
             expectText('  whiteSpace', { equals: 'whiteSpace', ignoreWhiteSpace: true });
             expectText('  whiteSpace', { equals: 'whiteSpace', ignoreWhiteSpace: 'leading' });

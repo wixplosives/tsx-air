@@ -31,7 +31,7 @@ export function buildFullQuery(matcher: HTMLMatcher): string {
     if (matcher._ancestor) {
         return buildFullQuery(matcher._ancestor) + ' ' + matcher.cssQuery;
     }
-    return matcher.cssQuery;
+    return matcher.cssQuery || '';
 }
 
 export function expectCount(actual: any, expected: Count, message?: string) {
@@ -100,6 +100,10 @@ export function expectText(actual: any, expected: Text | string, message?: strin
             expect(compare, message).not.to.contain(expected.doesNotContain);
         }
     } else {
-        expect(actual, message).to.equal(expected);
+        expectText(actual, {
+            equals: expected,
+            ignoreLineBreaks: true,
+            ignoreWhiteSpace: true
+        }, message);
     }
 }

@@ -10,7 +10,7 @@ describe('loadSuite', () => {
 
     it('should load a test suite of an example', ()=>{
         const suite = loadSuite('01.stateless-parent-child');
-        expect(suite.path).to.equal(join(exampleSrcPath, '01.stateless-parent-child'));
+        expect(suite.path).to.equal(join(__dirname, '../../examples/src/examples', '01.stateless-parent-child'));
         expect(suite.suite).to.be.a('function');
     });
 });

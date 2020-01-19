@@ -1,6 +1,6 @@
 
 export interface HTMLMatcher {
-    cssQuery: string;
+    cssQuery?: string;
     name?: string;
     children?: ChildrenDescriptor[];
     decedents?: ChildrenDescriptor[];
