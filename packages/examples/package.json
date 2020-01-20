@@ -23,10 +23,5 @@
     "files": [
         "dist",
         "src"
-    ],
-    "dependencies": {
-        "@file-services/commonjs": "~2.1.2",
-        "@file-services/memory": "~2.1.1",
-        "@file-services/overlay": "~2.1.0"
-    }
+    ]
 }

@@ -1,3 +1,4 @@
+import { safely } from '@tsx-air/utils';
 import { ExampleSuite } from '@tsx-air/types';
 import { join, dirname } from 'path';
 
@@ -8,7 +9,7 @@ export function loadSuite(example: string): ExampleSuite {
     const suitePath = join(examplePath, 'suite');
 
 
-    const suite = safeDo(
+    const suite = safely(
         () => require(suitePath).default,
         `Error running "${suitePath}.ts"`);
 
@@ -16,14 +17,4 @@ export function loadSuite(example: string): ExampleSuite {
         suite,
         path: examplePath
     };
-}
-
-function safeDo<T>(fn: () => T, errorMessage: string): T {
-    try {
-        return fn();
-    } catch (err) {
-        const newErr = new Error(errorMessage);
-        newErr.stack = err.stack;
-        throw newErr;
-    }
 }

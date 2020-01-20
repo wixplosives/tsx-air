@@ -1,0 +1,26 @@
+{
+    "name": "@tsx-air/utils",
+    "repository": "https://github.com/wixplosives/tsx-air/tree/master/packages/utils",
+    "description": "Awesome time saving utils",
+    "main": "dist/cjs/index.js",
+    "module": "dist/esm/index.js",
+    "types": "dist/esm/index.d.ts",
+    "version": "0.1.0",
+    "author": "Wix.com",
+    "license": "MIT",
+    "private": true,
+    "scripts": {
+        "build": "yarn build:cjs && yarn build:esm",
+        "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
+        "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
+        "clean": "rimraf ./dist",
+        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)' -e '**/*.d.ts'",
+        "prebuild": "yarn clean",
+        "test": "mocha 'src/**/*.test.ts?(x)'"
+    },
+    "sideEffects": [],
+    "files": [
+        "dist",
+        "src"
+    ]
+}

@@ -1,6 +1,5 @@
 import { createTestServer, TestServer } from './testserver';
 import { expect } from 'chai';
-import { fail } from 'assert';
 import { get, threadedGet } from './http.client';
 import  fixtures  from '../../fixtures';
 import { block } from './block.thread';
@@ -85,7 +84,7 @@ describe('test server', () => {
                 server.addEndpoint('/4', '4')
             ]);
         } catch (e) {
-            fail('server error');
+            expect.fail('server error');
         }
         expect(
             await Promise.all([
