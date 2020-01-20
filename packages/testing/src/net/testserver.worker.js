@@ -1,12 +1,15 @@
 const { workerData, parentPort } = require('worker_threads');
 const { createServer } = require('http');
+const m = require('mime');
 
 (async (port) => {
     let urls = {};
     let root;
     const app = createServer((req, res)=>{
         if (urls[req.url]) {
-            res.writeHead(200);
+            res.writeHead(200, 'ok', {
+                'content-type': m.getType(req.url)
+            });
             res.write(urls[req.url]);
             res.end();
         } else {
@@ -16,6 +19,10 @@ const { createServer } = require('http');
                 createReadStream(join(root, req.url), { encoding: 'utf8' }).on('error', () => {
                     res.writeHead(404);
                     res.end();
+                }).on('open', ()=>{
+                    res.writeHead(200, 'ok', {
+                        'content-type': m.getType(req.url)
+                    });
                 }).pipe(res);
             } else {
                 res.writeHead(404);

@@ -1,11 +1,10 @@
-import { exampleSrcPath } from '@tsx-air/examples';
 import { expect } from 'chai';
 import { join } from 'path';
 import { loadSuite } from './load.suite';
 
 describe('loadSuite', () => {
     it('should fail if the example is not found', ()=>{
-        expect(() => loadSuite('Missing example')).to.throw(/^(Invalid example path: did not find) \".*(Missing example)[\/\\]suite.ts/);        
+        expect(() => loadSuite('Missing example')).to.throw('Error running');        
     });
 
     it('should load a test suite of an example', ()=>{

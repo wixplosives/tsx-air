@@ -1,8 +1,9 @@
+import { ExampleSuiteApi } from '@tsx-air/types';
 import { htmlMatch } from '@tsx-air/testing';
 
-export default function () {
-    it('should have 2 buttons', async function () {
-        const { page } = this;
+export default function (api:ExampleSuiteApi) {
+    it('should have 2 buttons', async  () => {
+        const { page } = api;
         await htmlMatch(page, {
             cssQuery: '.btn',
             pageInstances: 2,
@@ -12,8 +13,8 @@ export default function () {
         });
     });
     describe('interactions', () => {
-        it('should respond to buttons being clicked', async function () {
-            const { page } = this;
+        it('should respond to buttons being clicked', async () => {
+            const { page } = api;
             const buttons = await page.$$('.btn');
             await buttons[0].click();
             await buttons[0].click();

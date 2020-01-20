@@ -1,6 +1,6 @@
 import { launch, Browser } from 'puppeteer';
 import { after, afterEach } from 'mocha';
-import { Compiler, GetPage } from '@tsx-air/types';
+import { Compiler, GetPage, ExampleSuiteApi } from '@tsx-air/types';
 import { createTestServer, TestServer, loadSuite } from '@tsx-air/testing';
 import ts from 'typescript';
 import { browserify } from '@tsx-air/browserify';
@@ -36,20 +36,40 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
         examples.map(
             ({ suite, path }) =>
                 describe(basename(path), () => {
-                    beforeEach(async function () {
+                    // @ts-ignore
+                    const api = new SuiteApiProxy();
+
+                    beforeEach(async () => {
                         try {
                             const getPage = getCompiledPage(compiler.transformers, path, () => browser, () => server);
-                            this.page = await getPage('./suite.boilerplate.ts');
-                            this.server = server;
-                        } catch {
+                            api._api = {
+                                page: await getPage('./suite.boilerplate.ts'),
+                                getPage,
+                                server
+                            };
+                        } catch (e){
                             expect.fail('Failed to compile example');
                         }
-                    });                    
-                    suite.apply(this);
+                    });
+
+                    suite.call(this, api);
                 }));
     });
 }
 
+class SuiteApiProxy implements ExampleSuiteApi {
+    public _api!: ExampleSuiteApi;
+
+    get getPage() {
+        return this._api.getPage;
+    }
+    get page() {
+        return this._api.page;
+    }
+    get server() {
+        return this._api.server;
+    }
+}
 
 export function getCompiledPage(
     transformers: ts.CustomTransformers,
