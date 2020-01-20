@@ -194,17 +194,16 @@ export interface RecursiveMap {
     [key: string]: RecursiveMap;
 }
 
-
 export interface UsedVariables {
     accessed: RecursiveMap;
     modified: RecursiveMap;
     defined: RecursiveMap;
 }
 
-
 export function isTsJsxRoot(node: ts.Node): node is ts.JsxElement | ts.JsxSelfClosingElement | ts.JsxFragment {
     return ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || isJsxFragment(node);
 }
+
 export function isTsFunction(node: ts.Node): node is ts.ArrowFunction | ts.FunctionExpression {
     return ts.isArrowFunction(node) || ts.isFunctionExpression(node);
 }

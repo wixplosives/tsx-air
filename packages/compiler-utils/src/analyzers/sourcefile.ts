@@ -26,6 +26,7 @@ export const sourceFile: Analyzer<TsxFile> = node => {
             sourceAstNode: node,
             imports: nodesOfInterest.filter(isImport),
             reExports: nodesOfInterest.filter(isReExport)
+            
         };
         return {
             tsxAir, astToTsxAir
