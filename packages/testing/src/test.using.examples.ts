@@ -83,7 +83,7 @@ export function getCompiledPage(
         const boilerplate = await browserify({
             base: join(exampleSrcPath, basename(examplePath)),
             entry: testBoilerplatePath,
-            output: join(__dirname, '../.tmp/builerplate.js'),
+            output: join(__dirname, '../.tmp/boilerplate.js'),
             debug: !!process.env.DEBBUG,
             loaderOptions: {
                 transformers,
