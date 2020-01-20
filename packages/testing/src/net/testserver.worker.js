@@ -23,9 +23,9 @@ const m = require('mime');
             roots.some(root => {
                 const filePath = join(root, req.url);
                 if (existsSync(filePath)) {
-                    return !!createReadStream(join(root, req.url), { encoding: 'utf8' }).on('error', fail).on('open', () => {
+                    return !!createReadStream(join(root, req.url)).on('error', fail).on('open', () => {
                         res.writeHead(200, 'ok', {
-                            'content-type': m.getType(req.url)
+                            'Content-Type': m.getType(req.url)
                         });
                     }).pipe(res);
                 }

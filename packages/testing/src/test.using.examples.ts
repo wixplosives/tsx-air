@@ -9,6 +9,7 @@ import { join, basename, dirname } from 'path';
 import rimraf from 'rimraf';
 const examplePackage = dirname(require.resolve('@tsx-air/examples/package.json'));
 const fixtures = join(examplePackage, 'fixtures');
+const publicPath = join(examplePackage, 'public');
 const tempPath = join(__dirname, '../.tmp');
 
 export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]) {
@@ -53,7 +54,8 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                         await Promise.all([
                             server.addStaticRoot(path),
                             server.addStaticRoot(exampleTmpPath),
-                            server.addStaticRoot(fixtures)
+                            server.addStaticRoot(fixtures),
+                            server.addStaticRoot(publicPath)
                         ]);
 
                         api._api = {
