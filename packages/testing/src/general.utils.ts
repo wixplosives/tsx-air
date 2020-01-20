@@ -10,4 +10,4 @@ export const execute = (code: string, window: any = {}) => {
             ${code};
         return window;}`), `Error evaluating code`);
     return safely(() => fn(window), 'Error executing code');
-}
+};
