@@ -3,7 +3,8 @@ import { safely } from './safely';
 describe('safeDo', () => {
     describe('when there is no exception', () => {
         it('should return the execution result', () => {
-            expect(safely(()=>'ok', 'not ok')).to.equal('ok');
+            expect(safely(() => 'ok', 'safe execution failed')).to.equal('ok');
+            expect(safely(()=>undefined, 'safe execution failed')).to.equal(undefined);
         });
     });
     describe('when fn throws an error', () => {
