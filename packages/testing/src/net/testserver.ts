@@ -2,11 +2,11 @@ import { Worker } from 'worker_threads';
 
 export type AddEndPoint = (url: string, content: string) => Promise<void>;
 export interface TestServer {
-    setRoot: (path: string) => Promise<void>;
+    addStaticRoot: (path: string) => Promise<void>;
     addEndpoint: AddEndPoint;
     reset: () => Promise<void>;
     close: () => Promise<number>;
-    baseUrl: string;
+    readonly baseUrl: string;
 }
 
 export async function createTestServer(preferredPort = 12357): Promise<TestServer> {
@@ -41,7 +41,7 @@ export async function createTestServer(preferredPort = 12357): Promise<TestServe
     }) as Promise<T>;
 
     return {
-        setRoot: async (path: string) => post({ type: 'root', path }),
+        addStaticRoot: async (path: string) => post({ type: 'root', path }),
         addEndpoint: async (url: string, content: string) => post({ type: 'set', url, content }),
         reset: () => post({ type: 'clear' }),
         close: async () => serverWorker.terminate(),

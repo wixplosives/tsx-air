@@ -11,7 +11,7 @@ describe('htmlMatch', () => {
     before(async () => {
         browser = launch({ timeout: 2000 });
         server = await createTestServer();
-        await server.setRoot(base);
+        await server.addStaticRoot(base);
     });
     beforeEach(async () => {
         page = await (await (await browser).newPage());

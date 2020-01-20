@@ -3,7 +3,7 @@
     "compilerOptions": {
         "paths": {
             "@tsx-air/*": [
-                "node_modules/@tsx-air/*/dist",
+                "node_modules/@tsx-air/*/src",
             ]
         }
     },

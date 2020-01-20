@@ -5,7 +5,7 @@ import { htmlMatch } from '@tsx-air/testing';
 export default function (api:ExampleSuiteApi) {
     beforeEach(async () => {
         const pub = join(dirname(require.resolve('@tsx-air/examples/package.json')), 'public');
-        await api.server.setRoot(pub);
+        await api.server.addStaticRoot(pub);
     });
 
     it('should start with a preloader', async () => {

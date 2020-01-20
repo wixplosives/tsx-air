@@ -1,14 +1,13 @@
-import { TestServer } from '@tsx-air/testing/src/net/testserver';
-import { Page } from 'puppeteer';
+import { TestServer } from '@tsx-air/testing';
+import { Page, Browser } from 'puppeteer';
 
 export interface ExampleSuiteApi {
     page: Page;
-    getPage: GetPage;
     server: TestServer;
+    browser: Browser;
 }
 
 export interface ExampleSuite {
     suite: (api: ExampleSuiteApi) => void;
     path: string;
 }
-export type GetPage = (testHtml: string) => Promise<Page>;

@@ -4,8 +4,13 @@ const m = require('mime');
 
 (async (port) => {
     let urls = {};
-    let root;
-    const app = createServer((req, res)=>{
+    let roots = [];
+    const app = createServer((req, res) => {
+        const fail = () => {
+            res.writeHead(404, 'Missing endpoint');
+            res.end();
+        }
+
         if (urls[req.url]) {
             res.writeHead(200, 'ok', {
                 'content-type': m.getType(req.url)
@@ -13,24 +18,21 @@ const m = require('mime');
             res.write(urls[req.url]);
             res.end();
         } else {
-            if (root) {
-                const { createReadStream } = require('fs');
-                const { join } = require('path');
-                createReadStream(join(root, req.url), { encoding: 'utf8' }).on('error', () => {
-                    res.writeHead(404);
-                    res.end();
-                }).on('open', ()=>{
-                    res.writeHead(200, 'ok', {
-                        'content-type': m.getType(req.url)
-                    });
-                }).pipe(res);
-            } else {
-                res.writeHead(404);
-                res.end();
-            }
+            const { createReadStream, existsSync } = require('fs');
+            const { join } = require('path');
+            roots.some(root => {
+                const filePath = join(root, req.url);
+                if (existsSync(filePath)) {
+                    return !!createReadStream(join(root, req.url), { encoding: 'utf8' }).on('error', fail).on('open', () => {
+                        res.writeHead(200, 'ok', {
+                            'content-type': m.getType(req.url)
+                        });
+                    }).pipe(res);
+                }
+            }) || fail();
         }
     });
-    
+
     await new Promise(async resolve => {
         let s;
         s = app.listen(port, () => {
@@ -53,12 +55,12 @@ const m = require('mime');
                 parentPort.postMessage({ type: 'done', id: message.id });
                 break;
             case 'root':
-                root = message.path;
+                roots.unshift(message.path);
                 parentPort.postMessage({ type: 'done', id: message.id });
                 break;
             case 'clear':
                 urls = {};
-                root = undefined;
+                roots = [];
                 parentPort.postMessage({ type: 'done', id: message.id });
                 break;
             default:
