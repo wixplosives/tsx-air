@@ -34,7 +34,7 @@ describe('TSXAir component analyzer: Jsx', () => {
         });
 
         describe('variables', () => {
-            it('should find and agregate used variables', () => {
+            it('should find and aggregate used variables', () => {
                 const { comp } = getCompDef(`const Comp = TSXAir(props => { 
                     return <div>{props.expression}</div>;})`);
 

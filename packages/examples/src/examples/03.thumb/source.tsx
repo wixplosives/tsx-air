@@ -19,5 +19,5 @@ export const Thumb = TSXAir((props: { url: string, onClick?: (e: MouseEvent) => 
 });
 
 export const runExample = (target: HTMLElement) => {
-    render(target, Thumb, { url: '/images/prettyboy.jpg' });
+    render(target, Thumb, { url: '/images/pretty-boy.jpg' });
 };

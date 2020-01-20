@@ -80,5 +80,5 @@ Thumb.factory = {
 
 
 export const runExample = (target: HTMLElement) => {
-    render(target, Thumb as any, { url: '/images/prettyboy.jpg' });
+    render(target, Thumb as any, { url: '/images/pretty-boy.jpg' });
 };
