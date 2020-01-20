@@ -43,7 +43,7 @@ describe('htmlMatch', () => {
                 expect(() => { throw err; }).to.throw('NothingTested2: nothing was checked');
             }
             try {
-                await htmlMatch(page, { name: 'NothingTested3', cssQuery: '', children: [], decedents: [] });
+                await htmlMatch(page, { name: 'NothingTested3', cssQuery: '', children: [], descendants: [] });
                 expect.fail('NothingTested3 should have thrown');
             } catch (err) {
                 expect(() => { throw err; }).to.throw('NothingTested3: nothing was checked');
@@ -92,7 +92,7 @@ describe('htmlMatch', () => {
                 htmlMatch(page, {
                     cssQuery: '.with.children', children: [3]
                 }),
-                await htmlMatch(page, {
+                htmlMatch(page, {
                     cssQuery: '.with.children', children: [
                         { cssQuery: '.one', pageInstances: 2 }]
                 })]);

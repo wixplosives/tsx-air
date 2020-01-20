@@ -1,4 +1,3 @@
-import { join, dirname } from 'path';
 import { ExampleSuiteApi } from '@tsx-air/types';
 import { htmlMatch } from '@tsx-air/testing';
 
@@ -19,6 +18,37 @@ export default function (api:ExampleSuiteApi) {
         const { page } = api;
         await page.waitFor(200);
         await htmlMatch(page, {
+            cssQuery: '.thumb',
+            pageInstances: 1,
+            children: [{
+                name: 'Image',
+                cssQuery: 'img',
+                scopeInstances: 1
+            },
+            {
+                name:'Preloader',
+                cssQuery: '.preloader',
+                scopeInstances: 0
+            }]
+        });
+    });
+    it('should repeat the loading sequence when the image changes', async () => {
+        const { page } = api;
+        await page.evaluate(() => (window as any).app.updateProps({ url: '/weird.jpg'}));
+        await page.waitFor(50);
+        await htmlMatch(page, {
+            name:'Thumb',
+            cssQuery: '.thumb',
+            pageInstances: 1,
+            children: [{
+                name: 'Preloader',
+                cssQuery: '.preloader',
+                scopeInstances: 1
+            }]
+        });
+        await page.waitFor(200);
+        await htmlMatch(page, {
+            name:'Thumb',
             cssQuery: '.thumb',
             pageInstances: 1,
             children: [{
