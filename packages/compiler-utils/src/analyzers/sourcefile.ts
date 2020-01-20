@@ -20,13 +20,24 @@ export const sourceFile: Analyzer<TsxFile> = node => {
             return;
         }).map(i => i.metadata);
 
+
+        /// TODO discuss with Nadav
         const tsxAir: TsxFile = {
             kind: 'file',
             compDefinitions: nodesOfInterest.filter(isCompDefinition),
             sourceAstNode: node,
             imports: nodesOfInterest.filter(isImport),
-            reExports: nodesOfInterest.filter(isReExport)
-            
+            reExports: nodesOfInterest.filter(isReExport),
+            variables: {
+                accessed: {},
+                modified: {},
+                defined: {}
+            },
+            aggregatedVariables: {
+                accessed: {},
+                modified: {},
+                defined: {}
+            }
         };
         return {
             tsxAir, astToTsxAir

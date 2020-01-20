@@ -4,7 +4,7 @@ import { ICommonJsModuleSystem, createCjsModuleSystem } from '@file-services/com
 import { createMemoryFs } from '@file-services/memory';
 import flatMap from 'lodash/flatMap';
 import { dirname, basename, extname } from 'path';
-import { toCommonJs } from '@tsx-air/compiler-utils';
+import { toCommonJs } from '@tsx-air/utils';
 import { CjsEnv, FileSnippets } from './types';
 
 

@@ -9,7 +9,6 @@ import { findUsedVariables } from './find-used-variables';
 import { functions } from './func-definition';
 import { stores } from './store-definition';
 
-
 export const compDefinition: Analyzer<CompDefinition> = astNode => {
     if (!isCallExpression(astNode) || astNode.expression.getText() !== 'TSXAir') {
         return errorNode<CompDefinition>(astNode, 'Not a component definition', 'internal');

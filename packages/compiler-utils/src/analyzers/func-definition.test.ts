@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { getCompDef } from './comp-definition.test';
+import { getCompDef } from './component.definition.test';
 // tslint:disable: no-unused-expression
 // tslint:disable: no-shadowed-variable
 
@@ -39,7 +39,7 @@ describe('TSXAir component analyzer: functions', () => {
             defined: { src: {} },
             modified: {}
         });
-        expect(aRepeater.agregatedVariables).to.eql({
+        expect(aRepeater.aggregatedVariables).to.eql({
             accessed: {
                 src: {},
                 props: {

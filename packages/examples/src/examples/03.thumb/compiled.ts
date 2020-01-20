@@ -1,7 +1,5 @@
 import { Component, Factory, runtime, runtimeUtils, render } from '@tsx-air/framework';
 
-/* tslint:disable:rule no-bitwise */
-
 export interface ThumbProps { url: string; onClick?: (e: MouseEvent) => any; }
 interface ThumbState { imageLoaded: boolean; }
 interface ThumbCtx { img1: HTMLImageElement; div1?: HTMLDivElement; root: HTMLDivElement; }

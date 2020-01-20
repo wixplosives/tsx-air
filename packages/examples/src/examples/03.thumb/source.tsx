@@ -1,4 +1,5 @@
 import { TSXAir, render, store, when } from '@tsx-air/framework';
+// tslint:disable: jsx-no-lambda
 
 export const Thumb = TSXAir((props: { url: string, onClick?: (e: MouseEvent) => void }) => {
     const state = store({
