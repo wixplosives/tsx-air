@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { Analyzer, FuncDefinition, isTSFunction, isTsJsxRoot } from './types';
+import { Analyzer, FuncDefinition, isTsFunction, isTsJsxRoot } from './types';
 import { errorNode, aggregateAstNodeMapping, addToNodesMap } from './types.helpers';
 import { findUsedVariables } from './find-used-variables';
 import { scan } from '../astUtils/scanner';
@@ -7,11 +7,11 @@ import { findFunction } from '../visitors/functions';
 import { jsxRoots } from './jsxroot';
 
 export const funcDefinition: Analyzer<FuncDefinition> = astNode => {
-    if (!isTSFunction(astNode)) {
+    if (!isTsFunction(astNode)) {
         return errorNode<FuncDefinition>(astNode, 'Not a function definition', 'internal');
     }
 
-    const variables = findUsedVariables(astNode, n => isTSFunction(n) || isTsJsxRoot(n));
+    const variables = findUsedVariables(astNode, n => isTsFunction(n) || isTsJsxRoot(n));
     const aggregatedVariables = findUsedVariables(astNode);
 
     const funcDef: FuncDefinition = {

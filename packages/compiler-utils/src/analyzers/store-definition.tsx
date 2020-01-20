@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { Analyzer, isTSFunction, isTsJsxRoot, StoreDefinition } from './types';
+import { Analyzer, isTsFunction, isTsJsxRoot, StoreDefinition } from './types';
 import { errorNode } from './types.helpers';
 import { findUsedVariables } from './find-used-variables';
 import { scan } from '../astUtils/scanner';
@@ -23,7 +23,7 @@ export const storeDefinition: Analyzer<StoreDefinition> = astNode => {
     }
 
     const aggregatedVariables = findUsedVariables(argument);
-    const variables = findUsedVariables(argument, n => isTSFunction(n) || isTsJsxRoot(n));
+    const variables = findUsedVariables(argument, n => isTsFunction(n) || isTsJsxRoot(n));
 
     const storeDef: StoreDefinition = {
         kind: 'storeDefinition',

@@ -205,7 +205,7 @@ export interface UsedVariables {
 export function isTsJsxRoot(node: ts.Node): node is ts.JsxElement | ts.JsxSelfClosingElement | ts.JsxFragment {
     return ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || isJsxFragment(node);
 }
-export function isTSFunction(node: ts.Node): node is ts.ArrowFunction | ts.FunctionExpression {
+export function isTsFunction(node: ts.Node): node is ts.ArrowFunction | ts.FunctionExpression {
     return ts.isArrowFunction(node) || ts.isFunctionExpression(node);
 }
 
