@@ -56,14 +56,11 @@ export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMa
     while (pending.length > lastCount) {
         lastCount = pending.length;
         await Promise.all(pending);
-        if (waitForChecks) {
-            await Promise.all(checks);
+        if (waitForChecks) { 
+            await Promise.all(checks); 
         }
     }
 
-    const sourceMatcher: Check = Promise.resolve() as Check;
-    sourceMatcher.matcher = printable(matcher);
-    sourceMatcher.scopeQuery = scopeQuery;
 
     expect(checks).to.have.length.above(0, `${name}nothing was checked`);
 
@@ -72,8 +69,12 @@ export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMa
         (failed.error as any).checks = checks;
         throw failed.error;
     }
-
-    return waitForChecks
-        ? [sourceMatcher, ...checks]
-        : check;
+    if(waitForChecks) {
+        const sourceMatcher: Check = Promise.resolve() as Check;
+        sourceMatcher.matcher = printable(matcher);
+        sourceMatcher.scopeQuery = scopeQuery;
+        return [sourceMatcher, ...checks];
+    } else {
+        return checks;
+    }
 }
