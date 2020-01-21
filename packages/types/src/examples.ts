@@ -2,7 +2,7 @@ import { TestServer } from '@tsx-air/testing';
 import { Page, Browser } from 'puppeteer';
 
 export interface ExampleSuiteApi {
-    page: Page;
+    page: Promise<Page>;
     server: TestServer;
     browser: Browser;
 }

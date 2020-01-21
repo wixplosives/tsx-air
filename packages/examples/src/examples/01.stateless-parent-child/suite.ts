@@ -3,7 +3,7 @@ import { htmlMatch } from '@tsx-air/testing';
 
 export default function (api:ExampleSuiteApi) {
     it('should create a parent component with the correct name', async  () => {
-        const { page } = api;
+        const page = await api.page;
         await htmlMatch(page, {
             cssQuery: '.parent',
             pageInstances: 1,
@@ -19,7 +19,7 @@ export default function (api:ExampleSuiteApi) {
         });
     });
     it('should update the view', async () => {
-        const { page } = api;
+        const page = await api.page;
         await page.evaluate(() => (window as any).app.updateProps({ name: 'changed' }));
         await page.waitFor(50);
         await htmlMatch(page, {

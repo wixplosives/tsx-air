@@ -1,28 +1,34 @@
 import { expect } from 'chai';
 import { ElementHandle, FrameBase } from 'puppeteer';
 import { isHTMLMatcher, HTMLMatcher, isText } from './page.matcher.types';
-import { buildFullQuery, withAncestors, assertElementsCount, handleDescendants, Checker } from './page.matcher.helpers';
+import { buildFullQuery, withAncestors, assertElementsCount, handleDescendants, Checker, printable } from './page.matcher.helpers';
 import { expectText } from './expect.text';
 
 export interface Check extends Promise<void> {
     scopeQuery: string;
     matcher: HTMLMatcher;
+    error?: Error;
 }
 
-export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMatcher): Promise<Check[]> {
+export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMatcher, waitForChecks = true): Promise<Check[]> {
     const pending: Array<Promise<void>> = [];
     const checks: Check[] = [];
+
     const check: Checker = (...args: any[]) => {
         if (isHTMLMatcher(args[0])) {
             pending.push(new Promise(async added => {
-                checks.push(...await htmlMatch(page, args[0]));
+                const htmlChecks = await htmlMatch(page, args[0], false);
+                checks.push(...htmlChecks);
                 added();
             }));
         } else {
             const [query, checkMatcher, assertion] = args;
-            const checkFor: Check = (query ? page.$$(query).then(assertion) : assertion([page as unknown as ElementHandle])) as Check;
+            const checkFor: Check = (query
+                ? page.$$(query).then(assertion)
+                : assertion([page as unknown as ElementHandle]))
+                .catch((err: Error) => checkFor.error = err) as Check;
             checkFor.scopeQuery = query || '';
-            checkFor.matcher = checkMatcher || withAncestors(matcher);
+            checkFor.matcher = printable(checkMatcher || withAncestors(matcher));
             checks.push(checkFor);
         }
     };
@@ -40,21 +46,34 @@ export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMa
             )).then(() => resolve()).catch(reject));
         }));
     }
-    
+
     assertElementsCount(pageInstances, `${name}page instances`, check, cssQuery!, { pageInstances });
     assertElementsCount(scopeInstances, `${name}scope instances`, check, scopeQuery, { scopeInstances });
     handleDescendants(matcher, 'children', scopeQuery, check);
     handleDescendants(matcher, 'descendants', scopeQuery, check);
 
+    let lastCount = -1;
+    while (pending.length > lastCount) {
+        lastCount = pending.length;
+        await Promise.all(pending);
+        if (waitForChecks) {
+            await Promise.all(checks);
+        }
+    }
 
-    await Promise.all(pending);
-    const sourceMatcher: Check = Promise.all(checks).then(() => void (0)) as Check;
-    sourceMatcher.matcher = matcher;
+    const sourceMatcher: Check = Promise.resolve() as Check;
+    sourceMatcher.matcher = printable(matcher);
     sourceMatcher.scopeQuery = scopeQuery;
-    await sourceMatcher;
 
     expect(checks).to.have.length.above(0, `${name}nothing was checked`);
-    await Promise.all(checks);
-    return [sourceMatcher, ...checks];
-}
 
+    const failed = checks.find(c => c.error);
+    if (failed) {
+        (failed.error as any).checks = checks;
+        throw failed.error;
+    }
+
+    return waitForChecks
+        ? [sourceMatcher, ...checks]
+        : check;
+}

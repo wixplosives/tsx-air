@@ -10,7 +10,7 @@ const m = require('mime');
             res.writeHead(404, 'Missing endpoint');
             res.end();
         }
-
+        
         if (urls[req.url]) {
             res.writeHead(200, 'ok', {
                 'content-type': m.getType(req.url)

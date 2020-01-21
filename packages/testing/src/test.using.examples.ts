@@ -59,7 +59,7 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                         ]);
 
                         api._api = {
-                            page: await getBoilerPlatePage(server, browser),
+                            page: getBoilerPlatePage(server, browser),
                             server,
                             browser
                         };
@@ -103,12 +103,12 @@ async function getBoilerPlatePage(server: TestServer, browser: Browser): Promise
     page.on('pageerror', (e: Error) => {
         pageErrors.push(e);
     });
-    await page.goto(url);
-    if (pageErrors.length) {
-        throw new Error(`Test boilerplate page contains the following errors
+    return page.goto(url).then(() => {
+        if (pageErrors.length) {
+            throw new Error(`Test boilerplate page contains the following errors
         Tip: use "DEBUG=true yarn test" to debug in browser
         
         ${pageErrors.join('\'n')}`);
-    }
-    return page;
+        }
+    }).then(() => page);
 }

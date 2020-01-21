@@ -30,7 +30,8 @@ export function isHTMLMatcher(x: any): x is HTMLMatcher {
     const allowedKeys = ['cssQuery','name','children','descendants','scopeInstances','pageInstances','textContent','_directParent','_ancestor'];
 
     return !(
-        isWrongType(x, 'object')
+        x === undefined
+        || isWrongType(x, 'object')
         || isWrongType(y.scopeInstances, isCount)
         || isWrongType(y.pageInstances, isCount)
         || isWrongType(y.textContent, 'string', isText)
