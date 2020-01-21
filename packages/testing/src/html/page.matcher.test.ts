@@ -56,7 +56,7 @@ describe('htmlMatch', () => {
                 await htmlMatch(page, { name: 'Missing', cssQuery: 'missing', pageInstances: { above: 0 } });
                 expect.fail('HTML should not match query');
             } catch (err) {
-                expect(() => { throw err; }).to.throw(`Missing: page instances: expected 0 to be above 0`);
+                expect(() => { throw err; }).to.throw(`Missing: page instances count: expected 0 to be above 0`);
             }
         });
 

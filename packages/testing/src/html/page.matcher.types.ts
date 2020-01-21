@@ -1,3 +1,4 @@
+import { isWrongType, isArrayOf } from '@tsx-air/utils';
 
 export interface HTMLMatcher {
     cssQuery?: string;
@@ -18,51 +19,27 @@ export interface Range {
     below?: number;
 }
 export function isRange(x: any): x is Range {
-    return x  && (!isNaN(Number(x.above)) || !isNaN(Number(x.below)));
+    return x && (!isNaN(Number(x.above)) || !isNaN(Number(x.below)));
 }
 export function isCount(x: any): x is Count {
     return isNaN(Number(x)) ? isRange(x) : true;
 }
+
 export function isHTMLMatcher(x: any): x is HTMLMatcher {
-    if (x.scopeInstances !== undefined) {
-        if (!isCount(x.scopeInstances)) {
-            return false;
-        }
-    }
-    if (x.pageInstances !== undefined) {
-        if (!isCount(x.pageInstances)) {
-            return false;
-        }
-    }
-    if (x.textContent !== undefined) {
-        if (!isText(x.textContent) && typeof x.textContent !== 'string') {
-            return false;
-        }
-    }
+    const y = x as HTMLMatcher;
+    const allowedKeys = ['cssQuery','name','children','descendants','scopeInstances','pageInstances','textContent','_directParent','_ancestor'];
 
-    if (x.name !== undefined) {
-        if (typeof x.name !== 'string') {
-            return false;
-        }
-    }
-
-    if (x.cssQuery !== undefined) {
-        if (typeof x.cssQuery !== 'string') {
-            return false;
-        }
-    }
-    
-    if (x.children) {
-        if (!(x.children instanceof Array && x.children.every(isChildrenDescriptor))) {
-            return false;
-        }
-    }
-    if (x.descendants) {
-        if (!(x.descendants instanceof Array && x.descendants.every(isChildrenDescriptor))) {
-            return false;
-        }
-    }
-    return true;
+    return !(
+        isWrongType(x, 'object')
+        || isWrongType(y.scopeInstances, isCount)
+        || isWrongType(y.pageInstances, isCount)
+        || isWrongType(y.textContent, 'string', isText)
+        || isWrongType(y.name, 'string')
+        || isWrongType(y.cssQuery, 'string')
+        || isWrongType(y.children, c => isArrayOf(c, isChildrenDescriptor))
+        || isWrongType(y.descendants, c => isArrayOf(c, isChildrenDescriptor))
+        || !Object.keys(x).every(key => allowedKeys.includes(key))
+    );
 }
 
 export type ChildrenDescriptor = Count | HTMLMatcher;
