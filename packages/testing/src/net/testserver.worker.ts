@@ -1,25 +1,27 @@
-const { workerData, parentPort } = require('worker_threads');
-const { createServer } = require('http');
-const m = require('mime');
-const { delay } = require('@tsx-air/utils');
+import { AddEndPoint, Delay, Message } from './testserver.types';
+import { createServer } from 'http';
+import { TimeoutsPromise, delay } from '@tsx-air/utils';
+import { getType } from 'mime';
+import { parentPort, workerData } from 'worker_threads';
 
-(async (port) => {
-    let urls = [];
-    let roots = [];
-    let delays = [];
-    let delayed = {};
+(async (port: number) => {
+    let urls: AddEndPoint[] = [];
+    let roots: string[] = [];
+    let delays: Delay[] = [];
+    let delayed: Record<string, TimeoutsPromise[]> = {};
 
     const app = createServer(async (req, res) => {
         const fail = () => {
             res.writeHead(404, 'Missing endpoint');
             res.end();
-        }
-
-        const urlMatch = ({ url }) =>
-            url === req.url || (url instanceof RegExp && url.test(req.url));
-            
+        };
+        const success = () => res.writeHead(200, 'ok', {
+            'content-type': getType(req.url!)!
+        });
+        const urlMatch = ({ url }: { url: string | RegExp }) =>
+            url === req.url || (url instanceof RegExp && url.test(req.url!));
         const applyDelay = () => {
-            const dl = delays.find(urlMatch);
+            const dl = delays.find(urlMatch) as Required<Delay>;
             if (dl) {
                 const ret = delay(dl.delay);
                 delayed[dl.id] = delayed[dl.id] || [];
@@ -28,37 +30,35 @@ const { delay } = require('@tsx-air/utils');
                 return ret;
             }
             return Promise.resolve();
-        }
+        };
+
 
         const match = urls.find(urlMatch);
         if (match) {
-            res.writeHead(200, 'ok', {
-                'content-type': m.getType(req.url)
-            });
+            success();
             await applyDelay();
             res.write(match.content);
             res.end();
         } else {
             const { createReadStream, existsSync } = require('fs');
             const { join } = require('path');
-            roots.some(root => {
+            if (!roots.some((root: string) => {
                 const filePath = join(root, req.url);
-                if (existsSync(filePath)) {
-                    return !!applyDelay().then(() =>{
-                        res.writeHead(200, 'ok', {
-                            'Content-Type': m.getType(req.url)
-                        });
+                return existsSync(filePath) &&
+                    !!applyDelay().then(() => {
                         createReadStream(join(root, req.url)).on('error', fail).on('open', () => {
-                        }).pipe(res)}
-                    );
-                }
-            }) || fail();
+                            success();
+                        }).pipe(res);
+                        return true;
+                    });
+            })) {
+                fail();
+            }
         }
     });
 
     await new Promise(async resolve => {
-        let s;
-        s = app.listen(port, () => {
+        let s = app.listen(port, () => {
             resolve(s);
         });
         s.on('error', () => {
@@ -69,38 +69,41 @@ const { delay } = require('@tsx-air/utils');
         });
     });
 
-    parentPort.postMessage({ type: 'ready', port });
-    parentPort.on('message', (message) => {
+    const pPort = parentPort!;
+    pPort.postMessage({ type: 'ready', port });
+    pPort.on('message', (message: Required<Message>) => {
         switch (message.type) {
             case 'set':
                 urls.push(message);
-                parentPort.postMessage({ type: 'done', id: message.id });
+                pPort.postMessage({ type: 'done', id: message.id });
                 break;
             case 'root':
                 roots.unshift(message.path);
-                parentPort.postMessage({ type: 'done', id: message.id });
+                pPort.postMessage({ type: 'done', id: message.id });
                 break;
             case 'delay':
                 delays.unshift(message);
-                parentPort.postMessage({ type: 'done', id: message.id });
+                pPort.postMessage({ type: 'done', id: message.id });
                 break;
             case 'stopDelay':
                 const { originalId } = message;
                 delays = delays.filter(({ id }) => id !== originalId);
-                delayed[originalId] && delayed[originalId]
-                    .forEach(d => d.finish());
+                if (delayed[originalId]) {
+                    delayed[originalId]
+                        .forEach(d => d.finish());
+                }
                 delete delayed[originalId];
-                parentPort.postMessage({ type: 'done', id: message.id });
+                pPort.postMessage({ type: 'done', id: message.id });
                 break;
             case 'clear':
                 urls = [];
                 roots = [];
                 delays = [];
                 delayed = {};
-                parentPort.postMessage({ type: 'done', id: message.id });
+                pPort.postMessage({ type: 'done', id: message.id });
                 break;
             default:
-                parentPort.postMessage({
+                pPort.postMessage({
                     id: message.id,
                     type: 'error',
                     error: `Unsupported message type ${message.type}`

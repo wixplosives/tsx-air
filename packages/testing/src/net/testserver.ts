@@ -1,18 +1,12 @@
 import { Worker } from 'worker_threads';
-
-export type AddEndPoint = (url: string | RegExp, content: string) => Promise<void>;
-export type StopDelay = () => Promise<void>;
-export interface TestServer {
-    addStaticRoot: (path: string) => Promise<void>;
-    addEndpoint: AddEndPoint;
-    setDelay: (url: string | RegExp, delay?: number) => Promise<StopDelay>;
-    reset: () => Promise<void>;
-    close: () => Promise<number>;
-    readonly baseUrl: string;
-}
+import { Message, Done } from './testserver.types';
 
 export async function createTestServer(preferredPort = 12357): Promise<TestServer> {
-    const serverWorker = new Worker(require.resolve('./testserver.worker'), { workerData: { preferredPort } });
+    const serverWorker = new Worker(
+        `require(${JSON.stringify(require.resolve('./testserver.worker'))})`, 
+        { workerData: { preferredPort }, 
+        eval: true, 
+        execArgv: ['-r', '@ts-tools/node/r', '-r', 'tsconfig-paths/register'] });
     const baseUrl: string = await new Promise((resolve, reject) => {
         serverWorker.once('message', m => {
             if (m.type === 'ready') {
@@ -23,13 +17,13 @@ export async function createTestServer(preferredPort = 12357): Promise<TestServe
         });
     });
     let messageId = 0;
-    const post = <T = void>(m: any) => new Promise((resolve, reject) => {
+    const post = (m: Message): Promise<number> => new Promise((resolve, reject) => {
         const id = messageId++;
         const msg = {
             ...m, id
-        };
+        } as Message;
         serverWorker.postMessage(msg);
-        const waitUntilDone = (message: any) => {
+        const waitUntilDone = (message: Done) => {
             if (message.id === id) {
                 serverWorker.off('message', waitUntilDone);
                 if (message.type === 'done') {
@@ -40,20 +34,33 @@ export async function createTestServer(preferredPort = 12357): Promise<TestServe
             }
         };
         serverWorker.on('message', waitUntilDone);
-    }) as Promise<T>;
+    });
 
     return {
         addStaticRoot: async (path: string) =>
-            post({ type: 'root', path }),
+            post({ type: 'root', path }).then(() => void (0)),
         addEndpoint: async (url: string | RegExp, content: string) =>
-            post({ type: 'set', url, content }),
+            post({ type: 'set', url, content }).then(() => void (0)),
         reset: () =>
-            post({ type: 'clear' }),
+            post({ type: 'clear' }).then(() => void (0)),
         close: async () =>
             serverWorker.terminate(),
-        setDelay: async (url: string | RegExp, delay = Number.MAX_SAFE_INTEGER) =>
+        setDelay: async (url: string | RegExp, delay: number) =>
             post({ type: 'delay', url, delay })
-                .then(originalId => () => post({ type: 'stopDelay', originalId })),
+                .then((originalId: number) => () => (post({ type: 'stopDelay', originalId }).then(() => void (0)))),
         baseUrl
     };
 }
+
+
+export interface TestServer {
+    addStaticRoot: (path: string) => Promise<void>;
+    addEndpoint: AddEndPointFn;
+    setDelay: (url: string | RegExp, delay: number) => Promise<StopDelayFn>;
+    reset: () => Promise<void>;
+    close: () => Promise<number>;
+    readonly baseUrl: string;
+}
+
+type AddEndPointFn = (url: string | RegExp, content: string) => Promise<void>;
+type StopDelayFn = () => Promise<void>;

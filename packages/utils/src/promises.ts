@@ -1,4 +1,4 @@
-type TimeoutsPromise = Promise<void> & TimeoutsPromiseApi;
+export type TimeoutsPromise = Promise<void> & TimeoutsPromiseApi;
 interface TimeoutsPromiseApi {
     cancel: () => void;
     pause: () => void;
