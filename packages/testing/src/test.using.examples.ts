@@ -57,9 +57,8 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                             server.addStaticRoot(fixtures),
                             server.addStaticRoot(publicPath)
                         ]);
-
                         api._api = {
-                            page: getBoilerPlatePage(server, browser),
+                            ...await getBoilerPlatePage(server, browser),
                             server,
                             browser
                         };
@@ -73,12 +72,21 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
 
 class SuiteApiProxy implements ExampleSuiteApi {
     public _api!: ExampleSuiteApi;
-    get page() {
-        return this._api.page;
+    get beforeLoading() {
+        return this._api.beforeLoading;
     }
+
+    get afterLoading() {
+        return this._api.afterLoading;
+    }
+    get domContentLoaded() {
+        return this._api.domContentLoaded;
+    }
+
     get server() {
         return this._api.server;
     }
+
     get browser() {
         return this._api.browser;
     }
@@ -96,20 +104,32 @@ const browserifyBoilerplate = async (examplePath: string, target: string,
         }
     });
 
-async function getBoilerPlatePage(server: TestServer, browser: Browser): Promise<Page> {
-    const page = await browser.newPage();
+async function getBoilerPlatePage(server: TestServer, browser: Browser) {
+    const page = browser.newPage();
     const url = `${server.baseUrl}/suite.loader.html`;
     const pageErrors: Error[] = [];
-    page.on('pageerror', (e: Error) => {
+    (await page).on('pageerror', (e: Error) => {
         pageErrors.push(e);
     });
 
-    return page.goto(url, {waitUntil:'domcontentloaded'}).then(() => {
+    const verify = () => {
         if (pageErrors.length) {
             throw new Error(`Test boilerplate page contains the following errors
         Tip: use "DEBUG=true yarn test" to debug in browser
         
         ${pageErrors.join('\'n')}`);
         }
-    }).then(() => page);
+        return page as Promise<Page>;
+    };
+
+    const domContentLoaded = page.then(p => p.goto(url, { waitUntil: 'domcontentloaded' })).then(verify);
+    const afterLoading = domContentLoaded.then(p =>
+        p.waitForFunction(() => (window as any).app, { polling: 10 }))
+        .then(() => page);
+
+    return {
+        beforeLoading: page,
+        afterLoading,
+        domContentLoaded
+    };
 }

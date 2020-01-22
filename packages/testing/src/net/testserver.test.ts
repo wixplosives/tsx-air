@@ -143,7 +143,7 @@ describe('test server', () => {
         server = await createTestServer();
         await server.addEndpoint('/got', 'ok');
         const done = threadedGet(server.baseUrl + '/got');
-        const [start, end] = block(200);
+        const [start, end] = block(300);
         const { result, time } = await done;
 
         expect(result).to.eql('ok');

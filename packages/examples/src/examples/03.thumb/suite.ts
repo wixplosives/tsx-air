@@ -30,9 +30,9 @@ const onlyImage = {
 
 export default function (api: ExampleSuiteApi) {
     it('should start with a preloader, then show only the image', async () => {
-        const { page: p, server } = api;
+        const { afterLoading, server } = api;
         const serveImages = await server.setDelay(/.*\.jpg/, 9999999);
-        const page = await p;
+        const page = await afterLoading;
         await htmlMatch(page, onlyPreloader);
         serveImages();
         await page.waitForResponse(`${server.baseUrl}/images/pretty-boy.jpg`);
@@ -41,7 +41,7 @@ export default function (api: ExampleSuiteApi) {
     });
 
     it('should repeat the loading sequence when the image changes', async () => {
-        const { page: p, server } = api;
+        const { beforeLoading: p, server } = api;
         const page = await p;
         await page.waitForResponse(`${server.baseUrl}/images/pretty-boy.jpg`);
         // Now let's update the props

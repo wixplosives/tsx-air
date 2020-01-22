@@ -23,7 +23,7 @@ describe('promises', () => {
         it('should reset the timer with setTimeout', async () => {
             const dl = delay(100);
             const actualDuration = duration(dl);
-            dl.setTimeout(10);
+            dl.setTimeout(11);
             expect(await actualDuration).to.be.within(10, 50);
         });
     });

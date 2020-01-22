@@ -5,11 +5,11 @@
     "packages/*"
   ],
   "scripts": {
-    "clean": "lerna run clean --stream --parallel",
-    "build": "lerna run build --stream --parallel",
-    "lint": "lerna run lint --stream --parallel",
+    "clean": "lerna run clean --stream",
+    "build": "lerna run build --stream",
+    "lint": "lerna run lint",
     "pretest": "yarn lint",
-    "test": "lerna run test --stream --parallel",
+    "test": "lerna run test --concurrency 2",
     "typecheck": "tsc -p tsconfig.test.json --noEmit"
   },
   "dependencies": {
