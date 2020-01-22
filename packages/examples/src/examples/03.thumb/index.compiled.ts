@@ -19,16 +19,21 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
                     state.imageLoaded = false;
                     return Thumb.changeBitmask.imageLoaded;
                 });
+                this.context.img1.src = newProps.url;
             }],
             [Thumb.changeBitmask.imageLoaded, () => {
                 if (newState.imageLoaded) {
-                    this.context.root.removeChild(this.context.div1!);
+                    if (this.context.div1) {
+                        this.context.root.removeChild(this.context.div1);
+                        this.context.div1 = undefined;
+                    }
                     runtimeUtils.setStyle(this.context.img1, { display: 'block' });
-                    this.context.div1 = undefined;
                 } else {
                     runtimeUtils.setStyle(this.context.img1, { display: 'none' });
-                    this.context.div1 = runtimeUtils.createFromString('<div class="preloader" />') as HTMLDivElement;
-                    this.context.root.appendChild(this.context.div1);
+                    if (!this.context.div1) {
+                        this.context.div1 = runtimeUtils.createFromString('<div class="preloader" />') as HTMLDivElement;
+                        this.context.root.prepend(this.context.div1);
+                    }
                 }
             }],
             [Thumb.changeBitmask.onClick, () => {
