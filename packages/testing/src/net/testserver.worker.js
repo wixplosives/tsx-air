@@ -1,21 +1,42 @@
 const { workerData, parentPort } = require('worker_threads');
 const { createServer } = require('http');
 const m = require('mime');
+const { delay } = require('@tsx-air/utils');
 
 (async (port) => {
-    let urls = {};
+    let urls = [];
     let roots = [];
-    const app = createServer((req, res) => {
+    let delays = [];
+    let delayed = {};
+
+    const app = createServer(async (req, res) => {
         const fail = () => {
             res.writeHead(404, 'Missing endpoint');
             res.end();
         }
-        
-        if (urls[req.url]) {
+
+        const urlMatch = ({ url }) =>
+            url === req.url || (url instanceof RegExp && url.test(req.url));
+            
+        const applyDelay = () => {
+            const dl = delays.find(urlMatch);
+            if (dl) {
+                const ret = delay(dl.delay);
+                delayed[dl.id] = delayed[dl.id] || [];
+                delayed[dl.id].push(ret);
+                ret.then(() => delayed[dl.id] = delayed[dl.id] && delayed[dl.id].filter(i => i !== ret));
+                return ret;
+            }
+            return Promise.resolve();
+        }
+
+        const match = urls.find(urlMatch);
+        if (match) {
             res.writeHead(200, 'ok', {
                 'content-type': m.getType(req.url)
             });
-            res.write(urls[req.url]);
+            await applyDelay();
+            res.write(match.content);
             res.end();
         } else {
             const { createReadStream, existsSync } = require('fs');
@@ -23,11 +44,13 @@ const m = require('mime');
             roots.some(root => {
                 const filePath = join(root, req.url);
                 if (existsSync(filePath)) {
-                    return !!createReadStream(join(root, req.url)).on('error', fail).on('open', () => {
+                    return !!applyDelay().then(() =>{
                         res.writeHead(200, 'ok', {
                             'Content-Type': m.getType(req.url)
                         });
-                    }).pipe(res);
+                        createReadStream(join(root, req.url)).on('error', fail).on('open', () => {
+                        }).pipe(res)}
+                    );
                 }
             }) || fail();
         }
@@ -48,19 +71,32 @@ const m = require('mime');
 
     parentPort.postMessage({ type: 'ready', port });
     parentPort.on('message', (message) => {
-        message.processed = true;
         switch (message.type) {
             case 'set':
-                urls[message.url] = message.content;
+                urls.push(message);
                 parentPort.postMessage({ type: 'done', id: message.id });
                 break;
             case 'root':
                 roots.unshift(message.path);
                 parentPort.postMessage({ type: 'done', id: message.id });
                 break;
+            case 'delay':
+                delays.unshift(message);
+                parentPort.postMessage({ type: 'done', id: message.id });
+                break;
+            case 'stopDelay':
+                const { originalId } = message;
+                delays = delays.filter(({ id }) => id !== originalId);
+                delayed[originalId] && delayed[originalId]
+                    .forEach(d => d.finish());
+                delete delayed[originalId];
+                parentPort.postMessage({ type: 'done', id: message.id });
+                break;
             case 'clear':
-                urls = {};
+                urls = [];
                 roots = [];
+                delays = [];
+                delayed = {};
                 parentPort.postMessage({ type: 'done', id: message.id });
                 break;
             default:

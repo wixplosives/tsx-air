@@ -1,11 +1,13 @@
 import { ExampleSuiteApi } from '@tsx-air/types';
 import { htmlMatch } from '@tsx-air/testing';
+import { delay } from '@tsx-air/utils';
 
 export default function (api:ExampleSuiteApi) {    
-    it('should start with a preloader', async () => {
-        const { page, server } = api;
-        server.addEndpoint('/images/pretty-boy.jpg', 'invaid image');
-        await htmlMatch(await page, {
+    it('should start with a preloader, then show only the image', async () => {
+        const { page:p, server } = api;
+        const serveImage = await server.setDelay(/.*\.jpg/, 9999999);        
+        const page = await p;
+        await htmlMatch(page, {
             cssQuery: '.thumb',
             pageInstances: 1,
             children: [{
@@ -14,11 +16,10 @@ export default function (api:ExampleSuiteApi) {
                 scopeInstances: 1
             }]
         });
-    });
-    it('should change to image once loaded', async () => {
-        const page  = await api.page;
-        await page.waitFor(50);
-        await htmlMatch(page, {
+        serveImage();
+        await page.waitForResponse(`${server.baseUrl}/images/pretty-boy.jpg`);
+        await delay(50);
+        await htmlMatch(await page, {
             cssQuery: '.thumb',
             pageInstances: 1,
             children: [{
@@ -27,15 +28,16 @@ export default function (api:ExampleSuiteApi) {
                 scopeInstances: 1
             },
             {
-                name:'Preloader',
+                name: 'Preloader',
                 cssQuery: '.preloader',
                 scopeInstances: 0
             }]
         });
     });
-    xit('should repeat the loading sequence when the image changes', async () => {
+   
+    it('should repeat the loading sequence when the image changes', async () => {
         const page = await api.page;
-        await page.evaluate(() => (window as any).app.updateProps({ url: '/weird.jpg'}));
+        await page.evaluate(() => (window as any).app.updateProps({ url: '/missing.jpg'}));
         await page.waitFor(50);
         await htmlMatch(page, {
             name:'Thumb',

@@ -103,7 +103,8 @@ async function getBoilerPlatePage(server: TestServer, browser: Browser): Promise
     page.on('pageerror', (e: Error) => {
         pageErrors.push(e);
     });
-    return page.goto(url).then(() => {
+
+    return page.goto(url, {waitUntil:'domcontentloaded'}).then(() => {
         if (pageErrors.length) {
             throw new Error(`Test boilerplate page contains the following errors
         Tip: use "DEBUG=true yarn test" to debug in browser

@@ -1,9 +1,11 @@
 import { Worker } from 'worker_threads';
 
-export type AddEndPoint = (url: string, content: string) => Promise<void>;
+export type AddEndPoint = (url: string | RegExp, content: string) => Promise<void>;
+export type StopDelay = () => Promise<void>;
 export interface TestServer {
     addStaticRoot: (path: string) => Promise<void>;
     addEndpoint: AddEndPoint;
+    setDelay: (url: string | RegExp, delay?: number) => Promise<StopDelay>;
     reset: () => Promise<void>;
     close: () => Promise<number>;
     readonly baseUrl: string;
@@ -31,7 +33,7 @@ export async function createTestServer(preferredPort = 12357): Promise<TestServe
             if (message.id === id) {
                 serverWorker.off('message', waitUntilDone);
                 if (message.type === 'done') {
-                    resolve();
+                    resolve(message.id);
                 } else {
                     reject(message);
                 }
@@ -41,10 +43,17 @@ export async function createTestServer(preferredPort = 12357): Promise<TestServe
     }) as Promise<T>;
 
     return {
-        addStaticRoot: async (path: string) => post({ type: 'root', path }),
-        addEndpoint: async (url: string, content: string) => post({ type: 'set', url, content }),
-        reset: () => post({ type: 'clear' }),
-        close: async () => serverWorker.terminate(),
+        addStaticRoot: async (path: string) =>
+            post({ type: 'root', path }),
+        addEndpoint: async (url: string | RegExp, content: string) =>
+            post({ type: 'set', url, content }),
+        reset: () =>
+            post({ type: 'clear' }),
+        close: async () =>
+            serverWorker.terminate(),
+        setDelay: async (url: string | RegExp, delay = Number.MAX_SAFE_INTEGER) =>
+            post({ type: 'delay', url, delay })
+                .then(originalId => () => post({ type: 'stopDelay', originalId })),
         baseUrl
     };
 }

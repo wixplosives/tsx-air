@@ -28,7 +28,6 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
                 } else {
                     runtimeUtils.setStyle(this.context.img1, { display: 'none' });
                     this.context.div1 = runtimeUtils.createFromString('<div class="preloader" />') as HTMLDivElement;
-                    this.context.root.innerHTML = '<div class="preloader" />';
                     this.context.root.appendChild(this.context.div1);
                 }
             }],

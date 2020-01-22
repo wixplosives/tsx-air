@@ -1,3 +1,4 @@
+import { delay, duration } from '@tsx-air/utils';
 import { createTestServer, TestServer } from './testserver';
 import { expect } from 'chai';
 import { get, threadedGet } from './http.client';
@@ -35,10 +36,10 @@ describe('test server', () => {
             await server.addStaticRoot(fixtures);
             await server.addStaticRoot(join(fixtures, 'inner'));
             expect(await Promise.all([
-                get(await server.baseUrl + '/static.root.priority'),
-                get(await server.baseUrl + '/inner/common.file'),
-                get(await server.baseUrl + '/common.file'),
-                get(await server.baseUrl + '/first.static.root'),
+                get(server.baseUrl + '/static.root.priority'),
+                get(server.baseUrl + '/inner/common.file'),
+                get(server.baseUrl + '/common.file'),
+                get(server.baseUrl + '/first.static.root'),
             ])).to.eql([
                 'added latest', 'ok', 'ok', 'no conflict, no problem'
             ]);
@@ -54,22 +55,56 @@ describe('test server', () => {
         it('should serve GET endpoint set by addEndpoint', async () => {
             server = await createTestServer();
             await server.addEndpoint('/endpoint', 'added');
-            expect(await get(await server.baseUrl + '/endpoint')).to.eql('added');
+            await server.addEndpoint(/withRegex/, 'regex endpoint');
+            expect(await get(server.baseUrl + '/endpoint')).to.eql('added');
+            expect(await get(server.baseUrl + '/withRegex1')).to.eql('regex endpoint');
+            expect(await get(server.baseUrl + '/withRegex2')).to.eql('regex endpoint');
         });
 
         it('should prioritize endpoints set by addEndpoint over addStaticRoot', async () => {
             server = await createTestServer();
             await server.addStaticRoot(fixtures);
             await server.addEndpoint('/from.fs', 'nope');
-            expect(await get(await server.baseUrl + '/from.fs')).to.eql('nope');
+            expect(await get(server.baseUrl + '/from.fs')).to.eql('nope');
         });
     });
+
+    describe(`setDelay`, () => {
+        it('should return a value only after the delay period', async () => {
+            server = await createTestServer();
+            await server.addEndpoint('/endpoint', 'with delay');
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(40);
+            await server.setDelay('/endpoint', 40);
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.within(40, 60);
+            await server.setDelay(/\/end.*/, 60);
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.above(60);
+        });
+        it('should return a killswitch function', async () => {
+            server = await createTestServer();
+            await server.addEndpoint('/endpoint', 'with delay');
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(40);
+            const kill = await server.setDelay('/endpoint', 100);
+            const cancelledDelayDuration = duration(get(server.baseUrl + '/endpoint'));
+            await delay(40);
+            await kill();
+            expect(await cancelledDelayDuration).to.be.within(40,100);
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(40);
+        });
+        it('delay static resources', async()=>{
+            server = await createTestServer();
+            await server.addStaticRoot(fixtures);
+            expect(await duration(get(server.baseUrl + '/first.static.root'))).to.be.below(40);
+            await server.setDelay('/first.static.root', 50);
+            expect(await duration(get(server.baseUrl + '/first.static.root'))).to.be.above(50);
+        });
+    });
+
 
     describe('reset', () => {
         it('should clear all endpoints', async () => {
             server = await createTestServer();
             await server.addEndpoint('/endpoint', 'added');
-            expect(await get(await server.baseUrl + '/endpoint')).to.eql('added');
+            expect(await get(server.baseUrl + '/endpoint')).to.eql('added');
             await server.reset();
             await shouldFail(server.baseUrl + '/endpoint', 'Endpoint active after server reset');
         });
@@ -77,7 +112,7 @@ describe('test server', () => {
         it('should clear the base path', async () => {
             server = await createTestServer();
             await server.addStaticRoot(fixtures);
-            expect(await get(await server.baseUrl + '/from.fs')).to.eql('ok');
+            expect(await get(server.baseUrl + '/from.fs')).to.eql('ok');
             await server.reset();
             await shouldFail(server.baseUrl + '/from.fs', 'Endpoint active after server reset');
         });
