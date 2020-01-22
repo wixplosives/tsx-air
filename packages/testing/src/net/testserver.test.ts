@@ -7,10 +7,6 @@ import { block } from './block.thread';
 import { join } from 'path';
 
 describe('test server', () => {
-    before(function () {
-        this.timeout(3000);
-    });
-
     let server: TestServer;
     afterEach(() => {
         server?.close();
@@ -74,20 +70,20 @@ describe('test server', () => {
             server = await createTestServer();
             await server.addEndpoint('/endpoint', 'with delay');
             expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(40);
-            await server.setDelay('/endpoint', 40);
-            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.within(40, 60);
-            await server.setDelay(/\/end.*/, 60);
-            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.above(60);
+            await server.setDelay('/endpoint', 50);
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.within(50, 120);
+            await server.setDelay(/\/end.*/, 120);
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.above(120);
         });
         it('should return a killswitch function', async () => {
             server = await createTestServer();
             await server.addEndpoint('/endpoint', 'with delay');
             expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(40);
-            const kill = await server.setDelay('/endpoint', 100);
+            const kill = await server.setDelay('/endpoint', 200);
             const cancelledDelayDuration = duration(get(server.baseUrl + '/endpoint'));
             await delay(40);
             await kill();
-            expect(await cancelledDelayDuration).to.be.within(40,100);
+            expect(await cancelledDelayDuration).to.be.within(40,150);
             expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(40);
         });
         it('delay static resources', async()=>{

@@ -16,7 +16,7 @@
         "clean": "rimraf ./dist",
         "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
         "prebuild": "yarn clean",
-        "test": "mocha \"src/**/*.test.ts?(x)\""
+        "test": "mocha \"src/**/*.test.ts?(x)\" --retries 4"
     },
     "sideEffects": [],
     "files": [
