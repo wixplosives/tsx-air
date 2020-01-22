@@ -21,10 +21,7 @@ export default function (api:ExampleSuiteApi) {
     it('should update the view', async () => {
         const page = await api.afterLoading;
         await page.evaluate(() => (window as any).app.updateProps({ name: 'changed' }));
-        // tslint:disable: no-console
-        console.log('A1');
         await page.waitFor(50);
-        console.log('A2');
         await htmlMatch(page, {
             cssQuery: '.parent',
             pageInstances: 1,
@@ -38,7 +35,5 @@ export default function (api:ExampleSuiteApi) {
                 textContent: 'Child: changed'
             }]
         });
-        console.log('A3');
-
     });
 }
