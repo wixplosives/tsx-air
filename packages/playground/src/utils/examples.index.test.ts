@@ -19,7 +19,7 @@ describe('examples index API', () => {
     let loaded: string[] = [];
     const loading: Set<Promise<any>> = new Set();
     const slowUrls: Array<{ url: string, duration: number }> = [];
-    const tooooSlow = 200;
+    const tooooSlow = 300;
     before(done => {
         let port = 13123;
         server = new Worker(join(__dirname, 'example.indexer.express.js'), {
@@ -53,7 +53,15 @@ describe('examples index API', () => {
     after(() => {
         server.terminate();
     });
-    afterEach(() => {
+    afterEach(function () {
+        if (loading.size) {
+            this.currentTest?.emit('error', 'Some resources are still loading');
+        }
+        if (slowUrls.length) {
+            this.currentTest?.emit('error', 'Got slow calls:\n'
+                + slowUrls.map(s => s.duration + 'ms: ' +s.url)
+            );
+        }
         expect(loading.size, 'Some resources are still loading').to.equal(0);
         expect(slowUrls).to.eql([]);
     });
