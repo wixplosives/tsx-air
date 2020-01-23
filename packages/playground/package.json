@@ -13,7 +13,7 @@
         "prebuild": "yarn clean",
         "start:server": "node server.js",
         "start": "webpack-dev-server --progress",
-        "test": "mocha \"src/**/*.test.ts?(x)\" --retries 4"
+        "test": "mocha 'src/**/*.test.ts?(x)'"
     },
     "sideEffects": [],
     "dependencies": {

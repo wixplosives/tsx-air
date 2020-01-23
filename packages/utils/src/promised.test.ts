@@ -3,7 +3,7 @@ import { expect } from 'chai';
 describe('promises', () => {
     describe('delay', () => {
         it('should resolve after the set timeout', async () => {
-            expect(await duration(delay(20))).to.be.within(20, 50);
+            expect(await duration(delay(21))).to.be.within(20, 50);
         });
         it('should throw when canceled', async () => {
             const dl = delay(100);

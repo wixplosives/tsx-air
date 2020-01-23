@@ -16,7 +16,7 @@
         "clean": "rimraf ./dist ./.tmp",
         "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)' -e '**/*.d.ts'",
         "prebuild": "yarn clean",
-        "test": "mocha 'src/**/*.test.ts?(x)' --timeout 4000 --retries 4"
+        "test": "mocha 'src/**/*.test.ts?(x)'"
     },
     "sideEffects": [
         "src/chai.extensions.ts"

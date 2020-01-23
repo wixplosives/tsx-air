@@ -21,26 +21,25 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
         opt.fixtures = [opt.fixtures as string];
     }
 
-    const getBrowser = () => launch({ headless: !opt.DEBUG, devtools: opt.DEBUG });
-    const addFixtures = (s: TestServer) => Promise.all((opt.fixtures as string[])
-        .map(f => s.addStaticRoot(f)));
-
     let browser: Promise<Browser>;
     let server: Promise<TestServer>;
     let timeout: number | undefined;
 
     before(async function () {
         this.currentTest?.retries(opt.retries);
-        browser = getBrowser();
-        server = createTestServer();
+        browser = launch({ headless: !opt.DEBUG, devtools: opt.DEBUG });
+        const _server = createTestServer();
+        server = _server.then(s =>
+            Promise.all((opt.fixtures as string[])
+                .map(f => s.addStaticRoot(f)))
+        ).then(() => _server);
     });
 
     beforeEach(async function () {
         timeout = timeout || this.currentTest?.timeout() || 5000;
         this.currentTest?.timeout(timeout);
-        const s = await server;
-        await s.reset().then(() => addFixtures(s));
         Object.assign(api, getNewPage(await server, await browser, opt));
+        api.server.reset();
     });
 
     afterEach(function () {
