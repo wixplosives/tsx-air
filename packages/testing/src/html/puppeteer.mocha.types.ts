@@ -1,7 +1,7 @@
 import { Page, Browser } from 'puppeteer';
 import { TestServer } from '../net';
 
-export interface PuppeteerSuiteOptions {
+export interface PreppeteerOptions {
     /**
      * @default "./fixtures"
      */
@@ -33,7 +33,7 @@ export interface PuppeteerSuiteOptions {
     retries:number;
 }
 
-export interface PuppeteerSuiteApi {
+export interface PreppeteerSuiteApi {
     beforeLoading: Promise<Page>;
     domContentLoaded: Promise<Page>;
     afterLoading: Promise<Page>;

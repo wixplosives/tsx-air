@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { PuppeteerSuiteApi as PreppeteerSuiteApi, PuppeteerSuiteOptions as PreppeteerOptions } from './puppeteer.mocha.types';
+import { PreppeteerSuiteApi, PreppeteerOptions } from './puppeteer.mocha.types';
 import { TestServer, createTestServer } from '../net';
 import { launch, Browser } from 'puppeteer';
 import { isArrayOf } from '@tsx-air/utils';
@@ -14,7 +14,7 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
         DEBUG: !!process.env.DEBUG,
         pageLoadedPredicate: 'loaded',
         startTests: 'afterLoading',
-        retries: 5
+        retries: (mocha.options.retries || 0) + 2,
     } as PreppeteerOptions);
 
     if (!isArrayOf(opt.fixtures, 'string')) {
