@@ -14,7 +14,7 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
         DEBUG: !!process.env.DEBUG,
         pageLoadedPredicate: 'loaded',
         startTests: 'afterLoading',
-        retries: (mocha.options.retries || 0) + 2,
+        retries: 3,
     } as PreppeteerOptions);
 
     if (!isArrayOf(opt.fixtures, 'string')) {
@@ -31,7 +31,7 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
     let timeout: number | undefined;
 
     before(async function () {
-        this.currentTest?.retries(opt.retries);
+        this.currentTest?.retries(this.currentTest?.retries() + opt.retries);
         browser = getBrowser();
         server = createTestServer();
     });
