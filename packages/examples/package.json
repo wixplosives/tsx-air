@@ -1,7 +1,7 @@
 {
     "name": "@tsx-air/examples",
     "repository": "https://github.com/wixplosives/tsx-air/tree/master/packages/examples",
-    "description": "TSXAir working examples, with manually 'compiled' version",
+    "description": "TSXAir working examples, with manually \"compiled\" version",
     "main": "dist/cjs/index.js",
     "module": "dist/esm/index.js",
     "types": "dist/esm/index.d.ts",
@@ -10,14 +10,14 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "concurrently 'yarn build:cjs' 'yarn build:esm' 'yarn build:examples'",
+        "build": "concurrently \"yarn build:cjs\" \"yarn build:esm\" \"yarn build:examples\"",
         "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
         "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
-        "build:examples": "cpy 'src/examples/*/**/*' './dist' --parents",
+        "build:examples": "cpy \"src/examples/*/**/*\" \"./dist\" --parents",
         "clean": "rimraf ./dist",
-        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)' -e 'src/examples/TODO*/**/*'",
+        "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\" -e \"src/examples/TODO*/**/*\"",
         "prebuild": "yarn clean",
-        "test": "mocha 'src/**/*.test.ts?(x)' --timeout 8000"
+        "test": "mocha \"src/**/*.test.ts?(x)\" --timeout 8000"
     },
     "sideEffects": false,
     "files": [

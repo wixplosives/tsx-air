@@ -9,11 +9,11 @@
         "build": "echo ok",
         "profile": "webpack --profile",
         "clean": "rimraf ./dist",
-        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)' -e 'src/**/*.d.ts'",
+        "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\" -e \"src/**/*.d.ts\"",
         "prebuild": "yarn clean",
         "start:server": "node server.js",
         "start": "webpack-dev-server --progress",
-        "test": "mocha 'src/**/*.test.ts?(x)'"
+        "test": "mocha \"src/**/*.test.ts?(x)\""
     },
     "sideEffects": [],
     "dependencies": {

@@ -14,9 +14,9 @@
         "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
         "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "clean": "rimraf ./dist",
-        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)' -e '**/*.d.ts'",
+        "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\" -e \"**/*.d.ts\"",
         "prebuild": "yarn clean",
-        "test": "mocha 'src/**/*.test.ts?(x)'"
+        "test": "mocha \"src/**/*.test.ts?(x)\""
     },
     "sideEffects": [],
     "files": [

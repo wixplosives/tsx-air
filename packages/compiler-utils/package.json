@@ -10,13 +10,13 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "concurrently 'yarn build:cjs' 'yarn build:esm'",
+        "build": "concurrently \"yarn build:cjs\" \"yarn build:esm\"",
         "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
         "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "clean": "rimraf ./dist",
-        "lint": "tslint -c ../../tslint.json 'src/**/*.ts?(x)'",
+        "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\"",
         "prebuild": "yarn clean",
-        "test": "mocha 'src/**/*.test.ts?(x)' --retries 3"
+        "test": "mocha \"src/**/*.test.ts?(x)\""
     },
     "files": [
         "dist",

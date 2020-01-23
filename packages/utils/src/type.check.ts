@@ -1,5 +1,5 @@
 type IsOfType = (x: any) => boolean;
-type TypeCheck = IsOfType | 'string' | 'number' | 'function' | 'object' | 'undefined';
+type TypeCheck = IsOfType | 'string' | 'number' | 'function' | 'object' | 'undefined' | 'boolean';
 
 /**
  * Returns true if x is defined and matched NONE of the allowed types
