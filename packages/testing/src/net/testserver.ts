@@ -43,8 +43,8 @@ export async function createTestServer(preferredPort = 12357): Promise<TestServe
             post({ type: 'set', url, content }).then(() => void (0)),
         reset: () =>
             post({ type: 'clear' }).then(() => void (0)),
-        close: async () =>
-            serverWorker.terminate(),
+        close:  () =>
+            serverWorker.terminate().then(()=>void(0)),
         setDelay: async (url: string | RegExp, delay: number) =>
             post({ type: 'delay', url, delay })
                 .then((originalId: number) => () => (post({ type: 'stopDelay', originalId }).then(() => void (0)))),
@@ -58,7 +58,7 @@ export interface TestServer {
     addEndpoint: AddEndPointFn;
     setDelay: (url: string | RegExp, delay: number) => Promise<StopDelayFn>;
     reset: () => Promise<void>;
-    close: () => Promise<number>;
+    close: () => Promise<void>;
     readonly baseUrl: string;
 }
 

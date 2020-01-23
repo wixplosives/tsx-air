@@ -1,7 +1,7 @@
 import { isWrongType, isArrayOf } from './type.check';
 import { expect } from 'chai';
 describe('type checks', () => {
-    describe('isWrongType', () => {
+    it('isWrongType', () => {
         expect(isWrongType(undefined, 'string')).to.equal(false, 
             'undefined values are not considered wrong type');
         expect(isWrongType('ok', 'string')).to.equal(false);
@@ -14,12 +14,14 @@ describe('type checks', () => {
         expect(isWrongType({ ok: false }, x => x.ok)).to.equal(true, 'predicate returned false');
     });
 
-    describe('isArrayOf', () => {
+    it('isArrayOf', () => {
         expect(isArrayOf([], _ => false)).to.equal(true, 'an empty array is considered as true by default');
         expect(isArrayOf([], _ => false, false)).to.equal(false, 'emptyPasses = false');
         expect(isArrayOf([1], i => isNaN(i))).to.equal(false, '1 does not match the predicate');
+        expect(isArrayOf([1, 0], 'number' )).to.equal(true, '1,0 are instances Number');
         expect(isArrayOf(['one', 1], i => isNaN(i))).to.equal(false, '1 does not match the predicate');
-        expect(isArrayOf(['one', 'two'], i => isNaN(i))).to.equal(true, 'all items match the predicate');
+        expect(isArrayOf(['one', 'two'], isNaN)).to.equal(true, 'all items match the predicate');
+        expect(isArrayOf(['one', 'two'], 'string')).to.equal(true, 'all items match the predicate');
         expect(isArrayOf('not an array', _=>true)).to.equal(false);
     });
 });

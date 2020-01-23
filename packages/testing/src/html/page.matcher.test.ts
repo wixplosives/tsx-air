@@ -1,34 +1,16 @@
-import { createTestServer, TestServer } from '../net';
-import { launch, Page, Browser } from 'puppeteer';
+import fixtures from '../../fixtures';
 import { expect } from 'chai';
-import base from '../../fixtures';
 import { htmlMatch } from './page.matcher';
+import { preppeteer } from './puppeteer.mocha.utils';
 
 describe('htmlMatch', () => {
-    let server: TestServer;
-    let browser: Promise<Browser>;
-    let page: Page;
-    before(async () => {
-        browser = launch({ timeout: 2000 });
-        server = await createTestServer();
-        await server.addStaticRoot(base);
+    const api = preppeteer({
+        fixtures,
+        url: '/match.html'
     });
-    beforeEach(async () => {
-        page = await (await (await browser).newPage());
-        await page.goto(server.baseUrl + '/match.html');
-    });
-    afterEach(() => {
-        browser.then(b => b.pages()).then(p => p.forEach(i => i.close().catch(() => null)));
-    });
-    after(() => {
-        server.close();
-        browser.then(i => {
-            i.close().catch(() => null);
-        });
-    });
-
     describe('htmlMatch', () => {
         it('should fail if nothing was tested for', async () => {
+            const page = await api.afterLoading;
             try {
                 // @ts-ignore
                 await htmlMatch(page, { name: 'NothingTested1' });
@@ -51,6 +33,7 @@ describe('htmlMatch', () => {
         });
 
         it('should match by simple css query', async () => {
+            const page = await api.afterLoading;
             await htmlMatch(page, { cssQuery: 'body', pageInstances: 1 });
             try {
                 await htmlMatch(page, { name: 'Missing', cssQuery: 'missing', pageInstances: { above: 0 } });
@@ -61,6 +44,7 @@ describe('htmlMatch', () => {
         });
 
         it('should match by text', async () => {
+            const page = await api.afterLoading;
             await htmlMatch(page, {
                 cssQuery: '.child.three',
                 textContent: '[content of child three]'
@@ -87,7 +71,8 @@ describe('htmlMatch', () => {
             }
         });
 
-        it('should match by simple children and defendants', async () => {
+        it('should match by simple children and defendants', async () => {      
+            const page = await api.afterLoading;
             await Promise.all([
                 htmlMatch(page, {
                     cssQuery: '.with.children', children: [3]

@@ -1,6 +1,5 @@
-
 type IsOfType = (x: any) => boolean;
-type TypeCheck = string | IsOfType;
+type TypeCheck = IsOfType | 'string' | 'number' | 'function' | 'object' | 'undefined';
 
 /**
  * Returns true if x is defined and matched NONE of the allowed types
@@ -16,7 +15,9 @@ export const isWrongType = (x: any, ...allowedTypes: TypeCheck[]) => {
     return false;
 };
 
-export const isArrayOf = (x: any, isOf: IsOfType, emptyPasses = true) => 
-    x instanceof Array 
-    && (x.length > 0 || emptyPasses) 
-    && x.every(i => isOf(i));
+export const isArrayOf = (x: any, isOf: TypeCheck, emptyPasses = true) =>
+    x instanceof Array
+    && (x.length > 0 || emptyPasses)
+    && x.every(i =>
+        (typeof isOf === 'string' && typeof i === isOf)
+        || (typeof isOf === 'function' && isOf(i)));
