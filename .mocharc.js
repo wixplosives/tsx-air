@@ -5,3 +5,4 @@ module.exports = {
     retries: process.env.CI ? 5 : 1,
     timeout: process.env.CI ? 10000 : 2000
 };
+console.log(JSON.stringify(module.exports));
