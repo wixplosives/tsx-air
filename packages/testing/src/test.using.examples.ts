@@ -22,7 +22,7 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
         examples.map(
             ({ suite, path }) => {
                 const exampleName = basename(path);
-                const exampleTmpPath = join(tempPath, exampleName);
+                const exampleTmpPath = join(tempPath, exampleName, Date.now().toString(36));
 
                 describe(exampleName, () => {
                     before(() => browserifyBoilerplate(path, exampleTmpPath, compiler.transformers));
@@ -31,7 +31,7 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                         api.server.addStaticRoot(exampleTmpPath),
                     ]));
                     after(() => rimraf(exampleTmpPath, () => void (0)));
-                    
+
                     suite.call(this, api);
                 });
             });

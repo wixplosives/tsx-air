@@ -72,7 +72,7 @@ describe('test server', () => {
             expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(40);
             await server.setDelay('/endpoint', 50);
             expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.within(50, 120);
-            await server.setDelay(/\/end.*/, 120);
+            await server.setDelay(/\/end.*/, 121);
             expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.above(120);
         });
         it('should return a killswitch function', async () => {

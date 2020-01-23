@@ -4,6 +4,7 @@ import { TestServer, createTestServer } from '../net';
 import { launch, Browser } from 'puppeteer';
 import { isArrayOf } from '@tsx-air/utils';
 import defaults from 'lodash/defaults';
+import { Socket } from 'net';
 
 export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuiteApi {
     const api = {} as PreppeteerSuiteApi;
@@ -13,7 +14,7 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
         DEBUG: !!process.env.DEBUG,
         pageLoadedPredicate: 'loaded',
         startTests: 'afterLoading',
-        retries: 4
+        retries: 5
     } as PreppeteerOptions);
 
     if (!isArrayOf(opt.fixtures, 'string')) {
@@ -61,21 +62,26 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
         }
     });
 
-    afterEach(function () {
+    afterEach(async function () {
         if (this.currentTest?.timedOut) {
+            this.timeout(5000);
             try {
-                api.browser.close().catch(() => undefined);
+                const s = new Socket();
+                const old = api.browser;
+                api.browser.close().catch(() => old.disconnect());
             } catch { /* */ }
-            browser = launch({ headless: !opt.DEBUG, devtools: opt.DEBUG });
-            console.log('Starting a new instance of puppeteer');
-            timeout = timeout! * 2;
+            browser = getBrowser();
+            await browser;
+            // tslint:disable: no-console
+            console.warn('Stared a new instance of puppeteer');
+            timeout = timeout! + 2000;
         }
     });
 
     after(() => {
         // tslint:disable: no-unused-expression
         api.server && api.server.close().catch(() => null);
-        api.browser && api.browser.close().catch(() => null);
+        return api.browser && api.browser.close().catch(() => null);
     });
 
     return new ApiProxy(api);
