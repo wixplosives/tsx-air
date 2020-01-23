@@ -34,7 +34,7 @@ deploy:
   script: lerna-publisher publish
   on:
     os: linux
-    node: 10
+    node: 12
     branch: master
     # Disabled because of 3 tags limitation https://developer.github.com/v3/activity/events/types/#createevent 
     # tags: true
