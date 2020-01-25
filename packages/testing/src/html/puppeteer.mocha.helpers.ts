@@ -1,3 +1,4 @@
+import { delay } from '@tsx-air/utils';
 import { PreppeteerSuiteApi, PreppeteerOptions } from './puppeteer.mocha.types';
 import { TestServer } from '../net';
 import { launch, Browser } from 'puppeteer';
@@ -38,16 +39,21 @@ export function getNewPage(server: TestServer, browser: Browser, options: Preppe
 }
 
 export const getBrowser = (debug: boolean) => launch({ headless: !debug, devtools: debug });
-
+export const killBrowser = async (browser:Browser) => {
+    const res = await Promise.race([
+        browser.close().then(() => 'CLOSED').catch(() => 'ERR'),
+        delay(2000)]);
+    if (res !== 'CLOSED') {
+        browser.disconnect();
+        browser.process().kill();
+    }
+};
 export function cleanupPuppeteer(api: PreppeteerSuiteApi) {
     return async function (this: Mocha.Context) {
         if (this.currentTest?.timedOut) {
             // Try to kill/disconnect the (suspected) unresponsive puppeteer 
             this.timeout(5000);
-            try {
-                const old = api.browser;
-                api.browser.close().catch(() => old.disconnect());
-            } catch { /* */ }
+            killBrowser(api.browser);
             api.browser = await getBrowser(api.options.DEBUG);
             // tslint:disable-next-line: no-console
             console.warn('Stared a new instance of puppeteer');

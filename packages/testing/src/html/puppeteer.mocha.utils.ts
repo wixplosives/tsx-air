@@ -4,7 +4,7 @@ import { TestServer, createTestServer } from '../net';
 import {  Browser } from 'puppeteer';
 import { isArrayOf } from '@tsx-air/utils';
 import defaults from 'lodash/defaults';
-import { ApiProxy, getBrowser, getNewPage, cleanupPuppeteer, assertNoPageErrors } from './puppeteer.mocha.helpers';
+import { ApiProxy, getBrowser, getNewPage, cleanupPuppeteer, assertNoPageErrors, killBrowser } from './puppeteer.mocha.helpers';
 
 export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuiteApi {
     const api = {} as PreppeteerSuiteApi;
@@ -46,7 +46,7 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
     after(() => {
         // tslint:disable: no-unused-expression
         api.server && api.server.close().catch(() => null);
-        api.browser && api.browser.close().catch(() => null);
+        killBrowser(api.browser);
     });
 
     return new ApiProxy(api, opt);
