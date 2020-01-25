@@ -12,7 +12,7 @@ describe('browserify', () => {
         const built = await browserify({
             base: fixtures,
             entry: 'simple.ts',
-            output: join(fixtures, '../tmp/bundle.js'),
+            output: join(fixtures, '..', 'tmp', 'bundle.js'),
             outputFs: createMemoryFs()
         });
         expect(execute(built)).to.eql({ wasExported: true });
@@ -22,7 +22,7 @@ describe('browserify', () => {
         const built = await browserify({
             base: fixtures,
             entry: 'simple.ts',
-            output: join(fixtures, '../tmp/bundle.js'),
+            output: join(fixtures, '..', 'tmp', 'bundle.js'),
             outputFs: createMemoryFs()
         });
         expect(execute(built)).to.eql({ wasExported: true });
@@ -32,7 +32,7 @@ describe('browserify', () => {
         const built = await browserify({
             base: fixtures,
             entry: 'with.imports.ts',
-            output: join(fixtures, '../tmp/bundle.js'),
+            output: join(fixtures, '..', 'tmp', 'bundle.js'),
             outputFs: createMemoryFs()
         });
         expect(execute(built).imports).to.eql({
@@ -43,14 +43,13 @@ describe('browserify', () => {
     });
 
     it('should package import.examples.ts into a single js file', async () => {
-        expect(exampleSrcPath).to.be.oneOf(
-            [join(browserifyPath, '../examples/dist/src/examples'),
-            join(browserifyPath, '../examples/src/examples')]);
+        expect(exampleSrcPath).to.equal(
+            join(browserifyPath, '..', 'examples', 'src', 'examples'));
         const built = await browserify({
             base: fixtures,
             entry: 'import.examples.ts',
             configFilePath: join(fixtures, 'tsconfig.json'),
-            output: join(fixtures, '../tmp/bundle.js'),
+            output: join(fixtures, '..', 'tmp', 'bundle.js'),
             outputFs: createMemoryFs()
         });
         expect(execute(built)).to.eql({
@@ -63,7 +62,7 @@ describe('browserify', () => {
         const built = await browserify({
             base: fixtures,
             entry: 'simple.ts',
-            output: join(fixtures, '../tmp/bundle.js'),
+            output: join(fixtures, '..', 'tmp', 'bundle.js'),
             outputFs: createMemoryFs(),
             loaderOptions: {
                 transformers: {

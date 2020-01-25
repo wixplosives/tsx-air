@@ -9,7 +9,7 @@
     "build": "lerna run build --stream",
     "lint": "lerna run lint",
     "pretest": "yarn lint",
-    "test": "lerna run test --concurrency 1",
+    "test": "lerna run test",
     "typecheck": "tsc -p tsconfig.test.json --noEmit"
   },
   "dependencies": {

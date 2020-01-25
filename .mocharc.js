@@ -3,6 +3,6 @@ module.exports = {
     extension: ['js', 'json', 'ts', 'tsx'],
     colors: true,
     retries: process.env.CI ? 5 : 1,
-    timeout: process.env.CI ? 10000 : 2000
+    timeout: process.env.CI ? 10000 : 5000
 };
 console.log(JSON.stringify(module.exports));

@@ -54,7 +54,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         resolve: {
             extensions: ['.tsx', '.ts', '.js', '.json'],
             plugins: [new TsconfigPathsPlugin({
-                configFile: join(browserifyPath, '../../tsconfig.json')
+                configFile: join(browserifyPath, '..', '..', 'tsconfig.json')
             })]
         },
         performance: {
