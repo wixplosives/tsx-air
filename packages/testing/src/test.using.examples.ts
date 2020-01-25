@@ -26,11 +26,8 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
 
                 describe(exampleName, () => {
                     before(() => {
-                        // tslint:disable: no-console
-                        console.log('Building example');
-                        this.timeout(process.env.CI ? 12000 : 6000);
-                        return browserifyBoilerplate(path, exampleTmpPath, compiler.transformers)
-                            .finally(() => console.log('DONE Building example'));
+                        this.timeout(process.env.CI ? 15000 : 6000);
+                        return browserifyBoilerplate(path, exampleTmpPath, compiler.transformers);
                     });
                     beforeEach(() => Promise.all([
                         api.server.addStaticRoot(path),
