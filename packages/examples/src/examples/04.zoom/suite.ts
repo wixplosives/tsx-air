@@ -31,7 +31,8 @@ export default function (api: ExampleSuiteApi, paths: ExamplePaths) {
     });
 
     describe('user interactions', () => {
-        it('should move the zoomed image', async () => {
+        it('should move the zoomed image', async function () {
+            this.timeout(20000);
             await (await api.domContentLoaded).setViewport({
                 height: 1000, width: 1000
             });
@@ -67,9 +68,9 @@ export default function (api: ExampleSuiteApi, paths: ExamplePaths) {
                         delta: 50,
                         threshold: 0.1,
                         composition: false,
-                        imageOutputPath: join(paths.temp, 'diff-'+path),
+                        imageOutputPath: join(paths.temp, 'diff-' + path),
                     });
-                    diff.run((err:Error, result:any)=>{
+                    diff.run((err: Error, result: any) => {
                         if (err) {
                             return reject(err);
                         }
