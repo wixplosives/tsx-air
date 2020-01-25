@@ -23,5 +23,8 @@
     "files": [
         "dist",
         "src"
-    ]
+    ],
+    "devDependencies": {
+        "blink-diff": "^1.0.13"
+    }
 }

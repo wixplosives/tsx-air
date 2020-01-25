@@ -27,13 +27,13 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
     let browser: Promise<Browser>;
     let server: Promise<TestServer>;
 
-    before(function () {
-        this.currentTest?.retries(this.currentTest?.retries() + opt.retries);
+    before(() => {
         browser = getBrowser(opt.DEBUG);
         server = createTestServer();
     });
 
     beforeEach(async function () {
+        this.currentTest?.retries(opt.DEBUG ? 1 : this.currentTest?.retries() + opt.retries);
         const s = await server;
         await s.reset().then(() => addFixtures(s));
         Object.assign(api, getNewPage(await server, await browser, opt, this.currentTest!.timeout()));

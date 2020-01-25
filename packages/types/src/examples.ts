@@ -9,7 +9,13 @@ export interface ExampleSuiteApi {
     browser: Browser;
 }
 
+export interface ExamplePaths {
+    temp: string;
+    fixtures: string;
+    path: string;
+}
+
 export interface ExampleSuite {
-    suite: (api: ExampleSuiteApi) => void;
+    suite: (api: ExampleSuiteApi, paths:ExamplePaths) => void;
     path: string;
 }

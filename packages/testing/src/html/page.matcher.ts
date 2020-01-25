@@ -8,17 +8,22 @@ export interface Check extends Promise<void> {
     scopeQuery: string;
     matcher: HTMLMatcher;
     error?: Error;
+    checkerId: number;
 }
 
-export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMatcher, waitForChecks = true): Promise<Check[]> {
+export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMatcher, isExternal = true): Promise<Check[]> {
     const pending: Array<Promise<void>> = [];
     const checks: Check[] = [];
 
     const check: Checker = (...args: any[]) => {
         if (isHTMLMatcher(args[0])) {
             pending.push(new Promise(async added => {
-                const htmlChecks = await htmlMatch(page, args[0], false);
-                checks.push(...htmlChecks);
+                try {
+                    const htmlChecks = await htmlMatch(page, args[0], false);
+                    checks.push(...htmlChecks);
+                } catch (e) {
+                    checks.push(...e.checks);
+                }
                 added();
             }));
         } else {
@@ -56,20 +61,22 @@ export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMa
     while (pending.length > lastCount) {
         lastCount = pending.length;
         await Promise.all(pending);
-        if (waitForChecks) { 
-            await Promise.all(checks); 
-        }
+        await Promise.all(checks);
     }
-
-
-    expect(checks).to.have.length.above(0, `${name}nothing was checked`);
 
     const failed = checks.find(c => c.error);
     if (failed) {
         (failed.error as any).checks = checks;
         throw failed.error;
     }
-    if(waitForChecks) {
+    try {
+        expect(checks).to.have.length.above(0, `${name}nothing was checked`);
+    } catch (e) {
+        e.checks = checks;
+        throw e;
+    }
+
+    if (isExternal) {
         const sourceMatcher: Check = Promise.resolve() as Check;
         sourceMatcher.matcher = printable(matcher);
         sourceMatcher.scopeQuery = scopeQuery;
