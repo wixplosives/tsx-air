@@ -40,5 +40,7 @@ export interface PreppeteerSuiteApi {
     server: TestServer;
     browser: Browser;
     pageErrors: Error[];
+    timeout: number;
+    readonly options:Readonly<PreppeteerOptions>;
 }
 
