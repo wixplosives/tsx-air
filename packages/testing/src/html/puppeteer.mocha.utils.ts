@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { PreppeteerSuiteApi, PreppeteerOptions } from './puppeteer.mocha.types';
 import { TestServer, createTestServer } from '../net';
-import {  Browser } from 'puppeteer';
+import { Browser } from 'puppeteer';
 import { isArrayOf } from '@tsx-air/utils';
 import defaults from 'lodash/defaults';
 import { ApiProxy, getBrowser, getNewPage, cleanupPuppeteer, assertNoPageErrors, killBrowser } from './puppeteer.mocha.helpers';
@@ -24,7 +24,6 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
 
     const addFixtures = (s: TestServer) => Promise.all((opt.fixtures as string[])
         .map(f => s.addStaticRoot(f)));
-
     let browser: Promise<Browser>;
     let server: Promise<TestServer>;
 
@@ -43,11 +42,10 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
 
     afterEach(assertNoPageErrors(api));
     afterEach(cleanupPuppeteer(api));
-    after(() => {
-        // tslint:disable: no-unused-expression
-        api.server && api.server.close().catch(() => null);
-        killBrowser(api.browser);
-    });
+    after(async () => Promise.all([
+        await api.server.close().catch(() => null),
+        await killBrowser(api.browser)
+    ]));
 
     return new ApiProxy(api, opt);
 }
