@@ -25,7 +25,13 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                 const exampleTmpPath = join(tempPath, exampleName, Date.now().toString(36));
 
                 describe(exampleName, () => {
-                    before(() => browserifyBoilerplate(path, exampleTmpPath, compiler.transformers));
+                    before(() => {
+                        // tslint:disable: no-console
+                        console.log('Building example');
+                        this.timeout(process.env.CI ? 12000 : 6000);
+                        return browserifyBoilerplate(path, exampleTmpPath, compiler.transformers)
+                            .finally(() => console.log('DONE Building example'));
+                    });
                     beforeEach(() => Promise.all([
                         api.server.addStaticRoot(path),
                         api.server.addStaticRoot(exampleTmpPath),

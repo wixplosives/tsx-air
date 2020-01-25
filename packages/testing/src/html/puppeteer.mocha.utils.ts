@@ -28,7 +28,7 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
     let browser: Promise<Browser>;
     let server: Promise<TestServer>;
 
-    before(async function () {
+    before(function () {
         this.currentTest?.retries(this.currentTest?.retries() + opt.retries);
         browser = getBrowser(opt.DEBUG);
         server = createTestServer();
