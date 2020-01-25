@@ -6,7 +6,8 @@ export const shouldBeCompiled = [
 
 export const manuallyCompiledOnly = [
     '02.stateful',
-    '03.thumb'
+    '03.thumb',
+    '04.zoom'
 ];
 
 // Used to ensure the correct path in build version

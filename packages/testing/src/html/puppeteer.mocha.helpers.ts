@@ -39,7 +39,7 @@ export function getNewPage(server: TestServer, browser: Browser, options: Preppe
 }
 
 export const getBrowser = (debug: boolean) => launch({ headless: !debug, devtools: debug });
-export const killBrowser = async (browser:Browser) => {
+export const killBrowser = async (browser: Browser) => {
     const res = await Promise.race([
         browser.close().then(() => 'CLOSED').catch(() => 'ERR'),
         delay(2000)]);
@@ -60,15 +60,12 @@ export function cleanupPuppeteer(api: PreppeteerSuiteApi) {
             // clearly this system needs more help
             api.timeout = api.timeout! + 2000;
         } else {
-            try {
-                api.browser.pages()
-                    .then(pages => pages.forEach(
-                        (page, i) => i > 0
-                            ? page.close().catch(() => null)
-                            : null));
-            } catch {
-                // don't care
-            }
+            api.browser.pages()
+                .then(pages => pages.forEach(
+                    (page, i) => i > 0
+                        ? page.close().catch(() => null)
+                        : null))
+                .catch(() => null);
         }
     };
 }
