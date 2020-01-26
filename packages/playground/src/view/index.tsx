@@ -3,11 +3,13 @@ import './index.css';
 import { getExamples, buildExample } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
-import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, showSourceCode, resetView } from './helpers';
+import { showStyle, setOptions, updateSources, showReadme, resetView } from './helpers';
 import { Model } from './index.model';
 import { setup } from './setup';
 import { rebuild, reCompile } from '../build/rebuild';
 import { Compiler } from '@tsx-air/types';
+import { showCompiledCode } from './compiled';
+import { showSourceCode } from './source';
 setup();
 
 (async () => {
