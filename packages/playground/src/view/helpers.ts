@@ -78,11 +78,12 @@ export async function showCompiledCode({ dom, currentExample, getSelectedSource 
     const path = getSelectedSource();
     const compiledCode = getCompiledEsm(await currentExample.build, path);
     if (!viewer) {
-        viewerModel = await createFileModel(path, await compiledCode);
+        viewerModel = await createFileModel(path + '.js', await compiledCode);
         viewer = (await monaco).editor.create(dom.compiled, {
             model: viewerModel,
             readOnly: true,
             language: 'javascript',
+            colorDecorators: true,
             lineNumbers: 'on',
             roundedSelection: false,
             scrollBeyondLastLine: false,
