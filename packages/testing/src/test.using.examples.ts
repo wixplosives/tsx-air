@@ -1,19 +1,19 @@
-import { ExamplePaths } from './../../types/src/examples';
 import { after } from 'mocha';
-import { Compiler } from '@tsx-air/types';
+import { Compiler, ExamplePaths } from '@tsx-air/types';
 import { loadSuite } from '@tsx-air/testing';
 import ts from 'typescript';
 import { browserify } from '@tsx-air/browserify';
 import { join, basename, dirname } from 'path';
 import rimraf from 'rimraf';
 import { preppeteer } from './html/puppeteer.mocha.utils';
+
 const examplePackage = dirname(require.resolve('@tsx-air/examples/package.json'));
 const fixtures = join(examplePackage, 'fixtures');
 const publicPath = join(examplePackage, 'public');
 const tempPath = join(__dirname, '../.tmp');
 
 export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]) {
-    const examples = examplePaths.map(loadSuite);    
+    const examples = examplePaths.map(loadSuite);
     describe(`${compiler.label}: compiling examples`, function () {
         const api = preppeteer({
             fixtures: [fixtures, publicPath],
@@ -23,7 +23,7 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
         examples.map(
             ({ suite, path }) => {
                 const exampleName = basename(path);
-                const paths:ExamplePaths = {
+                const paths: ExamplePaths = {
                     temp: join(tempPath, exampleName, Date.now().toString(36)),
                     fixtures,
                     path
@@ -38,7 +38,11 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                         api.server.addStaticRoot(path),
                         api.server.addStaticRoot(paths.temp),
                     ]));
-                    after(() => rimraf(paths.temp, () => void (0)));
+                    after(function () {
+                        if (this.test?.parent?.tests.every(t => t.isPassed())) {
+                            rimraf(paths.temp, () => null);
+                        }
+                    });
 
                     suite.call(this, api, paths);
                 });

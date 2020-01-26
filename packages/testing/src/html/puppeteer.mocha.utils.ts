@@ -1,10 +1,11 @@
 import { expect } from 'chai';
 import { PreppeteerSuiteApi, PreppeteerOptions } from './puppeteer.mocha.types';
 import { TestServer, createTestServer } from '../net';
-import { Browser } from 'puppeteer';
-import { isArrayOf } from '@tsx-air/utils';
+import { Browser, ElementHandle, Page } from 'puppeteer';
+import { isArrayOf, delay } from '@tsx-air/utils';
 import defaults from 'lodash/defaults';
 import { ApiProxy, getBrowser, getNewPage, cleanupPuppeteer, assertNoPageErrors, killBrowser } from './puppeteer.mocha.helpers';
+import { PNG } from 'pngjs';
 
 export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuiteApi {
     const api = {} as PreppeteerSuiteApi;
@@ -42,10 +43,24 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
 
     afterEach(assertNoPageErrors(api));
     afterEach(cleanupPuppeteer(api));
-    after(async () => Promise.all([
-        await api.server.close().catch(() => null),
-        await killBrowser(api.browser)
+    after(() => Promise.all([
+        api.server.close().catch(() => null),
+        killBrowser(api.browser)
     ]));
 
     return new ApiProxy(api, opt);
+}
+
+export function moveMouseAndTakeSnapshot(
+    locations: number[][], page: Page, target: ElementHandle): Array<Promise<PNG>> {
+    let last = Promise.resolve() as unknown as Promise<PNG>;
+    return locations.map(([x, y]) =>
+        last = last
+            .then(() => page.mouse.move(x, y, { steps: 20 }))
+            .then(() => delay(1000 / 60))
+            .then(() => target.screenshot({
+                encoding: 'binary',
+                type: 'png'
+            }).then(data => PNG.sync.read(data))
+            ));
 }

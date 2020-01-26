@@ -60,16 +60,18 @@ export function cleanupPuppeteer(api: PreppeteerSuiteApi) {
             // clearly this system needs more help
             api.timeout = api.timeout! + 2000;
         } else {
-            api.browser.pages()
-                .then(pages => pages.forEach(
-                    (page, i) => i > 0
-                        ? page.close().catch(() => null)
-                        : null))
-                .catch(() => null);
+            const { tests } = this.currentTest!.parent!;
+            if (this.currentTest !== tests[tests.length - 1]) {
+                api.browser.pages()
+                    .then(pages => pages.forEach(
+                        (page, i) => i > 0
+                            ? page.close().catch(() => null)
+                            : null))
+                    .catch(() => null);
+            }
         }
     };
 }
-
 
 export class ApiProxy implements Readonly<PreppeteerSuiteApi> {
     get beforeLoading() { return this._api.beforeLoading; }
