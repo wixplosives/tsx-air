@@ -1,3 +1,4 @@
+import { packagePath } from '@tsx-air/utils/packages';
 import { nodeFs } from '@file-services/node';
 import { IFileSystem } from '@file-services/types';
 import { join, basename, dirname } from 'path';
@@ -18,7 +19,7 @@ export interface BrowserifyOptions {
     loaderOptions?: ITypeScriptLoaderOptions;
 }
 
-export const browserifyPath = dirname(require.resolve(join('@tsx-air/browserify', 'package.json')));
+export const browserifyPath = packagePath('@tsx-air/browserify');
 
 export async function browserify(options: BrowserifyOptions): Promise<string> {
     const { base, entry, output,

@@ -3,14 +3,14 @@ import { Compiler, ExamplePaths } from '@tsx-air/types';
 import { loadSuite } from '@tsx-air/testing';
 import ts from 'typescript';
 import { browserify } from '@tsx-air/browserify';
-import { join, basename, dirname } from 'path';
+import { join, basename } from 'path';
 import rimraf from 'rimraf';
 import { preppeteer } from './html/puppeteer.mocha.utils';
+import { packagePath } from '@tsx-air/utils/packages';
 
-const examplePackage = dirname(require.resolve('@tsx-air/examples/package.json'));
-const fixtures = join(examplePackage, 'fixtures');
-const publicPath = join(examplePackage, 'public');
-const tempPath = join(__dirname, '../.tmp');
+const fixtures = packagePath('@tsx-air/examples', 'fixtures');
+const publicPath = packagePath('@tsx-air/examples', 'public');
+const tempPath = packagePath('@tsx-air/examples', '.tmp');
 
 export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]) {
     const examples = examplePaths.map(loadSuite);

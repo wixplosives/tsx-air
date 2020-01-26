@@ -1,10 +1,10 @@
+import { packagePath } from '@tsx-air/utils/packages';
 import { safely } from '@tsx-air/utils';
 import { ExampleSuite } from '@tsx-air/types';
-import { join, dirname } from 'path';
+import { join } from 'path';
 
 export function loadSuite(example: string): ExampleSuite {
-    const examplePath =
-        join(dirname(require.resolve('@tsx-air/examples/package.json')), 'src', 'examples', example);
+    const examplePath = packagePath('@tsx-air/examples', 'src', 'examples', example);
     const suitePath = join(examplePath, 'suite');
 
     const suite = safely(

@@ -21,6 +21,8 @@
     "sideEffects": [],
     "files": [
         "dist",
-        "src"
+        "src",
+        "packages.js",
+        "packages.d.ts"
     ]
 }

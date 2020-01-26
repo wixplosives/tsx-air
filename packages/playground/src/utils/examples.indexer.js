@@ -1,11 +1,10 @@
 const { promisify } = require('util');
 const { statSync, readdir: _readdir, createReadStream, existsSync } = require('fs');
-const { join, dirname } = require('path');
+const { join } = require('path');
 
 const readdir = promisify(_readdir);
-
-const subdir = exports.subdir = (package, path) => join(dirname(require.resolve(join(package, 'package.json'))), path);
-const examples = subdir('@tsx-air/examples', 'src/examples');
+const { packagePath } = require('@tsx-air/utils/packages');
+const examples = packagePath('@tsx-air/examples', 'src/examples');
 
 const getExamples = async () => (await (await readdir(examples)))
     .filter(i => statSync(join(examples, i)).isDirectory());
