@@ -95,7 +95,7 @@ export async function showCompiledCode({ dom, currentExample, getSelectedSource 
         viewer.onMouseDown(async e => {
             const { Range } = await monaco;
             const line = e.target.position!.lineNumber;
-            viewer.setSelection(new Range(1,1,1,1));
+            viewer.setSelection(new Range(1, 1, 1, 1));
             if (view.hasBreakPoint(viewer, line)) {
                 currentExample.build = removeBreakpoint(await currentExample.build, path, line);
                 view.removeBreakPoint(viewer, line);
@@ -103,7 +103,7 @@ export async function showCompiledCode({ dom, currentExample, getSelectedSource 
                 currentExample.build = addBreakpoint(await currentExample.build, path, line);
                 view.addBreakPoint(viewerModel, line);
             }
-            
+
         });
     } else {
         viewerModel.setValue('');
@@ -119,7 +119,9 @@ export async function updateSources(target: HTMLSelectElement, example: Example)
     }
     const sources = getImportsPath(example.build).then(
         f => f.filter(i => i.startsWith('/src/examples'))
-            .map(i => ({ label: i.replace(/^\/src\//, '').replace(/\.js$/, ''), path: i })));
+            .map(i => ({ label: i.replace(/^\/src\/examples\/.*\//, '').replace(/\.js$/, ''), path: i }))
+            .sort((a, b) => b.label.indexOf('index') - a.label.indexOf('index'))
+    );
     return await setOptions<string>(target, sources, 'label', 'path');
 }
 
