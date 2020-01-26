@@ -1,9 +1,9 @@
 const { promisify } = require('util');
 const { statSync, readdir: _readdir, createReadStream, existsSync } = require('fs');
 const { join } = require('path');
+const { packagePath } = require('@tsx-air/utils/packages');
 
 const readdir = promisify(_readdir);
-const { packagePath } = require('@tsx-air/utils/packages');
 const examples = packagePath('@tsx-air/examples', 'src/examples');
 
 const getExamples = async () => (await (await readdir(examples)))
