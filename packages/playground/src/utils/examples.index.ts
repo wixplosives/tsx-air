@@ -30,17 +30,15 @@ const safeExampleFileLoader = async (example: string, path: string) => {
     const sourcePath = withoutExt(path).replace(/^\/src/, '');
     const source = fetch(sourcePath);
     
-    // tslint:disable-next-line: no-console
-    console.log(nodeFs.join('/', 'src', sourcePath));
     if (isSource.test(asTsx(sourcePath))) {
         const compiledPath = sourcePath.replace(isSource, '.compiled');
         return {
-            [nodeFs.join('/', 'src', compiledPath)]: await fetch(compiledPath),
-            [nodeFs.join('/', 'src', sourcePath)]: await source
+            [nodeFs.join('/', 'src', compiledPath).replace(/\\/g, '/')]: await fetch(compiledPath),
+            [nodeFs.join('/', 'src', sourcePath).replace(/\\/g, '/')]: await source
         };
     }
     return {
-        [nodeFs.join('/', 'src', sourcePath)]: await source
+        [nodeFs.join('/', 'src', sourcePath).replace(/\\/g, '/')]: await source
     };
 };
 
