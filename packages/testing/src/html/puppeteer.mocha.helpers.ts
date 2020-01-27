@@ -63,7 +63,7 @@ export function cleanupPuppeteer(api: PreppeteerSuiteApi) {
             // Try to kill/disconnect the (suspected) unresponsive puppeteer 
             this.timeout(5000);
             killBrowser(api.browser);
-            api.browser = await getBrowser(api.options.DEBUG);
+            this.browser = api.browser = await getBrowser(api.options.DEBUG);
             // tslint:disable-next-line: no-console
             console.warn('Stared a new instance of puppeteer');
             // clearly this system needs more help

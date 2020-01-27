@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { PreppeteerSuiteApi, PreppeteerOptions } from './puppeteer.mocha.types';
 import { TestServer, createTestServer } from '../net';
-import { Browser, ElementHandle, Page } from 'puppeteer';
+import { ElementHandle, Page } from 'puppeteer';
 import { isArrayOf, delay } from '@tsx-air/utils';
 import defaults from 'lodash/defaults';
 import { ApiProxy, getBrowser, getNewPage, cleanupPuppeteer, assertNoPageErrors, killBrowser } from './puppeteer.mocha.helpers';
@@ -25,20 +25,22 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
 
     const addFixtures = (s: TestServer) => Promise.all((opt.fixtures as string[])
         .map(f => s.addStaticRoot(f)));
-    let browser: Promise<Browser>;
-    let server: Promise<TestServer>;
 
-    before(() => {
-        browser = getBrowser(opt.DEBUG);
-        server = createTestServer();
+    before(function () {
+        this.browser = getBrowser(opt.DEBUG);
+        this.server = createTestServer();
     });
 
     beforeEach(async function () {
         this.retries(1);
-        const s = await server;
+        const s = await this.server;
         await s.reset().then(() => addFixtures(s));
-        Object.assign(api, getNewPage(await server, await browser, opt, this.currentTest!.timeout()));
-        
+        Object.assign(api, getNewPage(
+            await this.server,
+            await this.browser,
+            opt,
+            this.currentTest!.timeout()));
+
         this.currentTest?.retries(opt.DEBUG ? 1 : this.currentTest?.retries() + opt.retries);
         this.currentTest?.timeout(api.timeout);
     });
