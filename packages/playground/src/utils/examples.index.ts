@@ -29,6 +29,9 @@ const safeExampleFileLoader = async (example: string, path: string) => {
     const isSource = /\.source(\.tsx?)?$/;
     const sourcePath = withoutExt(path).replace(/^\/src/, '');
     const source = fetch(sourcePath);
+    
+    // tslint:disable-next-line: no-console
+    console.log(nodeFs.join('/', 'src', sourcePath));
     if (isSource.test(asTsx(sourcePath))) {
         const compiledPath = sourcePath.replace(isSource, '.compiled');
         return {
