@@ -1,7 +1,8 @@
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { join } = require('path');
-const { serveExamples, subdir } = require('./src/utils/examples.indexer');
+const { serveExamples } = require('./src/utils/examples.indexer');
+const { packagePath } = require('@tsx-air/utils/packages');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 
@@ -25,7 +26,7 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
                     exclude: /node_modules/,
                     loader: '@ts-tools/webpack-loader',
                     options: {
-                        configFilePath: require.resolve('./src/tsconfig.json')
+                        configFilePath: require.resolve('./tsconfig.dev.json')
                     }
                 },
                 {
@@ -42,7 +43,7 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
         },
         resolve: {
             extensions: ['.tsx', '.ts', '.js', '.json'],
-            plugins: [new TsconfigPathsPlugin({ configFile: require.resolve('../../tsconfig.base.json') })]
+            plugins: [new TsconfigPathsPlugin({ configFile: require.resolve('./tsconfig.dev.json') })]
         },
         plugins: [
             new HtmlWebpackPlugin({
@@ -62,11 +63,11 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
 
         devServer: {
             contentBase: [
-                join(__dirname, 'public'),
-                subdir('@tsx-air/examples', 'public'),
-                subdir('@tsx-air/examples', 'src/examples'),
-                subdir('typescript','lib'),
-                subdir('monaco-editor', 'min')
+                packagePath('@tsx-air/playground', 'public'),
+                packagePath('@tsx-air/examples', 'public'),
+                packagePath('@tsx-air/examples', 'src/examples'),
+                packagePath('typescript','lib'),
+                packagePath('monaco-editor', 'min')
             ],
             hot: true,
             historyApiFallback: true,

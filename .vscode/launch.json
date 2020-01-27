@@ -9,20 +9,110 @@
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
         },
-
         {
             "type": "node",
             "request": "launch",
-            "name": "Mocha Current",
+            "name": "examples",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
-                "**/*.test.ts?(x)",
+                "packages/examples/**/*.test.ts?(x)",
                 "--timeout",
-                "999999",
-                "${file}"
-
+                "999999"
             ],
-            "internalConsoleOptions": "openOnSessionStart"
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "compilers",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/compilers/**/*.test.ts?(x)",
+                "--timeout",
+                "999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "browserify",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/browserify/**/*.test.ts?(x)",
+                "--timeout",
+                "999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "c-utils",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/compiler-utils/**/*.test.ts?(x)",
+                "--timeout",
+                "999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "testing",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/testing/**/*.test.ts?(x)",
+                "--timeout",
+                "999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "utils",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/utils/**/*.test.ts?(x)",
+                "--timeout",
+                "999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "playground",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/playground/**/*.test.ts?(x)",
+                "--timeout",
+                "999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
         }
     ]
 }

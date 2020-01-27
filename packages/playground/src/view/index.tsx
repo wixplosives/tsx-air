@@ -1,12 +1,15 @@
-import { compilers, Compiler } from '../compilers';
+import { compilers } from '../compilers';
 import './index.css';
 import { getExamples, buildExample } from '../utils/examples.index';
 import dom from './dom';
 import './helpers';
-import { showStyle, setOptions, updateSources, showReadme, showCompiledCode, showSourceCode, resetView } from './helpers';
+import { showStyle, setOptions, updateSources, showReadme, resetView } from './helpers';
 import { Model } from './index.model';
 import { setup } from './setup';
-import { reCompile, rebuild } from '../utils/build';
+import { rebuild, reCompile } from '../build/rebuild';
+import { Compiler } from '@tsx-air/types';
+import { showCompiledCode } from './compiled';
+import { showSourceCode } from './source';
 setup();
 
 (async () => {
@@ -84,6 +87,6 @@ async function runExample(model: Model) {
         model.stop = model.stop || (() => void (0));
     } catch (err) {
         model.dom.resultRoot.innerHTML = `<div>🤒</div><pre>${err.message}</pre>`;
+        throw err;
     }
 }
-

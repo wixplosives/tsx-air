@@ -1,8 +1,9 @@
 import { Analyzer, TsxAirNode } from './types';
-import { compDefinition } from './comp-definition';
+import { compDefinition } from './component.definition';
 import { hasError, errorNode, isTsxAirNode } from './types.helpers';
 import { importStatement } from './imports';
 import { sourceFile } from './sourcefile';
+import { exportStatement } from './re.export';
 
 export const analyze: Analyzer<TsxAirNode> = node => {
     if (!node) {
@@ -11,6 +12,7 @@ export const analyze: Analyzer<TsxAirNode> = node => {
     const prioritizedAnalyzers = [
         sourceFile,
         importStatement,
+        exportStatement,
         compDefinition
     ];
 

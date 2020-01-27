@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { expect } from 'chai';
-import { getCompDef } from './comp-definition.test';
+import { getCompDef } from './component.definition.test';
 // tslint:disable: no-unused-expression
 // tslint:disable: no-shadowed-variable
 
@@ -34,7 +34,7 @@ describe('TSXAir component analyzer: Jsx', () => {
         });
 
         describe('variables', () => {
-            it('should find and agregate used variables', () => {
+            it('should find and aggregate used variables', () => {
                 const { comp } = getCompDef(`const Comp = TSXAir(props => { 
                     return <div>{props.expression}</div>;})`);
 
@@ -50,8 +50,8 @@ describe('TSXAir component analyzer: Jsx', () => {
                 };
 
                 expect(expression.variables, 'expression access not found').to.eql(expectedUsedVars);
-                expect(expression.agregatedVariables, 'expression access not found').to.eql(expectedUsedVars);
-                expect(comp.agregatedVariables, 'expression access is aggregated').to.eql({ ...expectedUsedVars, defined: { props: {} } });
+                expect(expression.aggregatedVariables, 'expression access not found').to.eql(expectedUsedVars);
+                expect(comp.aggregatedVariables, 'expression access is aggregated').to.eql({ ...expectedUsedVars, defined: { props: {} } });
                 expect(comp.variables, 'comp has only one variable (defines props)').to.eql({ accessed: {}, defined: { props: {} }, modified: {} });
             });
 
@@ -69,7 +69,7 @@ describe('TSXAir component analyzer: Jsx', () => {
                         props: { wasModified: {} }
                     }
                 });
-                expect(comp.agregatedVariables).to.eql({
+                expect(comp.aggregatedVariables).to.eql({
                     accessed: {
                         props: {
                             expression0: {},
@@ -109,10 +109,10 @@ describe('TSXAir component analyzer: Jsx', () => {
                     defined: {},
                     modified: {}
                 };
-                expect(comp.jsxRoots[0].components[0].agregatedVariables, 'Component jsx node aggregated variables').to.eql(expectedCompVariables);
+                expect(comp.jsxRoots[0].components[0].aggregatedVariables, 'Component jsx node aggregated variables').to.eql(expectedCompVariables);
                 expect(comp.jsxRoots[0].components[0].variables, 'Component jsx node variables').to.eql(expectedCompVariables);
                 expect(comp.jsxRoots[0].components[0].children!.variables, 'Component children variables').to.eql(expectedChildrenVariables);
-                expect(comp.jsxRoots[0].components[0].children!.agregatedVariables, 'Component children aggregated variables').to.eql(expectedChildrenVariables);
+                expect(comp.jsxRoots[0].components[0].children!.aggregatedVariables, 'Component children aggregated variables').to.eql(expectedChildrenVariables);
             });
         });
 
@@ -125,7 +125,7 @@ describe('TSXAir component analyzer: Jsx', () => {
             expect(staticExpression.expression).to.equal('3');
         });
 
-        it('should find attribiutes with expressions', () => {
+        it('should find attributes with expressions', () => {
             const { comp } = getCompDef(`TSXAir(props => (<span att="3" exp={props.name}>!</span>)`);
             const prop = comp.jsxRoots[0].expressions[0];
 

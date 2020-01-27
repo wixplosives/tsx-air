@@ -1,15 +1,19 @@
 import { expect } from 'chai';
-import { compilers } from '.';
-
+import { shouldCompileExamples } from '@tsx-air/testing';
+import { shouldBeCompiled } from '@tsx-air/examples';
+import { transformerCompilers } from '.';
 
 describe('compilers', () => {
     it('each compiler should have a unique name', () => {
-        expect(compilers.length).to.be.greaterThan(0);
-        const nameSet: Set<string> = new Set();
-        for (const compiler of compilers) {
-            nameSet.add(compiler.name);
-            expect(compiler.name.length).to.be.greaterThan(0);
+        const usedNames: Set<string> = new Set();
+        for (const { label } of transformerCompilers) {
+            expect(usedNames, `${label} is not unique`).not.to.include(label);
+            usedNames.add(label);
+            expect(label.trim()).not.to.eql('');
         }
-        expect(nameSet.size, 'compiler names are not unique').to.equal(compilers.length);
     });
+
+    for (const compiler of transformerCompilers) {
+        shouldCompileExamples(compiler, shouldBeCompiled);
+    }
 });

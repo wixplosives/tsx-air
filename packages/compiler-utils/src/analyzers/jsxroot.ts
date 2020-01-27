@@ -3,7 +3,7 @@ import uniqBy from 'lodash/uniqBy';
 import { Visitor } from './../astUtils/scanner';
 import { findJsxRoot, findJsxExpression, getComponentTag } from './../visitors/jsx';
 import { scan, ScannerApi } from '../astUtils/scanner';
-import { CompProps, JsxExpression, JsxRoot, JsxElm, JsxComponent, JsxAttribute, isJsxExpression, isTSJSXRoot, isTSFunction } from './types';
+import { CompProps, JsxExpression, JsxRoot, JsxElm, JsxComponent, JsxAttribute, isJsxExpression, isTsJsxRoot, isTsFunction } from './types';
 import ts, { isJsxElement } from 'typescript';
 import { findUsedVariables, mergeUsedVariables } from './find-used-variables';
 
@@ -15,15 +15,15 @@ export function jsxRoots(astNode: ts.Node, propsIdentifier: string | undefined, 
 const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string, usedProps: CompProps[]) => {
     const expressions = scan(sourceAstNode, findJsxExpression).map(({ node }) => parseExpression(node));
     const components = scan(sourceAstNode, findJsxComponent).map<JsxComponent>(i => i.metadata);
-    const variables = findUsedVariables(sourceAstNode, node => isTSJSXRoot(node) || isTSFunction(node));
-    const agregatedVariables = findUsedVariables(sourceAstNode);
+    const variables = findUsedVariables(sourceAstNode, node => isTsJsxRoot(node) || isTsFunction(node));
+    const aggregatedVariables = findUsedVariables(sourceAstNode);
     const root: JsxRoot = {
         kind: 'JsxRoot',
         expressions,
         sourceAstNode,
         components,
         variables,
-        agregatedVariables
+        aggregatedVariables
     };
     return root;
 
@@ -40,15 +40,15 @@ const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string, usedProps: Comp
         };
 
         if (ts.isJsxExpression(n) && n.expression) {
-            const expVariables = findUsedVariables(n, node => isTSJSXRoot(node) || isTSFunction(node));
-            const expAgregatedVariables = findUsedVariables(n);
+            const expVariables = findUsedVariables(n, node => isTsJsxRoot(node) || isTsFunction(node));
+            const expAggregatedVariables = findUsedVariables(n);
             const result: JsxExpression = {
                 kind: 'JsxExpression',
                 dependencies: scan(n, findExpressionDependencies).map(i => i.metadata),
                 sourceAstNode: n as ts.JsxExpression,
                 expression: n.expression.getText(),
                 variables: expVariables,
-                agregatedVariables: expAgregatedVariables
+                aggregatedVariables: expAggregatedVariables
             };
             return result;
         } else {
@@ -84,7 +84,7 @@ const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string, usedProps: Comp
                 []
             );
             const childrenNode = ts.isJsxElement(jsxCompNode) ? jsxCompNode.children : {};
-            const compUsedVars = findUsedVariables(jsxCompNode, n => n === childrenNode || isTSJSXRoot(n) || isTSFunction(n));
+            const compUsedVars = findUsedVariables(jsxCompNode, n => n === childrenNode || isTsJsxRoot(n) || isTsFunction(n));
             const compAggVars = findUsedVariables(jsxCompNode);
             const items = findChildren(jsxCompNode);
 
@@ -97,20 +97,20 @@ const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string, usedProps: Comp
                 ...flatMap(childExpressions.map(c => c.dependencies))], 'name');
 
             const childrenUsedVariables = mergeUsedVariables(items.map(item => item.variables));
-            const childrenAgregatedVars = mergeUsedVariables(items.map(item => item.agregatedVariables));
+            const childrenAggregatedVars = mergeUsedVariables(items.map(item => item.aggregatedVariables));
             const comp: JsxComponent = {
                 kind: 'JsxComponent',
                 name,
                 props,
                 variables: compUsedVars,
-                agregatedVariables: compAggVars,
+                aggregatedVariables: compAggVars,
                 sourceAstNode: jsxCompNode as JsxElm,
                 children: items.length ? {
                     kind: 'JsxFragment',
                     components: childComponents,
                     expressions: childExpressions,
                     variables: childrenUsedVariables,
-                    agregatedVariables: childrenAgregatedVars,
+                    aggregatedVariables: childrenAggregatedVars,
                     items,
                     sourceAstNode: jsxCompNode as ts.JsxFragment
                 } : undefined,

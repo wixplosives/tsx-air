@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { createProcessUpdateForComp } from './generate-process-update';
-import { NamedCompiler } from '../types';
 import { printAST, getFileTransformationAPI, cObject, generateDomBindings, cClass, generateToString, generateHydrate, cArrow, createChangeBitMask, transfromerApiProvider } from '@tsx-air/compiler-utils';
+import { Compiler } from '@tsx-air/types';
 
 if (typeof window !== 'undefined') {
     (window as any).printAST = printAST;
@@ -57,8 +57,8 @@ export const tsxAirTransformer: ts.TransformerFactory<ts.Node> = ctx => {
     return visitor;
 };
 
-const compiler: NamedCompiler = {
-    name: 'AST Based compiler',
+const compiler: Compiler = {
+    label: 'AST Based compiler',
     transformers: {
         before: [transfromerApiProvider(tsxAirTransformer)]
     }

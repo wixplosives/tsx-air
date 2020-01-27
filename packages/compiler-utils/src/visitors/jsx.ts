@@ -1,13 +1,13 @@
 import { Visitor } from '../astUtils/scanner';
 import { isJsxSelfClosingElement, isJsxElement, isJsxExpression, JsxOpeningElement, isStringLiteral, JsxAttribute, Node, isJsxText } from 'typescript';
-import { isTSJSXRoot } from '../analyzers/types';
+import { isTsJsxRoot } from '../analyzers/types';
 
 
 
 
 export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
     if (
-        isTSJSXRoot(node)
+        isTsJsxRoot(node)
     ) {
         ignoreChildren();
         return {
@@ -20,7 +20,7 @@ export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
 
 export const findJsxNode: Visitor = node => {
     if (
-        isTSJSXRoot(node)
+        isTsJsxRoot(node)
     ) {
         return '/* Jsx */';
     }

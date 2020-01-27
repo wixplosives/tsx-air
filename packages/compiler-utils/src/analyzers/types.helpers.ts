@@ -1,6 +1,6 @@
-import { isArray } from 'util';
 import { TsxErrorType, TsxAirNodeError, TsxAirNode, AnalyzerResult } from './types';
 import ts from 'typescript';
+import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 import flatten from 'lodash/flatten';
 import { NodeMetaData } from '../astUtils/scanner';
@@ -80,7 +80,6 @@ export function isNotNull<T extends TsxAirNode>(input: null | undefined | T): in
 }
 
 export function filterResults<T extends TsxAirNode<any>>(result: Array<NodeMetaData<AnalyzerResult<T>>>): T[] {
-
     const specifiersInfo = result.map(res => {
         const inner = res.metadata.tsxAir;
         if (hasError(inner)) {

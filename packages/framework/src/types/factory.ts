@@ -1,4 +1,3 @@
-import { Factory } from './factory';
 import { Component } from './component';
 
 export interface Factory<Comp> {

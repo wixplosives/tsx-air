@@ -6,20 +6,15 @@
     "private": true,
     "main": "./src/index.ts",
     "scripts": {
-        "build": "webpack --progress --mode production --devtool false",
-        "clean": "rimraf ./dist",
-        "lint": "tslint -p src",
+        "build": "concurrently \"yarn build:cjs\" \"yarn build:esm\"",
+        "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
+        "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
+        "clean": "rimraf ./dist ./tmp",
+        "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\"",
         "prebuild": "yarn clean",
-        "test": "mocha \"**/*.test.ts?(x)\""
+        "test": "mocha \"src/**/*.test.ts?(x)\""
     },
-    "dependencies": {
-        "@tsx-air/compiler-utils": "^1.0.4",
-        "@file-services/memory": "^2.0.1",
-        "@file-services/node": "^2.0.2",
-        "@file-services/typescript": "^2.0.1",
-        "@types/react-syntax-highlighter": "^11.0.1",
-        "lodash": "^4.17.15",
-        "sanitize.css": "^11.0.0",
-        "tslib": "^1.10.0"
-    }
+    "files": [
+        "dist", "src"
+    ]
 }

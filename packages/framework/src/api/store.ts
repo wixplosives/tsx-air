@@ -1,4 +1,4 @@
-import { Setter, Getter } from './../types/type-utils';
+import { Setter, Getter } from '../types/type-utils';
 
 export interface StoreApi<T> {
     $set: Setter<T>;
@@ -16,7 +16,7 @@ export interface AsyncStoreApi<T> {
 export type Store<T> = T & StoreApi<T>;
 export type AsyncStore<T> = Store<T> & AsyncStoreApi<T>;
 
-interface StoreFactory {
+export interface StoreFactory {
     <T>(initial: T): Store<T>;
     derived<T>(value: T): T;
     async<T>(p:Promise<T>): AsyncStore<T>;

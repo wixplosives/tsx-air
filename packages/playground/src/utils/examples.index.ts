@@ -1,9 +1,11 @@
-import { build } from './build';
-import { Compiler } from '../compilers';
-import { BuiltCode } from './build.helpers';
+import { nodeFs } from '@file-services/node';
+import { withoutExt, asTsx } from './../build/build.helpers';
+import { build } from '../build/build';
+import { BuiltCode } from '../build/types';
+import { Compiler } from '@tsx-air/types';
 
-export async function getExamples(): Promise<string[]> {
-    return (await (await fetch('/examples')).json());
+export function getExamples(): Promise<string[]> {
+    return globalThis.fetch('/examples').then(r => r.json());
 }
 
 export interface Example {
@@ -13,17 +15,31 @@ export interface Example {
     build: Promise<BuiltCode>;
 }
 
-export type Loader = (path: string) => Promise<string>;
+function fetch(input: RequestInfo, init?: RequestInit | undefined): Promise<string> {
+    return globalThis.fetch(input, init).then(i => i.text());
+}
 
-const loadExampleFile = async (example: string, file: string) =>
-    await (await fetch(`/examples/${example}/${file}`)).text();
+const loadExampleFile = (example: string, file: string) =>
+    fetch(`/examples/${example}/${file}`);
 
 const safeExampleFileLoader = async (example: string, path: string) => {
     if (path.indexOf(`/src/examples/${example}/`) !== 0) {
         throw new Error(`Invalid source path: ${path} is out of ${example} sources`);
     }
-    const exampleFilePath = path.replace(/^\/src/, '').replace(/\.js$/, '');
-    return await (await fetch(exampleFilePath)).text();
+    const isSource = /\.source(\.tsx?)?$/;
+    const sourcePath = withoutExt(path).replace(/^\/src/, '');
+    const source = fetch(sourcePath);
+    const asSrc = (file: string) => nodeFs.join('/', 'src', file).replace(/\\/g, '/');
+    if (isSource.test(asTsx(sourcePath))) {
+        const compiledPath = sourcePath.replace(isSource, '.compiled');
+        return {
+            [asSrc(compiledPath).replace(/\\/g, '/')]: await fetch(compiledPath),
+            [asSrc(sourcePath).replace(/\\/g, '/')]: await source
+        };
+    }
+    return {
+        [asSrc(sourcePath).replace(/\\/g, '/')]: await source
+    };
 };
 
 let convertor: import('showdown').Converter;
@@ -38,7 +54,8 @@ export const buildExample = async (example: string, compiler: Compiler) => {
                 return convertor.makeHtml(i);
             })
             .then(i => `<div>${i}</div>`),
-        build: build(compiler, async path => safeExampleFileLoader(example, path), `/src/examples/${example}/source`)
+        build: build(compiler, async (path: string) =>
+            safeExampleFileLoader(example, path), `/src/examples/${example}/runner`)
     };
     return result;
 };

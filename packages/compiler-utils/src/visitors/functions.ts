@@ -1,11 +1,11 @@
 
 import { Visitor } from '../astUtils/scanner';
-import { isTSFunction } from '../analyzers/types';
+import { isTsFunction } from '../analyzers/types';
 
 
 export const findFunction: Visitor = (node, { ignoreChildren }) => {
     if (
-        isTSFunction(node)
+        isTsFunction(node)
     ) {
         ignoreChildren();
         return {

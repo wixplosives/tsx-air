@@ -1,0 +1,1 @@
+export declare function packagePath(name: string, ...innerPath: string[]): string;

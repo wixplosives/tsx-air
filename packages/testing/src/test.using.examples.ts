@@ -1,0 +1,63 @@
+import { after } from 'mocha';
+import { Compiler, ExamplePaths } from '@tsx-air/types';
+import { loadSuite } from '@tsx-air/testing';
+import ts from 'typescript';
+import { browserify } from '@tsx-air/browserify';
+import { join, basename } from 'path';
+import rimraf from 'rimraf';
+import { preppeteer } from './html/puppeteer.mocha.utils';
+import { packagePath } from '@tsx-air/utils/packages';
+
+const fixtures = packagePath('@tsx-air/examples', 'fixtures');
+const publicPath = packagePath('@tsx-air/examples', 'public');
+const tempPath = packagePath('@tsx-air/examples', '.tmp');
+
+export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]) {
+    const examples = examplePaths.map(loadSuite);
+    describe(`${compiler.label}: compiling examples`, function () {
+        const api = preppeteer({
+            fixtures: [fixtures, publicPath],
+            pageLoadedPredicate: () => (window as any).app
+        });
+
+        examples.map(
+            ({ suite, path }) => {
+                const exampleName = basename(path);
+                const paths: ExamplePaths = {
+                    temp: join(tempPath, exampleName, Date.now().toString(36)),
+                    fixtures,
+                    path
+                };
+
+                describe(exampleName, () => {
+                    before(() => {
+                        this.timeout(process.env.CI ? 15000 : 6000);
+                        return browserifyBoilerplate(path, paths.temp, compiler.transformers);
+                    });
+                    beforeEach(() => Promise.all([
+                        api.server.addStaticRoot(path),
+                        api.server.addStaticRoot(paths.temp),
+                    ]));
+                    after(function () {
+                        if (this.test?.parent?.tests.every(t => t.isPassed())) {
+                            rimraf(paths.temp, () => null);
+                        }
+                    });
+
+                    suite.call(this, api, paths);
+                });
+            });
+    });
+}
+
+const browserifyBoilerplate = async (examplePath: string, target: string,
+    transformers: ts.CustomTransformers) => await browserify({
+        base: examplePath,
+        entry: 'suite.boilerplate.ts',
+        output: join(target, 'boilerplate.js'),
+        debug: !!process.env.DEBUG,
+        loaderOptions: {
+            transformers,
+            cache: false
+        }
+    });

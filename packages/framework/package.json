@@ -1,21 +1,26 @@
 {
     "name": "@tsx-air/framework",
     "version": "0.0.1",
+    "description": "Standing for the future super awesome TSXAir framework",
+    "repository": "https://github.com/wixplosives/tsx-air/tree/master/packages/framework",
+    "main": "dist/cjs/index.js",
+    "module": "dist/esm/index.js",
+    "types": "dist/esm/index.d.ts",
     "author": "Wix.com",
     "license": "MIT",
     "private": true,
-    "main": "./src/index.ts",
     "scripts": {
-        "build": "webpack --progress --mode production --devtool false --profile",
-        "profile": "webpack --profile",
+        "build": "concurrently \"yarn build:cjs\" \"yarn build:esm\"",
+        "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
+        "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "clean": "rimraf ./dist",
-        "lint": "tslint -p src",
+        "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\"",
         "prebuild": "yarn clean",
-        "start:server": "node server.js",
-        "start": "webpack-dev-server --progress --open",
         "test": "mocha \"src/**/*.test.ts?(x)\""
     },
-    "dependencies": {
-        "lodash": "^4.17.15"
-    }
+    "sideEffects": [],
+    "files": [
+        "dist",
+        "src"
+    ]
 }
