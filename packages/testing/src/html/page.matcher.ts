@@ -22,7 +22,15 @@ export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMa
                     const htmlChecks = await htmlMatch(page, args[0], false);
                     checks.push(...htmlChecks);
                 } catch (e) {
-                    checks.push(...e.checks);
+                    if (e.check) {
+                        checks.push(...e.checks);
+                    } else {
+                        const failedCheck = Promise.reject(e) as Check;
+                        failedCheck.error = e;
+                        failedCheck.matcher = args[0];
+                        failedCheck.scopeQuery = scopeQuery;
+                        checks.push(failedCheck);
+                    }
                 }
                 added();
             }));

@@ -57,10 +57,11 @@ export const killBrowser = async (browser: Browser) => {
         }
     }
 };
+
+
 export function cleanupPuppeteer(api: PreppeteerSuiteApi) {
     return async function (this: Mocha.Context) {
-        if (this.currentTest?.timedOut) {
-            // Try to kill/disconnect the (suspected) unresponsive puppeteer 
+        const restartBrowser = async () => {
             this.timeout(5000);
             killBrowser(api.browser);
             this.browser = api.browser = await getBrowser(api.options.DEBUG);
@@ -68,15 +69,23 @@ export function cleanupPuppeteer(api: PreppeteerSuiteApi) {
             console.warn('Stared a new instance of puppeteer');
             // clearly this system needs more help
             api.timeout = api.timeout! + 2000;
+        };
+
+        if (this.currentTest?.timedOut) {
+            await restartBrowser();
         } else {
             const { tests } = this.currentTest!.parent!;
             if (this.currentTest !== tests[tests.length - 1]) {
-                api.browser.pages()
-                    .then(pages => pages.forEach(
-                        (page, i) => i > 0
-                            ? page.close().catch(() => null)
-                            : null))
-                    .catch(() => null);
+                if (api.browser.isConnected()) {
+                    api.browser.pages()
+                        .then(pages => pages.forEach(
+                            (page, i) => i > 0
+                                ? page.close().catch(() => null)
+                                : null))
+                        .catch(() => null);
+                } else {
+                    await restartBrowser();
+                }
             }
         }
     };
