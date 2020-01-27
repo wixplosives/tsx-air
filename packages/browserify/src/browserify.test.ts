@@ -1,4 +1,3 @@
-import { createMemoryFs } from '@file-services/memory';
 import { expect } from 'chai';
 import fixtures from '../fixtures';
 import { browserify, browserifyPath } from './browserify';
@@ -6,14 +5,17 @@ import { join } from 'path';
 import ts, { visitEachChild } from 'typescript';
 import { execute } from '@tsx-air/testing';
 import { exampleSrcPath } from '@tsx-air/examples';
+import rimraf from 'rimraf';
 
 describe('browserify', () => {
+    const tmp = join(fixtures, '..', 'tmp');
+    afterEach(done=>rimraf(tmp, done));
+
     it('should package simple.ts into a single js file', async () => {
         const built = await browserify({
             base: fixtures,
             entry: 'simple.ts',
-            output: join(fixtures, '..', 'tmp', 'bundle.js'),
-            outputFs: createMemoryFs()
+            output: join(tmp, 'bundle.js')
         });
         expect(execute(built)).to.eql({ wasExported: true });
     });
@@ -22,8 +24,7 @@ describe('browserify', () => {
         const built = await browserify({
             base: fixtures,
             entry: 'simple.ts',
-            output: join(fixtures, '..', 'tmp', 'bundle.js'),
-            outputFs: createMemoryFs()
+            output: join(tmp, 'bundle.js')
         });
         expect(execute(built)).to.eql({ wasExported: true });
     });
@@ -32,8 +33,7 @@ describe('browserify', () => {
         const built = await browserify({
             base: fixtures,
             entry: 'with.imports.ts',
-            output: join(fixtures, '..', 'tmp', 'bundle.js'),
-            outputFs: createMemoryFs()
+            output: join(tmp, 'bundle.js')
         });
         expect(execute(built).imports).to.eql({
             local: true,
@@ -49,8 +49,7 @@ describe('browserify', () => {
             base: fixtures,
             entry: 'import.examples.ts',
             configFilePath: join(fixtures, 'tsconfig.json'),
-            output: join(fixtures, '..', 'tmp', 'bundle.js'),
-            outputFs: createMemoryFs()
+            output: join(tmp, 'bundle.js')
         });
         expect(execute(built)).to.eql({
             // TODO discuss with Avi: should be with full path
@@ -63,7 +62,6 @@ describe('browserify', () => {
             base: fixtures,
             entry: 'simple.ts',
             output: join(fixtures, '..', 'tmp', 'bundle.js'),
-            outputFs: createMemoryFs(),
             loaderOptions: {
                 transformers: {
                     before: [ctx => node => {
