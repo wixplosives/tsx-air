@@ -34,10 +34,12 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
     });
 
     beforeEach(async function () {
-        this.currentTest?.retries(opt.DEBUG ? 1 : this.currentTest?.retries() + opt.retries);
+        this.retries(1);
         const s = await server;
         await s.reset().then(() => addFixtures(s));
         Object.assign(api, getNewPage(await server, await browser, opt, this.currentTest!.timeout()));
+        
+        this.currentTest?.retries(opt.DEBUG ? 1 : this.currentTest?.retries() + opt.retries);
         this.currentTest?.timeout(api.timeout);
     });
 

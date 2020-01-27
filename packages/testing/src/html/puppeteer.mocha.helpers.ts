@@ -4,6 +4,9 @@ import { TestServer } from '../net';
 import { launch, Browser } from 'puppeteer';
 
 export function getNewPage(server: TestServer, browser: Browser, options: PreppeteerOptions, timeout: number): PreppeteerSuiteApi {
+    if (!browser.isConnected()) {
+        throw new Error('Browser is disconnected');
+    }
     const page = browser.newPage();
     const pageErrors: Error[] = [];
     const wasLoaded = new Promise(resolve =>
@@ -40,12 +43,18 @@ export function getNewPage(server: TestServer, browser: Browser, options: Preppe
 
 export const getBrowser = (debug: boolean) => launch({ headless: !debug, devtools: debug });
 export const killBrowser = async (browser: Browser) => {
-    const res = await Promise.race([
-        browser.close().then(() => 'CLOSED').catch(() => 'ERR'),
-        delay(2000)]);
-    if (res !== 'CLOSED') {
-        browser.disconnect();
-        browser.process().kill();
+    if (browser.isConnected()) {
+        const res = await Promise.race([
+            browser.close().then(() => 'CLOSED').catch(() => 'ERR'),
+            delay(2000)]);
+        if (res !== 'CLOSED') {
+            browser.disconnect();
+            browser.process().kill();
+        }
+    } else {
+        if (browser.process()) {
+            browser.process().kill();
+        }
     }
 };
 export function cleanupPuppeteer(api: PreppeteerSuiteApi) {
