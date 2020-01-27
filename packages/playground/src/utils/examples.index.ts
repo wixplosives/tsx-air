@@ -5,7 +5,7 @@ import { BuiltCode } from '../build/types';
 import { Compiler } from '@tsx-air/types';
 
 export function getExamples(): Promise<string[]> {
-    return globalThis.fetch('/examples').then(r =>r.json());
+    return globalThis.fetch('/examples').then(r => r.json());
 }
 
 export interface Example {
@@ -15,7 +15,7 @@ export interface Example {
     build: Promise<BuiltCode>;
 }
 
-function fetch(input: RequestInfo, init ?: RequestInit | undefined): Promise<string>{
+function fetch(input: RequestInfo, init?: RequestInit | undefined): Promise<string> {
     return globalThis.fetch(input, init).then(i => i.text());
 }
 
@@ -29,16 +29,16 @@ const safeExampleFileLoader = async (example: string, path: string) => {
     const isSource = /\.source(\.tsx?)?$/;
     const sourcePath = withoutExt(path).replace(/^\/src/, '');
     const source = fetch(sourcePath);
-    
+    const asSrc = (file: string) => nodeFs.join('/', 'src', file).replace(/\\/g, '/');
     if (isSource.test(asTsx(sourcePath))) {
         const compiledPath = sourcePath.replace(isSource, '.compiled');
         return {
-            [nodeFs.join('/', 'src', compiledPath).replace(/\\/g, '/')]: await fetch(compiledPath),
-            [nodeFs.join('/', 'src', sourcePath).replace(/\\/g, '/')]: await source
+            [asSrc(compiledPath).replace(/\\/g, '/')]: await fetch(compiledPath),
+            [asSrc(sourcePath).replace(/\\/g, '/')]: await source
         };
     }
     return {
-        [nodeFs.join('/', 'src', sourcePath).replace(/\\/g, '/')]: await source
+        [asSrc(sourcePath).replace(/\\/g, '/')]: await source
     };
 };
 
