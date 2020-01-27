@@ -1,7 +1,7 @@
+import { nodeFs } from '@file-services/node';
 import { withoutExt, asTsx } from './../build/build.helpers';
 import { build } from '../build/build';
 import { BuiltCode } from '../build/types';
-import { join } from 'path';
 import { Compiler } from '@tsx-air/types';
 
 export function getExamples(): Promise<string[]> {
@@ -32,12 +32,12 @@ const safeExampleFileLoader = async (example: string, path: string) => {
     if (isSource.test(asTsx(sourcePath))) {
         const compiledPath = sourcePath.replace(isSource, '.compiled');
         return {
-            [join('/', 'src', compiledPath)]: await fetch(compiledPath),
-            [join('/', 'src', sourcePath)]: await source
+            [nodeFs.join('/', 'src', compiledPath)]: await fetch(compiledPath),
+            [nodeFs.join('/', 'src', sourcePath)]: await source
         };
     }
     return {
-        [join('/', 'src', sourcePath)]: await source
+        [nodeFs.join('/', 'src', sourcePath)]: await source
     };
 };
 
