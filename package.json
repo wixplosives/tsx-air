@@ -13,7 +13,7 @@
     "test": "lerna run test --stream --concurrency 1",
     "tst": "lerna run test",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "push": "git pull && yarn typecheck && yarn tst && yarn build && git push"
+    "push": "git diff --exit-code --cached && git diff --exit-code && git pull && yarn typecheck && yarn tst && yarn build && git push"
   },
   "dependencies": {
     "lodash": "^4.17.15",
