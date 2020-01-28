@@ -1,7 +1,5 @@
 import { Component, Factory, runtime, runtimeUtils } from '@tsx-air/framework';
 
-/* tslint:disable:rule no-bitwise */
-
 // Inferred from the TSX all possible return values 
 interface StatefulCompCtx { root: HTMLElement; div1: HTMLDivElement; div2: HTMLDivElement; div3: HTMLDivElement; }
 

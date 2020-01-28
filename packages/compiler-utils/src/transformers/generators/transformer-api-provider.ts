@@ -10,7 +10,7 @@ export interface FileTransformerAPI {
     appendPrivateVar(wantedName: string, expression: ts.Expression): ts.Expression;
     ensureImport(importedName: string, fromModule: string): ts.Expression;
     ensureDefaultImport(localName: string, fromModule: string): ts.Expression;
-    getAnalayzed(): TsxFile;
+    getAnalyzed(): TsxFile;
     tsNodeToAirNodes<T extends ts.Node>(node: T): Array<TsNodeToAirNode<T>> | undefined;
 }
 
@@ -33,7 +33,7 @@ export const transfromerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
                 appendedNodes[wantedName + counter] = exp;
                 return ts.createPropertyAccess(ts.createIdentifier(varHolderIdentifier), ts.createIdentifier(wantedName + counter));
             },
-            getAnalayzed() {
+            getAnalyzed() {
                 return scanRes.tsxAir as any;
             },
             tsNodeToAirNodes(n) {

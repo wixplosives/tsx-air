@@ -11,7 +11,7 @@ describe('transfromerApiProvider', () => {
         const res = ts.transform(ast, [transfromerApiProvider((_ctx: ts.TransformationContext) => {
             return (node: ts.Node) => {
                 const api = getFileTransformationAPI(node.getSourceFile());
-                expect(api.getAnalayzed().compDefinitions.length).to.equal(0);
+                expect(api.getAnalyzed().compDefinitions.length).to.equal(0);
                 return node;
             };
         })]);
