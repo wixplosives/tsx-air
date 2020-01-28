@@ -1,15 +1,13 @@
 import { FileAstLoader, scan } from './scanner';
-
 import { expect } from 'chai';
-import 'mocha';
-
 import ts from 'typescript';
 import nodeFs from '@file-services/node';
 import { sourceWithNotes, transpileNode } from './marker';
 import { normalizeLineBreaks } from './test.helpers';
 
+const samplePath = require.resolve('../../fixtures/scanner/sample.tsx');
+
 describe('sourceWithNotes', () => {
-    const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
     const fs = nodeFs;
     const scanner = new FileAstLoader(fs, samplePath);
     const { ast, source } = scanner.getAst(samplePath);
@@ -36,7 +34,6 @@ export const /* {"Var":2} */ b=a;`);
 
 
 describe('replaceNodeText', () => {
-    const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
     const fs = nodeFs;
     const scanner = new FileAstLoader(fs, samplePath);
     const { ast } = scanner.getAst(samplePath);

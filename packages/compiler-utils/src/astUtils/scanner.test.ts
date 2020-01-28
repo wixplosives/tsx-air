@@ -6,11 +6,11 @@ import ts from 'typescript';
 import nodeFs from '@file-services/node';
 import { normalizeLineBreaks } from './test.helpers';
 
+const samplePath = require.resolve('../../fixtures/scanner/sample.tsx');
+
 describe('FileAstLoader', () => {
-    const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
     const fs = nodeFs;
     const scanner = new FileAstLoader(fs, samplePath);
-
 
     it('should load a file as an AST and raw source', () => {
         const { ast, source } = scanner.getAst(samplePath);
@@ -21,7 +21,6 @@ export const b=a;`);
 });
 
 describe(`scan, Given a valid AST`, () => {
-    const samplePath = require.resolve('../../test/resources/scanner/sample.tsx');
     const fs = nodeFs;
     const scanner = new FileAstLoader(fs, samplePath);
     const { ast } = scanner.getAst(samplePath);

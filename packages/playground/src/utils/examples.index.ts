@@ -1,4 +1,3 @@
-import { nodeFs } from '@file-services/node';
 import { withoutExt, asTsx } from './../build/build.helpers';
 import { build } from '../build/build';
 import { BuiltCode } from '../build/types';
@@ -29,7 +28,7 @@ const safeExampleFileLoader = async (example: string, path: string) => {
     const isSource = /\.source(\.tsx?)?$/;
     const sourcePath = withoutExt(path).replace(/^\/src/, '');
     const source = fetch(sourcePath);
-    const asSrc = (file: string) => nodeFs.join('/', 'src', file).replace(/\\/g, '/');
+    const asSrc = (file: string) => `/src/${file}`.replace(/\\/g, '/').replace(/\/+/g,'/');
     if (isSource.test(asTsx(sourcePath))) {
         const compiledPath = sourcePath.replace(isSource, '.compiled');
         return {

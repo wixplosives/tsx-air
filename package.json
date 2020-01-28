@@ -7,11 +7,12 @@
   "scripts": {
     "clean": "yarn rimraf packages/*/.tmp; lerna run clean --stream",
     "build": "lerna run build --stream",
+    "start": "yarn workspace @tsx-air/playground start --open",
     "lint": "lerna run lint",
     "pretest": "yarn lint",
     "test": "lerna run test --stream --concurrency 1",
     "tst": "lerna run test",
-    "typecheck": "tsc -p tsconfig.test.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "lodash": "^4.17.15",

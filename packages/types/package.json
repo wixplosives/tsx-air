@@ -16,7 +16,7 @@
         "clean": "rimraf ./dist",
         "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\"",
         "prebuild": "yarn clean",
-        "test": "mocha \"src/**/*.test.ts?(x)\""
+        "test": "echo no tests"
     },
     "files": [
         "dist",

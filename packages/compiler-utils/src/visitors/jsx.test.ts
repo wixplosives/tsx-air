@@ -5,10 +5,9 @@ import { FileAstLoader } from '../astUtils/scanner';
 import nodeFs from '@file-services/node';
 import { findJsxRoot, getTextBlockChildren } from './jsx';
 
+const samplePath = require.resolve('../../fixtures/jsx/text.tsx');
 describe('jsx visitors', () => {
     describe('findTextBlockChildren', () => {
-        const samplePath = require.resolve('../../test/resources/jsx/text.tsx');
-      
         const fs = nodeFs;
         const scanner = new FileAstLoader(fs, samplePath);
         const {ast} = scanner.getAst(samplePath);

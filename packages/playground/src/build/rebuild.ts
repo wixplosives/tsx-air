@@ -1,9 +1,9 @@
-import { Compiler } from '@tsx-air/compilers';
 import { asTsx, asJs, removeBuilt, createCjs } from './build.helpers';
 import cloneDp from 'lodash/cloneDeep';
 import { BuiltCode, Snippets } from './types';
 import isEqual from 'lodash/isEqual';
 import { build, preloads } from './build';
+import { Compiler } from '@tsx-air/types';
 
 export async function rebuild(built: BuiltCode, overridesSources: Record<string, string>, injects: Snippets = {}): Promise<BuiltCode> {
     const { _cjsEnv, _usedBuildTools: { loader, compiler }, path } = built;
