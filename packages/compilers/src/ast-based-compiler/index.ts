@@ -20,7 +20,6 @@ export const tsxAirTransformer: ts.TransformerFactory<ts.Node> = ctx => {
                     importedComponent,
                     undefined,
                     [{
-                        isPublic: true,
                         isStatic: true,
                         name: 'factory',
                         initializer: cObject(
@@ -31,21 +30,17 @@ export const tsxAirTransformer: ts.TransformerFactory<ts.Node> = ctx => {
                             })
                     },
                     {
-                        isPublic: true,
                         isStatic: true,
                         name: 'changeBitmask',
                         initializer: createChangeBitMask(comp.usedProps.map(prop => prop.name))
                     },
                     {
-                        isPublic: true,
-                        isStatic: false,
                         name: '$$processUpdate',
                         initializer: createProcessUpdateForComp(comp, binding)
                     }]);
                 return res;
             }
         }
-
 
         return ts.visitEachChild(node, visitor, ctx);
     };

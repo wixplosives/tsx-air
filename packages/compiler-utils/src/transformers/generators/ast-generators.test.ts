@@ -90,8 +90,7 @@ describe('cClass', () => {
         it('should support properties', () => {
             expect(cClass('MyComp', undefined, undefined, [{
                 name: 'propA',
-                isPublic: false,
-                isStatic: false,
+                isPrivate: true,
                 initializer: ts.createTrue()
             }])).to.have.astLike(`export class MyComp {
                 private propA = true;
@@ -100,17 +99,16 @@ describe('cClass', () => {
         it('should support static properties', () => {
             expect(cClass('MyComp', undefined, undefined, [{
                 name: 'propA',
-                isPublic: true,
+                isPrivate: true,
                 isStatic: true,
                 initializer: ts.createTrue()
             }])).to.have.astLike(`export class MyComp {
-                public static propA = true;
+                private static propA = true;
              }`);
         });
         it('should support complex properties', () => {
             expect(cClass('MyComp', undefined, undefined, [{
                 name: 'propA',
-                isPublic: true,
                 isStatic: true,
                 initializer: cObject({
                     a: 3,

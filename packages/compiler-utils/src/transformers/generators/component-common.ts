@@ -8,6 +8,13 @@ export interface DomBinding {
     astNode?: ts.Node;
 }
 
+/**
+ * Create DOM bindings for DOM elements with data such as
+ * - <div>{a}</div>
+ * - <div attr="{a}" />
+ * @param compDef 
+ * @return DOM elements that include JSX expressions 
+ */
 export const generateDomBindings = (compDef: CompDefinition) => {
     const expressions: DomBinding[] = [];
     if (compDef.jsxRoots.length !== 1) {

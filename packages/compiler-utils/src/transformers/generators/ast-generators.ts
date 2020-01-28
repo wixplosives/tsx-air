@@ -1,3 +1,4 @@
+import defaults from 'lodash/defaults';
 import ts from 'typescript';
 import isArray from 'lodash/isArray';
 import { JsxRoot, CompDefinition } from '../../analyzers/types';
@@ -88,8 +89,14 @@ export const cPrimitive = (input: any, options: AstGeneratorsOptions = defaultOp
 
 export interface ClassProperty {
     name: string;
-    isPublic: boolean;
-    isStatic: boolean;
+    /**
+     * @default false
+     */
+    isPrivate?: boolean;
+    /**
+     * @default false
+     */
+    isStatic?: boolean;
     initializer: ts.Expression;
 }
 
@@ -98,13 +105,13 @@ export interface ClassConstructor {
     statements: ts.Statement[];
 }
 
-export const cClass = (name: string, extendz?: string | ts.Expression , constructorInfo?: ClassConstructor , properties: ClassProperty[]=[]) => {
+export const cClass = (name: string, extendz?: string | ts.Expression, constructorInfo?: ClassConstructor, properties: ClassProperty[] = []) => {
     const memebersAst: ts.ClassElement[] = properties.map(prop => {
         const modifiers: ts.Modifier[] = [];
-        if (prop.isPublic) {
-            modifiers.push(ts.createModifier(ts.SyntaxKind.PublicKeyword));
-        } else {
+        if (prop.isPrivate) {
             modifiers.push(ts.createModifier(ts.SyntaxKind.PrivateKeyword));
+        } else {
+            modifiers.push(ts.createModifier(ts.SyntaxKind.PublicKeyword));
         }
 
         if (prop.isStatic) {
