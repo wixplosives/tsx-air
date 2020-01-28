@@ -6,7 +6,6 @@ import { analyze } from '../../analyzers';
 import { CompDefinition } from '../../analyzers/types';
 import { printAst } from '../../dev-utils/print-ast';
 import { cloneDeep } from './ast-generators';
-import { expectEqualIgnoreWhiteSpace } from '../../dev-utils/expect-equal-ingnore-whitespace';
 
 describe('jsxToStringTemplate', () => {
     it('should return a the string of a jsx node if no replacers exist', () => {
@@ -113,8 +112,6 @@ describe('component node replacer', () => {
         const info = analyze(ast).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxComponentReplacer]);
-        const res = printAst(templateAst);
-        expectEqualIgnoreWhiteSpace(res, `\`<div id={props.id}>\${Comp.factory.toString({ name: "gaga", title: props.title })}</div>\``);
-
+        expect(templateAst).to.have.astLike(`\`<div id={props.id}>\${Comp.factory.toString({ name: "gaga", title: props.title })}</div>\``);
     });
 });

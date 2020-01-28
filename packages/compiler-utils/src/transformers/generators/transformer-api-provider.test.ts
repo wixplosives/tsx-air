@@ -1,11 +1,8 @@
 import { parseStatement } from '../../astUtils/parser';
 import { expect } from 'chai';
 import ts from 'typescript';
-import { printAst } from '../../dev-utils/print-ast';
-import { expectEqualIgnoreWhiteSpace } from '../../dev-utils/expect-equal-ingnore-whitespace';
-import { transfromerApiProvider, getFileTransformationAPI } from './transformer-api-provider';
 import { cCall, cLiteralAst, cObject } from './ast-generators';
-
+import { transfromerApiProvider, getFileTransformationAPI } from '../..';
 
 describe('transfromerApiProvider', () => {
     it('should wrap transformers providing extra API and not change the ast', () => {
@@ -19,7 +16,7 @@ describe('transfromerApiProvider', () => {
             };
         })]);
         expect(res.diagnostics!.length).to.equal(0);
-        expectEqualIgnoreWhiteSpace(printAst(res.transformed[0]), printAst(ast));
+        expect(res.transformed[0]).to.have.astLike(ast);
     });
 
     it('should allow prepending statements', () => {
@@ -38,7 +35,7 @@ describe('transfromerApiProvider', () => {
             };
         })]);
         expect(res.diagnostics!.length).to.equal(0);
-        expectEqualIgnoreWhiteSpace(printAst(res.transformed[0]), `console.log('gaga');
+        expect(res.transformed[0]).to.have.astLike(`console.log('gaga');
         console.log('hello');
         `);
     });
@@ -59,7 +56,7 @@ describe('transfromerApiProvider', () => {
             };
         })]);
         expect(res.diagnostics!.length).to.equal(0);
-        expectEqualIgnoreWhiteSpace(printAst(res.transformed[0]), `console.log('hello');
+        expect(res.transformed[0]).to.have.astLike(`console.log('hello');
         console.log('gaga');
         `);
     });
@@ -76,7 +73,7 @@ describe('transfromerApiProvider', () => {
             };
         })]);
         expect(res.diagnostics!.length).to.equal(0);
-        expectEqualIgnoreWhiteSpace(printAst(res.transformed[0]), `var __private_tsx_air__ = {
+        expect(res.transformed[0]).to.have.astLike(`var __private_tsx_air__ = {
             myStr0: 'gaga'
         };
         console.log(__private_tsx_air__.myStr0)
@@ -99,7 +96,7 @@ describe('transfromerApiProvider', () => {
                 };
             })]);
             expect(res.diagnostics!.length).to.equal(0);
-            expectEqualIgnoreWhiteSpace(printAst(res.transformed[0]), `import defaultExport, { namedImport } from 'somewhere';
+            expect(res.transformed[0]).to.have.astLike(`import defaultExport, { namedImport } from 'somewhere';
             console.log({
                 refToNamed: namedImport,
                 refToDefault: defaultExport

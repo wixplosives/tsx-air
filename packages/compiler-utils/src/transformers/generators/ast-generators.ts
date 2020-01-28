@@ -4,7 +4,6 @@ import { JsxRoot, CompDefinition } from '../../analyzers/types';
 import { DomBinding } from './component-common';
 import { parseValue } from '../../astUtils/parser';
 
-
 export interface AstGeneratorsOptions {
     useSingleQuates: boolean;
     multiline: boolean;
@@ -99,7 +98,7 @@ export interface ClassConstructor {
     statements: ts.Statement[];
 }
 
-export const cClass = (name: string, extendz: string | ts.Expression | undefined, constructorInfo: ClassConstructor | undefined, properties: ClassProperty[]) => {
+export const cClass = (name: string, extendz?: string | ts.Expression , constructorInfo?: ClassConstructor , properties: ClassProperty[]=[]) => {
     const memebersAst: ts.ClassElement[] = properties.map(prop => {
         const modifiers: ts.Modifier[] = [];
         if (prop.isPublic) {
@@ -136,18 +135,14 @@ export const cClass = (name: string, extendz: string | ts.Expression | undefined
             ]
         )] : undefined,
         allMembers
-
     );
 };
-
 
 function createSynthesizedNode(kind: ts.SyntaxKind) {
     const node = ts.createNode(kind, -1, -1);
     node.flags |= 8 /* Synthesized */;
     return node;
 }
-
-
 
 export const cloneDeep = <T extends ts.Node>(node: T, parent?: ts.Node) => {
     const clone = createSynthesizedNode(node.kind) as T;
@@ -182,7 +177,6 @@ export const cAssign = (to: string[], from: string[] | ts.Expression) => {
         ts.createAssignment(cAccess(...to), cAccess(...from))
     );
 };
-
 
 interface ImportSpecifierDef {
     localName?: string;
@@ -250,7 +244,6 @@ export const cNew = (classPath: string[], args: ts.Expression[] = []) => {
 };
 
 export const generateHydrate = (_node: JsxRoot, parentComp: CompDefinition, domBindings: DomBinding[]) => {
-
     const body = cNew([parentComp.name!], [
         cObject(domBindings.reduce((accum, item) => {
             accum[item.ctxName] = cloneDeep(parseValue(item.viewLocator));

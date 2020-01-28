@@ -1,9 +1,9 @@
 import { printAst } from '@tsx-air/compiler-utils';
-
 import { parseValue, parseStatement } from '../astUtils/parser';
-import { expect } from 'chai';
+import { expect, use } from 'chai';
 import { cObject } from '../transformers/generators/ast-generators';
-import { expectEqualIgnoreWhiteSpace } from './expect-equal-ingnore-whitespace';
+import {plugin } from '@tsx-air/testing';
+use(plugin);
 
 describe('print ast', () => {
     describe('with ast created through a file', () => {
@@ -37,7 +37,7 @@ describe('print ast', () => {
                 multiline: true,
                 useSingleQuates: true
             });
-            expectEqualIgnoreWhiteSpace(printAst(ast), `{
+            expect(printAst(ast)).to.be.similarText(`{
                 a: 'gaga',
                 b: 'baga'
             }`);
@@ -51,7 +51,7 @@ describe('print ast', () => {
                 multiline: true,
                 useSingleQuates: false
             });
-            expectEqualIgnoreWhiteSpace(printAst(ast), `{
+            expect(printAst(ast)).to.be.similarText(`{
                 a: "gaga",
                 b: "baga"
             }`);

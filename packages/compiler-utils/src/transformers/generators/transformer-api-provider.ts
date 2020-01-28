@@ -16,7 +16,7 @@ export interface FileTransformerAPI {
 
 
 const varHolderIdentifier = '__private_tsx_air__';
-const contextMap: Map<ts.SourceFile, FileTransformerAPI> = new Map();
+const contextMap: WeakMap<ts.SourceFile, FileTransformerAPI> = new WeakMap();
 export const transfromerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts.TransformerFactory<ts.SourceFile> = gen => ctx => {
     return (node: ts.SourceFile) => {
         const appendedNodes: Record<string, ts.Expression> = {};
