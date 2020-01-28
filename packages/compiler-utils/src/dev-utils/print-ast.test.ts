@@ -1,7 +1,7 @@
+import { printAst } from '@tsx-air/compiler-utils';
 
 import { parseValue, parseStatement } from '../astUtils/parser';
 import { expect } from 'chai';
-import { printAST } from './print-ast';
 import { cObject } from '../transformers/generators/ast-generators';
 import { expectEqualIgnoreWhiteSpace } from './expect-equal-ingnore-whitespace';
 
@@ -9,23 +9,23 @@ describe('print ast', () => {
     describe('with ast created through a file', () => {
         it('should print expressions', () => {
             const ast = parseValue(`window.location`);
-            expect(printAST(ast)).to.to.equal(ast.getText());
+            expect(printAst(ast)).to.to.equal(ast.getText());
         });
 
         it('should print calls', () => {
             const ast = parseValue(`console.log('gaga')`);
-            expect(printAST(ast)).to.to.equal(ast.getText());
+            expect(printAst(ast)).to.to.equal(ast.getText());
         });
 
 
         it('should print statements', () => {
             const ast = parseStatement(`const a = 'baga'`);
-            expect(printAST(ast)).to.to.equal(ast.getText());
+            expect(printAst(ast)).to.to.equal(ast.getText());
         });
 
         it('should include types', () => {
             const ast = parseStatement(`const a: string = 'baga'`);
-            expect(printAST(ast)).to.to.equal(ast.getText());
+            expect(printAst(ast)).to.to.equal(ast.getText());
         });
     });
     describe('with ast created through a factory', () => {
@@ -37,7 +37,7 @@ describe('print ast', () => {
                 multiline: true,
                 useSingleQuates: true
             });
-            expectEqualIgnoreWhiteSpace(printAST(ast), `{
+            expectEqualIgnoreWhiteSpace(printAst(ast), `{
                 a: 'gaga',
                 b: 'baga'
             }`);
@@ -51,7 +51,7 @@ describe('print ast', () => {
                 multiline: true,
                 useSingleQuates: false
             });
-            expectEqualIgnoreWhiteSpace(printAST(ast), `{
+            expectEqualIgnoreWhiteSpace(printAst(ast), `{
                 a: "gaga",
                 b: "baga"
             }`);

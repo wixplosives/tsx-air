@@ -1,9 +1,5 @@
 import ts from 'typescript';
-import { CompDefinition, DomBinding, JsxExpression, JsxComponent, CompProps, JsxRoot, printAST, cFunction, cBitMaskIf, cAccess, cAssign, isJsxExpression, createBitWiseOr, cCall, cArrow } from '@tsx-air/compiler-utils';
-
-if (typeof window !== 'undefined') {
-    (window as any).printAST = printAST;
-}
+import { CompDefinition, DomBinding, JsxExpression, JsxComponent, CompProps, JsxRoot, cFunction, cBitMaskIf, cAccess, cAssign, isJsxExpression, createBitWiseOr, cCall, cArrow } from '@tsx-air/compiler-utils';
 
 export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: DomBinding[]) => {
     return cFunction([comp.propsIdentifier!, 'state', 'changeMap'],
@@ -61,5 +57,4 @@ export const updateComponentExpressions = (_comp: CompDefinition, root: JsxRoot,
 
     }
     return res;
-
 };

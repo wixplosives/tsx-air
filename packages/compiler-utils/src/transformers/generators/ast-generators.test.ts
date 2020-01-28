@@ -2,7 +2,7 @@ import { parseValue } from '../../astUtils/parser';
 import { expect } from 'chai';
 import { cloneDeep, cClass, cObject, cAssign, cImport } from './ast-generators';
 import ts from 'typescript';
-import { printAST } from '../../dev-utils/print-ast';
+import { printAst } from '../../dev-utils/print-ast';
 import { expectEqualIgnoreWhiteSpace } from '../../dev-utils/expect-equal-ingnore-whitespace';
 
 
@@ -29,7 +29,7 @@ describe('cImport', () => {
                 }
             ]
         });
-        expectEqualIgnoreWhiteSpace(printAST(imp), `import { Comp } from './file'`);
+        expectEqualIgnoreWhiteSpace(printAst(imp), `import { Comp } from './file'`);
     });
 
     it('should allow importing with a different local name', () => {
@@ -43,7 +43,7 @@ describe('cImport', () => {
                 }
             ]
         });
-        expectEqualIgnoreWhiteSpace(printAST(imp), `import { Comp as Bomp } from './file'`);
+        expectEqualIgnoreWhiteSpace(printAst(imp), `import { Comp as Bomp } from './file'`);
     });
 
     it('should allow importing default exports', () => {
@@ -54,7 +54,7 @@ describe('cImport', () => {
             ],
             defaultLocalName: 'Zagzag'
         });
-        expectEqualIgnoreWhiteSpace(printAST(imp), `import Zagzag from './file'`);
+        expectEqualIgnoreWhiteSpace(printAst(imp), `import Zagzag from './file'`);
     });
 
     it('should support combinations', () => {
@@ -69,7 +69,7 @@ describe('cImport', () => {
             ],
             defaultLocalName: 'Zagzag'
         });
-        expectEqualIgnoreWhiteSpace(printAST(imp), `import Zagzag, { a, b as c } from './file'`);
+        expectEqualIgnoreWhiteSpace(printAst(imp), `import Zagzag, { a, b as c } from './file'`);
     });
 });
 
@@ -77,11 +77,11 @@ describe('cImport', () => {
 describe('cClass', () => {
     it('should create the ast of a class', () => {
         const cls = cClass('MyComp', undefined, undefined, []);
-        expectEqualIgnoreWhiteSpace(printAST(cls), `export class MyComp { }`);
+        expectEqualIgnoreWhiteSpace(printAst(cls), `export class MyComp { }`);
     });
     it('should support defining inheritance', () => {
         const cls = cClass('MyComp', 'ParentComp', undefined, []);
-        expectEqualIgnoreWhiteSpace(printAST(cls), `export class MyComp extends ParentComp { }`);
+        expectEqualIgnoreWhiteSpace(printAst(cls), `export class MyComp extends ParentComp { }`);
     });
     describe('class constructor', () => {
         it('should support class constructor', () => {
@@ -91,7 +91,7 @@ describe('cClass', () => {
                     cAssign(['this', 'props'], ['props'])
                 ]
             }, []);
-            expectEqualIgnoreWhiteSpace(printAST(cls), `export class MyComp {
+            expectEqualIgnoreWhiteSpace(printAst(cls), `export class MyComp {
                 constructor(props) {
                     this.props = props;
                 }
@@ -106,7 +106,7 @@ describe('cClass', () => {
                 isStatic: false,
                 initializer: ts.createTrue()
             }]);
-            expectEqualIgnoreWhiteSpace(printAST(cls), `export class MyComp {
+            expectEqualIgnoreWhiteSpace(printAst(cls), `export class MyComp {
                 private propA = true;
              }`);
         });
@@ -117,7 +117,7 @@ describe('cClass', () => {
                 isStatic: true,
                 initializer: ts.createTrue()
             }]);
-            expectEqualIgnoreWhiteSpace(printAST(cls), `export class MyComp {
+            expectEqualIgnoreWhiteSpace(printAst(cls), `export class MyComp {
                 public static propA = true;
              }`);
         });
@@ -131,7 +131,7 @@ describe('cClass', () => {
                     b: 79
                 })
             }]);
-            expectEqualIgnoreWhiteSpace(printAST(cls), `export class MyComp {
+            expectEqualIgnoreWhiteSpace(printAst(cls), `export class MyComp {
                 public static propA = {
                     a: 3,
                     b: 79

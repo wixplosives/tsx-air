@@ -4,14 +4,14 @@ import ts from 'typescript';
 import { expect } from 'chai';
 import { analyze } from '../../analyzers';
 import { CompDefinition } from '../../analyzers/types';
-import { printAST } from '../../dev-utils/print-ast';
+import { printAst } from '../../dev-utils/print-ast';
 import { cloneDeep } from './ast-generators';
 import { expectEqualIgnoreWhiteSpace } from '../../dev-utils/expect-equal-ingnore-whitespace';
 
 describe('jsxToStringTemplate', () => {
     it('should return a the string of a jsx node if no replacers exist', () => {
         const ast = parseValue(`<div>gaga</div>`);
-        const res = printAST(jsxToStringTemplate(ast as ts.JsxElement, []));
+        const res = printAst(jsxToStringTemplate(ast as ts.JsxElement, []));
         expect(res).to.equal('`<div>gaga</div>`');
     });
     it('should replace to template string expressions according to visitors', () => {
@@ -30,7 +30,7 @@ describe('jsxToStringTemplate', () => {
             }
 
         }]);
-        const res = printAST(templateAst);
+        const res = printAst(templateAst);
         expect(res).to.equal('`<div id="${window.location}">gaga</div>`');
     });
 });
@@ -46,7 +46,7 @@ describe('replace attribute expression', () => {
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
-        const res = printAST(templateAst);
+        const res = printAst(templateAst);
         expect(res).to.equal('`<div id="${props.shouldBeReplaced}">{props.shouldNotBeReplaced}</div>`');
     });
 });
@@ -60,7 +60,7 @@ describe('replace attribute name', () => {
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeNameReplacer]);
-        const res = printAST(templateAst);
+        const res = printAst(templateAst);
         expect(res).to.equal('`<div class="gaga"></div>`');
     });
     it('should not replace attribute names for components', () => {
@@ -72,7 +72,7 @@ describe('replace attribute name', () => {
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeNameReplacer]);
-        const res = printAST(templateAst);
+        const res = printAst(templateAst);
         expect(res).to.equal('`<Comp className="gaga"></Comp>`');
     });
 });
@@ -86,7 +86,7 @@ describe('jsx text expression replacer', () => {
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer]);
-        const res = printAST(templateAst);
+        const res = printAst(templateAst);
         expect(res).to.equal('`<div id={props.shouldNotBeChanged}><!-- props.shouldChange -->${props.shouldChange}<!-- props.shouldChange --></div>`');
     });
 
@@ -99,11 +99,11 @@ describe('jsx text expression replacer', () => {
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
-        const res = printAST(templateAst);
+        const res = printAst(templateAst);
         expect(res).to.equal('`<div id="${`"gaga"`}">{props.title}</div>`');
     });
 });
-(global as any).printAST = printAST;
+(global as any).printAST = printAst;
 describe('component node replacer', () => {
     it('should replace jsx nodes with upper case into calls to the component to string', () => {
         const ast = parseValue(`TSXAir((props)=>{
@@ -113,7 +113,7 @@ describe('component node replacer', () => {
         const info = analyze(ast).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxComponentReplacer]);
-        const res = printAST(templateAst);
+        const res = printAst(templateAst);
         expectEqualIgnoreWhiteSpace(res, `\`<div id={props.id}>\${Comp.factory.toString({ name: "gaga", title: props.title })}</div>\``);
 
     });

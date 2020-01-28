@@ -1,6 +1,6 @@
 import ts from 'typescript';
 
-export const printAST = (n: ts.Node) => {
+export const printAst = (n: ts.Node) => {
 
     const printer = ts.createPrinter({
         newLine: ts.NewLineKind.LineFeed,
