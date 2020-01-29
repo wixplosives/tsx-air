@@ -5,7 +5,7 @@ declare namespace Chai {
 
     export interface Assertion {
         eqlCode(sameIgnoreWhitespace: string): Assertion;
-        astLike(ast: string | Node, ignoreLines?:boolean):Assertion;
+        astLike(ast: string | Node):Assertion;
         contentOf(filePath: string):Assertion;
     }
 }

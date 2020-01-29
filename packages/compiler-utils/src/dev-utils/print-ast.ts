@@ -1,3 +1,4 @@
+import { asSourceFile } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 
 export const printAst = (n: ts.Node) => {

@@ -2,7 +2,8 @@ import ts from 'typescript';
 import { find } from './scanner';
 import isString from 'lodash/isString';
 
-export const asSourceFile = (statement: string ) =>  ts.createSourceFile('mock.ts', statement, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+export const asSourceFile = (statement: string, filename = 'mock.ts') =>
+    ts.createSourceFile(filename, statement, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 
 /**
  * 
@@ -11,7 +12,7 @@ export const asSourceFile = (statement: string ) =>  ts.createSourceFile('mock.t
  */
 export const parseValue = (obj: string | object) => {
     const mockFileContent = `export const frag = ${isString(obj) ? obj : JSON.stringify(obj)}`;
-    const mockFile = asSourceFile(mockFileContent); 
+    const mockFile = asSourceFile(mockFileContent);
     const def = find(mockFile, nd => {
         if (ts.isVariableDeclaration(nd) && ts.isIdentifier(nd.name) && nd.name.escapedText === 'frag') {
             return 'Literal';
@@ -30,9 +31,9 @@ export const parseValue = (obj: string | object) => {
 
 
 export const parseStatement = (statement: string) => {
-    const mockFile = asSourceFile(statement); 
+    const mockFile = asSourceFile(statement);
 
-    let validValue:any;
+    let validValue: any;
     mockFile.forEachChild(c => validValue = validValue || c);
 
     if (validValue &&

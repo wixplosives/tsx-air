@@ -202,7 +202,7 @@ export const createBitWiseOr = (maskPath: string[], names: string[]) => {
     return res;
 };
 
-export const CIf = (condition: ts.Expression, statements: ts.Statement[]) => {
+export const cIf = (condition: ts.Expression, statements: ts.Statement[]) => {
     return ts.createIf(condition, ts.createBlock(statements));
 };
 

@@ -9,11 +9,12 @@ export class comp extends Component {
 }
 
 comp.factory = {
-    toString: props => `<div />`,
+    toString: (props, state) => `<div />`,
     hydrate: (root, props) => new comp({
         root: root
     }, props),
     initialState: () => ({})
 };
-comp.changeBitmask = {};
+comp.changeBitmask = {
+};
 

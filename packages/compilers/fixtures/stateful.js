@@ -16,6 +16,8 @@ comp.factory = {
         root: root,
         exp0: root.childNodes[1]
     }, props),
-    initialState: () => ({})
+    initialState: (props) => ({ a: 'initial' })
 };
-comp.changeBitmask = {};
+comp.changeBitmask = {
+    state1_a: 1 << 0
+};
