@@ -1,11 +1,10 @@
 import { parseValue } from '../../astUtils/parser';
 import { expect } from 'chai';
-import { cloneDeep, cClass, cObject, cAssign, cImport } from './ast-generators';
+import { cloneDeep, cClass, cObject, cAssign, cPrivate, asStatic, cPublic, cImport } from './ast-generators';
 import ts from 'typescript';
 
 describe('cloneDeep', () => {
     it('should return a clone of the tree ready to be reused and attached', () => {
-
         const ast = parseValue(`window.location`) as ts.PropertyAccessExpression;
         const clone = cloneDeep(ast);
 
@@ -14,7 +13,6 @@ describe('cloneDeep', () => {
         expect(clone.expression).to.not.equal(ast.expression);
     });
 });
-
 
 describe('cImport', () => {
     it('should create the ast of an import statement', () => {
@@ -25,7 +23,7 @@ describe('cImport', () => {
                     importedName: 'Comp'
                 }
             ]
-        })).to.have.astLike(`import { Comp } from './file'`);
+        })).to.have.astLike(`import { Comp } from './file'`, true);
     });
 
     it('should allow importing with a different local name', () => {
@@ -88,33 +86,26 @@ describe('cClass', () => {
     });
     describe('class properties', () => {
         it('should support properties', () => {
-            expect(cClass('MyComp', undefined, undefined, [{
-                name: 'propA',
-                isPrivate: true,
-                initializer: ts.createTrue()
-            }])).to.have.astLike(`export class MyComp {
+            expect(cClass('MyComp', undefined, undefined, [
+                cPrivate('propA', ts.createTrue())
+            ])).to.have.astLike(`export class MyComp {
                 private propA = true;
              }`);
         });
         it('should support static properties', () => {
-            expect(cClass('MyComp', undefined, undefined, [{
-                name: 'propA',
-                isPrivate: true,
-                isStatic: true,
-                initializer: ts.createTrue()
-            }])).to.have.astLike(`export class MyComp {
+            expect(cClass('MyComp', undefined, undefined, [
+                asStatic(cPrivate('propA', ts.createTrue()))
+            ])).to.have.astLike(`export class MyComp {
                 private static propA = true;
              }`);
         });
         it('should support complex properties', () => {
-            expect(cClass('MyComp', undefined, undefined, [{
-                name: 'propA',
-                isStatic: true,
-                initializer: cObject({
+            expect(cClass('MyComp', undefined, undefined, [
+                asStatic(cPublic('propA', cObject({
                     a: 3,
                     b: 79
-                })
-            }])).to.have.astLike(`export class MyComp {
+                })))
+            ])).to.have.astLike(`export class MyComp {
                 public static propA = {
                     a: 3,
                     b: 79

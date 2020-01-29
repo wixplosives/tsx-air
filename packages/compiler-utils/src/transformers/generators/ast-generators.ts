@@ -1,4 +1,3 @@
-import defaults from 'lodash/defaults';
 import ts from 'typescript';
 import isArray from 'lodash/isArray';
 import { JsxRoot, CompDefinition } from '../../analyzers/types';
@@ -40,8 +39,6 @@ export const cCall = (callPath: string[], args: ts.Expression[]) => {
 };
 
 
-
-
 /**
  * creates a literal pojo from a literal pojo, supports nested expressions
  */
@@ -54,7 +51,6 @@ export const cObject = (properties: Record<string, any>, options: AstGeneratorsO
 export const cArray = (items: any[], options: AstGeneratorsOptions = defaultOptions) => {
     return ts.createArrayLiteral(items.map(item => cLiteralAst(item, options)));
 };
-
 
 export function cLiteralAst(item: any, options: AstGeneratorsOptions = defaultOptions): ts.Expression {
     const exp = isTSNode(item) ? item :
@@ -87,49 +83,44 @@ export const cPrimitive = (input: any, options: AstGeneratorsOptions = defaultOp
     return null;
 };
 
-export interface ClassProperty {
-    name: string;
-    /**
-     * @default false
-     */
-    isPrivate?: boolean;
-    /**
-     * @default false
-     */
-    isStatic?: boolean;
-    initializer: ts.Expression;
-}
 
 export interface ClassConstructor {
     params: string[];
     statements: ts.Statement[];
 }
 
-export const cClass = (name: string, extendz?: string | ts.Expression, constructorInfo?: ClassConstructor, properties: ClassProperty[] = []) => {
-    const memebersAst: ts.ClassElement[] = properties.map(prop => {
-        const modifiers: ts.Modifier[] = [];
-        if (prop.isPrivate) {
-            modifiers.push(ts.createModifier(ts.SyntaxKind.PrivateKeyword));
-        } else {
-            modifiers.push(ts.createModifier(ts.SyntaxKind.PublicKeyword));
-        }
+export const cPublic = (name: string, initializer: ts.Expression | undefined) => ts.createProperty(
+    undefined,
+    [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
+    ts.createIdentifier(name),
+    undefined,
+    undefined,
+    initializer
+);
 
-        if (prop.isStatic) {
-            modifiers.push(ts.createModifier(ts.SyntaxKind.StaticKeyword));
-        }
+export const cPrivate = (name: string, initializer: ts.Expression | undefined) => ts.createProperty(
+    undefined,
+    [ts.createModifier(ts.SyntaxKind.PrivateKeyword)],
+    ts.createIdentifier(name),
+    undefined,
+    undefined,
+    initializer
+);
 
-        return ts.createProperty(
-            undefined,
-            modifiers,
-            ts.createIdentifier(prop.name),
-            undefined,
-            undefined,
-            prop.initializer
-        );
-    });
+export const asStatic = (prop: ts.PropertyDeclaration) => ts.createProperty(
+    undefined,
+    [...prop.modifiers || [], ts.createModifier(ts.SyntaxKind.StaticKeyword)],
+    prop.name,
+    undefined,
+    undefined,
+    prop.initializer
+);
+
+
+export const cClass = (name: string, extendz?: string | ts.Expression, constructorInfo?: ClassConstructor, properties: ts.PropertyDeclaration[] = []) => {
     const allMembers = constructorInfo ? [
         ts.createConstructor(undefined, undefined, cParams(constructorInfo.params), ts.createBlock(constructorInfo.statements)) as ts.ClassElement
-    ].concat(memebersAst) : memebersAst;
+    ].concat(properties) : properties;
     return ts.createClassDeclaration(
         undefined,
         [ts.createModifier(ts.SyntaxKind.ExportKeyword)],
@@ -203,36 +194,12 @@ export const cImport = (info: ImportDefinition) => {
         ), cLiteralAst(info.modulePath));
 };
 
-export const createChangeBitMask = (names: string[]) => {
-    return cObject(names.reduce((accum, name, currentIndex) => {
-        accum[name] = ts.createBinary(ts.createNumericLiteral((currentIndex + 1).toString()), ts.SyntaxKind.LessThanLessThanToken, ts.createNumericLiteral('0'));
-        return accum;
-    }, {} as any));
-};
-
 export const createBitWiseOr = (maskPath: string[], names: string[]) => {
     let res: ts.Expression = cAccess(...maskPath, names[0]);
     for (let i = 1; i < names.length; i++) {
         res = ts.createBinary(res, ts.SyntaxKind.FirstBinaryOperator, cAccess(...maskPath, names[i]));
     }
     return res;
-};
-
-export interface CBitMaskIfOptions {
-    changedMaskName: string;
-    maskPath: string[];
-}
-const defaultCBitMaskIfOptions: CBitMaskIfOptions = {
-    changedMaskName: 'changeMap',
-    maskPath: []
-};
-export const cBitMaskIf = (checkedFlag: string, options: CBitMaskIfOptions = defaultCBitMaskIfOptions, statements: ts.Statement[]) => {
-    return CIf(ts.createBinary(
-
-        ts.createIdentifier(options.changedMaskName),
-        ts.createToken(ts.SyntaxKind.AmpersandToken),
-        cAccess(...options.maskPath, checkedFlag)
-    ), statements);
 };
 
 export const CIf = (condition: ts.Expression, statements: ts.Statement[]) => {
@@ -250,13 +217,3 @@ export const cNew = (classPath: string[], args: ts.Expression[] = []) => {
     return ts.createNew(cAccess(...classPath), undefined, args);
 };
 
-export const generateHydrate = (_node: JsxRoot, parentComp: CompDefinition, domBindings: DomBinding[]) => {
-    const body = cNew([parentComp.name!], [
-        cObject(domBindings.reduce((accum, item) => {
-            accum[item.ctxName] = cloneDeep(parseValue(item.viewLocator));
-            return accum;
-        }, { root: ts.createIdentifier('root') } as any)),
-        ts.createIdentifier('props')
-    ]);
-    return cArrow(['root', parentComp.propsIdentifier || 'props'], body);
-};

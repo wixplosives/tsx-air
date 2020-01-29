@@ -1,56 +1,11 @@
-import ts from 'typescript';
-import { createProcessUpdateForComp } from './generate-process-update';
-import { getFileTransformationAPI, cObject, generateDomBindings, cClass, generateToString, generateHydrate, cArrow, createChangeBitMask, transfromerApiProvider } from '@tsx-air/compiler-utils';
+import { transformerApiProvider as transformerApiProvider } from '@tsx-air/compiler-utils';
 import { Compiler } from '@tsx-air/types';
-
-export const tsxAirTransformer: ts.TransformerFactory<ts.Node> = ctx => {
-    const visitor: ts.Transformer<ts.Node> = node => {
-        if (ts.isVariableStatement(node)) {
-            const api = getFileTransformationAPI(node.getSourceFile());
-            const comps = api.getAnalyzed().compDefinitions;
-
-            const compNode = node.declarationList.declarations[0].initializer!;
-            const comp = comps.find(c => c.sourceAstNode === compNode);
-            if (comp) {
-                const importedComponent = api.ensureImport('Component', '@tsx-air/framework');
-                const binding = generateDomBindings(comp);
-                const info = comp.jsxRoots[0];
-                const res = cClass(
-                    comp.name!,
-                    importedComponent,
-                    undefined,
-                    [{
-                        isStatic: true,
-                        name: 'factory',
-                        initializer: cObject(
-                            {
-                                toString: generateToString(info, comp),
-                                hydrate: generateHydrate(info, comp, binding),
-                                initialState: cArrow([], cObject({}))
-                            })
-                    },
-                    {
-                        isStatic: true,
-                        name: 'changeBitmask',
-                        initializer: createChangeBitMask(comp.usedProps.map(prop => prop.name))
-                    },
-                    {
-                        name: '$$processUpdate',
-                        initializer: createProcessUpdateForComp(comp, binding)
-                    }]);
-                return res;
-            }
-        }
-
-        return ts.visitEachChild(node, visitor, ctx);
-    };
-    return visitor;
-};
+import { componentTransformer } from './transformer';
 
 const compiler: Compiler = {
     label: 'AST Based compiler',
     transformers: {
-        before: [transfromerApiProvider(tsxAirTransformer)]
+        before: [transformerApiProvider(componentTransformer)]
     }
 };
 

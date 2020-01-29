@@ -2,13 +2,13 @@ import { parseStatement } from '../../astUtils/parser';
 import { expect } from 'chai';
 import ts from 'typescript';
 import { cCall, cLiteralAst, cObject } from './ast-generators';
-import { transfromerApiProvider, getFileTransformationAPI } from '../..';
+import { transformerApiProvider, getFileTransformationAPI } from '../..';
 
 describe('transfromerApiProvider', () => {
     it('should wrap transformers providing extra API and not change the ast', () => {
 
         const ast = parseStatement(`console.log('hello')`).getSourceFile();
-        const res = ts.transform(ast, [transfromerApiProvider((_ctx: ts.TransformationContext) => {
+        const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
             return (node: ts.Node) => {
                 const api = getFileTransformationAPI(node.getSourceFile());
                 expect(api.getAnalyzed().compDefinitions.length).to.equal(0);
@@ -22,7 +22,7 @@ describe('transfromerApiProvider', () => {
     it('should allow prepending statements', () => {
 
         const ast = parseStatement(`console.log('hello')`).getSourceFile();
-        const res = ts.transform(ast, [transfromerApiProvider((_ctx: ts.TransformationContext) => {
+        const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
 
             return node => {
                 const api = getFileTransformationAPI(node.getSourceFile());
@@ -43,7 +43,7 @@ describe('transfromerApiProvider', () => {
     it('should allow appending statements', () => {
 
         const ast = parseStatement(`console.log('hello')`).getSourceFile();
-        const res = ts.transform(ast, [transfromerApiProvider((_ctx: ts.TransformationContext) => {
+        const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
 
             return (node: ts.Node) => {
                 const api = getFileTransformationAPI(node.getSourceFile());
@@ -64,7 +64,7 @@ describe('transfromerApiProvider', () => {
     it('should allow appending private vars', () => {
 
         const ast = parseStatement(`console.log('hello')`).getSourceFile();
-        const res = ts.transform(ast, [transfromerApiProvider((_ctx: ts.TransformationContext) => {
+        const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
 
             return (node: ts.Node) => {
                 const api = getFileTransformationAPI(node.getSourceFile());
@@ -84,7 +84,7 @@ describe('transfromerApiProvider', () => {
         it('should allow adding imports', () => {
 
             const ast = parseStatement(`console.log('hello')`).getSourceFile();
-            const res = ts.transform(ast, [transfromerApiProvider((_ctx: ts.TransformationContext) => {
+            const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
                 return node => {
                     const api = getFileTransformationAPI(node.getSourceFile());
                     const refToNamed = api.ensureImport('namedImport', 'somewhere');

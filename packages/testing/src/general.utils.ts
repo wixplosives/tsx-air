@@ -1,7 +1,23 @@
 import { safely } from '@tsx-air/utils';
-export const trimCode = (code: string, dropNewLines = false) =>
-    (dropNewLines ? code.replace(/\s+/gm, ' ').trim() :
-        code.replace(/^[ \t]*/mg, '').replace(/[ \t]+/g, ' ')).trim().replace(/\r\n/g,'\n');
+import { format } from 'prettier';
+
+export const trimCode = (code: string) => {
+    try {
+        return format(code, {
+            bracketSpacing: true,
+            arrowParens: 'avoid',
+            filepath: 'tmp.js',
+            endOfLine: 'lf',
+            semi: true,
+            parser: 'typescript'
+        }).replace(/(\s+$)+/gm, '');
+    } catch {
+        return code
+            .replace(/\r/g, '')
+            .replace(/\s+$/gm, '\n') 
+            .replace(/\s+[^$]/g, '');
+    }
+};
 
 export const execute = (code: string, window: any = {}) => {
     const fn = safely(() =>

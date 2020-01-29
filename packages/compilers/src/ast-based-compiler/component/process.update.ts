@@ -1,8 +1,9 @@
 import ts from 'typescript';
-import { CompDefinition, DomBinding, JsxExpression, JsxComponent, CompProps, JsxRoot, cFunction, cBitMaskIf, cAccess, cAssign, isJsxExpression, createBitWiseOr, cCall, cArrow } from '@tsx-air/compiler-utils';
+import { CompDefinition, DomBinding, JsxExpression, JsxComponent, CompProps, JsxRoot, cFunction, cAccess, cAssign, isJsxExpression, createBitWiseOr, cCall, cArrow } from '@tsx-air/compiler-utils';
+import { cBitMaskIf } from './bitmask';
 
 export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: DomBinding[]) => {
-    return cFunction([comp.propsIdentifier!, 'state', 'changeMap'],
+    return cFunction([comp.propsIdentifier || 'props', 'state', 'changeMap'],
         comp.usedProps.map((prop: any) => cBitMaskIf(prop.name, {
             changedMaskName: 'changeMap',
             maskPath: [comp.name!, 'changeBitmask']

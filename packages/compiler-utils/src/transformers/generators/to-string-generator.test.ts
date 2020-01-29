@@ -15,22 +15,15 @@ describe('jsxToStringTemplate', () => {
     });
     it('should replace to template string expressions according to visitors', () => {
         const ast = parseValue(`<div id={window.location}>gaga</div>`);
-        const templateAst = jsxToStringTemplate(ast as ts.JsxElement, [{
-            shouldReplace(node): node is ts.JsxExpression {
-                return ts.isJsxExpression(node);
-            },
-            transform(node) {
-                const a = node as ts.JsxExpression;
-                return {
-                    prefix: '"',
-                    expression: a.expression ? cloneDeep(a.expression) : ts.createTrue(),
-                    suffix: '"'
-                };
+        const templateAst = jsxToStringTemplate(ast as ts.JsxElement, [
+            node => ts.isJsxExpression(node) &&
+            {
+                prefix: '"',
+                expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
+                suffix: '"'
             }
-
-        }]);
-        const res = printAst(templateAst);
-        expect(res).to.equal('`<div id="${window.location}">gaga</div>`');
+        ]);
+        expect(templateAst).to.have.astLike('`<div id="${window.location}">gaga</div>`');
     });
 });
 
@@ -49,6 +42,7 @@ describe('replace attribute expression', () => {
         expect(res).to.equal('`<div id="${props.shouldBeReplaced}">{props.shouldNotBeReplaced}</div>`');
     });
 });
+
 describe('replace attribute name', () => {
     it('should replace jsx attribute names in native elements', () => {
         const ast = parseValue(`TSXAir((props)=>{
@@ -89,7 +83,7 @@ describe('jsx text expression replacer', () => {
         expect(res).to.equal('`<div id={props.shouldNotBeChanged}><!-- props.shouldChange -->${props.shouldChange}<!-- props.shouldChange --></div>`');
     });
 
-    it('should handle quates', () => {
+    it('should handle quotes', () => {
         const ast = parseValue(`TSXAir((props)=>{
             return <div id={\`"gaga"\`}>{props.title}</div>
         })`);
@@ -98,11 +92,10 @@ describe('jsx text expression replacer', () => {
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
-        const res = printAst(templateAst);
-        expect(res).to.equal('`<div id="${`"gaga"`}">{props.title}</div>`');
+        expect(templateAst).to.have.astLike('`<div id="${`"gaga"`}">{props.title}</div>`');
     });
 });
-(global as any).printAST = printAst;
+
 describe('component node replacer', () => {
     it('should replace jsx nodes with upper case into calls to the component to string', () => {
         const ast = parseValue(`TSXAir((props)=>{
