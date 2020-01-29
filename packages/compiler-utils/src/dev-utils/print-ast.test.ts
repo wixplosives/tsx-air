@@ -37,7 +37,7 @@ describe('print ast', () => {
                 multiline: true,
                 useSingleQuates: true
             });
-            expect(printAst(ast)).to.be.similarText(`{
+            expect(printAst(ast)).to.be.eqlCode(`{
                 a: 'gaga',
                 b: 'baga'
             }`);
@@ -51,7 +51,7 @@ describe('print ast', () => {
                 multiline: true,
                 useSingleQuates: false
             });
-            expect(printAst(ast)).to.be.similarText(`{
+            expect(printAst(ast)).to.be.eqlCode(`{
                 a: "gaga",
                 b: "baga"
             }`);

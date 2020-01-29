@@ -18,11 +18,10 @@ const fixture = (name: string) => packagePath('@tsx-air/compilers', 'fixtures', 
 const itShouldCompileFixture = (name: string) => {
     it(`should compile ${name}`, () => {
         const compiled = compileFixture(`${name}.tsx`);
-        console.log(compiled);
         expect(compiled).to.have.contentOf(fixture(`${name}.js`));
     });
 };
 
-describe.only('c-AST based compiler', () => {
+describe('c-AST based compiler', () => {
     ['static', 'stateless', 'stateful'].forEach(itShouldCompileFixture);
 });

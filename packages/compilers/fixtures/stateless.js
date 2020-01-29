@@ -3,9 +3,11 @@ import { TSXAir } from '@tsx-air/framework';
 export class comp extends Component {
     constructor() {
         super(...arguments);
-        this.$$processUpdate = function (props, state, changeMap) { if (changeMap & comp.changeBitmask.a) {
-            this.context.exp0.textContent = props.a;
-        } };
+        this.$$processUpdate = function (props, state, changeMap) {
+            if (changeMap & comp.changeBitmask.a) {
+                this.context.exp0.textContent = props.a;
+            }
+        };
     }
 }
 comp.factory = {

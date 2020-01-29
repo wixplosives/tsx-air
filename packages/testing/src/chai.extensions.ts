@@ -7,7 +7,7 @@ import chalk from 'chalk';
 use(plugin);
 
 export default function plugin(chai: any, utils: Chai.ChaiUtils) {
-    utils.addMethod(chai.Assertion.prototype, 'similarText', function (this: Chai.AssertionPrototype, text: string) {
+    utils.addMethod(chai.Assertion.prototype, 'eqlCode', function (this: Chai.AssertionPrototype, text: string) {
         const target: string = trimCode(this._obj);
         text = trimCode(text);
         new chai.Assertion(target).is.a('string');
@@ -25,7 +25,7 @@ export default function plugin(chai: any, utils: Chai.ChaiUtils) {
         const target: string = trimCode(printAst(this._obj));
         expected = trimCode(typeof expected === 'string'
             ? expected
-            : printAst(expected), true);
+            : printAst(expected));
         new chai.Assertion(target).is.a('string');
         this.assert(
             target === expected,
