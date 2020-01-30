@@ -11,13 +11,15 @@ export class comp extends Component {
     }
 }
 comp.factory = {
-    toString: (props, state) => `<div><!-- state.state1.a -->${state.state1.a}<!-- state.state1.a --></div>`,
+    toString: (__0, state) => `<div><!-- store1.a -->${state.store1.a}<!--state1.a --></div>`,
     hydrate: (root, props) => new comp({
         root: root,
         exp0: root.childNodes[1]
     }, props),
-    initialState: (props) => ({ a: 'initial' })
+    initialState: () => ({
+        store1: { a: 'initial' }
+    })
 };
 comp.changeBitmask = {
-    state1_a: 1 << 0
+    store1_a: 1 << 0
 };

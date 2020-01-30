@@ -2,15 +2,15 @@ export interface JSXAttributeMapping {
     kind: string;
 }
 
-export interface JSXHTMLAttribute extends JSXAttributeMapping {
+export interface JsxHtmlAttribute extends JSXAttributeMapping {
     kind: 'jsx-html-attribute';
     htmlName: string;
 }
-export function isJSXHTMLAttribute(val: JSXAttributeMapping): val is JSXHTMLAttribute {
+export function isJsxHtmlAttribute(val: JSXAttributeMapping): val is JsxHtmlAttribute {
     return val.kind === 'jsx-html-attribute';
 }
 const JSXHTMLAttribute = (htmlName: string) => {
-    const res: JSXHTMLAttribute = {
+    const res: JsxHtmlAttribute = {
         kind: 'jsx-html-attribute',
         htmlName
     };

@@ -9,7 +9,7 @@ export class comp extends Component {
 }
 
 comp.factory = {
-    toString: (props, state) => `<div />`,
+    toString: () => `<div></div>`,
     hydrate: (root, props) => new comp({
         root: root
     }, props),

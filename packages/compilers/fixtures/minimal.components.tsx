@@ -8,6 +8,6 @@ export const withState = TSXAir(() => {
     return <div>{store1.a}{store1.b}</div>;
 });
 export const withBoth = TSXAir((props: { a: string, b: string, unused: number }) => {
-    const store2 = store({ a: 1, b: 2 });
+    const store2 = store({ a: props.b, b: 2 });
     return <div>{props.a}{props.b}{store2.a}{store2.b}</div>;
 });

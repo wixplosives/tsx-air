@@ -1,7 +1,8 @@
 import flatMap from 'lodash/flatMap';
 import ts, { JsxSelfClosingElement } from 'typescript';
-import { cloneDeep, cCall, cObject } from './ast-generators';
-import { nativeAttributeMapping, isJSXHTMLAttribute } from './native-attribute-mapping';
+import { cloneDeep } from './ast-generators';
+import { nativeAttributeMapping, isJsxHtmlAttribute } from './native-attribute-mapping';
+import last from 'lodash/last';
 
 export interface ExpressionData {
     expression: ts.Expression;
@@ -9,18 +10,13 @@ export interface ExpressionData {
     suffix?: string;
 }
 
-type PossibleReplacement = Replacement | false;
+type PossibleReplacement = ts.Node | Replacement | false;
 type Replacement = ExpressionData | string;
-export type AstNodeReplacer<T extends ts.Node = ts.Node> =
-    (node: T) => PossibleReplacement;
+export type AstNodeReplacer =
+    (node: ts.Node) => PossibleReplacement;
 
-export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: Array<AstNodeReplacer<any>>) => {
-    const flattened = flatMap(nodeToStringParts(jsx, replacers),
-        item => typeof item === 'string'
-            ? [item]
-            : [item.prefix || '', item.expression, item.suffix || '']
-    );
-    const joinedRes = toExpTextTuples(flattened);
+export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: AstNodeReplacer[]) => {
+    const joinedRes = toExpTextTuples(jsx, replacers);
     joinedRes[0].text = joinedRes[0].text.slice(jsx.getLeadingTriviaWidth());
 
     if (joinedRes.length === 1) {
@@ -28,7 +24,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
     }
     const tail = joinedRes.pop()!;
     const head = joinedRes.shift()!;
-    const spans = joinedRes.map(({expression, text}) => 
+    const spans = joinedRes.map(({ expression, text }) =>
         ts.createTemplateSpan(expression, ts.createTemplateMiddle(text)));
     spans.push(ts.createTemplateSpan(tail?.expression, ts.createTemplateTail(tail.text)));
 
@@ -38,32 +34,36 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
     );
 };
 
-const toExpTextTuples = (arr: Array<string | ts.Expression>) => {
-    const res: Array<{expression:ts.Expression, text:string}> = [{
-        expression: null!, 
-        text: ''
+const toExpTextTuples = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: AstNodeReplacer[]) => {
+    const flattened = flatMap(nodeToStringParts(jsx, replacers),
+        item => typeof item === 'string'
+            ? [item]
+            : [item.prefix || '', item.expression, item.suffix || '']
+    );
+    const res: Array<{ expression: ts.Expression, textFragments: string[] }> = [{
+        expression: null!, // the head is always text-only
+        textFragments: []
     }];
-    for (const item of arr) {
+    for (const item of flattened) {
         if (typeof item === 'string') {
-            last(res).text = last(res).text + item; 
+            last(res)!.textFragments.push(item);
         } else {
             res.push({
                 expression: item,
-                text: ''
+                textFragments: []
             });
         }
-    }    
-    return res;
-};
-
-export const last = <T>(arr: T[]) => {
-    return arr[arr.length - 1];
+    }
+    return res.map(({ expression, textFragments: text }) => ({ expression, text: text.join('') }));
 };
 
 export function nodeToStringParts(node: ts.Node, replacers: AstNodeReplacer[]): Replacement[] {
     let replaced: PossibleReplacement = false;
     replacers.find(r => (replaced = r(node)) !== false);
     if (replaced !== false) {
+        if (ts.isJsxElement(replaced)) {
+            return nodeToStringParts(replaced, replacers);
+        }
         return [replaced];
     }
     if (node.getChildCount() > 0) {
@@ -74,7 +74,7 @@ export function nodeToStringParts(node: ts.Node, replacers: AstNodeReplacer[]): 
 }
 
 
-export const jsxAttributeReplacer: AstNodeReplacer<ts.JsxExpression> =
+export const jsxAttributeReplacer: AstNodeReplacer =
     node =>
         ts.isJsxExpression(node) && ts.isJsxAttribute(node.parent) &&
         {
@@ -83,14 +83,14 @@ export const jsxAttributeReplacer: AstNodeReplacer<ts.JsxExpression> =
             suffix: '"'
         };
 
-export const jsxAttributeNameReplacer: AstNodeReplacer<ts.Identifier> =
+export const jsxAttributeNameReplacer: AstNodeReplacer =
     node => {
         if (ts.isIdentifier(node) &&
             ts.isJsxAttribute(node.parent) &&
             !isComponentTag((node.parent.parent.parent as JsxSelfClosingElement).tagName) &&
             !!nativeAttributeMapping[node.getText()]) {
             const mapping = nativeAttributeMapping[node.getText()];
-            if (isJSXHTMLAttribute(mapping)) {
+            if (isJsxHtmlAttribute(mapping)) {
                 return ' ' + mapping.htmlName;
             }
             return ' ' + node.getText();
@@ -98,52 +98,16 @@ export const jsxAttributeNameReplacer: AstNodeReplacer<ts.Identifier> =
         return false;
     };
 
-export const jsxTextExpressionReplacer: AstNodeReplacer<ts.JsxExpression> =
-    node => ts.isJsxExpression(node) &&
-        !ts.isJsxAttribute(node.parent) &&
-    {
-        prefix: `<!-- ${node.expression ? node.expression.getText() : 'empty expression'} -->`,
-        expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
-        suffix: `<!-- ${node.expression ? node.expression.getText() : 'empty expression'} -->`
-    };
-
-export const jsxComponentReplacer: AstNodeReplacer<ts.JsxElement | JsxSelfClosingElement> =
-    node => {
-        if ((ts.isJsxElement(node) && isComponentTag(node.openingElement.tagName)) ||
-            (ts.isJsxSelfClosingElement(node) && isComponentTag(node.tagName))) {
-            const openingNode = ts.isJsxElement(node) ? node.openingElement : node;
-            const tagName = openingNode.tagName.getText();
-
-            return {
-                expression: cCall([tagName, 'factory', 'toString'],
-                    [
-                        cObject(openingNode.attributes.properties.reduce((accum, prop) => {
-                            if (ts.isJsxSpreadAttribute(prop)) {
-                                throw new Error('spread in attributes is not handled yet');
-                            }
-                            const initializer = prop.initializer;
-                            if (!initializer) {
-                                accum[prop.name.getText()] = ts.createTrue();
-                            } else if (ts.isJsxExpression(initializer)) {
-                                if (initializer.expression) {
-                                    accum[prop.name.getText()] = cloneDeep(initializer.expression);
-                                }
-                            } else {
-                                accum[prop.name.getText()] = cloneDeep(initializer);
-                            }
-                            return accum;
-                        }, {} as Record<string, any>))
-                    ]),
-            };
-        }
+export const jsxSelfClosingElementReplacer: AstNodeReplacer = node => {
+    if (ts.isJsxSelfClosingElement(node)) {
+        const tag = node.tagName.getText();
+        return node.getFullText().replace(/\s*\/\>$/, `></${tag}>`);
+    } else {
         return false;
-    };
-
-
+    }
+};
 
 export const isComponentTag = (node: ts.JsxTagNameExpression) => {
     const text = node.getText();
     return text[0].toLowerCase() !== text[0] || text.indexOf('.') !== -1;
 };
-
-

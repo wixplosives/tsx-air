@@ -1,4 +1,4 @@
-import { asSourceFile } from '@tsx-air/compiler-utils';
+import { asSourceFile, analyze, TsxFile } from '@tsx-air/compiler-utils';
 import { Compiler } from '@tsx-air/types';
 import { readFileSync } from 'fs';
 import { transpileModule } from 'typescript';
@@ -28,3 +28,5 @@ export const itShouldCompileFixture = (name: string, compiler:Compiler) => {
 };
 
 export const parseFixture = (name: string) => asSourceFile(readFixture(name), fixture(name));
+export const analyzeFixtureComponents = (name: string) =>
+ (analyze(parseFixture(name)).tsxAir as TsxFile).compDefinitions;

@@ -27,7 +27,9 @@ export const storeDefinition: Analyzer<StoreDefinition> = astNode => {
 
     const storeDef: StoreDefinition = {
         kind: 'storeDefinition',
-        name: ts.isVariableDeclaration(astNode.parent) ? astNode.parent.name.getText() : astNode.parent.getText(),
+        name: ts.isVariableDeclaration(astNode.parent) 
+            ? astNode.parent.name.getText() 
+            : astNode.parent.getText(),
         sourceAstNode: astNode,
         variables,
         aggregatedVariables,

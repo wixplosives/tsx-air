@@ -3,6 +3,8 @@ import isArray from 'lodash/isArray';
 import { JsxRoot, CompDefinition } from '../../analyzers/types';
 import { DomBinding } from './component-common';
 import { parseValue } from '../../astUtils/parser';
+import times from 'lodash/times';
+import last from 'lodash/last';
 
 export interface AstGeneratorsOptions {
     useSingleQuates: boolean;
@@ -14,9 +16,14 @@ export const defaultOptions: AstGeneratorsOptions = {
     multiline: true
 };
 
-export const cArrow = (params: string[], body: ts.ConciseBody) => {
+export const cArrow = (params: Array<string | ts.ObjectBindingPattern | undefined>, body: ts.ConciseBody) => {
+    while (params.length && last(params) === undefined) {
+        params.pop();
+    }
+
     return ts.createArrowFunction(undefined, undefined,
-        params.map(item => ts.createParameter(undefined, undefined, undefined, item, undefined, undefined, undefined)),
+        params.map((item, i) =>
+            ts.createParameter(undefined, undefined, undefined, item || `__${i}`, undefined, undefined, undefined)),
         undefined, undefined, body
     );
 };

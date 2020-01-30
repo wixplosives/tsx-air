@@ -80,7 +80,7 @@ export interface FuncDefinition extends NodeWithVariables<ts.FunctionExpression 
 
 
 
-export interface StoreDefinition extends NodeWithVariables<ts.CallExpression | ts.ArrowFunction> {
+export interface StoreDefinition extends NodeWithVariables<ts.CallExpression> {
     kind: 'storeDefinition';
     name: string;
     keys: string[];

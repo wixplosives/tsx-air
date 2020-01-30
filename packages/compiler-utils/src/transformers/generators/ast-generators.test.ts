@@ -23,7 +23,7 @@ describe('cImport', () => {
                     importedName: 'Comp'
                 }
             ]
-        })).to.have.astLike(`import { Comp } from './file'`, true);
+        })).to.have.astLike(`import { Comp } from './file'`);
     });
 
     it('should allow importing with a different local name', () => {
