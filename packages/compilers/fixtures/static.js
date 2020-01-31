@@ -4,7 +4,7 @@ import { TSXAir } from '@tsx-air/framework';
 export class comp extends Component {
     constructor() {
         super(...arguments);
-        this.$$processUpdate = function (props, state, changeMap) { };
+        this.$$processUpdate = () => { };
     }
 }
 

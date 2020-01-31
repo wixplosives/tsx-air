@@ -11,7 +11,7 @@ export class comp extends Component {
     }
 }
 comp.factory = {
-    toString: (__0, state) => `<div><!-- store1.a -->${state.store1.a}<!--state1.a --></div>`,
+    toString: (__0, { store1 }) => `<div><!-- store1.a -->${store1.a}<!-- store1.a --></div>`,
     hydrate: (root, props) => new comp({
         root: root,
         exp0: root.childNodes[1]
