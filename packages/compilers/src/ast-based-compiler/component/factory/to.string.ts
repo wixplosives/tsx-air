@@ -1,20 +1,9 @@
+import { propsAndStateParams } from './../helpers';
 import { cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer, JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep, jsxSelfClosingElementReplacer } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 
-export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
-    const props = comp.usedProps.length ? comp.propsIdentifier || 'props' : undefined;
-    
-    const stores = comp.stores.map(s => 
-        ts.createBindingElement(
-            undefined,
-            undefined,
-            ts.createIdentifier(s.name),
-            undefined
-        ));
-        const state = stores.length ? ts.createObjectBindingPattern(stores) : undefined;
-
-
-    return cArrow([props, state],
+export const generateToString = (node: JsxRoot, comp: CompDefinition) =>
+    cArrow(propsAndStateParams(comp),
         jsxToStringTemplate(node.sourceAstNode, [
             jsxComponentReplacer,
             jsxTextExpressionReplacer,
@@ -22,7 +11,6 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
             jsxAttributeNameReplacer,
             jsxSelfClosingElementReplacer
         ]));
-};
 
 export const jsxTextExpressionReplacer: AstNodeReplacer =
     node => ts.isJsxExpression(node) &&

@@ -7,7 +7,7 @@ export function generateInitialState(comp: CompDefinition) {
         comp.stores.forEach(s => {
             stores[s.name] = cloneDeep(s.sourceAstNode.arguments[0]) as ts.ObjectLiteralExpression;
         });        
-        const props = comp.usedProps.length ? comp.propsIdentifier || 'props' : undefined;
+        const props = comp.usedProps.length ? comp.propsIdentifier : undefined;
         return cArrow([props],
             cObject(stores));
     }
