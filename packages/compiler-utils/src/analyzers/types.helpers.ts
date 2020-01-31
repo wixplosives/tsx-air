@@ -1,9 +1,9 @@
 import { TsxErrorType, TsxAirNodeError, TsxAirNode, AnalyzerResult } from './types';
 import ts from 'typescript';
 import isArray from 'lodash/isArray';
-import isString from 'lodash/isString';
 import flatten from 'lodash/flatten';
 import { NodeMetaData } from '../astUtils/scanner';
+import { hasError, isNotNull, isTsxAirNode } from './types.istype';
 export function errorNode<T extends TsxAirNode>(sourceAstNode: ts.Node, message: string, type: TsxErrorType = 'code'): AnalyzerResult<T> {
     const tsxAir: TsxAirNodeError = {
         kind: 'error',
@@ -23,13 +23,6 @@ export function asAnalyzerResult<T extends TsxAirNode>(analyzedNode: T): Analyze
     };
 }
 
-export function hasError(node: TsxAirNode): node is TsxAirNodeError {
-    return node && node.kind === 'error';
-}
-
-export function isTsxAirNode(x: any): x is TsxAirNode {
-    return x && isString(x.kind) && x.sourceAstNode;
-}
 
 export type NodesMap = Map<ts.Node, TsxAirNode[]>;
 export function addToNodesMap(target: NodesMap, added: NodesMap | TsxAirNode) {
@@ -73,10 +66,6 @@ export function aggregateAstNodeMapping(nodes: TsxAirNode[]): NodesMap {
 
     nodes.forEach(walk);
     return agg;
-}
-
-export function isNotNull<T extends TsxAirNode>(input: null | undefined | T): input is T {
-    return !!input;
 }
 
 export function filterResults<T extends TsxAirNode<any>>(result: Array<NodeMetaData<AnalyzerResult<T>>>): T[] {
