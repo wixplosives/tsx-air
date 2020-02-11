@@ -1,9 +1,6 @@
-import { Visitor } from '../astUtils/scanner';
+import { Visitor } from '../ast-utils/scanner';
 import { isJsxSelfClosingElement, isJsxElement, isJsxExpression, JsxOpeningElement, isStringLiteral, JsxAttribute, Node, isJsxText } from 'typescript';
-import { isTsJsxRoot } from '../analyzers/types';
-
-
-
+import { isTsJsxRoot } from '../analyzers/types.is.type';
 
 export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
     if (
@@ -17,7 +14,6 @@ export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
     return undefined;
 };
 
-
 export const findJsxNode: Visitor = node => {
     if (
         isTsJsxRoot(node)
@@ -26,7 +22,6 @@ export const findJsxNode: Visitor = node => {
     }
     return undefined;
 };
-
 
 export const getComponentTag = (node: Node) => {
     let tag = '';

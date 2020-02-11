@@ -1,7 +1,7 @@
 import {Node} from 'typescript';
-import { find } from './../astUtils/scanner';
+import { find } from '../ast-utils/scanner';
 import { expect } from 'chai';
-import { FileAstLoader } from '../astUtils/scanner';
+import { FileAstLoader } from '../ast-utils/scanner';
 import nodeFs from '@file-services/node';
 import { findJsxRoot, getTextBlockChildren } from './jsx';
 

@@ -1,4 +1,5 @@
-import { CompDefinition, DomBinding, bitMask, CompProps, isJsxExpression, JsxExpression } from '@tsx-air/compiler-utils';
+import { CompDefinition, DomBinding, bitMask, JsxExpression } from '@tsx-air/compiler-utils';
+import { isJsxExpression } from '@tsx-air/compiler-utils';
 
 export const compClass = (dom: DomBinding[], def: CompDefinition) => {
     const mask = bitMask(def);
@@ -14,19 +15,22 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
 
 
     function processUpdate() {
+        const { propsIdentifier, aggregatedVariables } = def;
+        const props = aggregatedVariables.accessed[propsIdentifier || ''];
+        const usedProps = props ?  Object.keys(props) : []; 
         return `$$processUpdate(newProps, newState, changeMap) {
-            ${def.usedProps.map(handlePropChange)}
+            ${usedProps.map(handlePropChange)}
         }`;
     }
 
-    function handlePropChange(prop: CompProps) {
+    function handlePropChange(prop: string) {
         return `if (changeMap & ${def.name}.changeBitmask.${prop.name}){
             ${handlePropExpressions(prop).join('\n')}
             ${handlePropComp(prop).join('\n')}
         }`;
     }
 
-    function handlePropExpressions(prop: CompProps): string[] {
+    function handlePropExpressions(prop: UsedNamespace): string[] {
         return def.jsxRoots[0].expressions
             .filter(ex => ex.dependencies.includes(prop))
             .map(ex => ({ ex, dm: dom.find(dm => dm.astNode === ex.sourceAstNode)! }))
@@ -34,7 +38,7 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
         // TODO: update html attributes
     }
 
-    function handlePropComp(prop: CompProps): string[] {
+    function handlePropComp(prop: UsedNamespace): string[] {
         const comps = def.jsxRoots[0].components
             .filter(c => c.dependencies.includes(prop));
 

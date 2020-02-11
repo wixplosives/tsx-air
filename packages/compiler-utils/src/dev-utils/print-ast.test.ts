@@ -1,5 +1,5 @@
 import { printAst } from '@tsx-air/compiler-utils';
-import { parseValue, parseStatement } from '../astUtils/parser';
+import { parseValue, parseStatement } from '../ast-utils/parser';
 import { expect, use } from 'chai';
 import { cObject } from '../transformers/generators/ast-generators';
 import {plugin } from '@tsx-air/testing';

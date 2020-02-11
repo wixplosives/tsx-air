@@ -1,6 +1,6 @@
-import { CompDefinition } from './../../analyzers/types';
+import { CompDefinition } from '../../../compiler-utils/src/analyzers/types';
 import ts, { SyntaxKind } from 'typescript';
-import { getComponentTag } from '../../visitors/jsx';
+import { getComponentTag } from '../../../compiler-utils/src/visitors/jsx';
 
 export interface DomBinding {
     ctxName:string;
@@ -37,6 +37,7 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                     });
                     childCount += 3;
                     break;
+                case SyntaxKind.JsxOpeningElement:
                 case SyntaxKind.JsxElement:
                 case SyntaxKind.JsxSelfClosingElement:
                     const tag = getComponentTag(child);
@@ -52,7 +53,10 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                     }
                     childCount++;
                     break;
+                case SyntaxKind.JsxClosingElement:
+                    break;
                 default:
+                    console.log(child.getText());
                 // throw new Error('Unhandled JSX hydration');
             }
         });

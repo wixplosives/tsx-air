@@ -1,13 +1,12 @@
 import { cObject, cIf, cAccess, CompDefinition } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import flatMap from 'lodash/flatMap';
 import sortBy from 'lodash/sortBy';
+import { accessedVars } from './helpers';
 
 export const generateChangeBitMask = (comp: CompDefinition) => {
     const fields: Record<string, ts.BinaryExpression> = {};
-    const props = comp.usedProps.map(p => p.name);
-    const stores = flatMap(comp.stores, store => store.keys.map(key => `${store.name}_${key}`));
-    sortBy([...props, ...stores]).forEach((name, index) => {
+    const vars = accessedVars(comp);
+    sortBy(vars).forEach((name, index) => {
         fields[name] = ts.createBinary(ts.createNumericLiteral('1'),
             ts.SyntaxKind.LessThanLessThanToken,
             ts.createNumericLiteral(index.toString()));
@@ -25,10 +24,14 @@ const defaultCBitMaskIfOptions: CBitMaskIfOptions = {
     maskPath: []
 };
 
-export const cBitMaskIf = (checkedFlag: string, options: CBitMaskIfOptions = defaultCBitMaskIfOptions, statements: ts.Statement[]) => {
-    return cIf(ts.createBinary(
-        ts.createIdentifier(options.changedMaskName),
-        ts.createToken(ts.SyntaxKind.AmpersandToken),
-        cAccess(...options.maskPath, checkedFlag)
-    ), statements);
-};
+export const cBitMaskIf =
+    (checkedFlag: string, options: CBitMaskIfOptions = defaultCBitMaskIfOptions, statements: ts.Statement[]) => {
+        return cIf(ts.createBinary(
+            ts.createIdentifier(options.changedMaskName),
+            ts.createToken(ts.SyntaxKind.AmpersandToken),
+            ts.createElementAccess(
+                ts.createIdentifier('comp.changeBitmask'),
+                ts.createStringLiteral(checkedFlag)
+            ),
+        ), statements);
+    };

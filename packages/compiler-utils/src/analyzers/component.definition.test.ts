@@ -1,17 +1,5 @@
-import {  parseStatement } from '../astUtils/parser';
 import { expect } from 'chai';
-import { compDefinition } from './component.definition';
-import ts from 'typescript';
-import { find } from '../astUtils/scanner';
-import { CompDefinition } from './types';
-
-export const getCompDef = (code: string) => {
-    const ast = parseStatement(code);
-    const tsxairNode = find(ast, node => ts.isCallExpression(node));
-    const comp = compDefinition(tsxairNode).tsxAir as CompDefinition;
-
-    return { ast, comp, tsxairNode };
-};
+import { getCompDef } from './test.helpers';
 
 describe('TSXAir component definition', () => {
     describe('invalid calls', () => {
@@ -32,7 +20,7 @@ describe('TSXAir component definition', () => {
 
     describe('trivial component', () => {
         it('should return a CompDefinition with no propsIdentifier', () => {
-            const { comp, tsxairNode } = getCompDef(`TSXAir(() => (<div />))`);
+            const { comp, tsxairNode } = getCompDef(`TSXAir(props => (<div />))`);
             expect(comp).to.deep.include({
                 kind: 'CompDefinition',
                 propsIdentifier: undefined,
@@ -52,10 +40,6 @@ describe('TSXAir component definition', () => {
                 propsIdentifier: 'props',
                 sourceAstNode: tsxairNode
             });
-
-            const { usedProps } = comp;
-            expect(usedProps).to.have.length(1);
-            expect(usedProps[0]).to.deep.include({ kind: 'CompProps', name: 'name' });
         });
 
         it('should return a ComponentDefinition for function expression', () => {
@@ -68,10 +52,6 @@ describe('TSXAir component definition', () => {
                 propsIdentifier: 'props',
                 sourceAstNode: tsxairNode
             });
-
-            const { usedProps } = comp;
-            expect(usedProps).to.have.length(1);
-            expect(usedProps[0]).to.deep.include({ kind: 'CompProps', name: 'name' });
         });
     });
 });

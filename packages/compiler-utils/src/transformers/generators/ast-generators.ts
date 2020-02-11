@@ -1,9 +1,5 @@
 import ts from 'typescript';
 import isArray from 'lodash/isArray';
-import { JsxRoot, CompDefinition } from '../../analyzers/types';
-import { DomBinding } from './component-common';
-import { parseValue } from '../../astUtils/parser';
-import times from 'lodash/times';
 import last from 'lodash/last';
 
 export interface AstGeneratorsOptions {
@@ -16,17 +12,20 @@ export const defaultOptions: AstGeneratorsOptions = {
     multiline: true
 };
 
-export const cArrow = (params: Array<string | ts.ObjectBindingPattern | undefined>, body: ts.ConciseBody) => {
+export const cArrow = (params: Array<string | ts.ObjectBindingPattern | undefined>, body: ts.ConciseBody | ts.Statement[]) => {
     while (params.length && last(params) === undefined) {
         params.pop();
     }
-
     return ts.createArrowFunction(undefined, undefined,
         params.map((item, i) =>
             ts.createParameter(undefined, undefined, undefined, item || `__${i}`, undefined, undefined, undefined)),
-        undefined, undefined, body
+        undefined, undefined,
+        body instanceof Array
+            ? ts.createBlock(body)
+            : body
     );
 };
+
 
 export const cAccess = (...callPath: string[]) => {
     let identifier: ts.Expression = ts.createIdentifier(callPath[0]);
@@ -50,8 +49,10 @@ export const cCall = (callPath: string[], args: ts.Expression[]) => {
  * creates a literal pojo from a literal pojo, supports nested expressions
  */
 export const cObject = (properties: Record<string, any>, options: AstGeneratorsOptions = defaultOptions) => {
-    return ts.createObjectLiteral(Object.entries(properties).map(([name, value]) => {
-        return ts.createPropertyAssignment(name, cLiteralAst(value, options));
+    return ts.createObjectLiteral(
+        Object.entries(properties).map(([name, value]) => {
+        return ts.createPropertyAssignment(`"${name}"`, 
+            cLiteralAst(value, options));
     }), options.multiline);
 };
 

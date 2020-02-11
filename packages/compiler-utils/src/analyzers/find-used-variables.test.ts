@@ -1,5 +1,5 @@
 // tslint:disable: no-unused-expression
-import { parseValue, asSourceFile } from '../astUtils/parser';
+import { parseValue, asSourceFile } from '../ast-utils/parser';
 import { expect } from 'chai';
 import { UsedVariables } from './types';
 import { findUsedVariables } from './find-used-variables';
@@ -14,6 +14,9 @@ describe('findUsedVariables', () => {
                 var c = 'c';
             }`);
 
+        // const vars = scan(ast, isVariableLikeDeclaration).map(n => 
+        //     (n.node as ts.VariableDeclaration).initializer);
+      
         expect(findUsedVariables(ast).defined).to.eql({
             aParam: {},
             a: {},
@@ -21,6 +24,7 @@ describe('findUsedVariables', () => {
             c: {}
         });
     });
+
     it('should find accessed members', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = aParam.internalObj.property
@@ -28,9 +32,11 @@ describe('findUsedVariables', () => {
                 const c = { val: aParam.field }
             }`);
 
+        // const vars = scan(ast, isVariableLikeDeclaration).map(n => n.node);
+
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
-                field: {},
+                field:{},
                 internalObj: {
                     property: {},
                     anotherProperty: {}
@@ -38,6 +44,7 @@ describe('findUsedVariables', () => {
             }
         });
     });
+
     it('should find modifed members', () => {
         const ast = parseValue(`(aParam)=>{
                 aParam.replacedProperty = aParam.internalObject.accessedProperty;

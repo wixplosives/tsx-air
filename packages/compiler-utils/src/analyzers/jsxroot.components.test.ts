@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { getCompDef } from './component.definition.test';
-import { CompDefinition, JsxExpression, JsxComponent, isJsxAttribute } from './types';
+import { getCompDef } from './test.helpers';
+import { CompDefinition, JsxExpression, JsxComponent } from './types';
+import { isJsxAttribute } from './types.is.type';
 // tslint:disable: no-unused-expression
 
 describe('Jsx Components', () => {
@@ -49,11 +50,6 @@ describe('Jsx Components', () => {
         });
     });
 
-    it ('should analyze comp dependencies', () => {
-        expect(comp3.dependencies.map(d => d.name)).to.deep.equal(['name', 'a', 'b',]);
-        expect(comp4.dependencies.map(d => d.name)).to.deep.equal(['name', 'a', 'b', 'child']);
-    });
-
     it('should analyze dynamic properties', () => {
         [comp3, comp4].forEach(c => {
             const dynamic = c.props[2].value as JsxExpression;
@@ -63,17 +59,11 @@ describe('Jsx Components', () => {
                 kind: 'JsxExpression',
                 expression: 'props.name'
             }, c.name);
-            expect(dynamic.dependencies, c.name + ' dynamic dependencies count').to.have.length(1);
-            expect(dynamic.dependencies[0].name, c.name).to.equal('name');
 
             expect(multi).to.deep.include({
                 kind: 'JsxExpression',
                 expression: 'props.a*props.b+4'
             }, c.name);
-
-            expect(multi.dependencies.map(d => d.name), comp.name + ' multi dependencies count').to.deep.equal(['a','b']);
-
-            // TODO: Add support for non-props dependencies
         });
     });
 });

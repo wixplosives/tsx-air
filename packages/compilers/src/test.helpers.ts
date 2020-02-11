@@ -20,7 +20,7 @@ export const fixture = (name: string) => packagePath('@tsx-air/compilers', 'fixt
 
 export const readFixture = (name: string) => readFileSync(fixture(name), 'utf8');
 
-export const itShouldCompileFixture = (name: string, compiler:Compiler) => {
+export const itShouldCompileFixture = (name: string, compiler: Compiler) => {
     it(`should compile ${name} with ${compiler.label}`, () => {
         const compiled = compileFixture(`${name}.tsx`, compiler);
         expect(compiled).to.have.contentOf(fixture(`${name}.js`));
@@ -29,4 +29,4 @@ export const itShouldCompileFixture = (name: string, compiler:Compiler) => {
 
 export const parseFixture = (name: string) => asSourceFile(readFixture(name), fixture(name));
 export const analyzeFixtureComponents = (name: string) =>
- (analyze(parseFixture(name)).tsxAir as TsxFile).compDefinitions;
+    (analyze(parseFixture(name)).tsxAir as TsxFile).compDefinitions;

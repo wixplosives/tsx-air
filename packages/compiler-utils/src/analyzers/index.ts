@@ -1,9 +1,10 @@
 import { Analyzer, TsxAirNode } from './types';
 import { compDefinition } from './component.definition';
-import { hasError, errorNode, isTsxAirNode } from './types.helpers';
+import {  errorNode } from './types.helpers';
 import { importStatement } from './imports';
 import { sourceFile } from './sourcefile';
 import { exportStatement } from './re.export';
+import { isTsxAirNode, hasError } from './types.is.type';
 
 export const analyze: Analyzer<TsxAirNode> = node => {
     if (!node) {

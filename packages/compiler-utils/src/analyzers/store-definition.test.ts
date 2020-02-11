@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { getCompDef } from './component.definition.test';
+import { getCompDef } from './test.helpers';
 // tslint:disable: no-unused-expression
 // tslint:disable: no-shadowed-variable
 

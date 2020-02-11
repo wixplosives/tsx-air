@@ -4,7 +4,7 @@ export class comp extends Component {
     constructor() {
         super(...arguments);
         this.$$processUpdate = (props, __1, changeMap) => {
-            if (changeMap & comp.changeBitmask.a) {
+            if (changeMap & comp.changeBitmask['props.a']) {
                 this.context.exp0.textContent = props.a;
             }
         };
@@ -12,12 +12,13 @@ export class comp extends Component {
 }
 comp.factory = {
     toString: props => `<div><!-- props.a -->${props.a}<!-- props.a --></div>`,
-    hydrate: (root, props) => new comp({
+    hydrate: (root, props, state) => new comp({
         root: root,
         exp0: root.childNodes[1]
-    }, props),
+    }, props, state),
     initialState: () => ({})
 };
+
 comp.changeBitmask = {
-    a: 1 << 0
+    'props.a': 1 << 0
 };

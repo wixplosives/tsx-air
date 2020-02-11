@@ -1,7 +1,7 @@
 import { Analyzer, Import, ImportSpecifierInfo } from './types';
 import ts from 'typescript';
 import { asAnalyzerResult, errorNode, filterResults } from './types.helpers';
-import { scan } from '../astUtils/scanner';
+import { scan } from '../ast-utils/scanner';
 
 export const importStatement: Analyzer<Import> = sourceAstNode => {
     if (ts.isImportDeclaration(sourceAstNode)) {

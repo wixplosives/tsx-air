@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { Visitor } from '../astUtils/scanner';
+import { Visitor } from '../ast-utils/scanner';
 
 export const findStore: Visitor = (node, { ignoreChildren }) => {
     if (

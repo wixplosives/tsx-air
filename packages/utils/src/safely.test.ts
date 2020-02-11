@@ -4,7 +4,12 @@ describe('safeDo', () => {
     describe('when there is no exception', () => {
         it('should return the execution result', () => {
             expect(safely(() => 'ok', 'safe execution failed')).to.equal('ok');
-            expect(safely(()=>undefined, 'safe execution failed')).to.equal(undefined);
+            expect(safely(() => undefined, 'safe execution failed')).to.equal(undefined);
+        });
+        it('should throw if assertion is provided and returns false', () => {
+            expect(() => safely(
+                () => 'ok', 'safe execution failed', () => false))
+                .to.throw('safe execution failed');
         });
     });
     describe('when fn throws an error', () => {

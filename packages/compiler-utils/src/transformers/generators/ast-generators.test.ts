@@ -1,4 +1,4 @@
-import { parseValue } from '../../astUtils/parser';
+import { parseValue } from '../../ast-utils/parser';
 import { expect } from 'chai';
 import { cloneDeep, cClass, cObject, cAssign, cPrivate, asStatic, cPublic, cImport } from './ast-generators';
 import ts from 'typescript';

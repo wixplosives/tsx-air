@@ -80,9 +80,8 @@ export interface FuncDefinition extends NodeWithVariables<ts.FunctionExpression 
     definedFunctions: FuncDefinition[];
 }
 
-export interface StoreDefinition extends NodeWithVariables<ts.CallExpression> {
+export interface StoreDefinition extends Namespace {
     kind: 'storeDefinition';
-    name: string;
     keys: string[];
 }
 
@@ -90,26 +89,13 @@ export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     kind: 'CompDefinition';
     name?: string;
     propsIdentifier?: string;
-    usedProps: CompProps[];
     jsxRoots: JsxRoot[];
     functions: FuncDefinition[];
     stores: StoreDefinition[];
 }
 
-export interface Namespace extends TsxAirNode<ts.ParameterDeclaration | ts.VariableDeclaration> {
-    kind: 'Namespace';
-    name: string;
-}
-
-export interface UsedNamespaceProperty extends TsxAirNode<ts.PropertyAccessExpression> {
-    kind: 'UsedNamespaceProperty';
-    name: string;
-    namespace: Namespace;
-}
-
-export interface CompProps extends TsxAirNode<ts.Identifier | ts.PropertyAccessExpression> {
-    kind: 'CompProps';
-    name: string;
+export interface Namespace extends NodeWithVariables<ts.ParameterDeclaration | ts.VariableDeclaration> {
+    name:string;
 }
 
 export interface JsxRoot extends NodeWithVariables<JsxElm> {
@@ -127,7 +113,6 @@ export interface JsxFragment extends NodeWithVariables<ts.JsxFragment> {
 
 export interface JsxExpression extends NodeWithVariables<ts.JsxExpression> {
     kind: 'JsxExpression';
-    dependencies: CompProps[];
     expression: string;
 }
 
@@ -136,7 +121,7 @@ export interface JsxComponent extends NodeWithVariables<JsxElm> {
     name: string;
     props: JsxAttribute[];
     children?: JsxFragment;
-    dependencies: CompProps[];
+    // dependencies: CompProps[];
 }
 
 export interface JsxAttribute extends TsxAirNode<ts.JsxAttributeLike> {
@@ -149,7 +134,7 @@ export type TsNodeToAirNode<T extends ts.Node> = T extends ts.JsxAttributeLike ?
     T extends JsxElm ? JsxComponent | JsxRoot :
     T extends ts.JsxExpression ? JsxExpression :
     T extends ts.JsxFragment ? JsxFragment | JsxRoot :
-    T extends ts.Identifier | ts.PropertyAccessExpression ? CompProps :
+    T extends ts.Identifier | ts.PropertyAccessExpression ? Namespace :
     T extends ts.CallExpression ? CompDefinition :
     T extends ts.SourceFile ? TsxFile : TsxAirNode<T>;
 
@@ -158,7 +143,7 @@ export interface RecursiveMap {
     [key: string]: RecursiveMap;
 }
 
-export interface UsedVariables {
+export interface UsedVariables extends RecursiveMap {
     accessed: RecursiveMap;
     modified: RecursiveMap;
     defined: RecursiveMap;

@@ -1,6 +1,6 @@
 
-import { Visitor } from '../astUtils/scanner';
-import { isTsFunction } from '../analyzers/types';
+import { Visitor } from '../ast-utils/scanner';
+import { isTsFunction } from '../analyzers/types.is.type';
 
 
 export const findFunction: Visitor = (node, { ignoreChildren }) => {

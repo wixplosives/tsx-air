@@ -1,8 +1,9 @@
-import { TsxFile, Analyzer, isCompDefinition, isImport, isReExport } from './types';
+import { TsxFile, Analyzer } from './types';
 import ts from 'typescript';
 import { analyze } from '.';
-import { isTsxAirNode, addToNodesMap, hasError, NodesMap, errorNode } from './types.helpers';
-import { scan } from '../astUtils/scanner';
+import { addToNodesMap, NodesMap, errorNode } from './types.helpers';
+import { scan } from '../ast-utils/scanner';
+import { isTsxAirNode, hasError, isCompDefinition, isImport, isReExport } from './types.is.type';
 
 export const sourceFile: Analyzer<TsxFile> = node => {
     if (ts.isSourceFile(node)) {
