@@ -56,12 +56,13 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                 case SyntaxKind.JsxClosingElement:
                     break;
                 default:
-                    console.log(child.getText());
+                    // console.log(child.getText());
                 // throw new Error('Unhandled JSX hydration');
             }
         });
     };
 
     addDomElement(compDef.jsxRoots[0].sourceAstNode);
+    // console.log(expressions);
     return expressions;
 };

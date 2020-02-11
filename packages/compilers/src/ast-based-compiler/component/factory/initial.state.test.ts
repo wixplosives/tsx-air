@@ -1,6 +1,6 @@
-import { generateInitialState } from "./initial.state";
-import { analyzeFixtureComponents } from "packages/compilers/src/test.helpers";
-import { expect } from "chai";
+import { generateInitialState } from './initial.state';
+import { analyzeFixtureComponents } from 'packages/compilers/src/test.helpers';
+import { expect } from 'chai';
 
 describe('generateInitialState', () => {
     const [withNothing, withProps, withState, withBoth] =
