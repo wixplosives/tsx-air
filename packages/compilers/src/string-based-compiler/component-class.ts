@@ -17,36 +17,37 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
     function processUpdate() {
         const { propsIdentifier, aggregatedVariables } = def;
         const props = aggregatedVariables.accessed[propsIdentifier || ''];
-        const usedProps = props ?  Object.keys(props) : []; 
+        const usedProps = props ? Object.keys(props) : [];
+
         return `$$processUpdate(newProps, newState, changeMap) {
             ${usedProps.map(handlePropChange)}
         }`;
     }
 
     function handlePropChange(prop: string) {
-        return `if (changeMap & ${def.name}.changeBitmask.${prop.name}){
+        return `if (changeMap & ${def.name}.changeBitmask["props.${prop}"]){
             ${handlePropExpressions(prop).join('\n')}
             ${handlePropComp(prop).join('\n')}
         }`;
     }
 
-    function handlePropExpressions(prop: UsedNamespace): string[] {
+    function handlePropExpressions(prop: string): string[] {
         return def.jsxRoots[0].expressions
-            .filter(ex => ex.dependencies.includes(prop))
+            .filter(ex => ex.variables.accessed[prop])
             .map(ex => ({ ex, dm: dom.find(dm => dm.astNode === ex.sourceAstNode)! }))
             .map(({ ex, dm }) => `this.context.${dm.ctxName}.textContent = ${replaceProps(ex.expression, 'newProps')};`);
         // TODO: update html attributes
     }
 
-    function handlePropComp(prop: UsedNamespace): string[] {
+    function handlePropComp(prop: string): string[] {
         const comps = def.jsxRoots[0].components
-            .filter(c => c.dependencies.includes(prop));
+            .filter(c => c.variables.accessed.props?.[prop]);
 
         return comps.map(comp => {
             const props = comp.props.filter(p => isJsxExpression(p.value));
             const ctxName = dom.find(c => c.astNode === comp.sourceAstNode)!.ctxName;
             const update = props.reduce((ret, p) => `${ret}p.${p.name} = ${replaceProps((p.value as JsxExpression).expression, 'newProps')};\n`, '');
-            const changed = props.reduce((ret, p) => `${ret && ret + '|'}${comp.name}.changeBitmask.${p.name}`, '');
+            const changed = props.reduce((ret, p) => `${ret && ret + '|'}${comp.name}.changeBitmask["props.${p.name}"]`, '');
 
             return `TSXAir.runtime.updateProps(this.context.${ctxName} , p => {
                 ${update}

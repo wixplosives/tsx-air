@@ -49,10 +49,10 @@ export function withAncestors(matcher: HTMLMatcher): HTMLMatcher {
 
 export function buildFullQuery(matcher: HTMLMatcher): string {
     if (matcher._directParent) {
-        return buildFullQuery(matcher._directParent) + ' > ' + matcher.cssQuery;
+        return buildFullQuery(matcher._directParent) + ' > ' + (matcher.cssQuery || '*');
     }
     if (matcher._ancestor) {
-        return buildFullQuery(matcher._ancestor) + ' ' + matcher.cssQuery;
+        return buildFullQuery(matcher._ancestor) + ' ' + (matcher.cssQuery || '*');
     }
     return matcher.cssQuery || '';
 }
