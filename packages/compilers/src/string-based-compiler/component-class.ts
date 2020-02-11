@@ -1,5 +1,6 @@
 import { CompDefinition, DomBinding, bitMask, JsxExpression } from '@tsx-air/compiler-utils';
 import { isJsxExpression } from '@tsx-air/compiler-utils';
+import get from 'lodash/get';
 
 export const compClass = (dom: DomBinding[], def: CompDefinition) => {
     const mask = bitMask(def);
@@ -31,10 +32,11 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
         }`;
     }
 
-    function handlePropExpressions(prop: string): string[] {
+    function handlePropExpressions(prop: string): string[] {        
         return def.jsxRoots[0].expressions
-            .filter(ex => ex.variables.accessed[prop])
+            .filter(ex => get(ex.variables.accessed, ['props', prop]))
             .map(ex => ({ ex, dm: dom.find(dm => dm.astNode === ex.sourceAstNode)! }))
+           
             .map(({ ex, dm }) => `this.context.${dm.ctxName}.textContent = ${replaceProps(ex.expression, 'newProps')};`);
         // TODO: update html attributes
     }

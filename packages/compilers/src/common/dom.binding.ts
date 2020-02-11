@@ -37,7 +37,6 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                     });
                     childCount += 3;
                     break;
-                case SyntaxKind.JsxOpeningElement:
                 case SyntaxKind.JsxElement:
                 case SyntaxKind.JsxSelfClosingElement:
                     const tag = getComponentTag(child);
@@ -53,6 +52,7 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                     }
                     childCount++;
                     break;
+                case SyntaxKind.JsxOpeningElement:
                 case SyntaxKind.JsxClosingElement:
                     break;
                 default:

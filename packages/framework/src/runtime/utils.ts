@@ -56,7 +56,7 @@ export function setProp<Props>(instance: Component<any, Props, any>, p: Props, v
     if (p[key] !== value) {
         p[key] = value;
         // @ts-ignore
-        return instance.constructor.changeBitmask[key];
+        return instance.constructor.changeBitmask['props.'+key];
     }
     return 0;
 }

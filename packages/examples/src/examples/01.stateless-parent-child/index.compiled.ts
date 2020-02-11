@@ -9,15 +9,15 @@ interface ParentCompCtx extends Dom {
 export class ParentComp extends Component<ParentCompCtx, ParentCompProps> {
     public static factory: Factory<ParentComp>;
     public static readonly changeBitmask = {
-        name: 1 << 0
+        'props.name': 1 << 0
     };
 
     public $$processUpdate(newProps: ParentCompProps, _: {}, changeMap: number): void {
-        if (changeMap & ParentComp.changeBitmask.name) {
+        if (changeMap & ParentComp.changeBitmask['props.name']) {
             this.context.text1.textContent = newProps.name;
             runtime.updateProps(this.context.childComp1 as ChildComp, (p: ParentCompProps) => {
                 p.name = newProps.name;
-                return ChildComp.changeBitmask.name;
+                return ChildComp.changeBitmask['props.name'];
             });
         }
     }
@@ -45,11 +45,11 @@ interface ChildCompCtx extends Dom { text1: Text; }
 export class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
     public static factory: Factory<ChildComp>;
     public static readonly changeBitmask = {
-        name: 1 << 0
+        'props.name': 1 << 0
     };
 
     public $$processUpdate(newProps: ChildCompProps, _: {}, changeMap: number): void {
-        if (changeMap & ChildComp.changeBitmask.name) {
+        if (changeMap & ChildComp.changeBitmask['props.name']) {
             this.context.text1.textContent = newProps.name;
         }
     }
