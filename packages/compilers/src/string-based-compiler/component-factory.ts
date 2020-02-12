@@ -22,8 +22,8 @@ const toString = (def: CompDefinition) => {
     const components = scan(jsx, findJsxComponent);
     const attributes = scan(jsx, n => {
         if (ts.isJsxAttribute(n)) {
-            const { name, initializer} = n;
-            const att:JsxAttribute = {
+            const { name, initializer } = n;
+            const att: JsxAttribute = {
                 kind: 'JsxAttribute',
                 name: name.escapedText as string,
                 sourceAstNode: n,
@@ -60,8 +60,11 @@ const toString = (def: CompDefinition) => {
 };
 
 const hydrate = (dom: DomBinding[], def: CompDefinition) => {
-    const ctx = [{ ctxName: 'root', viewLocator: 'root' }, ...dom].map(
-        (i: DomBinding) => `${i.ctxName}:${i.viewLocator}`).join();
+    const ctx = [{ ctxName: 'root', domLocator: 'root' } as DomBinding, ...dom].map(
+        ({ compType, domLocator, ctxName }) => (compType
+            ? `${ctxName}:${compType}.factory.hydrate(${domLocator}, props)`
+            : `${ctxName}:${domLocator}`))
+        .join();
 
     return `(root, ${def.propsIdentifier})=>new ${def.name}({${ctx}}, ${def.propsIdentifier})`;
 };

@@ -170,7 +170,6 @@ export const cloneDeep = <T extends ts.Node>(node: T, parent?: ts.Node) => {
     clone.pos = -1;
     clone.end = -1;
     return clone;
-
 };
 
 export const cAssign = (to: string[], from: string[] | ts.Expression) => {

@@ -1,2 +1,2 @@
 import { TSXAir } from '@tsx-air/framework';
-export const comp = TSXAir(() => <div />);
+export const Comp = TSXAir(() => <div />);

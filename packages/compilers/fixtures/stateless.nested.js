@@ -5,7 +5,7 @@ export class Child extends Component {
     constructor() {
         super(...arguments);
         this.$$processUpdate = (props, __1, changeMap) => {
-            if (changeMap & comp.changeBitmask['props.b']) {
+            if (changeMap & Comp.changeBitmask['props.b']) {
                 this.context.exp0.textContent = props.b;
             }
         };
@@ -28,7 +28,7 @@ export class Parent extends Component {
     constructor() {
         super(...arguments);
         this.$$processUpdate = (props, __1, changeMap) => {
-            if (changeMap & comp.changeBitmask['props.a']) {
+            if (changeMap & Comp.changeBitmask['props.a']) {
                 runtime.updateProps(this.context.childComp1, p => {
                     p.b = props.a;
                     return Child.changeBitmask['props.b'];

@@ -6,14 +6,13 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
     const mask = bitMask(def);
     const propsIdentifierRegExp = new RegExp(`(?<![\\d\\w])(${def.propsIdentifier})`, 'g');
     return `
-    class ${def.name}{
+    class ${def.name} {
         constructor(public context,public props, public state){
             requestAnimationFrame(() => this.$afterMount && this.$afterMount(this.context.root));
         }
        ${processUpdate()}
     }
     ${def.name}.changeBitmask=${JSON.stringify(mask)};`;
-
 
     function processUpdate() {
         const { propsIdentifier, aggregatedVariables } = def;
@@ -32,18 +31,18 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
         }`;
     }
 
-    function handlePropExpressions(prop: string): string[] {        
+    function handlePropExpressions(prop: string): string[] {
         return def.jsxRoots[0].expressions
             .filter(ex => get(ex.variables.accessed, ['props', prop]))
             .map(ex => ({ ex, dm: dom.find(dm => dm.astNode === ex.sourceAstNode)! }))
-           
+
             .map(({ ex, dm }) => `this.context.${dm.ctxName}.textContent = ${replaceProps(ex.expression, 'newProps')};`);
         // TODO: update html attributes
     }
 
     function handlePropComp(prop: string): string[] {
         const comps = def.jsxRoots[0].components
-            .filter(c => c.variables.accessed.props?.[prop]);
+            .filter(c => get(c.variables.accessed, ['props', prop]));
 
         return comps.map(comp => {
             const props = comp.props.filter(p => isJsxExpression(p.value));

@@ -14,23 +14,13 @@ export const generateChangeBitMask = (comp: CompDefinition) => {
     return cObject(fields);
 };
 
-export interface CBitMaskIfOptions {
-    changedMaskName: string;
-    maskPath: string[];
-}
-
-const defaultCBitMaskIfOptions: CBitMaskIfOptions = {
-    changedMaskName: 'changeMap',
-    maskPath: []
-};
-
 export const cBitMaskIf =
-    (checkedFlag: string, options: CBitMaskIfOptions = defaultCBitMaskIfOptions, statements: ts.Statement[]) => {
+    (checkedFlag: string, comp: string, statements: ts.Statement[]) => {
         return cIf(ts.createBinary(
-            ts.createIdentifier(options.changedMaskName),
+            ts.createIdentifier('changeMap'),
             ts.createToken(ts.SyntaxKind.AmpersandToken),
             ts.createElementAccess(
-                ts.createIdentifier('comp.changeBitmask'),
+                ts.createIdentifier(`${comp}.changeBitmask`),
                 ts.createStringLiteral(checkedFlag)
             ),
         ), statements);

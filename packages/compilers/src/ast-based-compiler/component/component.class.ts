@@ -15,7 +15,7 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
         undefined, [
         asStatic(cPublic('factory', cObject({
             toString: generateToString(info, comp),
-            hydrate: generateHydrate(info, comp, binding),
+            hydrate: generateHydrate(comp, binding),
             initialState: generateInitialState(comp)
         }))),
         asStatic(cPublic('changeBitmask',

@@ -13,10 +13,7 @@ export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: Do
     }
     const vars = accessedVars(comp);
 
-    const changeHandlers = vars.map(prop => cBitMaskIf(prop, {
-        changedMaskName: 'changeMap',
-        maskPath: [comp.name!, 'changeBitmask']
-    }, [
+    const changeHandlers = vars.map(prop => cBitMaskIf(prop, comp.name!, [
         ...updateNativeExpressions(comp.jsxRoots[0], prop, domBindings),
         ...updateComponentExpressions(comp, comp.jsxRoots[0], prop, domBindings)
     ]));
@@ -49,7 +46,8 @@ export const updateComponentExpressions =
             get(prop.value.variables.accessed, variable);
         const findDom = (jsxComp: JsxComponent) => safely(
             () => domBindings.find(bind => bind.astNode === jsxComp.sourceAstNode),
-            `Dom binding not found for ${jsxComp.sourceAstNode.getText()}`, v => !!v)!;
+            `Dom binding not found for ${jsxComp.sourceAstNode.getText()}`, 
+            v => !!v)!;
 
         const affectedComps = root.components.filter(
             jsxComp => jsxComp.props.some(isAffectedProp)

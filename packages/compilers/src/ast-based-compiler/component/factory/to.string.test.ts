@@ -5,7 +5,7 @@ import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } fro
 import ts from 'typescript';
 
 describe('generateToString', () => {
-    const [withNothing, withProps, withState, withBoth] =
+    const [withNothing, withProps, withState, withBoth, nested] =
         analyzeFixtureComponents(`minimal.components.tsx`)
             .map(compDef => evalAst(generateToString(compDef.jsxRoots[0], compDef)));
 
@@ -17,6 +17,12 @@ describe('generateToString', () => {
             .to.equal(`<div><!-- store1.a -->1<!-- store1.a --><!-- store1.b -->2<!-- store1.b --></div>`);
         expect(withBoth({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }))
             .to.equal(`<div><!-- props.a -->a<!-- props.a --><!-- props.b -->b<!-- props.b --><!-- store2.a -->1<!-- store2.a --><!-- store2.b -->2<!-- store2.b --></div>`);
+        expect(nested.toString()).
+            to.be.eqlCode((pr => `<div>${WithProps.factory.toString({
+                "a": pr.a,
+                "b": pr.a,
+                "unused": 3
+            })}</div>`).toString());
     });
 
     describe('helpers', () => {

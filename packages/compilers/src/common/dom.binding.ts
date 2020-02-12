@@ -1,11 +1,11 @@
-import { CompDefinition } from '../../../compiler-utils/src/analyzers/types';
 import ts, { SyntaxKind } from 'typescript';
-import { getComponentTag } from '../../../compiler-utils/src/visitors/jsx';
+import { CompDefinition, getComponentTag } from '@tsx-air/compiler-utils';
 
 export interface DomBinding {
     ctxName:string;
-    viewLocator: string;
+    domLocator: string;
     astNode?: ts.Node;
+    compType?: string;
 }
 
 /**
@@ -32,7 +32,7 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                 case SyntaxKind.JsxExpression:
                     expressions.push({
                         ctxName: `exp${expressions.length}`,
-                        viewLocator: `${prefix}[${childCount + 1}]`,
+                        domLocator: `${prefix}[${childCount + 1}]`,
                         astNode: child
                     });
                     childCount += 3;
@@ -44,7 +44,8 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                         expressions.push({
                             ctxName: `${tag}${++compCount}`,
                             // TODO handle props mapping
-                            viewLocator: `${tag}.factory.hydrate(${prefix}[${childCount}], props)`,
+                            domLocator: `${prefix}[${childCount}]`,
+                            compType: tag,
                             astNode: child
                         });
                     } else {
@@ -56,13 +57,12 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                 case SyntaxKind.JsxClosingElement:
                     break;
                 default:
-                    // console.log(child.getText());
+                // console.log(child.getText());
                 // throw new Error('Unhandled JSX hydration');
             }
         });
     };
 
     addDomElement(compDef.jsxRoots[0].sourceAstNode);
-    // console.log(expressions);
     return expressions;
 };

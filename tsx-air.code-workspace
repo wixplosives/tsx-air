@@ -1,0 +1,47 @@
+{
+	"folders": [
+		{
+			"name": "tsx-air",
+			"path": "."
+		},
+		{
+			"name": "browserify",
+			"path": "packages/browserify"
+		},
+		{
+			"name": "compiler-utils",
+			"path": "packages/compiler-utils"
+		},
+		{
+			"name": "compilers",
+			"path": "packages/compilers"
+		},
+		{
+			"name": "testing",
+			"path": "packages/testing"
+		},
+		{
+			"name": "types",
+			"path": "packages/types"
+		},
+		{
+			"name": "framework",
+			"path": "packages/framework"
+		},
+		{
+			"name": "utils",
+			"path": "packages/utils"
+		},
+		{
+			"name": "examples",
+			"path": "packages/examples"
+		},
+		{
+			"name": "playground",
+			"path": "packages/playground"
+		}
+	],
+	"settings": {
+		"typescript.tsdk": "tsx-air/node_modules/typescript/lib"
+	}
+}
