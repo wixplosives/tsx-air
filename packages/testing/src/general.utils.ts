@@ -1,16 +1,18 @@
 import { safely } from '@tsx-air/utils';
 import { format } from 'prettier';
-import { isObject } from 'lodash';
-import { isNumber } from 'util';
 import isFunction from 'lodash/isFunction';
 
 export const trimCode = (code: string) => {
     try {
+        // tslint:disable-next-line: no-eval
         const asObject = eval(`()=>(${code})`)();
         if (!isFunction(asObject)) {
-            return JSON.stringify(asObject, null, 2);
+            const asString = JSON.stringify(asObject, null, 2);
+            if (asString !== undefined) {
+                return asString;
+            }
         }
-    } catch {/**Try as code */}
+    } catch { /* Try as code */ }
     try {
         return format(code, {
             bracketSpacing: true,
