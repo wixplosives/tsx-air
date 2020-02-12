@@ -28,7 +28,7 @@ export interface PreppeteerOptions {
     startTests: 'beforeLoading' | 'domContentLoaded' | 'afterLoading';
 
     /**
-     * @default 4
+     * @default 1
      */
     retries:number;
 }

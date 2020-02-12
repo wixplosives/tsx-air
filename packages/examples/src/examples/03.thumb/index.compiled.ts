@@ -7,21 +7,21 @@ interface ThumbCtx { img1: HTMLImageElement; div1?: HTMLDivElement; root: HTMLDi
 export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
     public static factory: Factory<Thumb>;
     public static readonly changeBitmask = {
-        url: 1 << 0,
-        onClick: 1 << 1,
-        imageLoaded: 1 << 2,
+        'props.url': 1 << 0,
+        'props.onClick': 1 << 1,
+        'props.imageLoaded': 1 << 2,
     };
 
     public $$processUpdate(newProps: ThumbProps, newState: ThumbState, changeMap: number): void {
         runtimeUtils.handleChanges(new Map([
-            [Thumb.changeBitmask.url, () => {
+            [Thumb.changeBitmask['props.url'], () => {
                 runtime.updateState(this as Thumb, (state: ThumbState) => {
                     state.imageLoaded = false;
-                    return Thumb.changeBitmask.imageLoaded;
+                    return Thumb.changeBitmask['props.imageLoaded'];
                 });
                 this.context.img1.src = newProps.url;
             }],
-            [Thumb.changeBitmask.imageLoaded, () => {
+            [Thumb.changeBitmask['props.imageLoaded'], () => {
                 if (newState.imageLoaded) {
                     if (this.context.div1) {
                         this.context.root.removeChild(this.context.div1);
@@ -36,7 +36,7 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
                     }
                 }
             }],
-            [Thumb.changeBitmask.onClick, () => {
+            [Thumb.changeBitmask['props.onClick'], () => {
                 if (this.props.onClick) {
                     this.context.root.removeEventListener('click', this.props.onClick);
                 }
@@ -48,7 +48,10 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
     }
 
     public $afterMount() {
-        this.context.img1.onload = () => runtime.updateState(this as Thumb, (s: ThumbState) => { s.imageLoaded = true; return Thumb.changeBitmask.imageLoaded; });
+        this.context.img1.onload = () => runtime.updateState(this as Thumb, (s: ThumbState) => {
+            s.imageLoaded = true;
+            return Thumb.changeBitmask['props.imageLoaded'];
+        });
         if (this.props.onClick) {
             this.context.root.addEventListener('click', this.props.onClick);
         }

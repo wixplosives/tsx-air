@@ -15,7 +15,7 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
         DEBUG: !!process.env.DEBUG,
         pageLoadedPredicate: 'loaded',
         startTests: 'afterLoading',
-        retries: 3,
+        retries: 1,
     } as PreppeteerOptions);
 
     if (!isArrayOf(opt.fixtures, 'string')) {
@@ -32,6 +32,7 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
     });
 
     beforeEach(async function () {
+        // refers to the beforeEach block
         this.retries(1);
         const s = await this.server;
         await s.reset().then(() => addFixtures(s));
@@ -41,7 +42,7 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
             opt,
             this.currentTest!.timeout()));
 
-        this.currentTest?.retries(opt.DEBUG ? 1 : this.currentTest?.retries() + opt.retries);
+        this.currentTest?.retries(opt.DEBUG ? 0 : this.currentTest?.retries() + opt.retries);
         this.currentTest?.timeout(api.timeout);
     });
 
