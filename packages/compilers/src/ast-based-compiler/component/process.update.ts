@@ -1,7 +1,6 @@
-import { JsxComponent } from './../../../../compiler-utils/src/analyzers/types';
 import { propsAndStateParams, accessedVars } from './helpers';
 import ts from 'typescript';
-import { CompDefinition, DomBinding, JsxExpression, JsxRoot, cAccess, cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, isJsxExpression } from '@tsx-air/compiler-utils';
+import { CompDefinition, DomBinding, JsxExpression, JsxRoot, cAccess, cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, isJsxExpression, JsxComponent } from '@tsx-air/compiler-utils';
 import { cBitMaskIf } from './bitmask';
 import get from 'lodash/get';
 import { safely } from '@tsx-air/utils';
@@ -46,7 +45,7 @@ export const updateComponentExpressions =
             get(prop.value.variables.accessed, variable);
         const findDom = (jsxComp: JsxComponent) => safely(
             () => domBindings.find(bind => bind.astNode === jsxComp.sourceAstNode),
-            `Dom binding not found for ${jsxComp.sourceAstNode.getText()}`, 
+            `Dom binding not found for ${jsxComp.sourceAstNode.getText()}`,
             v => !!v)!;
 
         const affectedComps = root.components.filter(
@@ -63,8 +62,7 @@ export const updateComponentExpressions =
                     (prop.value as JsxExpression).sourceAstNode.expression!));
 
             updateStatements.push(ts.createReturn(
-                createBitWiseOr([jsxComp.name, 'changeBitmask'],
-                    changedProps.map(prop => prop.name))));
+                createBitWiseOr(jsxComp.name, changedProps.map(prop => `props.${prop.name}`))));
 
             res.push(ts.createStatement(cCall(['TSXAir', 'runtime', 'updateProps'],
                 [

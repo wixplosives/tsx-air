@@ -26,13 +26,25 @@ export const cArrow = (params: Array<string | ts.ObjectBindingPattern | undefine
     );
 };
 
+export const cAccess = (...callPath: string[]) => _cAccess(false, callPath);
+export const cSafeAccess = (...callPath: string[]) => _cAccess(true, callPath);
 
-export const cAccess = (...callPath: string[]) => {
-    let identifier: ts.Expression = ts.createIdentifier(callPath[0]);
-    for (let i = 1; i < callPath.length; i++) {
-        identifier = ts.createPropertyAccess(identifier, callPath[i]);
-    }
-    return identifier;
+const _cAccess = (safe:boolean, callPath: string[]) => {
+    type Access = ts.PropertyAccessExpression | ts.PropertyAccessChain | ts.Identifier;
+    let ret: Access;
+    const create = (base: Access, p: string) => safe
+        ? ts.createPropertyAccessChain(
+            base,
+            ts.createToken(ts.SyntaxKind.QuestionDotToken),
+            ts.createIdentifier(p))
+        : ts.createPropertyAccess(base, p);
+
+    callPath.forEach(p => {
+        ret = ret
+            ? create(ret, p)
+            : ts.createIdentifier(p);
+    });
+    return ret!;
 };
 
 export const cCall = (callPath: string[], args: ts.Expression[]) => {
@@ -51,9 +63,9 @@ export const cCall = (callPath: string[], args: ts.Expression[]) => {
 export const cObject = (properties: Record<string, any>, options: AstGeneratorsOptions = defaultOptions) => {
     return ts.createObjectLiteral(
         Object.entries(properties).map(([name, value]) => {
-        return ts.createPropertyAssignment(`"${name}"`, 
-            cLiteralAst(value, options));
-    }), options.multiline);
+            return ts.createPropertyAssignment(`"${name}"`,
+                cLiteralAst(value, options));
+        }), options.multiline);
 };
 
 export const cArray = (items: any[], options: AstGeneratorsOptions = defaultOptions) => {
@@ -201,12 +213,27 @@ export const cImport = (info: ImportDefinition) => {
         ), cLiteralAst(info.modulePath));
 };
 
-export const createBitWiseOr = (maskPath: string[], names: string[]) => {
-    let res: ts.Expression = cAccess(...maskPath, names[0]);
-    for (let i = 1; i < names.length; i++) {
-        res = ts.createBinary(res, ts.SyntaxKind.FirstBinaryOperator, cAccess(...maskPath, names[i]));
+export const createBitWiseOr = (comp: string, fields: string[]) => {
+    const target: ts.Expression = cAccess(comp, 'changeBitmask');
+    let res: ts.Expression;
+    fields.forEach(fieldName => {
+        const field = cFieldAccess(target, fieldName);
+        res = res
+            ? ts.createBinary(res, ts.SyntaxKind.FirstBinaryOperator, field)
+            : field;
+    });
+
+    return res!;
+};
+
+export const cFieldAccess = (target: string | ts.Expression, field: string | ts.StringLiteral) => {
+    if (typeof target === 'string') {
+        target = cAccess(...target.split('.'));
     }
-    return res;
+    if (typeof field === 'string') {
+        field = ts.createStringLiteral(field);
+    }
+    return ts.createElementAccess(target, field);
 };
 
 export const cIf = (condition: ts.Expression, statements: ts.Statement[]) => {

@@ -42,7 +42,7 @@ describe('generateHydrate', () => {
                     a: pr.a,
                     b: pr.a,
                     unused: 3
-                }, state)
+                }, state && state.__childComps && state.__childComps.WithProps1)
          }, pr, state)`);
     });
 });
