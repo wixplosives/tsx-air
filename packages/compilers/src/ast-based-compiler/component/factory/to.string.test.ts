@@ -18,6 +18,8 @@ describe('generateToString', () => {
         expect(withBoth({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }))
             .to.equal(`<div><!-- props.a -->a<!-- props.a --><!-- props.b -->b<!-- props.b --><!-- store2.a -->1<!-- store2.a --><!-- store2.b -->2<!-- store2.b --></div>`);
         expect(nested.toString()).
+            // @ts-ignore
+            // tslint:disable: quotemark
             to.be.eqlCode((pr => `<div>${WithProps.factory.toString({
                 "a": pr.a,
                 "b": pr.a,

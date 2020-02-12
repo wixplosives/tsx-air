@@ -1,4 +1,4 @@
-import { CompDefinition, DomBinding, cNew, cObject, parseValue, cArrow, cloneDeep, cCall, JsxExpression, cSafeAccess } from '@tsx-air/compiler-utils';
+import { CompDefinition, DomBinding, cNew, cObject, parseValue, cArrow, cloneDeep, cCall, JsxExpression } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 
 export const generateHydrate = (comp: CompDefinition, domBindings: DomBinding[]) => {
@@ -32,7 +32,6 @@ export const generateHydrate = (comp: CompDefinition, domBindings: DomBinding[])
     const body = cNew([comp.name!], newCompParams);
     return cArrow(['root', comp.propsIdentifier || 'props', 'state'], body);
 };
-
 
 const cStateAccess = (name: string) => ts.createBinary(
     ts.createBinary(

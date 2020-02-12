@@ -1,4 +1,4 @@
-import { cObject, cIf, cAccess, CompDefinition } from '@tsx-air/compiler-utils';
+import { cObject, cIf, CompDefinition } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import sortBy from 'lodash/sortBy';
 import { accessedVars } from './helpers';

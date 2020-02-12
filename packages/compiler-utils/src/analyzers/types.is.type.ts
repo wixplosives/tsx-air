@@ -22,10 +22,6 @@ export function isJsxRoot(node: any): node is analyzed.JsxRoot {
     return node?.kind === 'JsxRoot';
 }
 
-export function isCompProps(node: any): node is analyzed.CompProps {
-    return node?.kind === 'CompProps';
-}
-
 export function isCompDefinition(node: any): node is analyzed.CompDefinition {
     return node?.kind === 'CompDefinition';
 }
