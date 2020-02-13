@@ -1,8 +1,9 @@
 import ts from 'typescript';
-import { Compiler } from '@tsx-air/types';
+import { Compiler, ALL } from '@tsx-air/types';
 
 export function createMockpiler(injectExport?:string): Compiler {
     return {
+        features:ALL,
         transformers: {
             before: injectExport ? [
                 _ => file => {
