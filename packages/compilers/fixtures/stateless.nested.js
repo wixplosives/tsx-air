@@ -12,7 +12,7 @@ export class Child extends Component {
     }
 }
 Child.factory = {
-    toString: props => `<div><!-- props.b -->${props.b}<!-- props.b --></div>`,
+    toString: props => `<div><!-- props.b -->${props.b}<!-- --></div>`,
     hydrate: (root, props, state) => new Child({
         root: root,
         exp0: root.childNodes[1]

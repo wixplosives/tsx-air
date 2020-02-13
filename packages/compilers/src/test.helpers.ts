@@ -4,7 +4,9 @@ import { readFileSync } from 'fs';
 import { transpileModule } from 'typescript';
 import { packagePath } from '@tsx-air/utils/packages';
 import { compilerOptions } from '@tsx-air/compiler-utils';
-import { expect } from 'chai';
+import { expect,use } from 'chai';
+import { plugin } from '@tsx-air/testing';
+use(plugin);
 
 export const compileFixture = (name: string, compiler: Compiler) => {
     return transpileModule(

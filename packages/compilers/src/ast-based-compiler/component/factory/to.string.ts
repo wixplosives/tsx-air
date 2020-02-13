@@ -18,7 +18,7 @@ export const jsxTextExpressionReplacer: AstNodeReplacer =
     {
         prefix: `<!-- ${node.expression ? node.expression.getText() : 'empty expression'} -->`,
         expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
-        suffix: `<!-- ${node.expression ? node.expression.getText() : 'empty expression'} -->`
+        suffix: `<!-- -->`
     };
 
 export const jsxComponentReplacer: AstNodeReplacer =

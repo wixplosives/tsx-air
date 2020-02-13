@@ -12,11 +12,11 @@ describe('generateToString', () => {
     it('should generate at toString method based on the used props and state', () => {
         expect(withNothing(), 'Self closing element').to.equal('<div></div>');
         expect(withProps({ a: 'a', b: 'b', unused: '!' }))
-            .to.equal(`<div><!-- props.a -->a<!-- props.a --><!-- props.b -->b<!-- props.b --></div>`);
+            .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --></div>`);
         expect(withState(undefined, { store1: { a: 1, b: 2 } }))
-            .to.equal(`<div><!-- store1.a -->1<!-- store1.a --><!-- store1.b -->2<!-- store1.b --></div>`);
+            .to.equal(`<div><!-- store1.a -->1<!-- --><!-- store1.b -->2<!-- --></div>`);
         expect(withBoth({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }))
-            .to.equal(`<div><!-- props.a -->a<!-- props.a --><!-- props.b -->b<!-- props.b --><!-- store2.a -->1<!-- store2.a --><!-- store2.b -->2<!-- store2.b --></div>`);
+            .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --><!-- store2.a -->1<!-- --><!-- store2.b -->2<!-- --></div>`);
         expect(nested.toString()).
             // @ts-ignore
             // tslint:disable: quotemark
@@ -51,7 +51,7 @@ describe('generateToString', () => {
                 const jsxRootInfo = info.jsxRoots[0];
 
                 const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer]);
-                expect(templateAst).to.have.astLike('`<div id={props.shouldNotBeChanged}><!-- props.shouldChange -->${props.shouldChange}<!-- props.shouldChange --></div>`');
+                expect(templateAst).to.have.astLike('`<div id={props.shouldNotBeChanged}><!-- props.shouldChange -->${props.shouldChange}<!-- --></div>`');
             });
 
             it('should handle quotes', () => {
