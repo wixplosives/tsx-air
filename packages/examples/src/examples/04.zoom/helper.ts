@@ -58,5 +58,5 @@ export interface ZoomState {
         zoomedOut: RefHolder<HTMLImageElement>;
         zoomedIn: RefHolder<HTMLImageElement>;
         root: RefHolder<HTMLDivElement>;
-    }
+    };
 }
