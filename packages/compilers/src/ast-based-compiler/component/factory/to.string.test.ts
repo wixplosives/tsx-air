@@ -1,27 +1,28 @@
 import { analyzeFixtureComponents } from '../../../test.helpers';
-import { parseValue, analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer } from '@tsx-air/compiler-utils';
+import { parseValue, analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, printAst } from '@tsx-air/compiler-utils';
 import { expect } from 'chai';
 import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } from './to.string';
 import ts from 'typescript';
 
-describe.only('generateToString', () => {
-    const [withNothing, withProps, withState, withBoth,
-        nested, withEvent] =
-        analyzeFixtureComponents(`minimal.components.tsx`)
-            .map(compDef => evalAst(generateToString(compDef.jsxRoots[0], compDef)));
+describe('generateToString', () => {
+    const analyzed = analyzeFixtureComponents(`minimal.components.tsx`);
 
     it('should generate at toString method based on the used props and state', () => {
-        expect(withNothing(), 'static s closing element').to.equal('<div></div>');
+        const [withNothing, withProps, withState, withBoth] =
+            analyzed.slice(0,4).map(compDef => evalAst(generateToString(compDef.jsxRoots[0], compDef)));
+
+        expect(withNothing(), 'static self closing element').to.equal('<div></div>');
         expect(withProps({ a: 'a', b: 'b', unused: '!' }), 'with props')
             .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --></div>`);
-        expect(withState(undefined, { store1: { a: 1, b: 2 } }),'with state')
+        expect(withState(undefined, { store1: { a: 1, b: 2 } }), 'with state')
             .to.equal(`<div><!-- store1.a -->1<!-- --><!-- store1.b -->2<!-- --></div>`);
         expect(withBoth({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }), 'with state and props')
             .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --><!-- store2.a -->1<!-- --><!-- store2.b -->2<!-- --></div>`);
-
     });
 
     it(`uses nested components' toString`, () => {
+        const nested = evalAst(generateToString(analyzed[4].jsxRoots[0], analyzed[4]));
+
         expect(nested.toString()).
             // @ts-ignore
             // tslint:disable: quotemark
@@ -33,8 +34,9 @@ describe.only('generateToString', () => {
     });
 
     it(`should removed event listeners`, () => {
+        const withEvent = evalAst(generateToString(analyzed[5].jsxRoots[0], analyzed[5]));
         expect(withEvent.toString()).
-            to.be.eqlCode('<div></div>');
+            to.be.eqlCode('()=>`<div></div>`');
     });
 
     describe('helpers', () => {

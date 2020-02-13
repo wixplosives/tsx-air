@@ -1,8 +1,10 @@
+import { printAst } from './../../dev-utils/print-ast';
 import flatMap from 'lodash/flatMap';
-import ts, { JsxSelfClosingElement } from 'typescript';
+import ts from 'typescript';
 import { cloneDeep } from './ast-generators';
 import { nativeAttributeMapping, isJsxHtmlAttribute } from './native-attribute-mapping';
 import last from 'lodash/last';
+import { parseValue } from '../../ast-utils/parser';
 
 export interface ExpressionData {
     expression: ts.Expression;
@@ -83,11 +85,19 @@ export const jsxAttributeReplacer: AstNodeReplacer =
             suffix: '"'
         };
 
+export const jsxEventHandlerRemover: AstNodeReplacer = 
+    node => {
+        return ts.isJsxAttribute(node) &&
+        node.name.getText().match(/^on[A-Z].*/) 
+        ? ''
+        : false;
+    }
+
 export const jsxAttributeNameReplacer: AstNodeReplacer =
     node => {
         if (ts.isIdentifier(node) &&
             ts.isJsxAttribute(node.parent) &&
-            !isComponentTag((node.parent.parent.parent as JsxSelfClosingElement).tagName) &&
+            !isComponentTag((node.parent.parent.parent as ts.JsxSelfClosingElement).tagName) &&
             !!nativeAttributeMapping[node.getText()]) {
             const mapping = nativeAttributeMapping[node.getText()];
             if (isJsxHtmlAttribute(mapping)) {
@@ -101,7 +111,8 @@ export const jsxAttributeNameReplacer: AstNodeReplacer =
 export const jsxSelfClosingElementReplacer: AstNodeReplacer = node => {
     if (ts.isJsxSelfClosingElement(node)) {
         const tag = node.tagName.getText();
-        return node.getFullText().replace(/\s*\/\>$/, `></${tag}>`);
+        const p = node.getFullText().replace(/\s*\/\>$/, `></${tag}>`);
+        return parseValue(p.replace(/^ /,''));
     } else {
         return false;
     }
