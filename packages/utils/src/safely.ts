@@ -19,12 +19,13 @@ export function safely<T>(fn: () => T, errorMessage: string, assertion: (v: any)
 }
 
 function newError(errorMessage: string, err?: any): Error {
-    const newErr = new Error(errorMessage + ((!err || err instanceof Error) ? '' : ('\n' + err)));
-    newErr.stack = stackOf(err);
+    const message = errorMessage + ((!err || err instanceof Error) ? '' : ('\n' + err));
+    const newErr = new Error(message);
+    newErr.stack = `${message}\n\t${stackOf(err)}`;
     return newErr;
 }
 
 function stackOf(e?: Error): string {
     const stack = e?.stack || new Error().stack || '';
-    return stack.split('\n').filter(s => s.indexOf('safe.do.ts') < 0).join();
+    return stack.split('\n').filter(s => s.indexOf(__filename) < 0).join('\n');
 }

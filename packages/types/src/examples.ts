@@ -1,5 +1,6 @@
 import { TestServer } from '@tsx-air/testing';
 import { Page, Browser } from 'puppeteer';
+import { Features } from './features';
 
 export interface ExampleSuiteApi {
     beforeLoading: Promise<Page>;
@@ -17,5 +18,6 @@ export interface ExamplePaths {
 
 export interface ExampleSuite {
     suite: (api: ExampleSuiteApi, paths:ExamplePaths) => void;
+    features: Features;
     path: string;
 }

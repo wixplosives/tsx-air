@@ -1,10 +1,7 @@
 import { join } from 'path';
 
 export const shouldBeCompiled = [
-    '01.stateless-parent-child'
-];
-
-export const manuallyCompiledOnly = [
+    '01.stateless-parent-child',
     '02.stateful',
     '03.thumb',
     '04.zoom'

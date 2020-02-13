@@ -48,10 +48,13 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
 
     afterEach(assertNoPageErrors(api));
     afterEach(cleanupPuppeteer(api));
-    after(() => Promise.all([
-        api.server.close().catch(() => null),
-        killBrowser(api.browser)
-    ]));
+    after(async function (){
+        const server = api.server || await this.server;
+        return Promise.all([
+            server.close().catch(() => null),
+            killBrowser(api.browser || await this.browser)
+        ]);
+    });
 
     return new ApiProxy(api, opt);
 }

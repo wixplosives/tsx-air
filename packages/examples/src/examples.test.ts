@@ -1,6 +1,6 @@
 import { safely } from '@tsx-air/utils';
 import { shouldCompileExamples } from '@tsx-air/testing';
-import { shouldBeCompiled, manuallyCompiledOnly } from '.';
+import { shouldBeCompiled } from '.';
 import { readFileSync } from 'fs';
 import { isSource, ManuallyCompiled } from './manual.compiler';
 
@@ -12,4 +12,4 @@ const manuallyCompiled = new ManuallyCompiled(
     )
 );
 
-shouldCompileExamples(manuallyCompiled, [...shouldBeCompiled, ...manuallyCompiledOnly]);
+shouldCompileExamples(manuallyCompiled, shouldBeCompiled);

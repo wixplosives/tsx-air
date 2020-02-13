@@ -1,7 +1,13 @@
-import { ExampleSuiteApi } from '@tsx-air/types';
+import { ExampleSuiteApi, feature, Features } from '@tsx-air/types';
 import { htmlMatch } from '@tsx-air/testing';
 
-export default function (api: ExampleSuiteApi) {
+export const features:Features = [
+    feature('stateful','component'),
+    feature('single','store'),
+    feature('event','handler')
+];
+
+export function suite (api: ExampleSuiteApi) {
     it('should have 2 buttons', async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, {

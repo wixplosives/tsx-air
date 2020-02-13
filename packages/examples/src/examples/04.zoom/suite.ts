@@ -1,9 +1,18 @@
 import flatMap from 'lodash/flatMap';
-import { ExampleSuiteApi, ExamplePaths } from '@tsx-air/types';
+import { ExampleSuiteApi, ExamplePaths, feature } from '@tsx-air/types';
 import { htmlMatch, loadPngs, matchImagesArray, moveMouseAndTakeSnapshot } from '@tsx-air/testing';
 import { join } from 'path';
 
-export default function (api: ExampleSuiteApi, paths: ExamplePaths) {
+
+export const features = [
+    feature('stateful', 'component'),
+    feature('single', 'store'),
+    feature('event', 'handler'),
+    feature('high', 'framerate'),
+    feature('dom','ref')
+];
+
+export function suite(api: ExampleSuiteApi, paths: ExamplePaths) {
     it('should load the {url} image in two size', async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, {

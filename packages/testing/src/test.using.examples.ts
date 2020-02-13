@@ -1,5 +1,5 @@
 import { after } from 'mocha';
-import { Compiler, ExamplePaths } from '@tsx-air/types';
+import { Compiler, ExamplePaths, Features, ALL } from '@tsx-air/types';
 import { loadSuite } from '@tsx-air/testing';
 import ts from 'typescript';
 import { browserify } from '@tsx-air/browserify';
@@ -21,34 +21,59 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
         });
 
         examples.map(
-            ({ suite, path }) => {
+            ({ suite, path, features }) => {
                 const exampleName = basename(path);
                 const paths: ExamplePaths = {
                     temp: join(tempPath, exampleName, Date.now().toString(36)),
                     fixtures,
                     path
                 };
-
-                describe(exampleName, () => {
-                    before(() => {
-                        this.timeout(process.env.CI ? 15000 : 6000);
-                        return browserifyBoilerplate(path, paths.temp, compiler.transformers);
+                const unsupported = getUnsupported(features, compiler);
+                if (unsupported.length) {
+                    describe(exampleName, () => {
+                        it.skip(`Unsupported features\n${
+                            unsupported.map(f => '\t\t' + [...f.values()].join(' ')).join('\n')}`, () => {
+                                /* */
+                            });
                     });
-                    beforeEach(() => Promise.all([
-                        api.server.addStaticRoot(path),
-                        api.server.addStaticRoot(paths.temp),
-                    ]));
-                    after(function () {
-                        if (this.test?.parent?.tests.every(t => t.isPassed())) {
-                            rimraf(paths.temp, () => null);
-                        }
-                    });
+                } else {
+                    describe(exampleName, () => {
+                        before(() => {
+                            this.timeout(process.env.CI ? 15000 : 6000);
+                            return browserifyBoilerplate(path, paths.temp, compiler.transformers);
+                        });
+                        beforeEach(() => Promise.all([
+                            api.server.addStaticRoot(path),
+                            api.server.addStaticRoot(paths.temp),
+                        ]));
+                        after(function () {
+                            if (this.test?.parent?.tests.every(t => t.isPassed())) {
+                                rimraf(paths.temp, () => null);
+                            }
+                        });
 
-                    suite.call(this, api, paths);
-                });
+                        suite.call(this, api, paths);
+                    });
+                }
             });
     });
 }
+
+const getUnsupported = (features: Features, compiler: Compiler) => {
+    if (compiler.features === ALL) {
+        return [];
+    }
+    return features.filter(tested => !compiler.features.find(
+        supported => {
+            for (const subFeature of tested) {
+                if (!supported.has(subFeature)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    ));
+};
 
 const browserifyBoilerplate = async (examplePath: string, target: string,
     transformers: ts.CustomTransformers) => await browserify({

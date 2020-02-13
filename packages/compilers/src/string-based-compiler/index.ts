@@ -1,7 +1,7 @@
 import { compFactory } from './component-factory';
 import ts from 'typescript';
 import { compClass } from './component-class';
-import { Compiler } from '@tsx-air/types';
+import { Compiler, featureWith, feature } from '@tsx-air/types';
 import { TsxFile, analyze, generateDomBindings, cloneDeep, parseValue } from '@tsx-air/compiler-utils';
 
 export const tsxAir = (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
@@ -31,6 +31,11 @@ const compiler: Compiler = {
     label: 'String Based Compiler',
     transformers: {
         before: [tsxAir]
-    }
+    },
+    features: [
+        ...featureWith(feature('component'), 'static', 'stateless'),
+        feature('declarative', 'update', 'nested', 'stateless', 'component'),
+        feature('imperative', 'update', 'component'),
+    ]
 };
 export default compiler;

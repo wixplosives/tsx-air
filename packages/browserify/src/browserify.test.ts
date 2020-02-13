@@ -70,7 +70,6 @@ describe('browserify', () => {
                                 return ts.createIdentifier('wasTransformed');
                             }
                             return visitEachChild(n, visitor, ctx);
-
                         };
                         return visitEachChild(node, visitor, ctx);
                     }]

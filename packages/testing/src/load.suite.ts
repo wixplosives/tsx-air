@@ -1,18 +1,21 @@
 import { packagePath } from '@tsx-air/utils/packages';
-import { safely } from '@tsx-air/utils';
+import { safely, isArrayOf } from '@tsx-air/utils';
 import { ExampleSuite } from '@tsx-air/types';
 import { join } from 'path';
+import { isSet, isFunction } from 'lodash';
 
 export function loadSuite(example: string): ExampleSuite {
     const examplePath = packagePath('@tsx-air/examples', 'src', 'examples', example);
     const suitePath = join(examplePath, 'suite');
 
     const suite = safely(
-        () => require(suitePath).default,
-        `Error running "${suitePath}.ts"`);
+        () => require(suitePath),
+        `Error loading "${suitePath}.ts"`,
+        (loaded: any) => isFunction(loaded.suite) && isArrayOf(loaded.features, isSet)
+    ) as ExampleSuite;
 
     return {
-        suite,
+        ...suite,
         path: examplePath
     };
 }

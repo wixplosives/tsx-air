@@ -6,11 +6,10 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
     const onClickA = () => state.a = state.a + '!';
     const onClickB = () => state.b = state.b + '*';
 
-    state.changeCount++;
-    /* 
-    // that's the equivalent of
+    /* shorthand for
         when(always, () => state.changeCount++);
     */
+   state.changeCount++;
 
     return <div>
         <div className="btn" onClick={onClickA}>
@@ -20,9 +19,9 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
             {state.b}
         </div>
         <div>state changed {state.changeCount} times</div>
-        {/* 
-        // The following will fail at compile time
-        <div>state changed {state.changeCount++} times</div> 
+        {/*  The following will fail at compile time
+                <div>state changed {state.changeCount++} times</div> 
+            Because the state should never be changed declaratively
         */}
     </div>;
 });
