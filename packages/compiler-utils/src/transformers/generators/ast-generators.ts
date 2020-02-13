@@ -109,32 +109,25 @@ export interface ClassConstructor {
     statements: ts.Statement[];
 }
 
-export const cPublic = (name: string, initializer: ts.Expression | undefined) => ts.createProperty(
+export const cProperty = (name: string, initializer: ts.Expression | undefined) => ts.createProperty(
     undefined,
-    [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
+    [],
     ts.createIdentifier(name),
     undefined,
     undefined,
     initializer
 );
 
-export const cPrivate = (name: string, initializer: ts.Expression | undefined) => ts.createProperty(
+export const cStatic = (name: string, initializer: ts.Expression | undefined) => ts.createProperty(
     undefined,
-    [ts.createModifier(ts.SyntaxKind.PrivateKeyword)],
+    [ts.createModifier(ts.SyntaxKind.StaticKeyword)],
     ts.createIdentifier(name),
     undefined,
     undefined,
     initializer
 );
 
-export const asStatic = (prop: ts.PropertyDeclaration) => ts.createProperty(
-    undefined,
-    [...prop.modifiers || [], ts.createModifier(ts.SyntaxKind.StaticKeyword)],
-    prop.name,
-    undefined,
-    undefined,
-    prop.initializer
-);
+
 
 
 export const cClass = (name: string, extendz?: string | ts.Expression, constructorInfo?: ClassConstructor, properties: ts.PropertyDeclaration[] = []) => {

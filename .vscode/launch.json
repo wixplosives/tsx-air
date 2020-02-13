@@ -17,7 +17,7 @@
             "args": [
                 "packages/examples/**/*.test.ts?(x)",
                 "--timeout",
-                "999999"
+                "99999999"
             ],
             "internalConsoleOptions": "openOnSessionStart",
             "env": {

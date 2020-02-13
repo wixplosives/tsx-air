@@ -61,10 +61,9 @@ export function setProp<Props>(instance: Component<any, Props, any>, p: Props, v
     return 0;
 }
 
-export function handleChanges(handlers: Map<number, () => void>, changesFlags: number) {
-    for (const [bitmask, action] of handlers) {
-        // tslint:disable-next-line: no-bitwise
-        if (bitmask & changesFlags) {
+export function handleChanges(changeMask:Record<string, number>, handlers: Map<string, () => void>, changesFlags: number) {
+    for (const [key, action] of handlers) {
+        if (changeMask[key] & changesFlags) {
             action();
         }
     }

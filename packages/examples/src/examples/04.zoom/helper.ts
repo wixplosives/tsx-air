@@ -1,7 +1,7 @@
 import clamp from 'lodash/clamp';
 import { RefHolder } from '@tsx-air/framework';
 
-    export function calculateDimensions(main: HTMLElement, zoomedIn: HTMLImageElement, zoomedOut: HTMLImageElement) {
+export function calculateDimensions(main: HTMLElement, zoomedIn: HTMLImageElement, zoomedOut: HTMLImageElement) {
     const { naturalWidth, naturalHeight } = zoomedIn;
     const { width, height } = main.getClientRects()[0];
     const [rW, rH] = [width / naturalWidth, height / naturalHeight];
@@ -20,7 +20,7 @@ import { RefHolder } from '@tsx-air/framework';
     ];
 }
 
-export function calcZoomFrameXY(e: MouseEvent, zoomedOut: HTMLImageElement, zoomFrame:Area, zoomedOutSize:Area) {
+export function calcZoomFrameXY(e: MouseEvent, zoomedOut: HTMLImageElement, zoomFrame: Area, zoomedOutSize: Area) {
     const { left, top } = zoomedOut.getBoundingClientRect();
     let [x, y] = [e.clientX - left, e.clientY - top];
     [x, y] = [clamp(x, 0, zoomedOutSize.width - zoomFrame.width), clamp(y, 0, zoomedOutSize.height - zoomFrame.height)];
@@ -34,25 +34,29 @@ export class Area {
 
 
 export const initialState = (_props?: any) => ({
-    x: 0, y: 0,
-    original: new Area(),
-    zoomFrame: new Area(),
-    zoomedOutSize: new Area(1, 1),
-    zoomedIn: {} as RefHolder<HTMLImageElement>,
-    zoomedOut: {} as RefHolder<HTMLImageElement>,
-    root: {} as RefHolder<HTMLDivElement>
+    state: {
+        x: 0, y: 0,
+        original: new Area(),
+        zoomFrame: new Area(),
+        zoomedOutSize: new Area(1, 1),
+        zoomedIn: {} as RefHolder<HTMLImageElement>,
+        zoomedOut: {} as RefHolder<HTMLImageElement>,
+        root: {} as RefHolder<HTMLDivElement>
+    }
 }) as ZoomState;
 
 
 export interface ZoomCtx { root: HTMLDivElement; zoomedIn: HTMLImageElement; zoomedOut: HTMLImageElement; zoomFrame: HTMLDivElement; }
 export interface ZoomProps { url: string; }
 export interface ZoomState {
-    x: number;
-    y: number;
-    original: Area;
-    zoomFrame: Area;
-    zoomedOutSize: Area;
-    zoomedOut: RefHolder<HTMLImageElement>;
-    zoomedIn: RefHolder<HTMLImageElement>;
-    root: RefHolder<HTMLDivElement>;
+    state: {
+        x: number;
+        y: number;
+        original: Area;
+        zoomFrame: Area;
+        zoomedOutSize: Area;
+        zoomedOut: RefHolder<HTMLImageElement>;
+        zoomedIn: RefHolder<HTMLImageElement>;
+        root: RefHolder<HTMLDivElement>;
+    }
 }

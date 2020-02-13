@@ -1,6 +1,6 @@
 import { parseValue } from '../../ast-utils/parser';
 import { expect } from 'chai';
-import { cloneDeep, cClass, cObject, cAssign, cPrivate, asStatic, cPublic, cImport } from './ast-generators';
+import { cloneDeep, cClass, cObject, cAssign, cProperty, cImport, cStatic } from './ast-generators';
 import ts from 'typescript';
 
 describe('cloneDeep', () => {
@@ -87,26 +87,26 @@ describe('cClass', () => {
     describe('class properties', () => {
         it('should support properties', () => {
             expect(cClass('MyComp', undefined, undefined, [
-                cPrivate('propA', ts.createTrue())
+                cProperty('propA', ts.createTrue())
             ])).to.have.astLike(`export class MyComp {
-                private propA = true;
+                propA = true;
              }`);
         });
         it('should support static properties', () => {
             expect(cClass('MyComp', undefined, undefined, [
-                asStatic(cPrivate('propA', ts.createTrue()))
+                cStatic('propA', ts.createTrue())
             ])).to.have.astLike(`export class MyComp {
-                private static propA = true;
+                static propA = true;
              }`);
         });
         it('should support complex properties', () => {
             expect(cClass('MyComp', undefined, undefined, [
-                asStatic(cPublic('propA', cObject({
+                cStatic('propA', cObject({
                     a: 3,
                     b: 79
-                })))
+                }))
             ])).to.have.astLike(`export class MyComp {
-                public static propA = {
+                static propA = {
                     a: 3,
                     b: 79
                 };

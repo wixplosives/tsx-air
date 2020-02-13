@@ -13,15 +13,15 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
     };
 
     public $$processUpdate(newProps: ThumbProps, newState: ThumbState, changeMap: number): void {
-        runtimeUtils.handleChanges(new Map([
-            [Thumb.changeBitmask['props.url'], () => {
+        runtimeUtils.handleChanges(Thumb.changeBitmask, new Map([
+            ['props.url', () => {
                 runtime.updateState(this as Thumb, (state: ThumbState) => {
                     state.imageLoaded = false;
                     return Thumb.changeBitmask['props.imageLoaded'];
                 });
                 this.context.img1.src = newProps.url;
             }],
-            [Thumb.changeBitmask['props.imageLoaded'], () => {
+            ['props.imageLoaded', () => {
                 if (newState.imageLoaded) {
                     if (this.context.div1) {
                         this.context.root.removeChild(this.context.div1);
@@ -36,7 +36,7 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
                     }
                 }
             }],
-            [Thumb.changeBitmask['props.onClick'], () => {
+            ['props.onClick', () => {
                 if (this.props.onClick) {
                     this.context.root.removeEventListener('click', this.props.onClick);
                 }

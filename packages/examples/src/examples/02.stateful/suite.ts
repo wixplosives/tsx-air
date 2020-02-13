@@ -34,6 +34,14 @@ export function suite (api: ExampleSuiteApi) {
             await htmlMatch(buttons[1], {
                 textContent: 'button*'
             });
+            await htmlMatch(page, {
+                cssQuery: '.changeCount',
+                textContent: 'state changed 8 times'
+            });
+            await htmlMatch(page, {
+                cssQuery: '.volatile',
+                textContent: 'volatile variable is still at 1'
+            });
         });
     });
 }
