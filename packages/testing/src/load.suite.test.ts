@@ -4,7 +4,7 @@ import { loadSuite } from './load.suite';
 
 describe('loadSuite', () => {
     it('should fail if the example is not found', ()=>{
-        expect(() => loadSuite('Missing example')).to.throw('Error running');        
+        expect(() => loadSuite('Missing example')).to.throw('Error loading');        
     });
 
     it('should load a test suite of an example', ()=>{
