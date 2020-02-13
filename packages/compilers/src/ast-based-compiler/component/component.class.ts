@@ -4,6 +4,7 @@ import { generateToString } from './factory/to.string';
 import { generateHydrate } from './factory/hydrate';
 import { generateInitialState } from './factory/initial.state';
 import { generateChangeBitMask } from './bitmask';
+import { eventHandlers } from './event.handlers';
 
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
     const importedComponent = api.ensureImport('Component', '@tsx-air/framework');
@@ -20,7 +21,8 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
         })),
         cStatic('changeBitmask',
             generateChangeBitMask(comp)),
-        cProperty('$$processUpdate', createProcessUpdateForComp(comp, binding))
+        cProperty('$$processUpdate', createProcessUpdateForComp(comp, binding)),
+        ...eventHandlers(comp, binding)
     ]);
     return res;
 };

@@ -18,3 +18,7 @@ export const WithBoth = TSXAir((props: { a: string, b: string, unused: number })
 export const NestedStateless = TSXAir((pr: { a: string }) => {
     return <div><WithProps a={pr.a} b={pr.a} unused={3}/></div>;
 });
+
+export const WithEventListener = TSXAir(() => 
+    // tslint:disable-next-line: no-console jsx-no-lambda
+    <div onClick={()=>console.log('ok!')} />);

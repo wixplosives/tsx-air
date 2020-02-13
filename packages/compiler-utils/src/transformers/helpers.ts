@@ -1,4 +1,4 @@
-import { CompDefinition } from './../analyzers/types';
+import { CompDefinition } from '../analyzers/types';
 export const bitMask = (def: CompDefinition) => {
     const { propsIdentifier, aggregatedVariables} = def; 
     const ret:Record<string, number> = {};

@@ -4,19 +4,24 @@ import { expect } from 'chai';
 import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } from './to.string';
 import ts from 'typescript';
 
-describe('generateToString', () => {
-    const [withNothing, withProps, withState, withBoth, nested] =
+describe.only('generateToString', () => {
+    const [withNothing, withProps, withState, withBoth,
+        nested, withEvent] =
         analyzeFixtureComponents(`minimal.components.tsx`)
             .map(compDef => evalAst(generateToString(compDef.jsxRoots[0], compDef)));
 
     it('should generate at toString method based on the used props and state', () => {
-        expect(withNothing(), 'Self closing element').to.equal('<div></div>');
-        expect(withProps({ a: 'a', b: 'b', unused: '!' }))
+        expect(withNothing(), 'static s closing element').to.equal('<div></div>');
+        expect(withProps({ a: 'a', b: 'b', unused: '!' }), 'with props')
             .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --></div>`);
-        expect(withState(undefined, { store1: { a: 1, b: 2 } }))
+        expect(withState(undefined, { store1: { a: 1, b: 2 } }),'with state')
             .to.equal(`<div><!-- store1.a -->1<!-- --><!-- store1.b -->2<!-- --></div>`);
-        expect(withBoth({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }))
+        expect(withBoth({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }), 'with state and props')
             .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --><!-- store2.a -->1<!-- --><!-- store2.b -->2<!-- --></div>`);
+
+    });
+
+    it(`uses nested components' toString`, () => {
         expect(nested.toString()).
             // @ts-ignore
             // tslint:disable: quotemark
@@ -25,6 +30,11 @@ describe('generateToString', () => {
                 "b": pr.a,
                 "unused": 3
             })}</div>`).toString());
+    });
+
+    it(`should removed event listeners`, () => {
+        expect(withEvent.toString()).
+            to.be.eqlCode('<div></div>');
     });
 
     describe('helpers', () => {

@@ -1,4 +1,4 @@
-import { propsAndStateParams } from './../helpers';
+import { propsAndStateParams } from '../helpers';
 import { cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer, JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep, jsxSelfClosingElementReplacer } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 
