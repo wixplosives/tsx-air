@@ -27,5 +27,5 @@ function newError(errorMessage: string, err?: any): Error {
 
 function stackOf(e?: Error): string {
     const stack = e?.stack || new Error().stack || '';
-    return stack.split('\n').filter(s => s.indexOf(__filename) < 0).join('\n');
+    return stack.split('\n').filter(s => s.indexOf('safely.ts') < 0).join('\n');
 }
