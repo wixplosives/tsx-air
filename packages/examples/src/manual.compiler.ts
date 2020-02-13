@@ -36,7 +36,7 @@ function useManuallyCompiledForSources(getAlternativeContent: ContentSwapper): t
                         undefined,
                         undefined,
                         ts.createStringLiteral('./' +
-                            basename(fileName).replace(/source\.tsx?/, 'compiled.ts')))
+                            basename(fileName).replace(/source\.tsx?/, 'compiled')))
                     ]
                 );
             return reExported;
