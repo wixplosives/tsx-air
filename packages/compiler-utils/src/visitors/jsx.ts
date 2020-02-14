@@ -1,5 +1,5 @@
 import { Visitor } from '../ast-utils/scanner';
-import { isJsxSelfClosingElement, isJsxElement, isJsxExpression, JsxOpeningElement, isStringLiteral, JsxAttribute, Node, isJsxText } from 'typescript';
+import ts from 'typescript';
 import { isTsJsxRoot } from '../analyzers/types.is.type';
 
 export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
@@ -23,14 +23,15 @@ export const findJsxNode: Visitor = node => {
     return undefined;
 };
 
-export const getComponentTag = (node: Node) => {
+export const getComponentTag = (node: ts.Node) => {
     let tag = '';
-    if (isJsxElement(node)) {
+    if (ts.isJsxElement(node)) {
         tag = node.openingElement.tagName.getText();
     }
-    if (isJsxSelfClosingElement(node)) {
+    if (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) {
         tag = node.tagName.getText();
     }
+
     return (tag && tag.match(/[A-Z].*/)) ? tag : undefined;
 };
 
@@ -39,14 +40,14 @@ export const findJsxComponent: Visitor = (node, { ignoreChildren }) => {
 
     if (tag) {
         ignoreChildren();
-        const props = (node as JsxOpeningElement).attributes.properties.reduce<Array<{ name: string, value: string }>>(
+        const props = (node as ts.JsxOpeningElement).attributes.properties.reduce<Array<{ name: string, value: string }>>(
             (acc, attribute) => {
-                const att = attribute as JsxAttribute;
+                const att = attribute as ts.JsxAttribute;
                 if (att.name) {
                     acc.push(
                         {
                             name: att.name.escapedText as string,
-                            value: isStringLiteral(att.initializer!)
+                            value: ts.isStringLiteral(att.initializer!)
                                 ? att.initializer.getText()
                                 : att.initializer!.expression && att.initializer!.expression.getText() || ''
                         });
@@ -71,7 +72,7 @@ export interface JSXExpressionData {
 }
 
 export const findJsxExpression: Visitor<JSXExpressionData> = (node, { ignoreChildren }) => {
-    if (isJsxExpression(node) && node.expression) {
+    if (ts.isJsxExpression(node) && node.expression) {
         return {
             kind: 'JSXExpression',
             sourceText: node.getText()
@@ -84,7 +85,7 @@ export const findJsxExpression: Visitor<JSXExpressionData> = (node, { ignoreChil
 };
 
 export const findJsxText: Visitor<{ kind: string, text: string }> = node => {
-    if (isJsxExpression(node)) {
+    if (ts.isJsxExpression(node)) {
         return {
             kind: 'JSXText',
             text: node.getText()
@@ -94,7 +95,7 @@ export const findJsxText: Visitor<{ kind: string, text: string }> = node => {
 };
 
 export const getTextBlockChildren: Visitor<Node[][]> = node => {
-    if (!isJsxElement(node)) {
+    if (!ts.isJsxElement(node)) {
         return;
     }
     const { children } = node;
@@ -102,7 +103,7 @@ export const getTextBlockChildren: Visitor<Node[][]> = node => {
     let current: Node[] = [];
 
     children.forEach(i => {
-        if (isJsxText(i) || isJsxExpression(i)) {
+        if (ts.isJsxText(i) || ts.isJsxExpression(i)) {
             current.push(i);
         } else {
             if (current.length > 0) {

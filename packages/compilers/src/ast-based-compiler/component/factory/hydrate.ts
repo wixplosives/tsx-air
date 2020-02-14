@@ -1,10 +1,10 @@
-import { CompDefinition, DomBinding, cNew, cObject, parseValue, cArrow, cloneDeep, cCall, JsxExpression } from '@tsx-air/compiler-utils';
+import { CompDefinition, cNew, cObject, parseValue, cArrow, cloneDeep, cCall, JsxExpression, DomBindings } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 
-export const generateHydrate = (comp: CompDefinition, domBindings: DomBinding[]) => {
+export const generateHydrate = (comp: CompDefinition, domBindings: DomBindings) => {
     const dom: Record<string, ts.ElementAccessExpression | ts.Identifier | ts.CallExpression> = { root: ts.createIdentifier('root') };
     const props: Record<string, ts.JsxExpression> = {};
-    domBindings.forEach(({ ctxName, domLocator, compType, astNode }) => {
+    for (const [, { ctxName, domLocator, compType, astNode }] of domBindings) {
         const locator = cloneDeep(parseValue(domLocator)) as ts.ElementAccessExpression;
         if (compType) {
             const jsxComp = comp.jsxRoots[0]!.components.filter(i => i.sourceAstNode === astNode)[0];
@@ -21,7 +21,7 @@ export const generateHydrate = (comp: CompDefinition, domBindings: DomBinding[])
         } else {
             dom[ctxName] = locator;
         }
-    });
+    }
 
     const newCompParams: Array<ts.ObjectLiteralExpression | ts.Identifier> = [
         cObject(dom),

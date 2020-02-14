@@ -1,11 +1,10 @@
-import { CompDefinition, cProperty, DomBinding, cArrow, FuncDefinition, JsxExpression } from '@tsx-air/compiler-utils';
+import { CompDefinition, cProperty, DomBindings, cArrow, FuncDefinition, JsxExpression } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { generateStateAwareFunction } from './function';
 import { isEventHandler, getAttrName, findBinding } from '../../common/jsx.event.handler';
 import { safely } from '@tsx-air/utils';
 
-
-export function* eventHandlers(comp: CompDefinition, domBinding: DomBinding[]) {
+export function* eventHandlers(comp: CompDefinition, domBinding: DomBindings) {
     const handlers = findHandlersUsed(comp);
     for (const [handler, uses] of handlers) {
         yield cProperty(safely(
@@ -13,13 +12,11 @@ export function* eventHandlers(comp: CompDefinition, domBinding: DomBinding[]) {
             , generateStateAwareFunction(comp, handler));
     }
     if (handlers.size > 0) {
-        yield cProperty('$afterMount', generateAfterMount(comp, handlers, domBinding));
+        yield cProperty('$afterMount', generateAfterMount(handlers, domBinding));
     }
 }
 
-const generateAfterMount = (comp: CompDefinition,
-    handlers: Map<FuncDefinition, JsxExpression[]>,
-    domBinding: DomBinding[]) => {
+const generateAfterMount = (handlers: Handlers, domBinding: DomBindings) => {
     function* addListeners() {
         for (const [, uses] of handlers) {
             for (const usage of uses) {
@@ -53,6 +50,8 @@ const generateAddListener = () => ts.createExpressionStatement(ts.createCall(
         )
     ]
 ));
+
+type Handlers = Map<FuncDefinition, JsxExpression[]>;
 
 const findHandlersUsed = (comp: CompDefinition) => {
     const expressionsWithHandlers =

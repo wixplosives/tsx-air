@@ -5,7 +5,7 @@ export class Comp extends Component {
         super(...arguments);
         this.$$processUpdate = (__0, { state }, changeMap) => {
             if (changeMap & Comp.changeBitmask['state.count']) {
-                this.context.exp0.textContent = state.count;
+                this.context.exp1.textContent = state.count;
             }
         };
       
@@ -26,7 +26,8 @@ Comp.factory = {
     toString: (__0, { state }) => `<div><!-- state.count -->${state.count}<!-- --></div>`,
     hydrate: (root, props, state) => new Comp({
         root: root,
-        exp0: root.childNodes[1]
+        elm0: root,
+        exp1: root.childNodes[1]
     }, props, state),
     initialState: () => ({
         state: { count: 0 }

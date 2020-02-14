@@ -1,4 +1,4 @@
-import { isJsxExpression, JsxExpression, DomBinding } from '@tsx-air/compiler-utils';
+import { isJsxExpression, JsxExpression, DomBinding, DomBindings } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 
 export const getAttrName = (exp: JsxExpression | ts.JsxExpression) => {
@@ -9,13 +9,11 @@ export const getAttrName = (exp: JsxExpression | ts.JsxExpression) => {
 export const isEventHandler =
     (exp: JsxExpression | ts.JsxExpression) => (getAttrName(exp) || '').match(/^on[A-Z]/);
 
-export const findBinding = (exp: JsxExpression, domBinding: DomBinding[]) => {
-    const dbind = new Map<ts.Node, DomBinding>();
-    domBinding.forEach(b => dbind.set(b.astNode, b));
+export const findBinding = (exp: JsxExpression, domBinding: DomBindings) => {
     type Walker = (n: ts.Node) => DomBinding | void;
     const walker: Walker = n => {
         if (n && n.parent && !ts.isSourceFile(n)) {
-            return dbind.get(n) || walker(n.parent);
+            return domBinding.get(n) || walker(n.parent);
         }
     };
     return walker(exp.sourceAstNode);

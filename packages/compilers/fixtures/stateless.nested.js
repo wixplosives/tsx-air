@@ -29,7 +29,7 @@ export class Parent extends Component {
         super(...arguments);
         this.$$processUpdate = (props, __1, changeMap) => {
             if (changeMap & Parent.changeBitmask['props.a']) {
-                TSXAir.runtime.updateProps(this.context.Child1, p => {
+                TSXAir.runtime.updateProps(this.context.Child0, p => {
                     p.b = props.a;
                     return Child.changeBitmask['props.b'];
                 });
@@ -44,12 +44,12 @@ Parent.factory = {
     })}</div>`,
     hydrate: (root, props, state) => new Parent({
         root: root,
-        Child1: Child.factory.hydrate(
+        Child0: Child.factory.hydrate(
             root.childNodes[0],
             {
                 b: props.a
             },
-            state && state.__childComps && state.__childComps.Child1)
+            state && state.__childComps && state.__childComps.Child0)
     }, props, state),
     initialState: () => ({})
 };

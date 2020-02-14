@@ -13,6 +13,7 @@ const compiler: Compiler = {
         feature('imperative', 'update', 'component'),
         feature('single', 'store'),
         feature('nested', 'stateless', 'component'),
+        feature('event', 'handler'),
     ]
 };
 

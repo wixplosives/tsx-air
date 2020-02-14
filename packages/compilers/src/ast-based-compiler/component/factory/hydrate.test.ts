@@ -34,13 +34,13 @@ describe('generateHydrate', () => {
 
         expect(comp.NestedStateless).to.have.astLike(`(root, pr, state) => new NestedStateless({
             root: root,
-            PropsOnly1: PropsOnly.factory.hydrate(
+            PropsOnly0: PropsOnly.factory.hydrate(
                 root.childNodes[0], 
                 {
                     a: pr.a,
                     b: pr.a,
                     unused: 3
-                }, state && state.__childComps && state.__childComps.PropsOnly1)
+                }, state && state.__childComps && state.__childComps.PropsOnly0)
          }, pr, state)`);
     });
 });
