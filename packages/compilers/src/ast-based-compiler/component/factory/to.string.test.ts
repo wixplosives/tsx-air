@@ -78,6 +78,5 @@ describe('generateToString', () => {
                 expect(templateAst).to.have.astLike('`<div id="${`"gaga"`}">{props.title}</div>`');
             });
         });
-
     });
 });
