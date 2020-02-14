@@ -1,12 +1,15 @@
 import ts, { SyntaxKind } from 'typescript';
 import { CompDefinition, getComponentTag } from '@tsx-air/compiler-utils';
+import { isEventHandler } from './jsx.event.handler';
 
 export interface DomBinding {
-    ctxName:string;
+    ctxName: string;
     domLocator: string;
-    astNode?: ts.Node;
+    astNode: ts.Node;
     compType?: string;
 }
+
+export type DomBindings = Map<ts.Node, DomBinding>;
 
 /**
  * Create DOM bindings for DOM elements with data such as
@@ -15,8 +18,8 @@ export interface DomBinding {
  * @param compDef 
  * @return DOM elements that include JSX expressions 
  */
-export const generateDomBindings = (compDef: CompDefinition) => {
-    const expressions: DomBinding[] = [];
+export function generateDomBindings(compDef: CompDefinition) {
+    const expressions: DomBindings = new Map();
     if (compDef.jsxRoots.length !== 1) {
         throw new Error('Unsupported (yet): TSXAir components must have a single JsxRoot');
     }
@@ -30,8 +33,8 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                     childCount++;
                     break;
                 case SyntaxKind.JsxExpression:
-                    expressions.push({
-                        ctxName: `exp${expressions.length}`,
+                    expressions.set(child, {
+                        ctxName: `exp${expressions.size}`,
                         domLocator: `${prefix}[${childCount + 1}]`,
                         astNode: child
                     });
@@ -41,7 +44,7 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                 case SyntaxKind.JsxSelfClosingElement:
                     const tag = getComponentTag(child);
                     if (tag) {
-                        expressions.push({
+                        expressions.set(child, {
                             ctxName: `${tag}${++compCount}`,
                             // TODO handle props mapping
                             domLocator: `${prefix}[${childCount}]`,
@@ -54,6 +57,14 @@ export const generateDomBindings = (compDef: CompDefinition) => {
                     childCount++;
                     break;
                 case SyntaxKind.JsxOpeningElement:
+                    const elm = child as ts.JsxOpeningElement;
+                    if (elm.attributes.properties.some(p =>
+                        ts.isJsxAttribute(p) && p.initializer &&
+                        ts.isJsxExpression(p.initializer)
+                    )) {
+                        console.log(elm.attributes.getText())
+                    }
+                    break;
                 case SyntaxKind.JsxClosingElement:
                     break;
                 default:
@@ -64,5 +75,5 @@ export const generateDomBindings = (compDef: CompDefinition) => {
     };
 
     addDomElement(compDef.jsxRoots[0].sourceAstNode);
-    return expressions;
-};
+    return [...expressions.values()];
+}

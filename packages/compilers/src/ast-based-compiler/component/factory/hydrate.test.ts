@@ -1,32 +1,30 @@
 import { generateHydrate } from './hydrate';
 import { generateDomBindings } from '@tsx-air/compiler-utils';
-import { analyzeFixtureComponents } from 'packages/compilers/src/test.helpers';
+import { basicPatterns } from 'packages/compilers/src/test.helpers';
 import { expect } from 'chai';
+import { mapValues } from 'lodash';
 
 describe('generateHydrate', () => {
-    const [withNothing, withProps, withState, withBoth, nested] =
-        analyzeFixtureComponents(`minimal.components.tsx`)
-            .map(compDef =>
-                generateHydrate(compDef, generateDomBindings(compDef)));
-
     it('should return an hydrate function AST', () => {
-        expect(withNothing).to.have.astLike(`(root, props, state) => new WithNothing({
+        const comp = mapValues(basicPatterns(), compDef => generateHydrate(compDef, generateDomBindings(compDef)));
+
+        expect(comp.Static).to.have.astLike(`(root, props, state) => new Static({
             root: root
         }, props, state)`);
 
-        expect(withProps).to.have.astLike(`(root, props, state) => new WithProps({
+        expect(comp.PropsOnly).to.have.astLike(`(root, props, state) => new PropsOnly({
             root: root,
             exp0: root.childNodes[1],
             exp1: root.childNodes[4]
          }, props, state)`);
 
-        expect(withState).to.have.astLike(`(root, props, state) => new WithState({
+        expect(comp.StateOnly).to.have.astLike(`(root, props, state) => new StateOnly({
             root: root,
             exp0: root.childNodes[1],
             exp1: root.childNodes[4]
          }, props, state)`);
 
-        expect(withBoth).to.have.astLike(`(root, props, state) => new WithBoth({
+        expect(comp.ProsAndState).to.have.astLike(`(root, props, state) => new ProsAndState({
             root: root,
             exp0: root.childNodes[1],
             exp1: root.childNodes[4],
@@ -34,15 +32,15 @@ describe('generateHydrate', () => {
             exp3: root.childNodes[10]
          }, props, state)`);
 
-        expect(nested).to.have.astLike(`(root, pr, state) => new NestedStateless({
+        expect(comp.NestedStateless).to.have.astLike(`(root, pr, state) => new NestedStateless({
             root: root,
-            WithProps1: WithProps.factory.hydrate(
+            PropsOnly1: PropsOnly.factory.hydrate(
                 root.childNodes[0], 
                 {
                     a: pr.a,
                     b: pr.a,
                     unused: 3
-                }, state && state.__childComps && state.__childComps.WithProps1)
+                }, state && state.__childComps && state.__childComps.PropsOnly1)
          }, pr, state)`);
     });
 });

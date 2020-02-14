@@ -1,19 +1,18 @@
 import { generateInitialState } from './initial.state';
-import { analyzeFixtureComponents } from 'packages/compilers/src/test.helpers';
+import { basicPatterns } from 'packages/compilers/src/test.helpers';
 import { expect } from 'chai';
+import { mapValues } from 'lodash';
 
 describe('generateInitialState', () => {
-    const [withNothing, withProps, withState, withBoth] =
-        analyzeFixtureComponents(`minimal.components.tsx`)
-            .map(compDef => generateInitialState(compDef));
-
     it('should return an initial state as defined in component', () => {
-        expect(withNothing).to.have.astLike(`() => ({})`);
-        expect(withProps).to.have.astLike(`() => ({})`);
-        expect(withState).to.have.astLike(`() => ({ 
+        const comp = mapValues(basicPatterns(), compDef => generateInitialState(compDef));
+       
+        expect(comp.Static).to.have.astLike(`() => ({})`);
+        expect(comp.PropsOnly).to.have.astLike(`() => ({})`);
+        expect(comp.StateOnly).to.have.astLike(`() => ({ 
             store1: { a:1, b:2 }
         })`);
-        expect(withBoth).to.have.astLike(`(props) => ({
+        expect(comp.ProsAndState).to.have.astLike(`(props) => ({
             store2: { a:props.b, b:2 }
         })`);
     });

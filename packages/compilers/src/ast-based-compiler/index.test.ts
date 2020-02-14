@@ -3,10 +3,10 @@ import compiler from '.';
 
 describe('c-AST based compiler', () => {
     [
-        // 'static',
-        // 'stateless',
-        // 'stateful',
-        // 'stateless.nested',
+        'static',
+        'stateless',
+        'stateful',
+        'stateless.nested',
         'event.handler'
     ].forEach(
         name => itShouldCompileFixture(name, compiler));

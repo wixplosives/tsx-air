@@ -1,10 +1,11 @@
-import { printAst } from './../../dev-utils/print-ast';
+import { asSourceFile } from './../../ast-utils/parser';
+import { printAst } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import { cloneDeep } from './ast-generators';
-import { nativeAttributeMapping, isJsxHtmlAttribute } from './native-attribute-mapping';
+import { nativeAttributeMapping } from './native-attribute-mapping';
 import last from 'lodash/last';
-import { parseValue } from '../../ast-utils/parser';
+import { repeat } from 'lodash';
 
 export interface ExpressionData {
     expression: ts.Expression;
@@ -18,8 +19,9 @@ export type AstNodeReplacer =
     (node: ts.Node) => PossibleReplacement;
 
 export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: AstNodeReplacer[]) => {
-    const joinedRes = toExpTextTuples(jsx, replacers);
-    joinedRes[0].text = joinedRes[0].text.slice(jsx.getLeadingTriviaWidth());
+    const leadingTriviaWidth = jsx.getLeadingTriviaWidth();
+    const joinedRes = toExpTextTuples(jsx, replacers, leadingTriviaWidth);
+    joinedRes[0].text = joinedRes[0].text.slice(leadingTriviaWidth);
 
     if (joinedRes.length === 1) {
         return ts.createNoSubstitutionTemplateLiteral(joinedRes[0].text);
@@ -36,8 +38,9 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
     );
 };
 
-const toExpTextTuples = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: AstNodeReplacer[]) => {
-    const flattened = flatMap(nodeToStringParts(jsx, replacers),
+const toExpTextTuples = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: AstNodeReplacer[], leadingTriviaWidth: number) => {
+    const parts = nodeToStringParts(jsx, replacers, leadingTriviaWidth);
+    const flattened = flatMap(parts,
         item => typeof item === 'string'
             ? [item]
             : [item.prefix || '', item.expression, item.suffix || '']
@@ -59,22 +62,24 @@ const toExpTextTuples = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacer
     return res.map(({ expression, textFragments: text }) => ({ expression, text: text.join('') }));
 };
 
-export function nodeToStringParts(node: ts.Node, replacers: AstNodeReplacer[]): Replacement[] {
+export function nodeToStringParts(node: ts.Node, replacers: AstNodeReplacer[], leadingTriviaWidth: number): Replacement[] {
     let replaced: PossibleReplacement = false;
     replacers.find(r => (replaced = r(node)) !== false);
     if (replaced !== false) {
         if (ts.isJsxElement(replaced)) {
-            return nodeToStringParts(replaced, replacers);
+            replaced = asSourceFile(repeat(' ', leadingTriviaWidth) + printAst(replaced));
+            const ret = nodeToStringParts(replaced, replacers, 0);
+            return ret;
         }
         return [replaced];
     }
     if (node.getChildCount() > 0) {
         return flatMap(node.getChildren(),
-            child => nodeToStringParts(child, replacers));
+            child => nodeToStringParts(child, replacers, 0));
     }
+
     return [node.getFullText()];
 }
-
 
 export const jsxAttributeReplacer: AstNodeReplacer =
     node =>
@@ -85,40 +90,40 @@ export const jsxAttributeReplacer: AstNodeReplacer =
             suffix: '"'
         };
 
-export const jsxEventHandlerRemover: AstNodeReplacer = 
+export const jsxEventHandlerRemover: AstNodeReplacer =
     node => {
-        return ts.isJsxAttribute(node) &&
-        node.name.getText().match(/^on[A-Z].*/) 
-        ? ''
-        : false;
-    }
+        if (ts.isJsxAttribute(node)) {
+            return printAst(node.name).match(/^on[A-Z].*/)
+                ? ''
+                : false;
+        }
+        return false;
+    };
 
 export const jsxAttributeNameReplacer: AstNodeReplacer =
     node => {
-        if (ts.isIdentifier(node) &&
-            ts.isJsxAttribute(node.parent) &&
-            !isComponentTag((node.parent.parent.parent as ts.JsxSelfClosingElement).tagName) &&
-            !!nativeAttributeMapping[node.getText()]) {
-            const mapping = nativeAttributeMapping[node.getText()];
-            if (isJsxHtmlAttribute(mapping)) {
-                return ' ' + mapping.htmlName;
-            }
-            return ' ' + node.getText();
+        if (ts.isIdentifier(node) && node.parent && ts.isJsxAttribute(node.parent)) {
+            const attrName = printAst(node);
+            const replacement = nativeAttributeMapping[attrName];
+            return ' ' + (replacement || attrName);
         }
         return false;
     };
 
 export const jsxSelfClosingElementReplacer: AstNodeReplacer = node => {
     if (ts.isJsxSelfClosingElement(node)) {
-        const tag = node.tagName.getText();
-        const p = node.getFullText().replace(/\s*\/\>$/, `></${tag}>`);
-        return parseValue(p.replace(/^ /,''));
+        return cloneDeep(ts.createJsxElement(
+            ts.createJsxOpeningElement(cloneDeep(node.tagName),
+                undefined,
+                cloneDeep(node.attributes)
+            ), [], ts.createJsxClosingElement(cloneDeep(node.tagName))
+        ), node.parent);
     } else {
         return false;
     }
 };
 
 export const isComponentTag = (node: ts.JsxTagNameExpression) => {
-    const text = node.getText();
+    const text = printAst(node);
     return text[0].toLowerCase() !== text[0] || text.indexOf('.') !== -1;
 };

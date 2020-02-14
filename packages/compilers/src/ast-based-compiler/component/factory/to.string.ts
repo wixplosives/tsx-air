@@ -1,5 +1,5 @@
 import { propsAndStateParams } from '../helpers';
-import { cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer, JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep, jsxSelfClosingElementReplacer, jsxEventHandlerRemover } from '@tsx-air/compiler-utils';
+import { cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer, JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep, jsxSelfClosingElementReplacer, jsxEventHandlerRemover, printAst } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 
 export const generateToString = (node: JsxRoot, comp: CompDefinition) =>
@@ -10,14 +10,14 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) =>
             jsxTextExpressionReplacer,
             jsxAttributeReplacer,
             jsxAttributeNameReplacer,
-            jsxSelfClosingElementReplacer
+            jsxSelfClosingElementReplacer,
         ]));
 
 export const jsxTextExpressionReplacer: AstNodeReplacer =
     node => ts.isJsxExpression(node) &&
         !ts.isJsxAttribute(node.parent) &&
     {
-        prefix: `<!-- ${node.expression ? node.expression.getText() : 'empty expression'} -->`,
+        prefix: `<!-- ${node.expression ? printAst(node.expression) : 'empty expression'} -->`,
         expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
         suffix: `<!-- -->`
     };
@@ -27,7 +27,7 @@ export const jsxComponentReplacer: AstNodeReplacer =
         if ((ts.isJsxElement(node) && isComponentTag(node.openingElement.tagName)) ||
             (ts.isJsxSelfClosingElement(node) && isComponentTag(node.tagName))) {
             const openingNode = ts.isJsxElement(node) ? node.openingElement : node;
-            const tagName = openingNode.tagName.getText();
+            const tagName = printAst(openingNode.tagName);
 
             return {
                 expression: cCall([tagName, 'factory', 'toString'],
@@ -37,14 +37,15 @@ export const jsxComponentReplacer: AstNodeReplacer =
                                 throw new Error('spread in attributes is not handled yet');
                             }
                             const initializer = prop.initializer;
+                            const name = printAst(prop.name);
                             if (!initializer) {
-                                accum[prop.name.getText()] = ts.createTrue();
+                                accum[name] = ts.createTrue();
                             } else if (ts.isJsxExpression(initializer)) {
                                 if (initializer.expression) {
-                                    accum[prop.name.getText()] = cloneDeep(initializer.expression);
+                                    accum[name] = cloneDeep(initializer.expression);
                                 }
                             } else {
-                                accum[prop.name.getText()] = cloneDeep(initializer);
+                                accum[name] = cloneDeep(initializer);
                             }
                             return accum;
                         }, {} as Record<string, any>))
