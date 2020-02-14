@@ -11,6 +11,7 @@ export * from './ast-utils/scanner';
 export * from './visitors/jsx';
 export * from './ast-utils/marker';
 export * from './ast-utils/parser';
+export * from './dev-utils/global-dev-tools';
 export { compilerOptions } from './compiler-options';
 
 

@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { UsedVariables, RecursiveMap } from './types';
 import { update, merge } from 'lodash';
+import { printAst } from '..';
 
 /**
  * 
@@ -23,7 +24,7 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
         const accessParent = n.parent;
         if (isVariableLikeDeclaration(accessParent) && accessParent.name === n) {
             if (isVariableDeclaration(accessParent)) {
-                res.defined[n.getText()] = {};
+                res.defined[printAst(n)] = {};
             }
              return;
         }
@@ -118,7 +119,7 @@ export function accessToStringArr(node: AccessNodes): { path: string[], nestedAc
             n = n.expression;
         } else {
 
-            path.unshift(n.name.getText());
+            path.unshift(printAst(n.name));
             n = n.expression;
         }
     }
@@ -126,7 +127,7 @@ export function accessToStringArr(node: AccessNodes): { path: string[], nestedAc
     if (!ts.isIdentifier(n)) {
         throw new Error('unhandled input in accessToStringArr');
     }
-    path.unshift(n.getText());
+    path.unshift(printAst(n));
     return {
         path,
         nestedAccess

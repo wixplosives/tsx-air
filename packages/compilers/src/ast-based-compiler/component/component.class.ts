@@ -19,8 +19,7 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
             hydrate: generateHydrate(comp, binding),
             initialState: generateInitialState(comp)
         })),
-        cStatic('changeBitmask',
-            generateChangeBitMask(comp)),
+        cStatic('changeBitmask', generateChangeBitMask(comp)),
         cProperty('$$processUpdate', createProcessUpdateForComp(comp, binding)),
         ...eventHandlers(comp, binding)
     ]);

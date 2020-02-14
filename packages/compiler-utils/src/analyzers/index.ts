@@ -28,3 +28,4 @@ export const analyze: Analyzer<TsxAirNode> = node => {
 };
 
 export * from './types';
+export * from './find-used-variables';
