@@ -43,6 +43,15 @@ describe('browserify', () => {
         });
     });
 
+    it('copies all .compiled.* files to the target folder', async () => {
+        await browserify({
+            base: fixtures,
+            entry: 'with.imports.ts',
+            output: nodeFs.join(tmp, 'bundle.js')
+        });
+        expect(nodeFs.existsSync(nodeFs.join(tmp, 'src.js', 'something.compiled.ts'))).to.equal(true);
+    });
+
     it('should package import.examples.ts into a single js file', async () => {
         expect(exampleSrcPath).to.equal(
             nodeFs.join(browserifyPath, '..', 'examples', 'src', 'examples'));

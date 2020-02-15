@@ -1,14 +1,16 @@
-import { CompDefinition, cProperty, DomBindings, cArrow, FuncDefinition, JsxExpression } from '@tsx-air/compiler-utils';
+import { getAttrName } from './../../common/jsx.event.handler';
+import { CompDefinition, cProperty, DomBindings, cArrow, FuncDefinition, JsxExpression, DomBinding, cCall, cAccess } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { generateStateAwareFunction } from './function';
-import { isEventHandler, getAttrName, findBinding } from '../../common/jsx.event.handler';
-import { safely } from '@tsx-air/utils';
+import { isEventHandler, findBinding } from '../../common/jsx.event.handler';
+import { safely, nonEmptyStr } from '@tsx-air/utils';
+import { camelCase } from 'lodash';
 
 export function* eventHandlers(comp: CompDefinition, domBinding: DomBindings) {
     const handlers = findHandlersUsed(comp);
-    for (const [handler, uses] of handlers) {
+    for (const [handler] of handlers) {
         yield cProperty(safely(
-            () => getAttrName(uses[0]) || '', 'Unknown event name', i => !!i)
+            () => handler.name!, 'Unknown event name', i => !!i)
             , generateStateAwareFunction(comp, handler));
     }
     if (handlers.size > 0) {
@@ -18,11 +20,11 @@ export function* eventHandlers(comp: CompDefinition, domBinding: DomBindings) {
 
 const generateAfterMount = (handlers: Handlers, domBinding: DomBindings) => {
     function* addListeners() {
-        for (const [, uses] of handlers) {
+        for (const [handler, uses] of handlers) {
             for (const usage of uses) {
                 const binding = findBinding(usage, domBinding);
                 if (binding) {
-                    yield generateAddListener();
+                    yield generateAddListener(binding, nonEmptyStr(getAttrName(usage), 'event name'), handler);
                 }
             }
         }
@@ -30,26 +32,35 @@ const generateAfterMount = (handlers: Handlers, domBinding: DomBindings) => {
     return cArrow([], ts.createBlock([...addListeners()]));
 };
 
-const generateAddListener = () => ts.createExpressionStatement(ts.createCall(
-    ts.createPropertyAccess(
-        ts.createPropertyAccess(
-            ts.createPropertyAccess(
-                ts.createThis(),
-                ts.createIdentifier('context')
-            ),
-            ts.createIdentifier('root')
-        ),
-        ts.createIdentifier('addEventListener')
-    ),
-    undefined,
-    [
-        ts.createStringLiteral('click'),
-        ts.createPropertyAccess(
-            ts.createThis(),
-            ts.createIdentifier('onClick')
-        )
-    ]
-));
+const generateAddListener = (dom: DomBinding, event: string, handler: FuncDefinition) =>
+    ts.createExpressionStatement(
+        cCall(
+            ['this', 'context', dom.ctxName, 'addEventListener'],
+            [
+                ts.createStringLiteral(camelCase(event.replace(/^on/, ''))),
+                cAccess('this', handler.name!)
+            ]));
+
+// ts.createExpressionStatement(ts.createCall(
+//     ts.createPropertyAccess(
+//         ts.createPropertyAccess(
+//             ts.createPropertyAccess(
+//                 ts.createThis(),
+//                 ts.createIdentifier('context')
+//             ),
+//             ts.createIdentifier('root')
+//         ),
+//         ts.createIdentifier('addEventListener')
+//     ),
+//     undefined,
+//     [
+//         ts.createStringLiteral('click'),
+//         ts.createPropertyAccess(
+//             ts.createThis(),
+//             ts.createIdentifier('onClick')
+//         )
+//     ]
+// ));
 
 type Handlers = Map<FuncDefinition, JsxExpression[]>;
 

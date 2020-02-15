@@ -7,10 +7,11 @@ import { join, basename } from 'path';
 import rimraf from 'rimraf';
 import { preppeteer } from './html/puppeteer.mocha.utils';
 import { packagePath } from '@tsx-air/utils/packages';
+import { safely } from '@tsx-air/utils/src';
 
 const fixtures = packagePath('@tsx-air/examples', 'fixtures');
 const publicPath = packagePath('@tsx-air/examples', 'public');
-const tempPath = packagePath('@tsx-air/examples', '.tmp');
+const tempPath = packagePath('@tsx-air/examples', 'tmp');
 
 export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]) {
     const examples = examplePaths.map(loadSuite);
@@ -38,9 +39,13 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                     });
                 } else {
                     describe(exampleName, () => {
-                        before(() => {
+                        before(async () => {
                             this.timeout(process.env.CI ? 15000 : 6000);
-                            return browserifyBoilerplate(path, paths.temp, compiler.transformers);
+                            this.retries(0);
+                            return safely(
+                                () => browserifyBoilerplate(path, paths.temp, compiler.transformers),
+                                'Failed to compile'
+                            );
                         });
                         beforeEach(() => Promise.all([
                             api.server.addStaticRoot(path),

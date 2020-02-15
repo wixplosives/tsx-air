@@ -8,7 +8,7 @@ import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { ITypeScriptLoaderOptions } from '@ts-tools/webpack-loader';
 import { compile } from './compile';
 import { asJs } from 'packages/playground/src/build/build.helpers';
-
+import cpy from 'cpy';
 export interface BrowserifyOptions {
     base: string;
     entry: string;
@@ -24,7 +24,8 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
     const { base, entry, output,
         debug = false, loaderOptions = {}, configFilePath } = options;
     const outDir = dirname(output);
-    compile([join(base, entry)], loaderOptions.transformers!, join(outDir,'src.js'));
+    compile([join(base, entry)], loaderOptions.transformers!, join(outDir, 'src.js'));
+    await cpy(`${base.replace(/\\/g, '/')}/*.compiled.ts`, join(outDir, 'src.js'));
 
     const wp = webpack({
         entry: join(outDir, 'src.js', asJs(entry)),

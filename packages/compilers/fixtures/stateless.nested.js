@@ -45,7 +45,7 @@ Parent.factory = {
     hydrate: (root, props, state) => new Parent({
         root: root,
         Child0: Child.factory.hydrate(
-            root.childNodes[0],
+            root.children[0],
             {
                 b: props.a
             },

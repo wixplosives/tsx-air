@@ -9,7 +9,7 @@ export class Comp extends Component {
             }
         };
       
-        this.onClick = () => {
+        this.handler = () => {
             TSXAir.runtime.updateState(this, ({state}) => {
                 state.count++;
                 return Comp.changeBitmask['state.count'];
@@ -17,7 +17,7 @@ export class Comp extends Component {
         }
 
         this.$afterMount = () => {
-            this.context.root.addEventListener('click', this.onClick);
+            this.context.elm0.addEventListener('click', this.handler);
         }
     }
 }
