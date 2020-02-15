@@ -38,10 +38,10 @@ export function suite (api: ExampleSuiteApi) {
                 cssQuery: '.changeCount',
                 textContent: 'state changed 8 times'
             });
-            await htmlMatch(page, {
-                cssQuery: '.volatile',
-                textContent: 'volatile variable is still at 1'
-            });
+            // await htmlMatch(page, {
+            //     cssQuery: '.volatile',
+            //     textContent: 'volatile variable is still at 1'
+            // });
         });
     });
 }

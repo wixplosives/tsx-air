@@ -29,6 +29,6 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
                 <div>state changed {state.changeCount++} times</div> 
             Because the state should never be changed declaratively
         */}
-        <div className="volatile">volatile variable is still at {volatile}</div>
+        {/* <div className="volatile">volatile variable is still at {volatile}</div> */}
     </div>;
 });

@@ -1,11 +1,11 @@
 import { propsAndStateParams, accessedVars } from './helpers';
 import ts from 'typescript';
-import { CompDefinition, DomBinding, JsxExpression, JsxRoot, cAccess, cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, isJsxExpression, JsxComponent } from '@tsx-air/compiler-utils';
+import { CompDefinition, DomBinding, JsxExpression, JsxRoot, cAccess, cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, isJsxExpression, JsxComponent, DomBindings } from '@tsx-air/compiler-utils';
 import { cBitMaskIf } from './bitmask';
 import get from 'lodash/get';
 import { safely } from '@tsx-air/utils';
 
-export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: DomBinding[]) => {
+export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: DomBindings) => {
     const params = propsAndStateParams(comp);
     if (params[0] || params[1]) {
         params.push('changeMap');
@@ -20,13 +20,13 @@ export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: Do
     return cArrow(params, [...changeHandlers]);
 };
 
-export const updateNativeExpressions = (root: JsxRoot, changed: string, domBindings: DomBinding[]) => {
+export const updateNativeExpressions = (root: JsxRoot, changed: string, domBindings: DomBindings) => {
     const dependentExpressions = root.expressions.filter(
         ex => get(ex.variables.accessed, changed)
     );
     const relevantExpressionsWithDom = dependentExpressions.map(exp => ({
         exp,
-        dom: domBindings.find(bind => bind.astNode === exp.sourceAstNode)
+        dom: domBindings.get(exp.sourceAstNode)
     }));
 
     return relevantExpressionsWithDom.map(exp => cAssign(
@@ -38,13 +38,13 @@ export const updateComponentExpressions =
     (_comp: CompDefinition,
         root: JsxRoot,
         variable: string,
-        domBindings: DomBinding[]) => {
+        domBindings: DomBindings) => {
 
         const isAffectedProp = (prop: JsxAttribute) =>
             isJsxExpression(prop.value) &&
             get(prop.value.variables.accessed, variable);
         const findDom = (jsxComp: JsxComponent) => safely(
-            () => domBindings.find(bind => bind.astNode === jsxComp.sourceAstNode),
+            () => domBindings.get(jsxComp.sourceAstNode),
             `Dom binding not found for ${jsxComp.sourceAstNode.getText()}`,
             v => !!v)!;
 
