@@ -6,10 +6,10 @@ import { execute } from '@tsx-air/testing';
 import { exampleSrcPath } from '@tsx-air/examples';
 import rimraf from 'rimraf';
 import { nodeFs } from '@file-services/node';
+import { packagePath } from '@tsx-air/utils/packages';
 
 describe('browserify', () => {
-    const tmp = nodeFs.join(fixtures, '..', 'tmp');
-    afterEach(done=>rimraf(tmp, done));
+    let tmp: string;
 
     it('should package simple.ts into a single js file', async () => {
         const built = await browserify({
@@ -36,7 +36,8 @@ describe('browserify', () => {
             output: nodeFs.join(tmp, 'bundle.js')
         });
         expect(execute(built).imports).to.eql({
-            local: true,
+            localImport: true,
+            importedTsx: true,
             packageDependency: true,
             monorepoPackage: true
         });
@@ -77,5 +78,13 @@ describe('browserify', () => {
             }
         });
         expect(execute(built)).to.eql({ wasTransformed: true });
+    });
+
+
+    beforeEach(function () {
+        tmp = packagePath('@tsx-air/browserify', 'tmp', this.currentTest!.title);
+    });
+    afterEach(function (done) {
+        this.test?.isPassed() ? rimraf(tmp, done) : done();
     });
 });

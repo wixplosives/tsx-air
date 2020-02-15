@@ -6,6 +6,8 @@ import { createWebpackFs } from '@file-services/webpack';
 import webpack from 'webpack';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { ITypeScriptLoaderOptions } from '@ts-tools/webpack-loader';
+import { compile } from './compile';
+import { asJs } from 'packages/playground/src/build/build.helpers';
 
 export interface BrowserifyOptions {
     base: string;
@@ -21,9 +23,11 @@ export const browserifyPath = packagePath('@tsx-air/browserify');
 export async function browserify(options: BrowserifyOptions): Promise<string> {
     const { base, entry, output,
         debug = false, loaderOptions = {}, configFilePath } = options;
+    const outDir = dirname(output);
+    compile([join(base, entry)], loaderOptions.transformers!, join(outDir,'src.js'));
 
     const wp = webpack({
-        entry: join(base, entry),
+        entry: join(outDir, 'src.js', asJs(entry)),
         mode: !debug ? 'production' : 'development',
         output: {
             filename: basename(output),
@@ -49,7 +53,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
             ]
         },
         resolve: {
-            extensions: ['.tsx', '.ts', '.js', '.json'],
+            extensions: ['.tsx', '.ts', '.js', '.jsx', '.json'],
             plugins: [new TsconfigPathsPlugin({
                 configFile: join(browserifyPath, '..', '..', 'tsconfig.json')
             })]
@@ -57,7 +61,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         performance: {
             hints: false
         },
-        devtool: !debug ? false : 'inline-source-map'
+        devtool: !debug ? false : '#source-map'
     });
 
     wp.outputFileSystem = createWebpackFs(nodeFs);
