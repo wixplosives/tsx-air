@@ -44,6 +44,7 @@
 	"settings": {
 		"typescript.tsdk": "tsx-air/node_modules/typescript/lib",
 		"cSpell.words": [
+			"Namepath",
 			"Unparsed"
 		]
 	}

@@ -9,10 +9,7 @@ let error;
 
 // tslint:disable: no-console
 const parsArgs = () => {
-    console.log(process.argv.slice(2));
     for (let i = 2; i < process.argv.length; i++) {
-        console.log(process.argv[i]);
-
         switch (process.argv[i]) {
             case '-c':
             case '--compiler':
