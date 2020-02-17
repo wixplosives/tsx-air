@@ -2,8 +2,8 @@ import { printAst } from '@tsx-air/compiler-utils';
 import { parseValue, parseStatement } from '../ast-utils/parser';
 import { expect, use } from 'chai';
 import { cObject } from '../transformers/generators/ast-generators';
-import {plugin } from '@tsx-air/testing';
-use(plugin);
+import {chaiPlugin } from '@tsx-air/testing';
+use(chaiPlugin);
 
 describe('print ast', () => {
     describe('with ast created through a file', () => {

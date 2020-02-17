@@ -7,7 +7,7 @@ import chalk from 'chalk';
 use(chaiPlugin);
 
 export function chaiPlugin(chai: any, utils: Chai.ChaiUtils) {
-    utils.addMethod(chai.Assertion.prototype, 'eqlCode', function (this: chaiPlugin.AssertionPrototype, text: string) {
+    utils.addMethod(chai.Assertion.prototype, 'eqlCode', function (this: Chai.AssertionPrototype, text: string) {
         const target: string = trimCode(this._obj);
         text = trimCode(text);
         new chai.Assertion(target).is.a('string');

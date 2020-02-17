@@ -1,4 +1,4 @@
-import { analyze, parseValue, CompDefinition, generateDomBindings } from '@tsx-air/compiler-utils';
+import { CompDefinition, generateDomBindings } from '@tsx-air/compiler-utils';
 import { analyzeFixtureComponents } from '../test.helpers';
 import { expect } from 'chai';
 
@@ -25,7 +25,7 @@ describe('generateDomBindings', () => {
         const spanText = fixture[0].jsxRoots[0].expressions[2].sourceAstNode;
         expect(binding.get(spanText)).to.eql({
             ctxName: 'exp2',
-            domLocator: 'root.children[0].children[0].childNodes[1]',
+            domLocator: 'root.children[0].children[0].childNodes[2]',
             astNode: spanText
         });
         const lastDiv = fixture[0].jsxRoots[0].expressions[3].sourceAstNode.parent.parent.parent;

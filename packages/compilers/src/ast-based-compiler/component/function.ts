@@ -58,7 +58,7 @@ export const cStateCall = (comp: CompDefinition, exp: ts.Expression) => {
                     ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
                     ts.createBlock(
                         [
-                            // [exp],
+                            ts.createExpressionStatement(exp),
                             ts.createReturn(createBitWiseOr(comp.name!, changeBits))
                         ],
                         true

@@ -69,9 +69,7 @@ export function generateDomBindings(compDef: CompDefinition) {
         const checkNode = (node: ts.Node) => {
             switch (node.kind) {
                 case SyntaxKind.JsxText:
-                    if (node.getText()) {
-                        childCount++;
-                    }
+                    childCount++;
                     break;
                 case SyntaxKind.JsxExpression:
                     domBound.set(node, {

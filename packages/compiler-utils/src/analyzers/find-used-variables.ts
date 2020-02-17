@@ -26,7 +26,7 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
             if (isVariableDeclaration(accessParent)) {
                 res.defined[printAst(n)] = {};
             }
-             return;
+            return;
         }
 
         if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
@@ -34,7 +34,7 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
                 return;
             }
             let isModification = false;
-            if (ts.isBinaryExpression(accessParent) && accessParent.left === n) {
+            if (ts.isBinaryExpression(accessParent) && printAst(accessParent.left) === printAst(n)) {
                 if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
                     isModification = true;
                 }
