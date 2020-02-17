@@ -1,5 +1,6 @@
+import ts from "typescript";
 
-export const kindInverse = {
+export const tsKindInverse: Record<ts.SyntaxKind, string> = {
     0: 'Unknown',
     1: 'EndOfFileToken',
     2: 'SingleLineCommentTrivia',
