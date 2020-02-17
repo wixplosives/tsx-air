@@ -1,6 +1,11 @@
 import isString from 'lodash/isString';
 import * as analyzed from './types';
 import ts from 'typescript';
+import { isNumber } from 'lodash';
+
+export function isAnalyzed(node: any): node is analyzed.JsxAttribute {
+    return typeof node.kind === 'string' && isNumber(node.sourceAstNode?.kind) && isNumber(node.sourceAstNode?.flags);
+}
 
 export function isJsxAttribute(node: any): node is analyzed.JsxAttribute {
     return node.kind === 'JsxAttribute';
@@ -47,15 +52,15 @@ export function isExportSpecifier(node: any): node is analyzed.ExportSpecifierIn
 }
 
 
-export function hasError(node: analyzed.TsxAirNode): node is analyzed.TsxAirNodeError {
+export function hasError(node: analyzed.AnalyzedNode): node is analyzed.AnalysisError {
     return node && node.kind === 'error';
 }
 
-export function isTsxAirNode(x: any): x is analyzed.TsxAirNode {
+export function isTsxAirNode(x: any): x is analyzed.AnalyzedNode {
     return x && isString(x.kind) && x.sourceAstNode;
 }
 
-export function isNotNull<T extends analyzed.TsxAirNode>(input: null | undefined | T): input is T {
+export function isNotNull<T extends analyzed.AnalyzedNode>(input: null | undefined | T): input is T {
     return !!input;
 }
 

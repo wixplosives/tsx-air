@@ -1,30 +1,31 @@
-import { packagePath } from '@tsx-air/utils/packages';
 import { nodeFs } from '@file-services/node';
 import { join, basename, dirname } from 'path';
 import { promisify } from 'util';
 import { createWebpackFs } from '@file-services/webpack';
 import webpack from 'webpack';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { ITypeScriptLoaderOptions } from '@ts-tools/webpack-loader';
 import { compile } from './compile';
-import { asJs } from 'packages/playground/src/build/build.helpers';
 import cpy from 'cpy';
+import { packagePath } from '@tsx-air/utils/packages';
+import { Compiler } from '@tsx-air/types';
+import { asJs } from '@tsx-air/utils';
+
 export interface BrowserifyOptions {
     base: string;
     entry: string;
     output: string;
     debug?: boolean;
     configFilePath?: string;
-    loaderOptions?: ITypeScriptLoaderOptions;
+    compiler: Compiler;
 }
 
 export const browserifyPath = packagePath('@tsx-air/browserify');
 
 export async function browserify(options: BrowserifyOptions): Promise<string> {
     const { base, entry, output,
-        debug = false, loaderOptions = {}, configFilePath } = options;
+        debug = false, configFilePath } = options;
     const outDir = dirname(output);
-    compile([join(base, entry)], loaderOptions.transformers!, join(outDir, 'src.js'));
+    compile([join(base, entry)], options.compiler, join(outDir, 'src.js'));
     await cpy(`${base.replace(/\\/g, '/')}/*.compiled.ts`, join(outDir, 'src.js'));
 
     const wp = webpack({
@@ -41,8 +42,6 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
                     exclude: /node_modules/,
                     loader: '@ts-tools/webpack-loader',
                     options: {
-                        ...loaderOptions,
-                        // configLookup:false,
                         configFilePath
                     }
                 },

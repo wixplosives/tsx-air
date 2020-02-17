@@ -9,20 +9,20 @@ export function generateStateAwareFunction(comp: CompDefinition, func: FuncDefin
     }
     const { statements } = (clone.body as ts.Block);
     clone.body.statements = ts.createNodeArray(statements.map(s => {
-        if (ts.isExpressionStatement(s)) {
-            return cStateCall(comp, [s]) || s;
-        }
+        // if (ts.isExpressionStatement(s)) {
+        //     return cStateCall(comp, [s]) || s;
+        // }
         if (ts.isReturnStatement(s) && s.expression) {
-            return cStateCall(comp, [ts.createExpressionStatement(s.expression)]) || s;
+            return cStateCall(comp, s.expression) || s;
         }
         return s;
     }));
     return clone;
 }
 
-export const cStateCall = (comp: CompDefinition, exp: ts.ExpressionStatement[]) => {
-    const { modified } = findUsedVariables(exp[0].expression);
-    const changeBits = flatMap(modified,
+export const cStateCall = (comp: CompDefinition, exp: ts.Expression) => {
+    const used = findUsedVariables(exp);
+    const changeBits = flatMap(used.modified,
         (v, m) => Object.keys(v).map(k => `${m}.${k}`));
 
     return changeBits.length === 0
@@ -58,7 +58,7 @@ export const cStateCall = (comp: CompDefinition, exp: ts.ExpressionStatement[]) 
                     ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
                     ts.createBlock(
                         [
-                            ...exp,
+                            // [exp],
                             ts.createReturn(createBitWiseOr(comp.name!, changeBits))
                         ],
                         true

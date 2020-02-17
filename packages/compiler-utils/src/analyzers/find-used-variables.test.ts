@@ -14,9 +14,6 @@ describe('findUsedVariables', () => {
                 var c = 'c';
             }`);
 
-        // const vars = scan(ast, isVariableLikeDeclaration).map(n => 
-        //     (n.node as ts.VariableDeclaration).initializer);
-      
         expect(findUsedVariables(ast).defined).to.eql({
             aParam: {},
             a: {},
@@ -31,8 +28,6 @@ describe('findUsedVariables', () => {
                 const b = aParam.internalObj.anotherProperty
                 const c = { val: aParam.field }
             }`);
-
-        // const vars = scan(ast, isVariableLikeDeclaration).map(n => n.node);
 
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {

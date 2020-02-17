@@ -1,30 +1,49 @@
-import * as ts from 'typescript';
-import { compilerOptions } from '@tsx-air/compiler-utils/src';
-import { astBasedCompiler } from '@tsx-air/compilers/src';
+import { compile } from '../compile';
+import { compilers } from 'packages/playground/src/compilers';
+import { kebabCase } from 'lodash';
 
-function compile(fileNames: string[]): void {
-    const program = ts.createProgram(fileNames, {...compilerOptions, outDir:'./out'});
-    const emitResult = program.emit(
-        undefined, undefined, undefined, undefined, astBasedCompiler.transformers
-    );
+const files: string[] = [];
+let compiler = 'ast';
+let out = 'src.js';
+let error;
 
-    const allDiagnostics = ts
-        .getPreEmitDiagnostics(program)
-        .concat(emitResult.diagnostics);
+// tslint:disable: no-console
+const parsArgs = () => {
+    console.log(process.argv.slice(2));
+    for (let i = 2; i < process.argv.length; i++) {
+        console.log(process.argv[i]);
 
-    allDiagnostics.forEach(diagnostic => {
-        if (diagnostic.file) {
-            const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start!);
-            const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-            console.log(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
-        } else {
-            console.log(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+        switch (process.argv[i]) {
+            case '-c':
+            case '--compiler':
+                compiler = process.argv[++i];
+                break;
+            case '-o':
+            case '--outDir':
+                out = process.argv[++i];
+                break;
+            default:
+                if (process.argv[i].startsWith('-')) {
+                    error = ('Invalid option: ${process.argv[i]}');
+                    return;
+                }
+                files.push(process.argv[i]);
         }
-    });
+    }
+};
 
-    const exitCode = emitResult.emitSkipped ? 1 : 0;
-    console.log(`Process exiting with code '${exitCode}'.`);
-    process.exit(exitCode);
+parsArgs();
+const cmp = compilers.find(c => kebabCase(c.label).startsWith(compiler));
+if (files.length && cmp && out && !error) {
+    compile(files, cmp, out);
+} else {
+    if (error) {
+        console.log(error, '\n');
+    }
+    if (!cmp) {
+        console.log(`Missing compiler ${compiler}`);
+    }
+    console.log(`Usage: tsx SOURCE... [-co]
+    -c --compiler ${compilers.map(c => kebabCase(c.label)).join('|')}
+    -o --outDir DEST`);
 }
-
-compile(process.argv.slice(2));

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import fixtures from '../fixtures';
 import { browserify, browserifyPath } from './browserify';
 import ts, { visitEachChild } from 'typescript';
-import { execute } from '@tsx-air/testing';
+import { execute, createMockpiler } from '@tsx-air/testing';
 import { exampleSrcPath } from '@tsx-air/examples';
 import rimraf from 'rimraf';
 import { nodeFs } from '@file-services/node';
@@ -15,7 +15,8 @@ describe('browserify', () => {
         const built = await browserify({
             base: fixtures,
             entry: 'simple.ts',
-            output: nodeFs.join(tmp, 'bundle.js')
+            output: nodeFs.join(tmp, 'bundle.js'),
+            compiler: createMockpiler()
         });
         expect(execute(built)).to.eql({ wasExported: true });
     });
@@ -24,7 +25,8 @@ describe('browserify', () => {
         const built = await browserify({
             base: fixtures,
             entry: 'simple.ts',
-            output: nodeFs.join(tmp, 'bundle.js')
+            output: nodeFs.join(tmp, 'bundle.js'),
+            compiler: createMockpiler()
         });
         expect(execute(built)).to.eql({ wasExported: true });
     });
@@ -33,7 +35,8 @@ describe('browserify', () => {
         const built = await browserify({
             base: fixtures,
             entry: 'with.imports.ts',
-            output: nodeFs.join(tmp, 'bundle.js')
+            output: nodeFs.join(tmp, 'bundle.js'),
+            compiler: createMockpiler()
         });
         expect(execute(built).imports).to.eql({
             localImport: true,
@@ -47,7 +50,8 @@ describe('browserify', () => {
         await browserify({
             base: fixtures,
             entry: 'with.imports.ts',
-            output: nodeFs.join(tmp, 'bundle.js')
+            output: nodeFs.join(tmp, 'bundle.js'),
+            compiler: createMockpiler()
         });
         expect(nodeFs.existsSync(nodeFs.join(tmp, 'src.js', 'something.compiled.ts'))).to.equal(true);
     });
@@ -59,7 +63,8 @@ describe('browserify', () => {
             base: fixtures,
             entry: 'import.examples.ts',
             configFilePath: nodeFs.join(fixtures, 'tsconfig.json'),
-            output: nodeFs.join(tmp, 'bundle.js')
+            output: nodeFs.join(tmp, 'bundle.js'),
+            compiler: createMockpiler()
         });
         expect(execute(built)).to.eql({
             // TODO discuss with Avi: should be with full path
@@ -72,7 +77,9 @@ describe('browserify', () => {
             base: fixtures,
             entry: 'simple.ts',
             output: nodeFs.join(fixtures, '..', 'tmp', 'bundle.js'),
-            loaderOptions: {
+            compiler: {
+                label: 'transformer',
+                features: [],
                 transformers: {
                     before: [ctx => node => {
                         const visitor: ts.Visitor = (n: ts.Node) => {

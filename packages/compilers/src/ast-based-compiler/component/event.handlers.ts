@@ -41,27 +41,6 @@ const generateAddListener = (dom: DomBinding, event: string, handler: FuncDefini
                 cAccess('this', handler.name!)
             ]));
 
-// ts.createExpressionStatement(ts.createCall(
-//     ts.createPropertyAccess(
-//         ts.createPropertyAccess(
-//             ts.createPropertyAccess(
-//                 ts.createThis(),
-//                 ts.createIdentifier('context')
-//             ),
-//             ts.createIdentifier('root')
-//         ),
-//         ts.createIdentifier('addEventListener')
-//     ),
-//     undefined,
-//     [
-//         ts.createStringLiteral('click'),
-//         ts.createPropertyAccess(
-//             ts.createThis(),
-//             ts.createIdentifier('onClick')
-//         )
-//     ]
-// ));
-
 type Handlers = Map<FuncDefinition, JsxExpression[]>;
 
 const findHandlersUsed = (comp: CompDefinition) => {

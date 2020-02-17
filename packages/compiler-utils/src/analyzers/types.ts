@@ -1,13 +1,13 @@
 import ts from 'typescript';
 
-export interface AnalyzerResult<T extends TsxAirNode> {
-    tsxAir: T | TsxAirNodeError;
-    astToTsxAir: Map<ts.Node, TsxAirNode[]>;
+export interface AnalyzerResult<T extends AnalyzedNode> {
+    tsxAir: T | AnalysisError;
+    astToTsxAir: Map<ts.Node, AnalyzedNode[]>;
 }
 
-export type Analyzer<T extends TsxAirNode> = (node: ts.Node) => AnalyzerResult<T>;
+export type Analyzer<T extends AnalyzedNode> = (node: ts.Node) => AnalyzerResult<T>;
 
-export type TsxAirNodeType = 'CompDefinition' | 'JsxFragment' |
+export type AnalyzedNodeType = 'CompDefinition' | 'JsxFragment' |
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
     'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' |
     'exportSpecifier' | 'reExport' | 'funcDefinition' | 'storeDefinition' |
@@ -21,17 +21,17 @@ interface TsxAirError {
     type: TsxErrorType;
 }
 
-export interface TsxAirNodeError extends TsxAirNode<ts.Node> {
+export interface AnalysisError extends AnalyzedNode<ts.Node> {
     kind: 'error';
 }
 
-export interface TsxAirNode<T extends ts.Node = ts.Node> {
-    kind: TsxAirNodeType;
+export interface AnalyzedNode<T extends ts.Node = ts.Node> {
+    kind: AnalyzedNodeType;
     sourceAstNode: T;
     errors?: TsxAirError[];
 }
 
-export interface NodeWithVariables<T extends ts.Node = ts.Node> extends TsxAirNode<T> {
+export interface NodeWithVariables<T extends ts.Node = ts.Node> extends AnalyzedNode<T> {
     variables: UsedVariables;
     /** members including internal closures */
     aggregatedVariables: UsedVariables;
@@ -44,7 +44,7 @@ export interface TsxFile extends NodeWithVariables<ts.SourceFile> {
     reExports: ReExport[];
 }
 
-export interface Import extends TsxAirNode<ts.ImportDeclaration> {
+export interface Import extends AnalyzedNode<ts.ImportDeclaration> {
     kind: 'import';
     module: string;
     imports: ImportSpecifierInfo[];
@@ -56,18 +56,18 @@ interface Specifier {
     localName: string;
     externalName: string;
 }
-export interface ImportSpecifierInfo extends TsxAirNode<ts.ImportSpecifier> {
+export interface ImportSpecifierInfo extends AnalyzedNode<ts.ImportSpecifier> {
     kind: 'importSpecifier';
 }
 export interface ImportSpecifierInfo extends Specifier {
 }
 
-export interface ExportSpecifierInfo extends TsxAirNode<ts.ExportSpecifier> {
+export interface ExportSpecifierInfo extends AnalyzedNode<ts.ExportSpecifier> {
     kind: 'exportSpecifier';
 }
 export interface ExportSpecifierInfo extends Specifier { }
 
-export interface ReExport extends TsxAirNode<ts.ExportDeclaration> {
+export interface ReExport extends AnalyzedNode<ts.ExportDeclaration> {
     kind: 'reExport';
     module: string;
     exports?: ExportSpecifierInfo[];
@@ -124,7 +124,7 @@ export interface JsxComponent extends NodeWithVariables<JsxElm> {
     // dependencies: CompProps[];
 }
 
-export interface JsxAttribute extends TsxAirNode<ts.JsxAttributeLike> {
+export interface JsxAttribute extends AnalyzedNode<ts.JsxAttributeLike> {
     kind: 'JsxAttribute';
     name: string;
     value: string | JsxExpression | true;
@@ -136,7 +136,7 @@ export type TsNodeToAirNode<T extends ts.Node> = T extends ts.JsxAttributeLike ?
     T extends ts.JsxFragment ? JsxFragment | JsxRoot :
     T extends ts.Identifier | ts.PropertyAccessExpression ? Namespace :
     T extends ts.CallExpression ? CompDefinition :
-    T extends ts.SourceFile ? TsxFile : TsxAirNode<T>;
+    T extends ts.SourceFile ? TsxFile : AnalyzedNode<T>;
 
 
 export interface RecursiveMap {

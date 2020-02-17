@@ -3,10 +3,10 @@ import { IFileSystem } from '@file-services/types';
 import { ICommonJsModuleSystem, createCjsModuleSystem } from '@file-services/commonjs';
 import { createMemoryFs } from '@file-services/memory';
 import flatMap from 'lodash/flatMap';
-import { dirname, basename, extname } from 'path';
+import { dirname, basename } from 'path';
 import { toCommonJs } from '@tsx-air/utils';
 import { CjsEnv, FileSnippets } from './types';
-
+import { asJs } from 'packages/utils/src/filenames';
 
 export async function preload(fs: IFileSystem, cjs: ICommonJsModuleSystem, filename: string, module: Promise<unknown>) {
     writeToFs(fs, filename, '// Preloaded');
@@ -76,19 +76,3 @@ export function removeBuilt(env: CjsEnv, path: string) {
     // tslint:disable-next-line: no-unused-expression
     env.compiledCjs.fileExistsSync(asJs(path)) && env.compiledCjs.removeSync(asJs(path));
 }
-
-const validExt = new Set(['.tsx', '.ts', '.js', '.json']);
-export const withoutExt = (path: string) => {
-    const ext = extname(path);
-    if (validExt.has(ext)) {
-        return path.replace(new RegExp(`${extname(path)}$`), '');
-    }
-    return path;
-};
-
-export const asJs = (path: string) => `${withoutExt(path)}.js`;
-export const asTs = (path: string) => `${withoutExt(path)}.ts`;
-export const asTsx = (path: string) => `${withoutExt(path)}.tsx`;
-export const isJs = (path: string) => extname(path) === 'js';
-export const isTs = (path: string) => extname(path) === 'ts';
-export const isTsx = (path: string) => extname(path) === 'tsx';

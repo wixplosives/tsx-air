@@ -1,12 +1,12 @@
-import * as ts from 'typescript';
+import ts from 'typescript';
 import { compilerOptions } from '@tsx-air/compiler-utils';
 import { Compiler } from '@tsx-air/types';
 
-// TODO replace ith Compiler
-export function compile(fileNames: string[], transformers: ts.CustomTransformers, outDir: string) {
-    const program = ts.createProgram(fileNames, { ...compilerOptions, outDir, sourceMap: true });
+export function compile(fileNames: string[], compiler: Compiler, outDir: string) {
+    const program = ts.createProgram(fileNames,
+        { ...compilerOptions, outDir, noEmit: !outDir, sourceMap: true });
     const emitResult = program.emit(
-        undefined, undefined, undefined, undefined, transformers
+        undefined, undefined, undefined, undefined, compiler.transformers
     );
 
     const allDiagnostics = ts
@@ -22,7 +22,7 @@ export function compile(fileNames: string[], transformers: ts.CustomTransformers
                     const message = ts.flattenDiagnosticMessageText(d.messageText, '\n');
                     return `${d.file.fileName} (${line + 1},${character + 1}): ${message}`;
                 } else {
-                    return ts.flattenDiagnosticMessageText(d.messageText, '\n')
+                    return ts.flattenDiagnosticMessageText(d.messageText, '\n');
                 }
             })
         );

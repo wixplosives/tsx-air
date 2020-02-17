@@ -1,7 +1,6 @@
 import { after } from 'mocha';
 import { Compiler, ExamplePaths, Features, ALL } from '@tsx-air/types';
 import { loadSuite } from '@tsx-air/testing';
-import ts from 'typescript';
 import { browserify } from '@tsx-air/browserify';
 import { join, basename } from 'path';
 import rimraf from 'rimraf';
@@ -43,7 +42,7 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                             this.timeout(process.env.CI ? 15000 : 6000);
                             this.retries(0);
                             return safely(
-                                () => browserifyBoilerplate(path, paths.temp, compiler.transformers),
+                                () => browserifyBoilerplate(path, paths.temp, compiler),
                                 'Failed to compile'
                             );
                         });
@@ -81,13 +80,10 @@ const getUnsupported = (features: Features, compiler: Compiler) => {
 };
 
 const browserifyBoilerplate = async (examplePath: string, target: string,
-    transformers: ts.CustomTransformers) => await browserify({
+    compiler: Compiler) => await browserify({
         base: examplePath,
         entry: 'suite.boilerplate.ts',
         output: join(target, 'boilerplate.js'),
         debug: !!process.env.DEBUG,
-        loaderOptions: {
-            transformers,
-            cache: false
-        }
+        compiler
     });
