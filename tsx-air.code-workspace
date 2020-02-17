@@ -42,6 +42,9 @@
 		}
 	],
 	"settings": {
-		"typescript.tsdk": "tsx-air/node_modules/typescript/lib"
+		"typescript.tsdk": "tsx-air/node_modules/typescript/lib",
+		"cSpell.words": [
+			"Unparsed"
+		]
 	}
 }

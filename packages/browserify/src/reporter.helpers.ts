@@ -1,4 +1,4 @@
-import ts from "typescript";
+import ts from 'typescript';
 
 export const tsKindInverse: Record<ts.SyntaxKind, string> = {
     0: 'Unknown',
