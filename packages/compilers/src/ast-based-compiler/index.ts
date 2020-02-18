@@ -14,6 +14,7 @@ const compiler: Compiler = {
         feature('single', 'store'),
         feature('nested', 'stateless', 'component'),
         feature('event', 'handler'),
+        // feature('when', 'props', 'change', 'handler'),
     ]
 };
 
