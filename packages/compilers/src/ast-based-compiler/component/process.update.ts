@@ -1,6 +1,8 @@
 import { propsAndStateParams, accessedVars } from './helpers';
 import ts from 'typescript';
-import { CompDefinition, JsxExpression, JsxRoot, cAccess, cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, isJsxExpression, JsxComponent, DomBindings, printAst, printAstText } from '@tsx-air/compiler-utils';
+import { CompDefinition, JsxExpression, JsxRoot, cAccess, 
+    cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, 
+    isJsxExpression, JsxComponent, DomBindings, printAstText } from '@tsx-air/compiler-utils';
 import { cBitMaskIf } from './bitmask';
 import get from 'lodash/get';
 import { safely } from '@tsx-air/utils';

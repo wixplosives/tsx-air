@@ -1,4 +1,4 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep, cArrow, cIf } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import get from 'lodash/get';

@@ -95,13 +95,13 @@ export const findJsxText: Visitor<{ kind: string, text: string }> = node => {
     return undefined;
 };
 
-export const getTextBlockChildren: Visitor<Node[][]> = node => {
+export const getTextBlockChildren: Visitor<ts.Node[][]> = node => {
     if (!ts.isJsxElement(node)) {
         return;
     }
     const { children } = node;
-    const texts: Node[][] = [];
-    let current: Node[] = [];
+    const texts: ts.Node[][] = [];
+    let current: ts.Node[] = [];
 
     children.forEach(i => {
         if (ts.isJsxText(i) || ts.isJsxExpression(i)) {

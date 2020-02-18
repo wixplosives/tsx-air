@@ -22,7 +22,7 @@ export function createReporter(files: string[], compiler: Compiler) {
                         closeAfter();
                         return session.run(query, data);
                     })
-                    .catch((e) => {
+                    .catch(() => {
                         last = null;
                     });
                 return last;

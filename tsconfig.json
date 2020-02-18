@@ -66,6 +66,9 @@
   ],
   "exclude": [
     "**/dist/**/*",
-    "**/TODO*"
+    "**/TODO*",
+    "**/tmp",
+    "**/src.js",
+    "**/fixtures"
   ]
 }

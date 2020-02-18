@@ -1,6 +1,6 @@
 import ts from 'typescript';
 
-export const printAst = (n: ts.Node) => {
+export function printAst(n: ts.Node): string {
     const printer = ts.createPrinter({
         newLine: ts.NewLineKind.LineFeed,
         omitTrailingSemicolon: true,
@@ -9,12 +9,12 @@ export const printAst = (n: ts.Node) => {
 
     const res = printer.printNode(ts.EmitHint.Unspecified, n, n.getSourceFile() || ts.createSourceFile('temp.tsx', ``, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX));
     return res;
-};
+}
 
-export const printAstText = (n:ts.Node) => {
+export function printAstText(n: ts.Node): string {
     if (n.pos > -1 && n.end > -1) {
         return n.getText();
     }
     return printAst(n);
-};
+}
 

@@ -1,5 +1,5 @@
 import { basicPatterns } from '../../../test.helpers';
-import { parseValue, analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, printAst } from '@tsx-air/compiler-utils';
+import { parseValue, analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer } from '@tsx-air/compiler-utils';
 import { expect } from 'chai';
 import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } from './to.string';
 import ts from 'typescript';
@@ -7,7 +7,7 @@ import { mapValues } from 'lodash';
 
 describe('generateToString', () => {
     it('should generate at toString method based on the used props and state', () => {
-        const comp = mapValues(basicPatterns(), 
+        const comp = mapValues(basicPatterns(),
             compDef => evalAst(generateToString(compDef.jsxRoots[0], compDef)));
 
         expect(comp.Static(), 'Static').to.equal('<div></div>');
@@ -17,7 +17,7 @@ describe('generateToString', () => {
             .to.equal(`<div><!-- store1.a -->1<!-- --><!-- store1.b -->2<!-- --></div>`);
         expect(comp.ProsAndState({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }), 'ProsAndState')
             .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --><!-- store2.a -->1<!-- --><!-- store2.b -->2<!-- --></div>`);
-        expect(comp.DynamicAttributes({a:1}), 'DynamicAttributes')
+        expect(comp.DynamicAttributes({ a: 1 }), 'DynamicAttributes')
             .to.equal(`<div dir="ltr" lang="1"><span></span></div>`);
         expect(comp.DynamicAttributesSelfClosing({ a: 2 }), 'DynamicAttributesSelfClosing')
             .to.equal(`<div dir="ltr" lang="2"></div>`);

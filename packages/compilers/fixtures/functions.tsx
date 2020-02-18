@@ -14,7 +14,7 @@ export const WithStateChangeOnly = TSXAir(() => {
 export const WithNonStateChangingCode = TSXAir(() => {
     const s = store({ a: 1 });
     const onClick = () => {
-        const a=1;
+        const a=1;        
         if (a===2) {
             console.log(s.a);
         }

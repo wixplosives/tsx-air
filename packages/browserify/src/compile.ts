@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { compilerOptions } from '@tsx-air/compiler-utils';
 import { Compiler } from '@tsx-air/types';
+// @ts-ignore
 import { createReporter } from './reporter';
 
 export function compile(fileNames: string[], compiler: Compiler, outDir: string) {

@@ -20,7 +20,7 @@ export const NestedStateless = TSXAir((pr: { a: string }) => {
 });
 
 export const EventListener = TSXAir(() => {
-    const onclick = () => console.log('ok!');
+    const onclick = () => void 0;
     return <div onClick={onclick} />;
 });
 

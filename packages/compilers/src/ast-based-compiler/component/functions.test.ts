@@ -2,8 +2,7 @@ import { functions } from '../../test.helpers';
 import { expect, use } from 'chai';
 import { generateStateAwareFunction, extractPreRender } from './function';
 import { chaiPlugin } from '@tsx-air/testing';
-import ts from 'typescript';
-import { cArray, cArrow } from '@tsx-air/compiler-utils/src';
+import {  cArrow } from '@tsx-air/compiler-utils/src';
 use(chaiPlugin);
 
 describe('functions', () => {

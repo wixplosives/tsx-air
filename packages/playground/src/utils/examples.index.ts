@@ -1,7 +1,7 @@
-import { withoutExt, asTsx } from './../build/build.helpers';
 import { build } from '../build/build';
 import { BuiltCode } from '../build/types';
 import { Compiler } from '@tsx-air/types';
+import { withoutExt, asTsx } from '@tsx-air/utils';
 
 export function getExamples(): Promise<string[]> {
     return globalThis.fetch('/examples').then(r => r.json());
