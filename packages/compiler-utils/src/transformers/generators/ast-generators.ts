@@ -206,13 +206,19 @@ export const cImport = (info: ImportDefinition) => {
         ), cLiteralAst(info.modulePath));
 };
 
-export const createBitWiseOr = (comp: string, fields: string[]) => {
+export const createBitWiseOr = (comp: string, fields: string[], flags:string[]=[]) => {
     const target: ts.Expression = cAccess(comp, 'changeBitmask');
     let res: ts.Expression;
     fields.forEach(fieldName => {
         const field = cFieldAccess(target, fieldName);
         res = res
             ? ts.createBinary(res, ts.SyntaxKind.FirstBinaryOperator, field)
+            : field;
+    });
+    flags.forEach(flag => {
+        const field = cFieldAccess('TSXAir.runtime.flags', flag);
+        res = res
+            ? ts.createBinary(res, ts.SyntaxKind.BarToken, field)
             : field;
     });
 

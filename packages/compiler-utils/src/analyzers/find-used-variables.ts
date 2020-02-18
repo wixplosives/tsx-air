@@ -22,7 +22,7 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
             return;
         }
         const accessParent = n.parent;
-        if (isVariableLikeDeclaration(accessParent) && accessParent.name === n) {
+        if (isVariableLikeDeclaration(accessParent) && printAst(accessParent.name) === printAst(n)) {
             if (isVariableDeclaration(accessParent)) {
                 res.defined[printAst(n)] = {};
             }

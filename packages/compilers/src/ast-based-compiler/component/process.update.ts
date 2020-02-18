@@ -1,9 +1,10 @@
 import { propsAndStateParams, accessedVars } from './helpers';
 import ts from 'typescript';
-import { CompDefinition, DomBinding, JsxExpression, JsxRoot, cAccess, cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, isJsxExpression, JsxComponent, DomBindings } from '@tsx-air/compiler-utils';
+import { CompDefinition, JsxExpression, JsxRoot, cAccess, cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, isJsxExpression, JsxComponent, DomBindings } from '@tsx-air/compiler-utils';
 import { cBitMaskIf } from './bitmask';
 import get from 'lodash/get';
 import { safely } from '@tsx-air/utils';
+import { generateStateAwareFunction } from './function';
 
 export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: DomBindings) => {
     const params = propsAndStateParams(comp);
@@ -17,7 +18,8 @@ export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: Do
         ...updateComponentExpressions(comp, comp.jsxRoots[0], prop, domBindings)
     ]));
 
-    return cArrow(params, [...changeHandlers]);
+    const preRender = generateStateAwareFunction(comp).body as ts.Block;
+    return cArrow(params, [...preRender.statements, ...changeHandlers]);
 };
 
 export const updateNativeExpressions = (root: JsxRoot, changed: string, domBindings: DomBindings) => {

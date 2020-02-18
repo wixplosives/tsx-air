@@ -16,6 +16,10 @@ export interface RuntimeCycle {
 }
 
 export class Runtime {
+    public  static readonly flags = {
+        preRender: 1 << 63
+    };
+
     public $stats = [] as RuntimeCycle[];
 
     private pending: {
@@ -37,7 +41,8 @@ export class Runtime {
         this.triggerViewUpdate();
     }
 
-    public updateState<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(instance: Comp, mutator: StateMutator<Comp>) {
+    public updateState<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>
+        (instance: Comp, mutator: StateMutator<Comp>) {
         // @ts-ignore
         this.pending.states.push([instance, mutator]);
         this.triggerViewUpdate();

@@ -4,9 +4,6 @@ import { readFileSync } from 'fs';
 import { transpileModule } from 'typescript';
 import { packagePath } from '@tsx-air/utils/packages';
 import { compilerOptions } from '@tsx-air/compiler-utils';
-import { expect, use } from 'chai';
-import { chaiPlugin } from '@tsx-air/testing';
-use(chaiPlugin);
 
 export const compileFixture = (name: string, compiler: Compiler) => {
     return transpileModule(
@@ -21,13 +18,6 @@ export const compileFixture = (name: string, compiler: Compiler) => {
 export const fixture = (name: string) => packagePath('@tsx-air/compilers', 'fixtures', name);
 
 export const readFixture = (name: string) => readFileSync(fixture(name), 'utf8');
-
-export const itShouldCompileFixture = (name: string, compiler: Compiler) => {
-    it(`should compile ${name} with "${compiler.label}.tsx" => "${compiler.label}.js"`, () => {
-        const compiled = compileFixture(`${name}.tsx`, compiler);
-        expect(compiled).to.have.contentOf(fixture(`${name}.js`));
-    });
-};
 
 export const parseFixture = (name: string) =>
     asSourceFile(readFixture(name), fixture(name));
@@ -47,5 +37,14 @@ export const basicPatterns = () => {
         EventListener: cache[5],
         DynamicAttributes: cache[6],
         DynamicAttributesSelfClosing: cache[7],
+    };
+};
+
+let fcache: CompDefinition[];
+export const functions = () => {
+    fcache = fcache || analyzeFixtureComponents(`functions.tsx`);
+    return {
+        WithStateChangeOnly: fcache[0],
+        WithNonStateChangingCode: fcache[1]
     };
 };
