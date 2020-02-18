@@ -26,7 +26,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         debug = false, configFilePath } = options;
     const outDir = dirname(output);
     compile([join(base, entry)], options.compiler, join(outDir, 'src.js'));
-    await cpy(`${base.replace(/\\/g, '/')}/*.compiled.ts`, join(outDir, 'src.js'));
+    await cpy(join(base, `/*.compiled.ts`), join(outDir, 'src.js'));
 
     const wp = webpack({
         entry: join(outDir, 'src.js', asJs(entry)),
