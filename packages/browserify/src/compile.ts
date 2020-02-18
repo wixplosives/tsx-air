@@ -10,8 +10,8 @@ export function compile(fileNames: string[], compiler: Compiler, outDir: string)
 
     const emitResult = program.emit(
         undefined, undefined, undefined, undefined,
-        // compiler.transformers
-        createReporter(fileNames, compiler)
+        compiler.transformers
+        // createReporter(fileNames, compiler)
     );
 
     const allDiagnostics = ts

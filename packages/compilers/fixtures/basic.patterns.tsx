@@ -19,12 +19,13 @@ export const NestedStateless = TSXAir((pr: { a: string }) => {
     return <div><PropsOnly a={pr.a} b={pr.a} unused={3} /></div>;
 });
 
-export const EventListener = TSXAir(() =>
-    // tslint:disable-next-line: no-console jsx-no-lambda
-    <div onClick={() => console.log('ok!')} />);
+export const EventListener = TSXAir(() => {
+    const onclick = () => console.log('ok!');
+    return <div onClick={onclick} />;
+});
 
-export const DynamicAttributes = TSXAir((props:{a:string}) =>
+export const DynamicAttributes = TSXAir((props: { a: string }) =>
     <div dir={'ltr'} lang={props.a}><span /></div>);
 
 export const DynamicAttributesSelfClosing = TSXAir((props: { a: string }) =>
-    <div dir={'ltr'} lang={props.a}/>);
+    <div dir={'ltr'} lang={props.a} />);

@@ -1,11 +1,12 @@
-import { asSourceFile } from './../../ast-utils/parser';
-import { printAst } from '@tsx-air/compiler-utils';
+import { getComponentTag } from './../../visitors/jsx';
+import { asSourceFile } from '../../ast-utils/parser';
+import { printAstText } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import { cloneDeep } from './ast-generators';
 import { nativeAttributeMapping } from './native-attribute-mapping';
 import last from 'lodash/last';
-import { repeat } from 'lodash';
+import repeat from 'lodash/repeat';
 
 export interface ExpressionData {
     expression: ts.Expression;
@@ -67,7 +68,7 @@ export function nodeToStringParts(node: ts.Node, replacers: AstNodeReplacer[], l
     replacers.find(r => (replaced = r(node)) !== false);
     if (replaced !== false) {
         if (ts.isJsxElement(replaced)) {
-            replaced = asSourceFile(repeat(' ', leadingTriviaWidth) + printAst(replaced));
+            replaced = asSourceFile(repeat(' ', leadingTriviaWidth) + printAstText(replaced));
             const ret = nodeToStringParts(replaced, replacers, 0);
             return ret;
         }
@@ -93,7 +94,7 @@ export const jsxAttributeReplacer: AstNodeReplacer =
 export const jsxEventHandlerRemover: AstNodeReplacer =
     node => {
         if (ts.isJsxAttribute(node)) {
-            return printAst(node.name).match(/^on[A-Z].*/)
+            return printAstText(node.name).match(/^on[A-Z].*/)
                 ? ''
                 : false;
         }
@@ -102,8 +103,10 @@ export const jsxEventHandlerRemover: AstNodeReplacer =
 
 export const jsxAttributeNameReplacer: AstNodeReplacer =
     node => {
-        if (ts.isIdentifier(node) && node.parent && ts.isJsxAttribute(node.parent)) {
-            const attrName = printAst(node);
+        if (ts.isIdentifier(node) && node.parent && ts.isJsxAttribute(node.parent)
+            && !getComponentTag(node.parent.parent.parent.parent)
+        ) {
+            const attrName = printAstText(node);
             const replacement = nativeAttributeMapping[attrName];
             return ' ' + (replacement || attrName);
         }
@@ -113,10 +116,10 @@ export const jsxAttributeNameReplacer: AstNodeReplacer =
 export const jsxSelfClosingElementReplacer: AstNodeReplacer = node => {
     if (ts.isJsxSelfClosingElement(node)) {
         return cloneDeep(ts.createJsxElement(
-            ts.createJsxOpeningElement(cloneDeep(node.tagName),
+            ts.createJsxOpeningElement(node.tagName,
                 undefined,
                 cloneDeep(node.attributes)
-            ), [], ts.createJsxClosingElement(cloneDeep(node.tagName))
+            ), [], ts.createJsxClosingElement(node.tagName)
         ), node.parent);
     } else {
         return false;
@@ -124,6 +127,6 @@ export const jsxSelfClosingElementReplacer: AstNodeReplacer = node => {
 };
 
 export const isComponentTag = (node: ts.JsxTagNameExpression) => {
-    const text = printAst(node);
+    const text = printAstText(node);
     return text[0].toLowerCase() !== text[0] || text.indexOf('.') !== -1;
 };

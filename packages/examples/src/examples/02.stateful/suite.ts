@@ -1,47 +1,52 @@
 import { ExampleSuiteApi, feature, Features } from '@tsx-air/types';
 import { htmlMatch } from '@tsx-air/testing';
+import repeat from 'lodash/repeat';
 
-export const features:Features = [
-    feature('stateful','component'),
-    feature('single','store'),
-    feature('event','handler')
+export const features: Features = [
+    feature('stateful', 'component'),
+    feature('single', 'store'),
+    feature('event', 'handler')
 ];
 
-export function suite (api: ExampleSuiteApi) {
+export function suite(api: ExampleSuiteApi) {
     it('should have 2 buttons', async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, {
             cssQuery: '.btn',
             pageInstances: 2,
             textContent: {
-                contains: 'button'
+                contains: 'Button'
             }
         });
     });
-    
+
     describe('interactions', () => {
         it('should respond to buttons being clicked', async () => {
             const page = await api.afterLoading;
-            const buttons = await page.$$('.btn');
-            await buttons[0].click();
-            await buttons[0].click();
-            await buttons[0].click();
-            await buttons[1].click();
+            const [buttonA, buttonB] = await page.$$('.btn');
+            const pressA = 4;
+            const pressB = 4;
+            for (let i = 0; i < pressA; i++) {
+                await buttonA.click();
+            }
+            for (let i = 0; i < pressB; i++) {
+                await buttonB.click();
+            }
             await page.waitFor(50);
-            await htmlMatch(buttons[0], {
-                textContent: 'button!!!'
+            await htmlMatch(buttonA, {
+                textContent: 'ButtonA' + repeat('!', pressA)
             });
-            await htmlMatch(buttons[1], {
-                textContent: 'button*'
+            await htmlMatch(buttonB, {
+                textContent: 'ButtonB' + repeat('*', pressB)
             });
             await htmlMatch(page, {
                 cssQuery: '.changeCount',
-                textContent: 'state changed 8 times'
+                textContent: `state changed ${pressA + pressB} times`
             });
-            // await htmlMatch(page, {
-            //     cssQuery: '.volatile',
-            //     textContent: 'volatile variable is still at 1'
-            // });
+            await htmlMatch(page, {
+                cssQuery: '.volatile',
+                textContent: 'volatile variable is still at 1'
+            });
         });
     });
 }

@@ -1,8 +1,8 @@
-import { CompDefinition, DomBinding, bitMask, JsxExpression } from '@tsx-air/compiler-utils';
+import { CompDefinition, bitMask, JsxExpression, DomBindings } from '@tsx-air/compiler-utils';
 import { isJsxExpression } from '@tsx-air/compiler-utils';
 import get from 'lodash/get';
 
-export const compClass = (dom: DomBinding[], def: CompDefinition) => {
+export const compClass = (dom: DomBindings, def: CompDefinition) => {
     const mask = bitMask(def);
     const propsIdentifierRegExp = new RegExp(`(?<![\\d\\w])(${def.propsIdentifier})`, 'g');
     return `
@@ -34,7 +34,7 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
     function handlePropExpressions(prop: string): string[] {
         return def.jsxRoots[0].expressions
             .filter(ex => get(ex.variables.accessed, ['props', prop]))
-            .map(ex => ({ ex, dm: dom.find(dm => dm.astNode === ex.sourceAstNode)! }))
+            .map(ex => ({ ex, dm: dom.get(ex.sourceAstNode)! }))
 
             .map(({ ex, dm }) => `this.context.${dm.ctxName}.textContent = ${replaceProps(ex.expression, 'newProps')};`);
         // TODO: update html attributes
@@ -46,7 +46,7 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
 
         return comps.map(comp => {
             const props = comp.props.filter(p => isJsxExpression(p.value));
-            const ctxName = dom.find(c => c.astNode === comp.sourceAstNode)!.ctxName;
+            const ctxName = dom.get(comp.sourceAstNode)!.ctxName;
             const update = props.reduce((ret, p) => `${ret}p.${p.name} = ${replaceProps((p.value as JsxExpression).expression, 'newProps')};\n`, '');
             const changed = props.reduce((ret, p) => `${ret && ret + '|'}${comp.name}.changeBitmask["props.${p.name}"]`, '');
 

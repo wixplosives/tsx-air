@@ -10,6 +10,7 @@ describe('findUsedVariables', () => {
     it('should find defined variables', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = 'a';
+                /* with leading comment */
                 let b = 'b';
                 var c = 'c';
             }`);
@@ -25,6 +26,7 @@ describe('findUsedVariables', () => {
     it('should find accessed members', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = aParam.internalObj.property
+                /* with leading comment */
                 const b = aParam.internalObj.anotherProperty
                 const c = { val: aParam.field }
             }`);
@@ -43,6 +45,7 @@ describe('findUsedVariables', () => {
     it('should find modifed members', () => {
         const ast = parseValue(`(aParam)=>{
                 aParam.replacedProperty = aParam.internalObject.accessedProperty;
+                /* with leading comment */
                 aParam.addedToProperty += 'a';
                 aParam.removedFromProperty -= 3;
                 aParam.devidedProperty /= 3;

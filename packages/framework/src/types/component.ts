@@ -15,7 +15,7 @@ export abstract class Component<Ctx extends Dom=Dom, Props={}, State={}> {
         requestAnimationFrame(() => this.$afterMount(context.root));
     }
 
-    public abstract $$processUpdate(newProps: Props, newState: State, changeMap: number): void;
+    public abstract $$processUpdate(newProps: Props, newState: State, changeMap: number, updatesCount:number): void;
 
     public $afterMount(_ref: HTMLElement) {/** Noop */ }
     public $afterUnmount() {/** Noop */ }

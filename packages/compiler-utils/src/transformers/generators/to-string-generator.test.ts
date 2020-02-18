@@ -4,13 +4,12 @@ import ts from 'typescript';
 import { expect } from 'chai';
 import { analyze } from '../../analyzers';
 import { CompDefinition } from '../../analyzers/types';
-import { printAst } from '../../dev-utils/print-ast';
-import { cloneDeep } from './ast-generators';
+import { printAstText } from '../../dev-utils/print-ast';
 
 describe('jsxToStringTemplate', () => {
     it('should return a the string of a jsx node if no replacers exist', () => {
         const ast = parseValue(`<div>gaga</div>`);
-        const res = printAst(jsxToStringTemplate(ast as ts.JsxElement, []));
+        const res = printAstText(jsxToStringTemplate(ast as ts.JsxElement, []));
         expect(res).to.equal('`<div>gaga</div>`');
     });
     it('should replace to template string expressions according to visitors', () => {
@@ -19,7 +18,7 @@ describe('jsxToStringTemplate', () => {
             node => ts.isJsxExpression(node) &&
             {
                 prefix: '"',
-                expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
+                expression: node.expression ? node.expression : ts.createTrue(),
                 suffix: '"'
             }
         ]);
@@ -38,7 +37,7 @@ describe('replace attribute expression', () => {
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
-        const res = printAst(templateAst);
+        const res = printAstText(templateAst);
         expect(res).to.equal('`<div id="${props.shouldBeReplaced}">{props.shouldNotBeReplaced}</div>`');
     });
 });
@@ -53,9 +52,10 @@ describe('replace attribute name', () => {
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeNameReplacer]);
-        const res = printAst(templateAst);
+        const res = printAstText(templateAst);
         expect(res).to.equal('`<div class="gaga"></div>`');
     });
+
     it('should not replace attribute names for components', () => {
         const ast = parseValue(`TSXAir((props)=>{
             return <Comp className="gaga"></Comp>
@@ -65,7 +65,7 @@ describe('replace attribute name', () => {
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeNameReplacer]);
-        const res = printAst(templateAst);
+        const res = printAstText(templateAst);
         expect(res).to.equal('`<Comp className="gaga"></Comp>`');
     });
 });

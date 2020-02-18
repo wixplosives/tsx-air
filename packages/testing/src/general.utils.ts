@@ -26,8 +26,8 @@ export const trimCode = (code: string) => {
     } catch {
         return code
             .replace(/\r/g, '')
-            .replace(/\s+$/gm, '\n')
-            .replace(/\s+[^$]/g, '');
+            .replace(/\s+$/gm, '\n');
+            // .replace(/\s+[^$]/g, '');
     }
 };
 

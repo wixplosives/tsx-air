@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { UsedVariables, RecursiveMap } from './types';
 import { update, merge } from 'lodash';
-import { printAst } from '..';
+import { printAstText } from '..';
 
 /**
  * 
@@ -22,9 +22,9 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
             return;
         }
         const accessParent = n.parent;
-        if (isVariableLikeDeclaration(accessParent) && printAst(accessParent.name) === printAst(n)) {
+        if (isVariableLikeDeclaration(accessParent) && printAstText(accessParent.name) === printAstText(n)) {
             if (isVariableDeclaration(accessParent)) {
-                res.defined[printAst(n)] = {};
+                res.defined[printAstText(n)] = {};
             }
             return;
         }
@@ -34,7 +34,7 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
                 return;
             }
             let isModification = false;
-            if (ts.isBinaryExpression(accessParent) && printAst(accessParent.left) === printAst(n)) {
+            if (ts.isBinaryExpression(accessParent) && printAstText(accessParent.left) === printAstText(n)) {
                 if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
                     isModification = true;
                 }
@@ -119,7 +119,7 @@ export function accessToStringArr(node: AccessNodes): { path: string[], nestedAc
             n = n.expression;
         } else {
 
-            path.unshift(printAst(n.name));
+            path.unshift(printAstText(n.name));
             n = n.expression;
         }
     }
@@ -127,7 +127,7 @@ export function accessToStringArr(node: AccessNodes): { path: string[], nestedAc
     if (!ts.isIdentifier(n)) {
         throw new Error('unhandled input in accessToStringArr');
     }
-    path.unshift(printAst(n));
+    path.unshift(printAstText(n));
     return {
         path,
         nestedAccess

@@ -3,14 +3,14 @@ import { TSXAir, store } from '@tsx-air/framework';
 export class Comp extends Component {
     constructor() {
         super(...arguments);
-        this.$$processUpdate = (__0, { state }, changeMap) => {
+        this.$$processUpdate = (__0, { state }, changeMap, externalUpdatesCount) => {
             if (changeMap & Comp.changeBitmask['state.count']) {
                 this.context.exp1.textContent = state.count;
             }
         };
-      
+
         this.handler = () => {
-            TSXAir.runtime.updateState(this, ({state}) => {
+            TSXAir.runtime.updateState(this, ({ state }) => {
                 state.count++;
                 return Comp.changeBitmask['state.count'];
             });

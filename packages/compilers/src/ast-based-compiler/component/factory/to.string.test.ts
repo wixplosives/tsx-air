@@ -7,7 +7,8 @@ import { mapValues } from 'lodash';
 
 describe('generateToString', () => {
     it('should generate at toString method based on the used props and state', () => {
-        const comp = mapValues(basicPatterns(), compDef => evalAst(generateToString(compDef.jsxRoots[0], compDef)));
+        const comp = mapValues(basicPatterns(), 
+            compDef => evalAst(generateToString(compDef.jsxRoots[0], compDef)));
 
         expect(comp.Static(), 'Static').to.equal('<div></div>');
         expect(comp.PropsOnly({ a: 'a', b: 'b', unused: '!' }), 'PropsOnly')

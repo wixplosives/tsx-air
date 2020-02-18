@@ -1,7 +1,9 @@
 import { functions } from '../../test.helpers';
 import { expect, use } from 'chai';
-import { generateStateAwareFunction } from './function';
+import { generateStateAwareFunction, extractPreRender } from './function';
 import { chaiPlugin } from '@tsx-air/testing';
+import ts from 'typescript';
+import { cArray, cArrow } from '@tsx-air/compiler-utils/src';
 use(chaiPlugin);
 
 describe('functions', () => {
@@ -41,18 +43,28 @@ describe('functions', () => {
             `);
         });
 
+    });
+
+    describe('extractPreRender', () => {
         it('remove store creation, functions and return statement from a component function', () => {
             const comp = functions().WithStateChangeOnly;
-            expect(generateStateAwareFunction(comp)).
-                to.have.astLike(`(__0, {s}, changeMask) => {
-                    if (!(changeMask & TSXAir.runtime.flags['preRender'])) {
+            const asFunc = cArrow([], extractPreRender(comp));
+            expect(asFunc).
+                to.have.astLike(`() => {
+                   if (externalUpdatesCount) {
                         TSXAir.runtime.updateState(this, ({s}) => {
                             s.a=3;
                             return WithStateChangeOnly.changeBitmask['s.a'] | TSXAir.runtime.flags['preRender'];
                         });
                     }
-                }
-            `);
+                }`);
+        });
+
+        describe('when the "removeStateChanges" param is true', ()=>{
+            it('remove all store modification as well', () => {
+                const comp = functions().WithStateChangeOnly;
+                expect(extractPreRender(comp, true)).to.eql([]);
+            });
         });
     });
 });

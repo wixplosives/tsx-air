@@ -1,15 +1,16 @@
 import { propsAndStateParams, accessedVars } from './helpers';
 import ts from 'typescript';
-import { CompDefinition, JsxExpression, JsxRoot, cAccess, cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, isJsxExpression, JsxComponent, DomBindings } from '@tsx-air/compiler-utils';
+import { CompDefinition, JsxExpression, JsxRoot, cAccess, cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, isJsxExpression, JsxComponent, DomBindings, printAst, printAstText } from '@tsx-air/compiler-utils';
 import { cBitMaskIf } from './bitmask';
 import get from 'lodash/get';
 import { safely } from '@tsx-air/utils';
-import { generateStateAwareFunction } from './function';
+import { extractPreRender } from './function';
 
 export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: DomBindings) => {
     const params = propsAndStateParams(comp);
     if (params[0] || params[1]) {
         params.push('changeMap');
+        params.push('externalUpdatesCount');
     }
     const vars = accessedVars(comp);
 
@@ -18,22 +19,73 @@ export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: Do
         ...updateComponentExpressions(comp, comp.jsxRoots[0], prop, domBindings)
     ]));
 
-    const preRender = generateStateAwareFunction(comp).body as ts.Block;
-    return cArrow(params, [...preRender.statements, ...changeHandlers]);
+    return cArrow(params, createUpdateBody(extractPreRender(comp), changeHandlers));
+};
+
+export const createUpdateBody = (preRender: ts.Statement[], changeHandlers: ts.IfStatement[]) => {
+    if (!changeHandlers.length) {
+        return [];
+    }
+    if (preRender.length) {
+        return [ts.createDo(
+            ts.createBlock(
+                [
+                    ...preRender,
+                    ts.createIf(
+                        ts.createPrefix(
+                            ts.SyntaxKind.ExclamationToken,
+                            ts.createIdentifier('externalUpdatesCount')
+                        ),
+                        ts.createBlock(
+                            changeHandlers,
+                            true
+                        ),
+                        undefined
+                    )
+                ],
+                true
+            ),
+            ts.createBinary(
+                ts.createPostfix(
+                    ts.createIdentifier('externalUpdatesCount'),
+                    ts.SyntaxKind.MinusMinusToken
+                ),
+                ts.createToken(ts.SyntaxKind.GreaterThanToken),
+                ts.createNumericLiteral('0')
+            )
+        )];
+    }
+    return changeHandlers;
 };
 
 export const updateNativeExpressions = (root: JsxRoot, changed: string, domBindings: DomBindings) => {
     const dependentExpressions = root.expressions.filter(
         ex => get(ex.variables.accessed, changed)
     );
-    const relevantExpressionsWithDom = dependentExpressions.map(exp => ({
-        exp,
-        dom: domBindings.get(exp.sourceAstNode)
-    }));
 
-    return relevantExpressionsWithDom.map(exp => cAssign(
-        ['this', 'context', exp.dom!.ctxName, 'textContent'],
-        exp.exp.sourceAstNode!.expression!));
+    return dependentExpressions.map(exp => {
+        const dom = domBindings.get(exp.sourceAstNode)?.ctxName;
+        if (dom) {
+            return cAssign(
+                ['this', 'context', dom, 'textContent'],
+                exp.sourceAstNode!.expression!);
+        } else {
+            const attr = exp.sourceAstNode.parent;
+            if (ts.isJsxAttribute(attr)) {
+                const name = printAstText(attr.name);
+                const element = (domBindings.get(attr.parent.parent) ||
+                    domBindings.get(attr.parent.parent.parent))?.ctxName;
+                if (name && element) {
+                    return ts.createStatement(
+                        cCall(
+                            ['this', 'context', element, 'setAttribute'],
+                            [ts.createIdentifier(name), exp.sourceAstNode!.expression!]
+                        ));
+                }
+            }
+            throw new Error('Dom binding error with\n' + printAstText(exp.sourceAstNode));
+        }
+    });
 };
 
 export const updateComponentExpressions =

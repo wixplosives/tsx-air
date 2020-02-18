@@ -1,33 +1,54 @@
-import { propsAndStateParams } from './helpers';
-import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep, cArrow, UsedVariables, printAst } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep, cArrow, cIf } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
-import ts, { isFunctionDeclaration } from 'typescript';
+import ts from 'typescript';
+import get from 'lodash/get';
 
-export function generateStateAwareFunction(comp: CompDefinition, func?: FuncDefinition) {
-    const src = func
-        ? func.sourceAstNode
-        : comp.sourceAstNode.arguments[0] as ts.ArrowFunction;
-    let clone = cloneDeep(src);
-    if (!ts.isBlock(clone.body)) {
-        clone.body = ts.createBlock([ts.createReturn(clone.body)]);
-    }
+export function generateStateAwareFunction(comp: CompDefinition, func: FuncDefinition) {
+    const clone = withBlockBody(func.sourceAstNode);
     const { statements } = (clone.body as ts.Block);
-    clone.body.statements = ts.createNodeArray(statements.map((s, i) => {
-        if (ts.isVariableStatement(s)) {
-            const used = findUsedVariables(s);
-            if (comp.stores.some(store => used.defined[store.name])) {
-                return undefined;
-            }
+    clone.body.statements = ts.createNodeArray(statements.map(s => {
+        if (isStoreDefinition(comp, s)) {
+            throw new Error('stores may only be declared in the main component body');
         }
         if (ts.isExpressionStatement(s)) {
-            return cStateCall(comp, s.expression, !func) || s;
-        }
-        if (ts.isReturnStatement(s) && !func) {
-            return undefined;
+            return cStateCall(comp, s.expression, false) || s;
         }
         if (ts.isReturnStatement(s) && s.expression) {
-            return cStateCall(comp, s.expression, !func) || s;
+            return cStateCall(comp, s.expression, false) || s;
         }
+        return s;
+    }));
+    return clone;
+}
+
+export function extractPreRender(comp: CompDefinition, removeStateChanges=false): ts.Statement[] {
+    const statements =
+        get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
+
+    if (!statements?.length) {
+        return [];
+    }
+    const modified = statements.map(s => {
+        if (isStoreDefinition(comp, s)) {
+            return;
+        }
+        if (ts.isExpressionStatement(s)) {
+            const stateChange = cStateCall(comp, s.expression, true);
+            if (removeStateChanges && stateChange) {
+                return;
+            }
+            return stateChange
+                ? cIfNotPreRender(stateChange)
+                : cloneDeep(s);
+        }
+        if (ts.isReturnStatement(s)) {
+            return;
+        }
+        if (ts.isVariableStatement(s)) {
+            return removeClosureFunctions(s);
+        }
+        return cloneDeep(s);
+
         // TODO: add general inner functions support, this coe should help:
         // const ff = comp.functions.find(f => {
         //     const srcStatement = (clone.body as ts.Block).statements ?
@@ -42,24 +63,53 @@ export function generateStateAwareFunction(comp: CompDefinition, func?: FuncDefi
         //     const modFunc = generateStateAwareFunction(comp, ff);
         //     ss.declarationList.declarations[0].initializer = modFunc;
         // }
-        if (!func && ts.isVariableStatement(s) && s.declarationList.declarations) {
-            const noFuncs = s.declarationList.declarations.filter(({ initializer }) => initializer && 
-                !ts.isArrowFunction(initializer) && !ts.isFunctionExpression(initializer)); 
-            if (noFuncs.length) {
-                s.declarationList.declarations = ts.createNodeArray(noFuncs);
-            } else {
-                return undefined;
-            }
-        }
-        return s;
-    }).filter(i => i) as ts.Statement[]);
-    if (!func) {
-        clone = cArrow(propsAndStateParams(comp), clone.body);
-    }
-    return clone;
+
+    }).filter(i => i) as ts.Statement[];
+    return modified;
 }
 
-export const cStateCall = (comp: CompDefinition, exp: ts.Expression, preRender: boolean) => {
+const removeClosureFunctions = (vars: ts.VariableStatement) => {
+    const noFuncs = vars.declarationList.declarations.filter(({ initializer }) => initializer &&
+        !ts.isArrowFunction(initializer) && !ts.isFunctionExpression(initializer));
+    if (noFuncs.length) {
+        const clone = cloneDeep(vars);
+        clone.declarationList.declarations = ts.createNodeArray(noFuncs);
+        return clone;
+    } else {
+        return undefined;
+    }
+};
+
+interface ArrowFunctionWithBlockBody extends ts.ArrowFunction {
+    body: ts.FunctionBody;
+}
+
+
+function withBlockBody(src: ts.ArrowFunction | ts.FunctionExpression): ArrowFunctionWithBlockBody {
+    const clone = cloneDeep(src);
+    if (!ts.isBlock(clone.body!)) {
+        clone.body = ts.createBlock([ts.createReturn(clone.body)]);
+    }
+    if (ts.isFunctionExpression(src)) {
+        return ts.createArrowFunction(
+            undefined,
+            clone.typeParameters, clone.parameters, clone.type,
+            undefined,
+            clone.body
+        ) as ArrowFunctionWithBlockBody;
+    }
+    return clone as ArrowFunctionWithBlockBody;
+}
+
+const isStoreDefinition = (comp: CompDefinition, node: ts.Statement) => {
+    if (ts.isVariableStatement(node)) {
+        const used = findUsedVariables(node);
+        return comp.stores.some(store => used.defined[store.name]);
+    }
+    return false;
+};
+
+const cStateCall = (comp: CompDefinition, exp: ts.Expression, preRender: boolean) => {
     const used = findUsedVariables(exp);
     const changeBits = flatMap(used.modified,
         (v, m) => Object.keys(v).map(k => `${m}.${k}`));
@@ -97,7 +147,7 @@ export const cStateCall = (comp: CompDefinition, exp: ts.Expression, preRender: 
                     ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
                     ts.createBlock(
                         [
-                            ts.createExpressionStatement(exp),
+                            ts.createExpressionStatement(cloneDeep(exp, undefined)),
                             ts.createReturn(createBitWiseOr(comp.name!, changeBits, preRender ? ['preRender'] : undefined))
                         ],
                         true
@@ -106,3 +156,13 @@ export const cStateCall = (comp: CompDefinition, exp: ts.Expression, preRender: 
             ]
         ));
 };
+
+const cIfNotPreRender = (ifTrue: ts.ExpressionStatement) =>
+    ts.createIf(
+        ts.createIdentifier('externalUpdatesCount'),
+        ts.createBlock(
+            [ifTrue],
+            true
+        ),
+        undefined
+    );

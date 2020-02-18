@@ -1,17 +1,23 @@
 import { propsAndStateParams } from '../helpers';
 import { cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer, JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep, jsxSelfClosingElementReplacer, jsxEventHandlerRemover, printAst } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
+import { extractPreRender } from '../function';
 
-export const generateToString = (node: JsxRoot, comp: CompDefinition) =>
-    cArrow(propsAndStateParams(comp),
-        jsxToStringTemplate(node.sourceAstNode, [
-            jsxComponentReplacer,
-            jsxEventHandlerRemover,
-            jsxTextExpressionReplacer,
-            jsxAttributeReplacer,
-            jsxAttributeNameReplacer,
-            jsxSelfClosingElementReplacer,
-        ]));
+export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
+    const preRender = extractPreRender(comp, true);
+    const template = jsxToStringTemplate(node.sourceAstNode, [
+        jsxComponentReplacer,
+        jsxEventHandlerRemover,
+        jsxTextExpressionReplacer,
+        jsxAttributeReplacer,
+        jsxAttributeNameReplacer,
+        jsxSelfClosingElementReplacer,
+    ]);
+    return cArrow(propsAndStateParams(comp),
+        preRender?.length
+            ? [...preRender, ts.createReturn(template)]
+            : template);
+};
 
 export const jsxTextExpressionReplacer: AstNodeReplacer =
     node => ts.isJsxExpression(node) &&

@@ -11,3 +11,10 @@ export const printAst = (n: ts.Node) => {
     return res;
 };
 
+export const printAstText = (n:ts.Node) => {
+    if (n.pos > -1 && n.end > -1) {
+        return n.getText();
+    }
+    return printAst(n);
+};
+

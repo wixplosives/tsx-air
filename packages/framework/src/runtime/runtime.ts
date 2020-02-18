@@ -15,10 +15,12 @@ export interface RuntimeCycle {
     readonly changed: number;
 }
 
+const flags = {
+    preRender: 1 << 63
+};
+
 export class Runtime {
-    public  static readonly flags = {
-        preRender: 1 << 63
-    };
+    public readonly flags = flags;
 
     public $stats = [] as RuntimeCycle[];
 
@@ -71,7 +73,13 @@ export class Runtime {
             mutatedData.set(instance, cloneDeep(initialData));
         }
         const modMapping = mutator(mutatedData.get(instance));
-        changeBitmasks.set(instance, changeBitmasks.get(instance)! | modMapping);
+        const oldChangeMap = changeBitmasks.get(instance) || 0;
+        const newChangeMap = oldChangeMap | modMapping;
+        // if (oldChangeMap) {
+        //     console.log(oldChangeMap & modMapping & flags.preRender);
+        // }
+        changeBitmasks.set(instance, newChangeMap);
+        return !(modMapping & flags.preRender);
     }
 
     private updateViewOnce(
@@ -80,17 +88,26 @@ export class Runtime {
         requested: Map<Component, IterableIterator<void>>) {
 
         const changeBitmasks = new Map<Component, number>([...requested.keys()].map(k => [k, 0]));
+        const updatesCount = new Map<Component, number>();
         const latestProps = new Map<Component, {}>();
         const latestStates = new Map<Component, {}>();
 
-        props.forEach(([instance, mutator]) => this.mutate(mutator, instance, instance.props, latestProps, changeBitmasks));
-        states.forEach(([instance, mutator]) => this.mutate(mutator, instance, instance.state, latestStates, changeBitmasks));
+        props.forEach(([instance, mutator]) => {
+            if (this.mutate(mutator, instance, instance.props, latestProps, changeBitmasks)) {
+                updatesCount.set(instance, (updatesCount.get(instance) || 0) + 1);
+            }
+        });
+        states.forEach(([instance, mutator]) => {
+            if (this.mutate(mutator, instance, instance.state, latestStates, changeBitmasks)) {
+                updatesCount.set(instance, (updatesCount.get(instance) || 0) + 1);
+            }
+        });
 
         changeBitmasks.forEach((changeMap, instance) => {
             const newProps = latestProps.get(instance) || instance.props;
             const newState = latestStates.get(instance) || instance.state;
 
-            instance.$$processUpdate(newProps, newState, changeMap);
+            instance.$$processUpdate(newProps, newState, changeMap, updatesCount.get(instance) || 0);
             // @ts-ignore
             instance.props = newProps;
             // @ts-ignore

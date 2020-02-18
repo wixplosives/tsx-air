@@ -3,7 +3,7 @@ import { TSXAir, store } from '@tsx-air/framework';
 export class Comp extends Component {
     constructor() {
         super(...arguments);
-        this.$$processUpdate = (__0, { store1 }, changeMap) => {
+        this.$$processUpdate = (__0, { store1 }, changeMap, externalUpdatesCount) => {
             if (changeMap & Comp.changeBitmask['store1.a']) {
                 this.context.exp0.textContent = store1.a;
             }

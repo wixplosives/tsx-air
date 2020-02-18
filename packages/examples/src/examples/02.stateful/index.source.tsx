@@ -2,8 +2,8 @@ import { TSXAir, store } from '@tsx-air/framework';
 
 export const StatefulComp = TSXAir((props: { initialState: string }) => {
     const state = store({
-        a: props.initialState,
-        b: props.initialState,
+        a: props.initialState + 'A',
+        b: props.initialState + 'B',
         changeCount: 0
     });
     let volatile = 0;
@@ -29,6 +29,6 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
                 <div>state changed {state.changeCount++} times</div> 
             Because the state should never be changed declaratively
         */}
-        {/* <div className="volatile">volatile variable is still at {volatile}</div> */}
+        <div className="volatile">volatile variable is still at {volatile}</div>
     </div>;
 });

@@ -4,7 +4,7 @@ import { TSXAir } from '@tsx-air/framework';
 export class Child extends Component {
     constructor() {
         super(...arguments);
-        this.$$processUpdate = (props, __1, changeMap) => {
+        this.$$processUpdate = (props, __1, changeMap, externalUpdatesCount) => {
             if (changeMap & Child.changeBitmask['props.b']) {
                 this.context.exp0.textContent = props.b;
             }
@@ -27,7 +27,7 @@ Child.changeBitmask = {
 export class Parent extends Component {
     constructor() {
         super(...arguments);
-        this.$$processUpdate = (props, __1, changeMap) => {
+        this.$$processUpdate = (props, __1, changeMap, externalUpdatesCount) => {
             if (changeMap & Parent.changeBitmask['props.a']) {
                 TSXAir.runtime.updateProps(this.context.Child0, p => {
                     p.b = props.a;
