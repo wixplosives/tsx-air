@@ -42,7 +42,7 @@ export function preppeteer(options?: Partial<PreppeteerOptions>): PreppeteerSuit
             opt,
             this.currentTest!.timeout()));
 
-        this.currentTest?.retries(opt.DEBUG ? 0 : this.currentTest?.retries() + opt.retries);
+        this.currentTest?.retries(opt.DEBUG ? 0 :  opt.retries);
         this.currentTest?.timeout(api.timeout);
     });
 
