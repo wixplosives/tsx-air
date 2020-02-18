@@ -56,8 +56,8 @@ export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, 
 const initialState = (props: StatefulCompProps) =>
     ({
         state: {
-            a: props.initialState,
-            b: props.initialState,
+            a: props.initialState+'A',
+            b: props.initialState+'B',
             changeCount: 0
         }
     }) as StatefulCompState;
