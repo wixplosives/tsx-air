@@ -1,7 +1,7 @@
 import ts from 'typescript';
-import { JsxAttribute, DomBinding, CompDefinition, scan, findJsxRoot, findJsxExpression, findJsxComponent, transpileNode } from '@tsx-air/compiler-utils';
+import { JsxAttribute, DomBinding, CompDefinition, scan, findJsxRoot, findJsxExpression, findJsxComponent, transpileNode, DomBindings } from '@tsx-air/compiler-utils';
 
-export const compFactory = (dom: DomBinding[], def: CompDefinition) => {
+export const compFactory = (dom: DomBindings, def: CompDefinition) => {
     return `${def.name}.factory = {
         initialState: ()=>({}),
         toString: ${toString(def)},
@@ -59,8 +59,8 @@ const toString = (def: CompDefinition) => {
         }\``;
 };
 
-const hydrate = (dom: DomBinding[], def: CompDefinition) => {
-    const ctx = [{ ctxName: 'root', domLocator: 'root' } as DomBinding, ...dom].map(
+const hydrate = (dom: DomBindings, def: CompDefinition) => {
+    const ctx = [{ ctxName: 'root', domLocator: 'root' } as DomBinding, ...dom.values()].map(
         ({ compType, domLocator, ctxName }) => (compType
             ? `${ctxName}:${compType}.factory.hydrate(${domLocator}, props)`
             : `${ctxName}:${domLocator}`))

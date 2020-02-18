@@ -35,7 +35,6 @@ export const compClass = (dom: DomBindings, def: CompDefinition) => {
         return def.jsxRoots[0].expressions
             .filter(ex => get(ex.variables.accessed, ['props', prop]))
             .map(ex => ({ ex, dm: dom.get(ex.sourceAstNode)! }))
-
             .map(({ ex, dm }) => `this.context.${dm.ctxName}.textContent = ${replaceProps(ex.expression, 'newProps')};`);
         // TODO: update html attributes
     }
