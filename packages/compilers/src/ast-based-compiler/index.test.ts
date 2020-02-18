@@ -1,4 +1,4 @@
-import { itShouldCompileFixture, compileFixture, fixture } from '../test.helpers';
+import { compileFixture, fixture } from '../test.helpers';
 import compiler from '.';
 import { expect } from 'chai';
 
@@ -15,5 +15,5 @@ describe('c-AST based compiler', () => {
                 const compiled = compileFixture(`${name}.tsx`, compiler);
                 expect(compiled).to.have.contentOf(fixture(`${name}.js`));
             });
-        };
+        });
 });
