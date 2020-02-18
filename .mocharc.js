@@ -3,5 +3,5 @@ module.exports = {
     extension: ['js', 'json', 'ts', 'tsx'],
     colors: true,
     retries: process.env.CI ? 5 : 1,
-    timeout: process.env.CI ? 24000 : 12000
+    timeout: process.env.CI ? 35000 : 15000
 };
