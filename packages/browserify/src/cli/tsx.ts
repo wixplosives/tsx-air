@@ -6,6 +6,7 @@ const files: string[] = [];
 let compiler = 'ast';
 let out = 'src.js';
 let error;
+let log = false;
 
 // tslint:disable: no-console
 const parsArgs = () => {
@@ -18,6 +19,10 @@ const parsArgs = () => {
             case '-o':
             case '--outDir':
                 out = process.argv[++i];
+                break;
+            case '-l':
+            case '--log':
+                log = true;
                 break;
             default:
                 if (process.argv[i].startsWith('-')) {
@@ -32,7 +37,7 @@ const parsArgs = () => {
 parsArgs();
 const cmp = compilers.find(c => kebabCase(c.label).startsWith(compiler));
 if (files.length && cmp && out && !error) {
-    compile(files, cmp, out);
+    compile(files, cmp, out, log);
 } else {
     if (error) {
         console.log(error, '\n');
@@ -42,5 +47,7 @@ if (files.length && cmp && out && !error) {
     }
     console.log(`Usage: tsx SOURCE... [-co]
     -c --compiler ${compilers.map(c => kebabCase(c.label)).join('|')}
-    -o --outDir DEST`);
+    -o --outDir DEST
+    -l --log log compilation graph to db
+    `);
 }

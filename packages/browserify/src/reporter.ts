@@ -1,16 +1,19 @@
 import { cloneDeep } from 'lodash';
 import { driver } from 'neo4j-driver';
 import { Compiler } from '@tsx-air/types';
-import { tsKindInverse, getProps } from './reporter.helpers';
+import { createVisitor, mapToId } from './reporter.helpers';
 import ts from 'typescript';
 import debounce from 'lodash/debounce';
+import { createNewCompilation, compilingFile, result } from './reporter.queries';
+import nodeFs from '@file-services/node';
 
-export function createReporter(files: string[], compiler: Compiler) {
+export function createReporter(files: string[], compiler: Compiler, url = 'bolt://0.0.0.0:7687') {
     const transformers = cloneDeep(compiler.transformers);
     type Driver = ReturnType<typeof driver>;
     try {
-        const drv: Driver = driver('bolt://0.0.0.0:7687');
+        const drv: Driver = driver(url);
         const session = drv.session();
+        console.log(`Logging compilation data to ${url}`);
         let last: Promise<any> | null = Promise.resolve();
         const closeAfter = debounce(() =>
             session.close().then(() => drv.close())
@@ -20,9 +23,19 @@ export function createReporter(files: string[], compiler: Compiler) {
                 last = last
                     .then(() => {
                         closeAfter();
-                        return session.run(query, data);
+                        const r = session.run(query, data);
+                        // r.then(res => {
+                        //     console.log('============================')
+                        //     console.log(query)
+                        //     console.error(JSON.stringify(data, null, 2));
+                        //     console.log(res)
+                        // });
+                        return r;
                     })
-                    .catch(() => {
+                    .catch(e => {
+                        console.error(`Logging error`, query);
+                        console.error(JSON.stringify(data, null, 2));
+                        console.error(e);
                         last = null;
                     });
                 return last;
@@ -30,66 +43,35 @@ export function createReporter(files: string[], compiler: Compiler) {
                 return Promise.resolve(null);
             }
         };
-        const compilationId = run(`
-            ${files.map((f, i) => `
-            MERGE (file${i}:File {path: '${f}'}`)})
-            MERGE (compiler:Compiler {label:'${compiler.label}'})
-            CREATE (comp:Compilation {timestamp: $time})-[:USING]->(compiler)
-            ${files.map((_, i) => `MERGE (comp)-[:COMPILED {main:'true'}]->(file${i})`)}            
-            RETURN id(comp)
-            `, { time: new Date().toISOString() })
-            .then(res => res.records[0].get(0));
 
-        transformers.before?.unshift(ctx => nd => {
-            const { fileName } = nd;
-            run(`MERGE (file:File { path: $fileName })`, { fileName });
-            compilationId.then(compId => {
-                run(`
-                MATCH (c:Compilation) WHERE id(c)=$compId
-                MERGE (file:File { path: $fileName })
-                MERGE (c)-[:COMPILED]->(file)
-                `, { compId, fileName });
-            });
+        const compilationId = run(
+            ...createNewCompilation(files, compiler))
+            .then(mapToId);
 
-            const visitor = (node: ts.Node) => {
-                const params = {
-                    fileName,
-                    kind: tsKindInverse[node.kind],
-                    pos: node.pos,
-                    fullPos: node.getFullStart(),
-                    end: node.end,
-                    text: node.getText(),
-                    fullText: node.getFullText(),
-                    parentPos: node.parent?.pos,
-                    parentEnd: node.parent?.end,
-                    parentFullPos: node.parent?.getFullStart(),
-                    parentText: node.parent?.getText(),
-                };
-                getProps(node);
-                if (!ts.isSourceFile(node.parent)) {
-                    if (node.getText().trim()) {
-                        run(`
-                        MATCH (parent { text: $parentText })<-[:PARENT_OF*]-(:File { path: $fileName })
-                        CREATE (node:${params.kind} { text: $text, kind: $kind })
-                        CREATE (parent)-[:PARENT_OF { pos: $pos, fullPos: $fullPos, end: $end }]->(node)
-                    `, params);
-                    }
-                } else {
-                    run(`
-                    MERGE (node:${params.kind} { kind: $kind, text: $text })
-                    MERGE (file:File { path: $fileName} )
-                    MERGE (file)-[:PARENT_OF { pos: $pos, fullPos: $fullPos, end: $end }]->(node)
-                `, params);
-                }
-
-                ts.visitEachChild(node, visitor, ctx);
-                return node;
-            };
-            ts.visitEachChild(nd, visitor, ctx);
-            return nd;
-        });
+        transformers.before = [
+            (ctx => nd => {
+                const fileName = nodeFs.resolve(process.cwd(), nd.fileName);
+                const file = compilationId.then(
+                    (compId: any) => run(...compilingFile(compId, fileName))
+                        .then(mapToId)
+                );
+                ts.visitEachChild(nd, createVisitor(file, file, fileName, ctx, run), ctx);
+                return nd;
+            }),
+            ...(transformers.before || []),
+            (ctx => nd => {
+                const fileName = nodeFs.resolve(process.cwd(), nd.fileName);
+                const file = compilationId.then(
+                    (compId: any) => run(...result(compId, fileName))
+                        .then(mapToId)
+                );
+                ts.visitEachChild(nd, createVisitor(file, file, fileName, ctx, run), ctx);
+                return nd;
+            }),
+        ];
         return transformers;
     } catch (err) {
+        console.error(`Logging to ${url} failed:`, err);
         return compiler.transformers;
     }
 }

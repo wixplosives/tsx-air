@@ -1,3 +1,4 @@
+import { tsKindInverse } from './invert.ts.kind';
 import ts from 'typescript';
 
 export function printAst(n: ts.Node): string {
@@ -12,9 +13,22 @@ export function printAst(n: ts.Node): string {
 }
 
 export function printAstText(n: ts.Node): string {
-    if (n.pos > -1 && n.end > -1) {
-        return n.getText();
-    }
+    if (!n) { return ''; }
+    try {
+        if (n.pos > -1 && n.end > -1 && n.getText && !ts.isSourceFile(n)) {
+            return n.getText();
+        }
+    } catch { /* */ }
+    return printAst(n);
+}
+
+export function printAstFullText(n: ts.Node): string {
+    if (!n) { return ''; }
+    try {
+        if (n.pos > -1 && n.end > -1 && n.getFullText && !ts.isSourceFile(n)) {
+            return n.getFullText();
+        }
+    } catch { /* */ }
     return printAst(n);
 }
 
