@@ -1,4 +1,3 @@
-import { tsKindInverse } from './invert.ts.kind';
 import ts from 'typescript';
 
 export function printAst(n: ts.Node): string {

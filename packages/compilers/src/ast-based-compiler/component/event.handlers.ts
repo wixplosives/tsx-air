@@ -1,5 +1,5 @@
 import { getAttrName } from './../../common/jsx.event.handler';
-import { CompDefinition, cProperty, DomBindings, cArrow, FuncDefinition, JsxExpression, DomBinding, cCall, cAccess } from '@tsx-air/compiler-utils';
+import { CompDefinition, DomBindings, FuncDefinition, JsxExpression, DomBinding, cCall, cAccess, cMethod, cProperty, cBind } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { generateStateAwareFunction } from './function';
 import { isEventHandler, findBinding } from '../../common/jsx.event.handler';
@@ -9,12 +9,13 @@ import { camelCase } from 'lodash';
 export function* eventHandlers(comp: CompDefinition, domBinding: DomBindings) {
     const handlers = findHandlersUsed(comp);
     for (const [handler] of handlers) {
-        yield cProperty(safely(
-            () => handler.name!, 'Unknown event name', i => !!i)
-            , generateStateAwareFunction(comp, handler));
+        const name = safely(() => handler.name!, 'Unknown event name', i => !!i);
+        const {parameters, body} = generateStateAwareFunction(comp, handler);
+        yield cMethod(`_${name}`, parameters, body);
+        yield cProperty(name, cBind(`_${name}`));
     }
     if (handlers.size > 0) {
-        yield cProperty('$afterMount', generateAfterMount(handlers, domBinding));
+        yield cMethod('$afterMount', [], generateAfterMount(handlers, domBinding));
     }
 }
 
@@ -29,7 +30,7 @@ const generateAfterMount = (handlers: Handlers, domBinding: DomBindings) => {
             }
         }
     }
-    return cArrow([], ts.createBlock([...addListeners()]));
+    return ts.createBlock([...addListeners()]);
 };
 
 const generateAddListener = (dom: DomBinding, event: string, handler: FuncDefinition) =>

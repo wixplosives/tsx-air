@@ -6,6 +6,7 @@ import ts from 'typescript';
 import debounce from 'lodash/debounce';
 import { createNewCompilation, compilingFile, result } from './reporter.queries';
 import nodeFs from '@file-services/node';
+// tslint:disable: no-console
 
 export function createReporter(files: string[], compiler: Compiler, url = 'bolt://0.0.0.0:7687') {
     const transformers = cloneDeep(compiler.transformers);

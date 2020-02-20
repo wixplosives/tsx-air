@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import isArray from 'lodash/isArray';
 import last from 'lodash/last';
+import isString from 'lodash/isString';
 
 export interface AstGeneratorsOptions {
     useSingleQuates: boolean;
@@ -13,23 +14,44 @@ export const defaultOptions: AstGeneratorsOptions = {
 };
 
 export const cArrow = (params: Array<string | ts.ObjectBindingPattern | undefined>, body: ts.ConciseBody | ts.Statement[]) => {
-    while (params.length && last(params) === undefined) {
+    const { _params, _body } = _cFunc(params, body as ts.Expression);
+    return ts.createArrowFunction(undefined, undefined, _params, undefined, undefined, _body);
+};
+
+interface CFunc<P, B> {
+    _params: P;
+    _body: B;
+}
+
+
+function _cFunc(params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>
+    | ts.NodeArray<ts.ParameterDeclaration>,
+    body: ts.Block | ts.Statement[]): CFunc<ts.ParameterDeclaration[], ts.Block>;
+function _cFunc(params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>, body: ts.Expression): CFunc<ts.ParameterDeclaration[], ts.Expression>;
+function _cFunc(params:
+    Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>
+    | ts.NodeArray<ts.ParameterDeclaration>,
+    body: ts.Block | ts.ConciseBody | ts.Statement[]) {
+    while (params instanceof Array && params.length && last(params) === undefined) {
         params.pop();
     }
-    return ts.createArrowFunction(undefined, undefined,
-        params.map((item, i) =>
-            ts.createParameter(undefined, undefined, undefined, item || `__${i}`, undefined, undefined, undefined)),
-        undefined, undefined,
-        body instanceof Array
+    return {
+        _params: params instanceof Array
+            ? params.map((item, i) =>
+                !item || isString(item) || ts.isObjectBindingPattern(item)
+                    ? ts.createParameter(undefined, undefined, undefined, item || `__${i}`, undefined, undefined, undefined)
+                    : item)
+            : params,
+        _body: body instanceof Array
             ? ts.createBlock(body)
             : body
-    );
-};
+    };
+}
 
 export const cAccess = (...callPath: string[]) => _cAccess(false, callPath);
 export const cSafeAccess = (...callPath: string[]) => _cAccess(true, callPath);
 
-const _cAccess = (safe:boolean, callPath: string[]) => {
+const _cAccess = (safe: boolean, callPath: string[]) => {
     type Access = ts.PropertyAccessExpression | ts.PropertyAccessChain | ts.Identifier;
     let ret: Access;
     const create = (base: Access, p: string) => safe
@@ -109,6 +131,20 @@ export interface ClassConstructor {
     statements: ts.Statement[];
 }
 
+export const cBind = (name: string) =>
+    ts.createCall(
+        ts.createPropertyAccess(
+            ts.createPropertyAccess(
+                ts.createThis(),
+                ts.createIdentifier(name)
+            ),
+            ts.createIdentifier('bind')
+        ),
+        undefined,
+        [ts.createThis()]
+    );
+
+
 export const cProperty = (name: string, initializer: ts.Expression | undefined) => ts.createProperty(
     undefined,
     [],
@@ -117,6 +153,15 @@ export const cProperty = (name: string, initializer: ts.Expression | undefined) 
     undefined,
     initializer
 );
+
+export function cMethod(name: string, params:
+    Array<string | ts.ObjectBindingPattern | undefined>
+    | ts.NodeArray<ts.ParameterDeclaration>,
+    body: ts.Block | ts.Statement[]): ts.MethodDeclaration {
+    const { _params, _body } = _cFunc(params, body);
+    return ts.createMethod(undefined, undefined, undefined, name,
+        undefined, undefined, _params, undefined, _body);
+}
 
 export const cStatic = (name: string, initializer: ts.Expression | undefined) => ts.createProperty(
     undefined,
@@ -127,10 +172,9 @@ export const cStatic = (name: string, initializer: ts.Expression | undefined) =>
     initializer
 );
 
-
-
-
-export const cClass = (name: string, extendz?: string | ts.Expression, constructorInfo?: ClassConstructor, properties: ts.PropertyDeclaration[] = []) => {
+export const cClass = (name: string, extendz?: string | ts.Expression,
+    constructorInfo?: ClassConstructor,
+    properties: Array<ts.PropertyDeclaration | ts.MethodDeclaration> = []) => {
     const allMembers = constructorInfo ? [
         ts.createConstructor(undefined, undefined, cParams(constructorInfo.params), ts.createBlock(constructorInfo.statements)) as ts.ClassElement
     ].concat(properties) : properties;
@@ -206,7 +250,7 @@ export const cImport = (info: ImportDefinition) => {
         ), cLiteralAst(info.modulePath));
 };
 
-export const createBitWiseOr = (comp: string, fields: string[], flags:string[]=[]) => {
+export const createBitWiseOr = (comp: string, fields: string[], flags: string[] = []) => {
     const target: ts.Expression = cAccess(comp, 'changeBitmask');
     let res: ts.Expression;
     fields.forEach(fieldName => {

@@ -1,5 +1,5 @@
-import { generateDomBindings, cClass, cProperty, cObject, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
-import { createProcessUpdateForComp } from './process.update';
+import { generateDomBindings, cClass, cObject, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
+import { createProcessUpdateMethod } from './process.update';
 import { generateToString } from './factory/to.string';
 import { generateHydrate } from './factory/hydrate';
 import { generateInitialState } from './factory/initial.state';
@@ -20,7 +20,7 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
             initialState: generateInitialState(comp)
         })),
         cStatic('changeBitmask', generateChangeBitMask(comp)),
-        cProperty('$$processUpdate', createProcessUpdateForComp(comp, binding)),
+        createProcessUpdateMethod(comp, binding),
         ...eventHandlers(comp, binding)
     ]);
     return res;
