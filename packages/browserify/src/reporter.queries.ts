@@ -45,8 +45,8 @@ export const parsedNode: Query = (fileId: any, parentId: any, params: any) => [`
     MATCH (file) WHERE id(file) = $fileId 
     MATCH (parent) WHERE id(parent) = $parentId     
     MERGE (node:${params.kind} { text: $text, kind: $kind })
-    MERGE (parent)-[:PARENT_OF ${ params.rel ? '{ field: $rel }' : ''}]->(node)
-    MERGE (file)-[:CONTAINS { pos: $pos, fullPos: $fullPos, end: $end }]->(node)
+    MERGE (parent)-[:PARENT_OF ${ params.relParams }]->(node)
+    MERGE (parent)-[:POS_IN_FILE { file: id(file), pos: $pos, fullPos: $fullPos, end: $end }]->(node)
     RETURN id(node)
     `, {
     ...params,

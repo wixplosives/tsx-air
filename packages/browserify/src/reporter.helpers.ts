@@ -10,26 +10,36 @@ import { QueryResult } from 'neo4j-driver';
 export { importedTsx };
 
 export const getNodeParams = (node: ts.Node, fileName: string) => {
-    let rel;
+    const rel: any = {};
     if (node.parent) {
         for (const key in node.parent) {
             if ((node.parent as any)[key] === node) {
-                rel = key;
+                rel.rel = key;
                 break;
             }
         }
+        if (node.pos > -1 && node.end > -1 && node.parent.pos > -1 && node.parent.end > -1) {
+            rel.relPos = node.pos - node.parent.pos;
+            // compensate for tsc counting space (sometimes)
+            rel.relEnd = rel.relPos + node.getWidth();
+        }
     }
-    const text = rel === 'moduleSpecifier'
+    
+    const relMapping = Object.keys(rel).map(k=>`${k} : $${k}`).join(', ');
+    rel.relParams = relMapping ? `{ ${relMapping} }` : '';
+    const text = rel.rel === 'moduleSpecifier'
         ? filePath(printAstText(node).replace(/^.(.*).$/g, '$1'), nodeFs.dirname(fileName))
         : printAstText(node);
 
+    
+
     return {
-        rel,
+        ...rel,
+        text,
         kind: tsKindInverse[node.kind],
         pos: node.pos,
         fullPos: node.pos > -1 ? node.getFullStart() : -1,
         end: node.end,
-        text,
         fullText: printAstFullText(node),
     };
 };
