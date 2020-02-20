@@ -4,12 +4,12 @@ import last from 'lodash/last';
 import isString from 'lodash/isString';
 
 export interface AstGeneratorsOptions {
-    useSingleQuates: boolean;
+    useSingleQuatres: boolean;
     multiline: boolean;
 }
 
 export const defaultOptions: AstGeneratorsOptions = {
-    useSingleQuates: true,
+    useSingleQuatres: true,
     multiline: true
 };
 
@@ -113,7 +113,7 @@ export function isTSNode(node: any): node is ts.Node {
 export const cPrimitive = (input: any, options: AstGeneratorsOptions = defaultOptions) => {
     if (typeof input === 'string') {
         const res = ts.createStringLiteral(input);
-        (res as any).singleQuote = options.useSingleQuates;
+        (res as any).singleQuote = options.useSingleQuatres;
         return res;
     }
     if (typeof input === 'number') {
@@ -293,4 +293,3 @@ export const cParams = (params: string[]) => params.map(val => ts.createParamete
 export const cNew = (classPath: string[], args: ts.Expression[] = []) => {
     return ts.createNew(cAccess(...classPath), undefined, args);
 };
-

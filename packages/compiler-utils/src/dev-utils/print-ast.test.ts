@@ -35,7 +35,7 @@ describe('print ast', () => {
                 b: 'baga'
             }, {
                 multiline: true,
-                useSingleQuates: true
+                useSingleQuatres: true
             });
             expect(printAst(ast)).to.be.eqlCode(`{
                 a: 'gaga',
@@ -49,7 +49,7 @@ describe('print ast', () => {
                 b: 'baga'
             }, {
                 multiline: true,
-                useSingleQuates: false
+                useSingleQuatres: false
             });
             expect(printAst(ast)).to.be.eqlCode(`{
                 a: "gaga",
