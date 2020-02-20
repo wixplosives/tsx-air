@@ -1,6 +1,6 @@
 import ts from 'typescript';
-import { cAccess } from './ast-generators';
 import { _cFunc } from './helpers';
+import { cAccess } from '.';
 
 export const cFunction = (params: string[], statements: ts.Statement[]) => {
     return ts.createFunctionExpression(undefined, undefined, undefined, undefined,

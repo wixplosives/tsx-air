@@ -1,4 +1,6 @@
-import ts from "typescript";
+import ts from 'typescript';
+import { _cFunc } from './helpers';
+import { cParams, cAccess } from '.';
 
 
 export interface ClassConstructor {

@@ -1,6 +1,7 @@
-import { CompDefinition, bitMask, JsxExpression, DomBindings } from '@tsx-air/compiler-utils';
+import { CompDefinition, bitMask, JsxExpression } from '@tsx-air/compiler-utils';
 import { isJsxExpression } from '@tsx-air/compiler-utils';
 import get from 'lodash/get';
+import { DomBindings } from '../common/dom.binding';
 
 export const compClass = (dom: DomBindings, def: CompDefinition) => {
     const mask = bitMask(def);

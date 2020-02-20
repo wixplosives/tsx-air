@@ -1,10 +1,11 @@
 import { getAttrName } from './../../common/jsx.event.handler';
-import { CompDefinition, DomBindings, FuncDefinition, JsxExpression, DomBinding, cCall, cAccess, cMethod, cProperty, cBind } from '@tsx-air/compiler-utils';
+import { CompDefinition,  FuncDefinition, JsxExpression, cCall, cAccess, cMethod, cProperty, cBind } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { generateStateAwareFunction } from './function';
 import { isEventHandler, findBinding } from '../../common/jsx.event.handler';
 import { safely, nonEmptyStr } from '@tsx-air/utils';
 import { camelCase } from 'lodash';
+import { DomBindings, DomBinding } from '../../common/dom.binding';
 
 export function* eventHandlers(comp: CompDefinition, domBinding: DomBindings) {
     const handlers = findHandlersUsed(comp);

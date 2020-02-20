@@ -1,10 +1,10 @@
 import { parseStatement } from '../parser';
 import { expect } from 'chai';
 import ts from 'typescript';
-import { cCall, cLiteralAst, cObject } from './ast-generators';
+import { cCall, cLiteralAst, cObject } from '.';
 import { transformerApiProvider, getFileTransformationAPI } from '../..';
 
-describe('transfromerApiProvider', () => {
+describe('transformerApiProvider', () => {
     it('should wrap transformers providing extra API and not change the ast', () => {
 
         const ast = parseStatement(`console.log('hello')`).getSourceFile();
@@ -19,7 +19,7 @@ describe('transfromerApiProvider', () => {
         expect(res.transformed[0]).to.have.astLike(ast);
     });
 
-    it('should allow prepending statements', () => {
+    it('should allow prepanding statements', () => {
 
         const ast = parseStatement(`console.log('hello')`).getSourceFile();
         const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {

@@ -1,5 +1,6 @@
-import { isJsxExpression, JsxExpression, DomBinding, DomBindings } from '@tsx-air/compiler-utils';
+import { isJsxExpression, JsxExpression } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
+import { DomBindings, DomBinding } from './dom.binding';
 
 export const getAttrName = (exp: JsxExpression | ts.JsxExpression) => {
     const parent = isJsxExpression(exp) ? exp.sourceAstNode.parent : exp.parent;

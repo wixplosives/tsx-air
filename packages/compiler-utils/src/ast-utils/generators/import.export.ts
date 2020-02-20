@@ -1,3 +1,5 @@
+import { cLiteralAst } from '.';
+import ts from 'typescript';
 
 interface ImportSpecifierDef {
     localName?: string;

@@ -1,12 +1,13 @@
 import { generateHydrate } from './hydrate';
-import { generateDomBindings } from '@tsx-air/compiler-utils';
 import { basicPatterns } from 'packages/compilers/src/test.helpers';
 import { expect } from 'chai';
 import { mapValues } from 'lodash';
+import { generateDomBindings } from 'packages/compilers/src/common/dom.binding';
 
 describe('generateHydrate', () => {
     it('should return an hydrate function AST', () => {
-        const comp = mapValues(basicPatterns(), compDef => generateHydrate(compDef, generateDomBindings(compDef)));
+        const comp = mapValues(basicPatterns(), compDef =>
+            generateHydrate(compDef, generateDomBindings(compDef)));
 
         expect(comp.Static).to.have.astLike(`(root, props, state) => new Static({
             root: root

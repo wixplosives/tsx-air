@@ -3,12 +3,13 @@ import ts from 'typescript';
 import {
     CompDefinition, JsxExpression, JsxRoot, cAccess,
     cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute,
-    isJsxExpression, JsxComponent, DomBindings, printAstText, cMethod
+    isJsxExpression, JsxComponent, printAstText, cMethod
 } from '@tsx-air/compiler-utils';
 import { cBitMaskIf } from './bitmask';
 import get from 'lodash/get';
 import { safely } from '@tsx-air/utils';
 import { extractPreRender } from './function';
+import { DomBindings } from '../../common/dom.binding';
 
 export const createProcessUpdateMethod = (comp: CompDefinition, domBindings: DomBindings) => {
     const params = propsAndStateParams(comp);

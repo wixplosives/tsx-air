@@ -1,5 +1,6 @@
 import ts from 'typescript';
-import { JsxAttribute, DomBinding, CompDefinition, scan, findJsxRoot, findJsxExpression, findJsxComponent, transpileNode, DomBindings } from '@tsx-air/compiler-utils';
+import { JsxAttribute, CompDefinition, scan, findJsxRoot, findJsxExpression, findJsxComponent, transpileNode } from '@tsx-air/compiler-utils';
+import { DomBindings, DomBinding } from '../common/dom.binding';
 
 export const compFactory = (dom: DomBindings, def: CompDefinition) => {
     return `${def.name}.factory = {
