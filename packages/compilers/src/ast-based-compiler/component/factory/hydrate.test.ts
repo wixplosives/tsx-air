@@ -1,6 +1,6 @@
+import { basicPatterns } from './../../../test.helpers';
 import { generateHydrate } from './hydrate';
 import { generateDomBindings } from '@tsx-air/compiler-utils';
-import { basicPatterns } from 'packages/compilers/src/test.helpers';
 import { expect } from 'chai';
 import { mapValues } from 'lodash';
 

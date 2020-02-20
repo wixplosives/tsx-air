@@ -1,5 +1,5 @@
 import { compile } from '../compile';
-import { compilers } from 'packages/playground/src/compilers';
+import { transformerCompilers } from '@tsx-air/compilers';
 import { kebabCase } from 'lodash';
 
 const files: string[] = [];
@@ -35,7 +35,7 @@ const parsArgs = () => {
 };
 
 parsArgs();
-const cmp = compilers.find(c => kebabCase(c.label).startsWith(compiler));
+const cmp = transformerCompilers.find(c => kebabCase(c.label).startsWith(compiler));
 if (files.length && cmp && out && !error) {
     compile(files, cmp, out, log);
 } else {
@@ -46,7 +46,7 @@ if (files.length && cmp && out && !error) {
         console.log(`Missing compiler ${compiler}`);
     }
     console.log(`Usage: tsx SOURCE... [-co]
-    -c --compiler ${compilers.map(c => kebabCase(c.label)).join('|')}
+    -c --compiler ${transformerCompilers.map(c => kebabCase(c.label)).join('|')}
     -o --outDir DEST
     -l --log log compilation graph to db
     `);
