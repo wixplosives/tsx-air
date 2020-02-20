@@ -1,5 +1,5 @@
-import { getComponentTag } from './../../visitors/jsx';
-import { asSourceFile } from '../../ast-utils/parser';
+import { getComponentTag } from '../../visitors/jsx';
+import { asSourceFile } from '../parser';
 import { printAstText } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';

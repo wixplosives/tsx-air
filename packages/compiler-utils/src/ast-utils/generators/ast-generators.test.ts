@@ -1,18 +1,8 @@
-import { parseValue } from '../../ast-utils/parser';
 import { expect } from 'chai';
-import { cloneDeep, cClass, cObject, cAssign, cProperty, cImport, cStatic } from './ast-generators';
+import {  cClass, cObject, cAssign, cProperty, cImport, cStatic } from '.';
 import ts from 'typescript';
 
-describe('cloneDeep', () => {
-    it('should return a clone of the tree ready to be reused and attached', () => {
-        const ast = parseValue(`window.location`) as ts.PropertyAccessExpression;
-        const clone = cloneDeep(ast);
 
-        expect(clone).to.have.astLike(`window.location`);
-        expect(clone).to.not.equal(ast);
-        expect(clone.expression).to.not.equal(ast.expression);
-    });
-});
 
 describe('cImport', () => {
     it('should create the ast of an import statement', () => {

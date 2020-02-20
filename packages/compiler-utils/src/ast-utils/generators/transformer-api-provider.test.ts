@@ -1,4 +1,4 @@
-import { parseStatement } from '../../ast-utils/parser';
+import { parseStatement } from '../parser';
 import { expect } from 'chai';
 import ts from 'typescript';
 import { cCall, cLiteralAst, cObject } from './ast-generators';
