@@ -59,7 +59,7 @@ const findHandlersUsed = (comp: CompDefinition) => {
     });
     if (missingHandlers.size > 0) {
         throw new Error(`Missing handler${missingHandlers.size > 1 ? 's' : ''}: ${
-            [...missingHandlers.values()].join(',')
+            [...missingHandlers.values()].map(e => e.expression).join(',')
             }`);
     }
     return handlersToUses;
