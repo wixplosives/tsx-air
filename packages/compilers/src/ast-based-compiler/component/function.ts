@@ -1,4 +1,4 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep, cCall, cArrow } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import get from 'lodash/get';
@@ -21,7 +21,7 @@ export function generateStateAwareFunction(comp: CompDefinition, func: FuncDefin
     return clone;
 }
 
-export function extractPreRender(comp: CompDefinition, removeStateChanges=false): ts.Statement[] {
+export function extractPreRender(comp: CompDefinition, removeStateChanges = false): ts.Statement[] {
     const statements =
         get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
 
@@ -48,22 +48,6 @@ export function extractPreRender(comp: CompDefinition, removeStateChanges=false)
             return removeClosureFunctions(s);
         }
         return cloneDeep(s);
-
-        // TODO: add general inner functions support, this coe should help:
-        // const ff = comp.functions.find(f => {
-        //     const srcStatement = (clone.body as ts.Block).statements ?
-        //         (clone.body as ts.Block).statements[i] : clone.body;
-        //     return (ts.isVariableStatement(srcStatement))
-        //         && srcStatement.declarationList.declarations.find(
-        //             d => printAst(d.initializer!) === printAst(f.sourceAstNode)
-        //         );
-        // });
-        // if (ff) {
-        //     const ss = (s as ts.VariableStatement);
-        //     const modFunc = generateStateAwareFunction(comp, ff);
-        //     ss.declarationList.declarations[0].initializer = modFunc;
-        // }
-
     }).filter(i => i) as ts.Statement[];
     return modified;
 }
@@ -116,39 +100,22 @@ const cStateCall = (comp: CompDefinition, exp: ts.Expression, preRender: boolean
 
     return changeBits.length === 0
         ? undefined
-        : ts.createExpressionStatement(ts.createCall(
-            ts.createPropertyAccess(
-                ts.createPropertyAccess(
-                    ts.createIdentifier('TSXAir'),
-                    ts.createIdentifier('runtime')
-                ),
-                ts.createIdentifier('updateState')
-            ),
-            undefined,
+        : ts.createExpressionStatement(cCall(['TSXAir', 'runtime', 'updateState'],
             [
                 ts.createThis(),
-                ts.createArrowFunction(
-                    undefined,
-                    undefined,
-                    [ts.createParameter(
-                        undefined,
-                        undefined,
-                        undefined,
-                        ts.createObjectBindingPattern(
-                            comp.stores.map(s =>
-                                ts.createBindingElement(
-                                    undefined,
-                                    undefined,
-                                    ts.createIdentifier(s.name),
-                                )
-                            )),
-                    )],
-                    undefined,
-                    ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-                    ts.createBlock(
+                cArrow([ts.createObjectBindingPattern(
+                    comp.stores.map(s =>
+                        ts.createBindingElement(
+                            undefined,
+                            undefined,
+                            ts.createIdentifier(s.name),
+                        )
+                    ))], ts.createBlock(
                         [
                             ts.createExpressionStatement(cloneDeep(exp, undefined)),
-                            ts.createReturn(createBitWiseOr(comp.name!, changeBits, preRender ? ['preRender'] : undefined))
+                            ts.createReturn(createBitWiseOr(comp.name!, changeBits, preRender
+                                ? ['preRender']
+                                : undefined))
                         ],
                         true
                     )
