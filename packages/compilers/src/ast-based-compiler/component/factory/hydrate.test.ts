@@ -1,8 +1,8 @@
+import { basicPatterns } from '../../../test.helpers';
 import { generateHydrate } from './hydrate';
-import { basicPatterns } from 'packages/compilers/src/test.helpers';
 import { expect } from 'chai';
 import { mapValues } from 'lodash';
-import { generateDomBindings } from 'packages/compilers/src/common/dom.binding';
+import { generateDomBindings } from '../../../common/dom.binding';
 
 describe('generateHydrate', () => {
     it('should return an hydrate function AST', () => {
