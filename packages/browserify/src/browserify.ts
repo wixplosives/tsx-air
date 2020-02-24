@@ -1,11 +1,13 @@
-import { packagePath } from '@tsx-air/utils/packages';
 import { nodeFs } from '@file-services/node';
 import { join, basename, dirname } from 'path';
 import { promisify } from 'util';
 import { createWebpackFs } from '@file-services/webpack';
 import webpack from 'webpack';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { ITypeScriptLoaderOptions } from '@ts-tools/webpack-loader';
+import { compile } from './compile';
+import { packagePath } from '@tsx-air/utils/packages';
+import { Compiler } from '@tsx-air/types';
+import { asJs } from '@tsx-air/utils';
 
 export interface BrowserifyOptions {
     base: string;
@@ -13,17 +15,23 @@ export interface BrowserifyOptions {
     output: string;
     debug?: boolean;
     configFilePath?: string;
-    loaderOptions?: ITypeScriptLoaderOptions;
+    compiler: Compiler;
 }
 
 export const browserifyPath = packagePath('@tsx-air/browserify');
 
 export async function browserify(options: BrowserifyOptions): Promise<string> {
-    const { base, entry, output,
-        debug = false, loaderOptions = {}, configFilePath } = options;
+    const { base, entry, output, debug = false, configFilePath } = options;
+    const outDir = dirname(output);
+
+    compile([join(base, entry)], options.compiler, join(outDir, 'src.js'));
+    const files = (await nodeFs.promises.readdir(base)).filter(name => name.endsWith('.compiled.ts'));
+    await Promise.all(
+        files.map(file => nodeFs.promises.copyFile(nodeFs.join(base, file), nodeFs.join(outDir, 'src.js', file)))
+    );
 
     const wp = webpack({
-        entry: join(base, entry),
+        entry: join(outDir, 'src.js', asJs(entry)),
         mode: !debug ? 'production' : 'development',
         output: {
             filename: basename(output),
@@ -36,8 +44,6 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
                     exclude: /node_modules/,
                     loader: '@ts-tools/webpack-loader',
                     options: {
-                        ...loaderOptions,
-                        // configLookup:false,
                         configFilePath
                     }
                 },
@@ -49,15 +55,17 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
             ]
         },
         resolve: {
-            extensions: ['.tsx', '.ts', '.js', '.json'],
-            plugins: [new TsconfigPathsPlugin({
-                configFile: join(browserifyPath, '..', '..', 'tsconfig.json')
-            })]
+            extensions: ['.tsx', '.ts', '.js', '.jsx', '.json'],
+            plugins: [
+                new TsconfigPathsPlugin({
+                    configFile: join(browserifyPath, '..', '..', 'tsconfig.json')
+                })
+            ]
         },
         performance: {
             hints: false
         },
-        devtool: !debug ? false : 'inline-source-map'
+        devtool: !debug ? false : '#source-map'
     });
 
     wp.outputFileSystem = createWebpackFs(nodeFs);
@@ -69,7 +77,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
     const res = await run();
     if (res.hasErrors()) {
         throw new Error(`Error browserifying ${join(base, entry)}
-        ${ res.toString()} `);
+        ${res.toString()} `);
     }
     return (await readFile(output)).toString();
 }

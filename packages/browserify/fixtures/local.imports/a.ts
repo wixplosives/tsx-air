@@ -1,1 +1,2 @@
-export const imported = true;
+export const localImport = true;
+export * from './b';

@@ -1,6 +1,6 @@
-import { asSourceFile, cloneDeep } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { Compiler } from '@tsx-air/types';
+import { Compiler, Features, ALL } from '@tsx-air/types';
+import { basename } from 'path';
 
 export const isSource = /\.source\.tsx?$/;
 export type ContentSwapper = (src: string) => string | undefined;
@@ -16,6 +16,7 @@ export class ManuallyCompiled implements Compiler {
         }
     }
     public readonly label = 'Manually compiled';
+    public readonly features: Features = ALL;
 
     constructor(public contentSwapper?: ContentSwapper) {
     }
@@ -26,11 +27,17 @@ function useManuallyCompiledForSources(getAlternativeContent: ContentSwapper): t
         const { fileName } = node;
         const replacementContent = getAlternativeContent(fileName);
         if (replacementContent) {
-            const compiled = asSourceFile(replacementContent);
+            // const compiled = asSourceFile(replacementContent);
             const reExported = ts.getMutableClone(node);
             reExported.statements =
                 ts.createNodeArray(
-                    compiled.statements.map(s => cloneDeep(s, reExported))
+                    [ts.createExportDeclaration(
+                        undefined,
+                        undefined,
+                        undefined,
+                        ts.createStringLiteral('./' +
+                            basename(fileName).replace(/source\.tsx?/, 'compiled')))
+                    ]
                 );
             return reExported;
         }

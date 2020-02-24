@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "clean": "yarn rimraf packages/*/.tmp; lerna run clean --stream",
+    "clean": "yarn rimraf packages/*/tmp; yarn rimraf packages/*/.tmp; lerna run clean --stream",
     "build": "lerna run build --stream",
     "start": "yarn workspace @tsx-air/playground start --open",
     "lint": "lerna run lint",
@@ -13,7 +13,7 @@
     "test": "lerna run test --stream --concurrency 1",
     "tst": "lerna run test",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "push": "git diff --exit-code --cached && git diff --exit-code && git pull && yarn && git diff --exit-code && yarn pretest && yarn tst && yarn build && git push"
+    "push": "git diff --exit-code --cached && git diff --exit-code && git pull && git clean -fdx && yarn && git diff --exit-code && yarn test && yarn build && git push"
   },
   "dependencies": {
     "lodash": "^4.17.15",
@@ -31,6 +31,7 @@
     "@types/node": "^13.1.0",
     "@types/pixelmatch": "^5.0.0",
     "@types/pngjs": "^3.4.0",
+    "@types/prettier": "^1.19.0",
     "@types/puppeteer": "^2.0.0",
     "@types/react": "^16.9.9",
     "@types/react-dom": "^16.9.2",
@@ -49,7 +50,7 @@
     "npm-run-all": "^4.1.5",
     "pixelmatch": "^5.1.0",
     "pngjs": "^3.4.0",
-    "prettier": "^1.18.2",
+    "prettier": "^1.19.1",
     "puppeteer": "^2.0.0",
     "raw-loader": "^4.0.0",
     "react": "^16.11.0",

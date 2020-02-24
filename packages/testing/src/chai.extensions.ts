@@ -1,11 +1,13 @@
+import { readFileSync } from 'fs';
 import ts from 'typescript';
 import { trimCode } from './general.utils';
 import { use } from 'chai';
 import { printAst } from '@tsx-air/compiler-utils';
-use(plugin);
+import chalk from 'chalk';
+use(chaiPlugin);
 
-export default function plugin(chai: any, utils: Chai.ChaiUtils) {
-    utils.addMethod(chai.Assertion.prototype, 'similarText', function (this: Chai.AssertionPrototype, text: string) {
+export function chaiPlugin(chai: any, utils: Chai.ChaiUtils) {
+    utils.addMethod(chai.Assertion.prototype, 'eqlCode', function (this: Chai.AssertionPrototype, text: string) {
         const target: string = trimCode(this._obj);
         text = trimCode(text);
         new chai.Assertion(target).is.a('string');
@@ -19,16 +21,48 @@ export default function plugin(chai: any, utils: Chai.ChaiUtils) {
         return this;
     });
 
+    // utils.addMethod(chai.Assertion.prototype, 'analyzedAs',chaiPlugin
+    //     function (this: Chai.AssertionPrototype, expected: object) {
+    //         const target = this._obj as AnalyzedNode;
+    //         if (!isAnalyzed()) {
+                
+    //         }
+    //         text = trimCode(text);
+    //         new chai.Assertion(target).is.a('string');
+    //         this.assert(
+    //             target.trim() === text.trim(),
+    //             `expected #{act} to be #{exp}`,
+    //             `expected #{act} not to be #{exp}`,
+    //             text,
+    //             target
+    //         );
+    //         return this;
+    //     });chaiPlugin
+
     utils.addMethod(chai.Assertion.prototype, 'astLike', function (this: Chai.AssertionPrototype, expected: string | ts.Node) {
-        const target: string = trimCode(printAst(this._obj), true);
+        const target: string = trimCode(printAst(this._obj));
         expected = trimCode(typeof expected === 'string'
             ? expected
-            : printAst(expected), true);
+            : printAst(expected));
         new chai.Assertion(target).is.a('string');
         this.assert(
             target === expected,
             `expected #{act} to be #{exp}`,
             `expected #{act} not to be #{exp}`,
+            expected,
+            target
+        );
+        return this;
+    });
+
+    utils.addMethod(chai.Assertion.prototype, 'contentOf', function (this: Chai.AssertionPrototype, filePath: string) {
+        const target: string = trimCode(this._obj);
+        const expected = trimCode(readFileSync(filePath, 'utf8'));
+        new chai.Assertion(target).is.a('string');
+        this.assert(
+            target === expected,
+            `expected ${target.replace(/\n.*/gs, '...')} to be like ` + chalk.cyanBright(`<source: ${filePath}>`),
+            `expected ${target.replace(/\n.*/gs, '...')} not to be like ` + chalk.cyanBright(`<source: ${filePath}>`),
             expected,
             target
         );

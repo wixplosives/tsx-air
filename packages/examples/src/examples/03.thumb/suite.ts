@@ -1,34 +1,17 @@
-import { ExampleSuiteApi } from '@tsx-air/types';
+import { ExampleSuiteApi, Features, feature } from '@tsx-air/types';
 import { htmlMatch } from '@tsx-air/testing';
 import { delay } from '@tsx-air/utils';
 
-const onlyPreloader = {
-    cssQuery: '.thumb',
-    pageInstances: 1,
-    children: [{
-        name: 'Preloader',
-        cssQuery: '.preloader',
-        pageInstances: 1,
-        scopeInstances: 1
-    }]
-};
+export const features: Features = [
+    feature('stateful', 'component'),
+    feature('single', 'store'),
+    feature('event', 'handler'),
+    feature('when','props','change', 'handler'),
+    feature('lambda', 'handler'),
+    feature('conditional', 'dom'),
+];
 
-const onlyImage = {
-    cssQuery: '.thumb',
-    pageInstances: 1,
-    children: [{
-        name: 'Image',
-        cssQuery: 'img',
-        scopeInstances: 1
-    },
-    {
-        name: 'Preloader',
-        cssQuery: '.preloader',
-        scopeInstances: 0
-    }]
-};
-
-export default function (api: ExampleSuiteApi) {
+export function suite (api: ExampleSuiteApi) {
     it('should start with a preloader, then show only the image', async () => {
         const { afterLoading, server } = api;
         const serveImages = await server.setDelay(/.*\.jpg/, 9999999);
@@ -55,3 +38,30 @@ export default function (api: ExampleSuiteApi) {
         await htmlMatch(page, onlyImage);
     });
 }
+
+
+const onlyPreloader = {
+    cssQuery: '.thumb',
+    pageInstances: 1,
+    children: [{
+        name: 'Preloader',
+        cssQuery: '.preloader',
+        pageInstances: 1,
+        scopeInstances: 1
+    }]
+};
+
+const onlyImage = {
+    cssQuery: '.thumb',
+    pageInstances: 1,
+    children: [{
+        name: 'Image',
+        cssQuery: 'img',
+        scopeInstances: 1
+    },
+    {
+        name: 'Preloader',
+        cssQuery: '.preloader',
+        scopeInstances: 0
+    }]
+};

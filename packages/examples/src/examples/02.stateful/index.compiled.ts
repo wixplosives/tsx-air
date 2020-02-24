@@ -1,37 +1,38 @@
 import { Component, Factory, runtime, runtimeUtils } from '@tsx-air/framework';
 
-/* tslint:disable:rule no-bitwise */
-
 // Inferred from the TSX all possible return values 
 interface StatefulCompCtx { root: HTMLElement; div1: HTMLDivElement; div2: HTMLDivElement; div3: HTMLDivElement; }
 
 interface StatefulCompProps { initialState: string; }
 // All the component scope vars [possibly only those who are bound to the view]
-interface StatefulCompState { a: string; b: string; changeCount: number; }
+interface StatefulCompState {
+    state: { a: string; b: string; changeCount: number; };
+}
 
 export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
     public static factory: Factory<StatefulComp>;
-    public static readonly changeBitmask = {
-        initialState: 1 << 0,
-        a: 1 << 1,
-        b: 1 << 2,
-        changeCount: 1 << 3
+    public static readonly changeBitmask: Record<string, number> = {
+        'props.initialState': 1 << 0,
+        'state.a': 1 << 1,
+        'state.b': 1 << 2,
+        'state.changeCount': 1 << 3
     };
 
-    public $$processUpdate(_: StatefulCompProps, newState: StatefulCompState, changeMap: number): void {
-        if (changeMap !== StatefulComp.changeBitmask.changeCount) {
-            runtime.updateState(this as StatefulComp, (s: StatefulCompState) => {
-                s.changeCount++;
-                return StatefulComp.changeBitmask.changeCount;
+    public $$processUpdate(_: StatefulCompProps, { state }: StatefulCompState, changeMap: number): void {
+        if (changeMap !== StatefulComp.changeBitmask['state.changeCount']) {
+            // tslint:disable-next-line: no-shadowed-variable
+            runtime.updateState(this as StatefulComp, ({ state }: StatefulCompState) => {
+                state.changeCount++;
+                return StatefulComp.changeBitmask['state.changeCount'];
             });
         }
 
-        runtimeUtils.handleChanges(new Map<number, () => void>(
+        runtimeUtils.handleChanges(StatefulComp.changeBitmask, new Map<string, () => void>(
             [
-                [StatefulComp.changeBitmask.initialState, runtimeUtils.noop],
-                [StatefulComp.changeBitmask.a, runtimeUtils.assignTextContent(this.context.div1, newState.a)],
-                [StatefulComp.changeBitmask.b, runtimeUtils.assignTextContent(this.context.div2, newState.b)],
-                [StatefulComp.changeBitmask.changeCount, runtimeUtils.assignTextContent(this.context.div3, `state changed ${newState.changeCount} times`)]
+                ['props.initialState', runtimeUtils.noop],
+                ['state.a', runtimeUtils.assignTextContent(this.context.div1, state.a)],
+                ['state.b', runtimeUtils.assignTextContent(this.context.div2, state.b)],
+                ['state.changeCount', runtimeUtils.assignTextContent(this.context.div3, '' + state.changeCount)]
             ]
         ), changeMap);
     }
@@ -41,23 +42,31 @@ export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, 
         this.context.div2.addEventListener('click', this.onClickB);
     }
 
-    private onClickA = () => runtime.updateState(this as StatefulComp, (s: StatefulCompState) => {
-        s.a = s.a + '!';
-        return StatefulComp.changeBitmask.a;
+    private onClickA = () => runtime.updateState(this as StatefulComp, ({ state }: StatefulCompState) => {
+        state.a = state.a + '!';
+        return StatefulComp.changeBitmask['state.a'];
     });
 
-    private onClickB = () => runtime.updateState(this as StatefulComp, (s: StatefulCompState) => {
-        s.b = s.b + '*';
-        return StatefulComp.changeBitmask.b;
+    private onClickB = () => runtime.updateState(this as StatefulComp, ({ state }: StatefulCompState) => {
+        state.b = state.b + '*';
+        return StatefulComp.changeBitmask['state.b'];
     });
 }
 
-const initialState = (props: StatefulCompProps) => ({ a: props.initialState, b: props.initialState, changeCount: 0 }) as StatefulCompState;
+const initialState = (props: StatefulCompProps) =>
+    ({
+        state: {
+            a: props.initialState+'A',
+            b: props.initialState+'B',
+            changeCount: 0
+        }
+    }) as StatefulCompState;
+
 StatefulComp.factory = {
     unique: Symbol('StatefulCompFactory'),
     initialState,
-    toString: (props, state?) => {
-        state = state || initialState(props);
+    toString: (props, s?) => {
+        const {state} = s || initialState(props);
         return `<div>
         <div class="btn">
             ${state.a}
@@ -66,7 +75,10 @@ StatefulComp.factory = {
             ${state.b}
         </div>
         <div>
-           state changed ${state.changeCount} times 
+           state changed <!-- state.changeCount -->${state.changeCount}<!-- --> times 
+        </div>
+        <div>
+           volatile variable is still at <!-- state.changeCount -->${1}<!-- -->
         </div>
     </div>`;
     },
@@ -75,7 +87,10 @@ StatefulComp.factory = {
             root,
             div1: root.children[0] as HTMLDivElement,
             div2: root.children[1] as HTMLDivElement,
-            div3: root.children[2] as HTMLDivElement
+            // @ts-ignore
+            div3: root.children[2].childNodes[2] as Text,
+            // @ts-ignore
+            div4: root.children[3].childNodes[2] as Text,
         }, props, state || initialState(props)
     )
 };

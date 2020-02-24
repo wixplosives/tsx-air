@@ -1,7 +1,7 @@
 import { Analyzer, ExportSpecifierInfo, ReExport } from './types';
 import ts from 'typescript';
 import { asAnalyzerResult, errorNode, filterResults } from './types.helpers';
-import { scan } from '../astUtils/scanner';
+import { scan } from '../ast-utils/scanner';
 
 export const exportStatement: Analyzer<ReExport> = sourceAstNode => {
     if (ts.isExportDeclaration(sourceAstNode) && sourceAstNode.moduleSpecifier) {

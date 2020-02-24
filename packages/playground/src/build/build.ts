@@ -1,10 +1,11 @@
 import { ManuallyCompiled, isSource } from '@tsx-air/examples';
 import { analyze, TsxFile, Import, asSourceFile, compilerOptions, ReExport } from '@tsx-air/compiler-utils';
-import { writeToFs, readFileOr, createCjs, evalModule, asTsx, asJs, withoutExt } from './build.helpers';
+import {  asTsx, asJs, withoutExt } from '@tsx-air/utils';
 import { dirname } from 'path';
 import { Compiler } from '@tsx-air/types';
 import ts from 'typescript';
 import { BuiltCode, Loader, CjsEnv } from './types';
+import { createCjs, readFileOr, evalModule, writeToFs } from './build.helpers';
 
 export const preloads = {
     '/node_modules/@tsx-air/framework/index.js': import('@tsx-air/framework'),

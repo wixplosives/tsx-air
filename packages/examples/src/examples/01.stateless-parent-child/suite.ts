@@ -1,8 +1,15 @@
-import { ExampleSuiteApi } from '@tsx-air/types';
+import { ExampleSuiteApi, feature, Features } from '@tsx-air/types';
 import { htmlMatch } from '@tsx-air/testing';
 
-export default function (api:ExampleSuiteApi) {
-    it('should create a parent component with the correct name', async  () => {
+export const features: Features = [
+    feature('stateless', 'component'),
+    feature('imperative', 'update', 'component'),
+    feature('declarative', 'update', 'nested', 'component'),
+    feature('nested', 'stateless', 'component'),
+];
+
+export function suite(api: ExampleSuiteApi) {
+    it('should create a parent component with the correct name', async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, {
             cssQuery: '.parent',
@@ -18,6 +25,7 @@ export default function (api:ExampleSuiteApi) {
             }]
         });
     });
+    
     it('should update the view', async () => {
         const page = await api.afterLoading;
         await page.evaluate(() => (window as any).app.updateProps({ name: 'changed' }));

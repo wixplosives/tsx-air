@@ -1,13 +1,13 @@
 import * as ts from 'typescript';
-import { CompDefinition, Analyzer, CompProps, AnalyzerResult, isTsJsxRoot, isTsFunction } from './types';
-import { isCallExpression, PropertyAccessExpression } from 'typescript';
-import uniqBy from 'lodash/uniqBy';
-import { scan } from '../astUtils/scanner';
+import { CompDefinition, Analyzer, AnalyzerResult } from './types';
+import { isCallExpression } from 'typescript';
 import { jsxRoots } from './jsxroot';
 import { errorNode, aggregateAstNodeMapping, addToNodesMap } from './types.helpers';
 import { findUsedVariables } from './find-used-variables';
 import { functions } from './func-definition';
-import { stores } from './store-definition';
+import { getStoresDefinitions } from './store-definition';
+import { isTsFunction, isTsJsxRoot } from './types.is.type';
+
 
 export const compDefinition: Analyzer<CompDefinition> = astNode => {
     if (!isCallExpression(astNode) || astNode.expression.getText() !== 'TSXAir') {
@@ -21,22 +21,23 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
         return errorNode<CompDefinition>(astNode, 'TSXAir must be called with a single (function) argument', 'code');
     }
 
-    const propsIdentifier = compFunc.parameters[0] && compFunc.parameters[0].name ? compFunc.parameters[0].name.getText() : undefined;
-    const usedProps = propsIdentifier ? findUsedProps(compFunc, propsIdentifier) || [] : [];
-
     const variables = findUsedVariables(compFunc, node => isTsJsxRoot(node) || isTsFunction(node));
     const aggregatedVariables = findUsedVariables(compFunc);
+    const propsName = compFunc.parameters[0]?.name?.getText();
+
+    const propsIdentifier = aggregatedVariables.accessed[propsName]
+        ? propsName : undefined;
+
     const tsxAir: CompDefinition = {
         kind: 'CompDefinition',
         name: ts.isVariableDeclaration(astNode.parent) ? astNode.parent.name.getText() : undefined,
         propsIdentifier,
-        usedProps,
         aggregatedVariables,
         variables,
         sourceAstNode: astNode,
-        jsxRoots: jsxRoots(astNode, propsIdentifier, usedProps),
+        jsxRoots: jsxRoots(astNode, propsIdentifier),
         functions: functions(compFunc.body),
-        stores: stores(compFunc.body)
+        stores: getStoresDefinitions(compFunc.body)
     };
     const astToTsxAir = aggregateAstNodeMapping(tsxAir.jsxRoots);
     addToNodesMap(astToTsxAir, tsxAir);
@@ -45,16 +46,3 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
         astToTsxAir
     } as AnalyzerResult<CompDefinition>;
 };
-
-const findUsedProps = (node: ts.Node, name: string) => uniqBy(
-    scan(node, n => {
-        if (ts.isPropertyAccessExpression(n) && n.expression.getText() === name) {
-            return n.name.getText();
-        }
-        return;
-    }).map<CompProps>(i => ({
-        kind: 'CompProps',
-        name: i.metadata,
-        sourceAstNode: (i.node as PropertyAccessExpression).name
-    })), 'name');
-

@@ -1,5 +1,7 @@
 import ts from 'typescript';
 import { UsedVariables, RecursiveMap } from './types';
+import { update, merge } from 'lodash';
+import { printAstText } from '..';
 
 /**
  * 
@@ -20,9 +22,9 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
             return;
         }
         const accessParent = n.parent;
-        if (isVariableLikeDeclaration(accessParent) && accessParent.name === n) {
+        if (isVariableLikeDeclaration(accessParent) && printAstText(accessParent.name) === printAstText(n)) {
             if (isVariableDeclaration(accessParent)) {
-                res.defined[n.getText()] = {};
+                res.defined[printAstText(n)] = {};
             }
             return;
         }
@@ -32,7 +34,7 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
                 return;
             }
             let isModification = false;
-            if (ts.isBinaryExpression(accessParent) && accessParent.left === n) {
+            if (ts.isBinaryExpression(accessParent) && printAstText(accessParent.left) === printAstText(n)) {
                 if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
                     isModification = true;
                 }
@@ -53,8 +55,6 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
     ts.forEachChild(node, visitor);
     return res;
 }
-
-
 
 export const modifyingOperators = [
     ts.SyntaxKind.EqualsToken,
@@ -119,7 +119,7 @@ export function accessToStringArr(node: AccessNodes): { path: string[], nestedAc
             n = n.expression;
         } else {
 
-            path.unshift(n.name.getText());
+            path.unshift(printAstText(n.name));
             n = n.expression;
         }
     }
@@ -127,44 +127,25 @@ export function accessToStringArr(node: AccessNodes): { path: string[], nestedAc
     if (!ts.isIdentifier(n)) {
         throw new Error('unhandled input in accessToStringArr');
     }
-    path.unshift(n.getText());
+    path.unshift(printAstText(n));
     return {
         path,
         nestedAccess
     };
 }
 
-export function addToAccessMap(path: string[], isModification: boolean, map: UsedVariables) {
-    let modMap = map.modified;
-    let accessMap = map.accessed;
-
-    for (const part of path) {
-        if (!accessMap[part]) {
-            accessMap[part] = {};
-        }
-        accessMap = accessMap[part];
-        if (isModification) {
-            if (!modMap[part]) {
-                modMap[part] = {};
-            }
-            modMap = modMap[part];
-        }
+function addToAccessMap(path: string[], isModification: boolean, map: UsedVariables) {
+    update(map.accessed, path, i => i || {});
+    if (isModification) {
+        update(map.modified, path, i => i || {});
     }
 }
 
-export function mergeUsedVariables(variables: UsedVariables[]): UsedVariables {
-    return {
-        accessed: mergeRecursiveMaps(variables.map(obj => obj.accessed)),
-        modified: mergeRecursiveMaps(variables.map(obj => obj.modified)),
-        defined: mergeRecursiveMaps(variables.map(obj => obj.defined))
-    };
-}
-
-export function mergeRecursiveMaps(maps: RecursiveMap[]): RecursiveMap {
-    const allKeys = [...new Set(...maps.map(map => Object.keys(map)))];
-    const res: RecursiveMap = {};
-    for (const key of allKeys) {
-        res[key] = mergeRecursiveMaps(maps.filter(map => !!map[key]).map(map => map[key]));
-    }
-    return res;
-}
+export const mergeUsedVariables = (variables: UsedVariables[]): UsedVariables =>
+    variables.reduce(
+        (acc: RecursiveMap, map: RecursiveMap) => merge(acc, map),
+        {
+            accessed: {},
+            modified: {},
+            defined: {}
+        }) as UsedVariables;

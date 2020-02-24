@@ -1,10 +1,13 @@
-import { CompDefinition, DomBinding, bitMask, CompProps, isJsxExpression, JsxExpression } from '@tsx-air/compiler-utils';
+import { CompDefinition, bitMask, JsxExpression } from '@tsx-air/compiler-utils';
+import { isJsxExpression } from '@tsx-air/compiler-utils';
+import get from 'lodash/get';
+import { DomBindings } from '../common/dom.binding';
 
-export const compClass = (dom: DomBinding[], def: CompDefinition) => {
+export const compClass = (dom: DomBindings, def: CompDefinition) => {
     const mask = bitMask(def);
     const propsIdentifierRegExp = new RegExp(`(?<![\\d\\w])(${def.propsIdentifier})`, 'g');
     return `
-    class ${def.name}{
+    class ${def.name} {
         constructor(public context,public props, public state){
             requestAnimationFrame(() => this.$afterMount && this.$afterMount(this.context.root));
         }
@@ -12,37 +15,40 @@ export const compClass = (dom: DomBinding[], def: CompDefinition) => {
     }
     ${def.name}.changeBitmask=${JSON.stringify(mask)};`;
 
-
     function processUpdate() {
+        const { propsIdentifier, aggregatedVariables } = def;
+        const props = aggregatedVariables.accessed[propsIdentifier || ''];
+        const usedProps = props ? Object.keys(props) : [];
+
         return `$$processUpdate(newProps, newState, changeMap) {
-            ${def.usedProps.map(handlePropChange)}
+            ${usedProps.map(handlePropChange)}
         }`;
     }
 
-    function handlePropChange(prop: CompProps) {
-        return `if (changeMap & ${def.name}.changeBitmask.${prop.name}){
+    function handlePropChange(prop: string) {
+        return `if (changeMap & ${def.name}.changeBitmask["props.${prop}"]){
             ${handlePropExpressions(prop).join('\n')}
             ${handlePropComp(prop).join('\n')}
         }`;
     }
 
-    function handlePropExpressions(prop: CompProps): string[] {
+    function handlePropExpressions(prop: string): string[] {
         return def.jsxRoots[0].expressions
-            .filter(ex => ex.dependencies.includes(prop))
-            .map(ex => ({ ex, dm: dom.find(dm => dm.astNode === ex.sourceAstNode)! }))
+            .filter(ex => get(ex.variables.accessed, ['props', prop]))
+            .map(ex => ({ ex, dm: dom.get(ex.sourceAstNode)! }))
             .map(({ ex, dm }) => `this.context.${dm.ctxName}.textContent = ${replaceProps(ex.expression, 'newProps')};`);
         // TODO: update html attributes
     }
 
-    function handlePropComp(prop: CompProps): string[] {
+    function handlePropComp(prop: string): string[] {
         const comps = def.jsxRoots[0].components
-            .filter(c => c.dependencies.includes(prop));
+            .filter(c => get(c.variables.accessed, ['props', prop]));
 
         return comps.map(comp => {
             const props = comp.props.filter(p => isJsxExpression(p.value));
-            const ctxName = dom.find(c => c.astNode === comp.sourceAstNode)!.ctxName;
+            const ctxName = dom.get(comp.sourceAstNode)!.ctxName;
             const update = props.reduce((ret, p) => `${ret}p.${p.name} = ${replaceProps((p.value as JsxExpression).expression, 'newProps')};\n`, '');
-            const changed = props.reduce((ret, p) => `${ret && ret + '|'}${comp.name}.changeBitmask.${p.name}`, '');
+            const changed = props.reduce((ret, p) => `${ret && ret + '|'}${comp.name}.changeBitmask["props.${p.name}"]`, '');
 
             return `TSXAir.runtime.updateProps(this.context.${ctxName} , p => {
                 ${update}

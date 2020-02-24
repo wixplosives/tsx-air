@@ -4,7 +4,8 @@ declare namespace Chai {
     import {Node} from 'typescript';
 
     export interface Assertion {
-        similarText(sameIgnoreWhitespace: string): Assertion;
+        eqlCode(sameIgnoreWhitespace: string): Assertion;
         astLike(ast: string | Node):Assertion;
+        contentOf(filePath: string):Assertion;
     }
 }

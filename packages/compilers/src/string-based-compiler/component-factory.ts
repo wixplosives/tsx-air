@@ -1,7 +1,8 @@
 import ts from 'typescript';
-import { JsxAttribute, DomBinding, CompDefinition, scan, findJsxRoot, findJsxExpression, findJsxComponent, transpileNode } from '@tsx-air/compiler-utils';
+import { JsxAttribute, CompDefinition, scan, findJsxRoot, findJsxExpression, findJsxComponent, transpileNode } from '@tsx-air/compiler-utils';
+import { DomBindings, DomBinding } from '../common/dom.binding';
 
-export const compFactory = (dom: DomBinding[], def: CompDefinition) => {
+export const compFactory = (dom: DomBindings, def: CompDefinition) => {
     return `${def.name}.factory = {
         initialState: ()=>({}),
         toString: ${toString(def)},
@@ -22,8 +23,8 @@ const toString = (def: CompDefinition) => {
     const components = scan(jsx, findJsxComponent);
     const attributes = scan(jsx, n => {
         if (ts.isJsxAttribute(n)) {
-            const { name, initializer} = n;
-            const att:JsxAttribute = {
+            const { name, initializer } = n;
+            const att: JsxAttribute = {
                 kind: 'JsxAttribute',
                 name: name.escapedText as string,
                 sourceAstNode: n,
@@ -59,9 +60,12 @@ const toString = (def: CompDefinition) => {
         }\``;
 };
 
-const hydrate = (dom: DomBinding[], def: CompDefinition) => {
-    const ctx = [{ ctxName: 'root', viewLocator: 'root' }, ...dom].map(
-        (i: DomBinding) => `${i.ctxName}:${i.viewLocator}`).join();
+const hydrate = (dom: DomBindings, def: CompDefinition) => {
+    const ctx = [{ ctxName: 'root', domLocator: 'root' } as DomBinding, ...dom.values()].map(
+        ({ compType, domLocator, ctxName }) => (compType
+            ? `${ctxName}:${compType}.factory.hydrate(${domLocator}, props)`
+            : `${ctxName}:${domLocator}`))
+        .join();
 
     return `(root, ${def.propsIdentifier})=>new ${def.name}({${ctx}}, ${def.propsIdentifier})`;
 };

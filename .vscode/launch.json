@@ -2,6 +2,7 @@
   
     "version": "0.2.0",
     "configurations": [
+    
         {
             "type": "chrome",
             "request": "launch",
@@ -17,7 +18,22 @@
             "args": [
                 "packages/examples/**/*.test.ts?(x)",
                 "--timeout",
-                "999999"
+                "99999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "DEBUG":"true"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "AST",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/compilers/src/ast-based-compiler/**/*.test.ts?(x)",
+                "--timeout",
+                "99999999"
             ],
             "internalConsoleOptions": "openOnSessionStart",
             "env": {

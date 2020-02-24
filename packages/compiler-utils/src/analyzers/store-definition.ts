@@ -1,11 +1,12 @@
-import * as ts from 'typescript';
-import { Analyzer, isTsFunction, isTsJsxRoot, StoreDefinition } from './types';
+import { Analyzer, StoreDefinition } from '.';
+import { isStoreDefinition, findStore } from '../visitors/stores';
 import { errorNode } from './types.helpers';
+import ts from 'typescript';
+import { scan } from '..';
 import { findUsedVariables } from './find-used-variables';
-import { scan } from '../astUtils/scanner';
-import { findStore, isStoreDefinition } from '../visitors/stores';
+import { isTsFunction, isTsJsxRoot } from './types.is.type';
 
-export const storeDefinition: Analyzer<StoreDefinition> = astNode => {
+const storeDefinition: Analyzer<StoreDefinition> = astNode => {
     if (!isStoreDefinition(astNode)) {
         return errorNode<StoreDefinition>(astNode, 'Not a store definition', 'internal');
     }
@@ -27,8 +28,8 @@ export const storeDefinition: Analyzer<StoreDefinition> = astNode => {
 
     const storeDef: StoreDefinition = {
         kind: 'storeDefinition',
-        name: ts.isVariableDeclaration(astNode.parent) ? astNode.parent.name.getText() : astNode.parent.getText(),
-        sourceAstNode: astNode,
+        name: parentDeclaration.name.getText(),
+        sourceAstNode: parentDeclaration,
         variables,
         aggregatedVariables,
         keys: argument.properties.map(arg => {
@@ -44,8 +45,7 @@ export const storeDefinition: Analyzer<StoreDefinition> = astNode => {
     };
 };
 
-
-export const stores = (astNode: ts.Node) => {
+export const getStoresDefinitions = (astNode: ts.Node) => {
     return scan(astNode, findStore)
         .map(({ node }) => storeDefinition(node).tsxAir as StoreDefinition);
 };

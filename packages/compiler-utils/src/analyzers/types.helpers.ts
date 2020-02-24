@@ -1,38 +1,31 @@
-import { TsxErrorType, TsxAirNodeError, TsxAirNode, AnalyzerResult } from './types';
+import { TsxErrorType, AnalysisError, AnalyzedNode, AnalyzerResult } from './types';
 import ts from 'typescript';
 import isArray from 'lodash/isArray';
-import isString from 'lodash/isString';
 import flatten from 'lodash/flatten';
-import { NodeMetaData } from '../astUtils/scanner';
-export function errorNode<T extends TsxAirNode>(sourceAstNode: ts.Node, message: string, type: TsxErrorType = 'code'): AnalyzerResult<T> {
-    const tsxAir: TsxAirNodeError = {
+import { NodeMetaData } from '../ast-utils/scanner';
+import { hasError, isNotNull, isTsxAirNode } from './types.is.type';
+export function errorNode<T extends AnalyzedNode>(sourceAstNode: ts.Node, message: string, type: TsxErrorType = 'code'): AnalyzerResult<T> {
+    const tsxAir: AnalysisError = {
         kind: 'error',
         sourceAstNode,
         errors: [{ message, type }]
     };
     return {
         tsxAir,
-        astToTsxAir: new Map([[sourceAstNode, [tsxAir]]]) as Map<ts.Node, TsxAirNode[]>
+        astToTsxAir: new Map([[sourceAstNode, [tsxAir]]]) as Map<ts.Node, AnalyzedNode[]>
     };
 }
 
-export function asAnalyzerResult<T extends TsxAirNode>(analyzedNode: T): AnalyzerResult<T> {
+export function asAnalyzerResult<T extends AnalyzedNode>(analyzedNode: T): AnalyzerResult<T> {
     return {
         tsxAir: analyzedNode,
-        astToTsxAir: new Map([[analyzedNode.sourceAstNode, [analyzedNode]]]) as Map<ts.Node, TsxAirNode[]>
+        astToTsxAir: new Map([[analyzedNode.sourceAstNode, [analyzedNode]]]) as Map<ts.Node, AnalyzedNode[]>
     };
 }
 
-export function hasError(node: TsxAirNode): node is TsxAirNodeError {
-    return node && node.kind === 'error';
-}
 
-export function isTsxAirNode(x: any): x is TsxAirNode {
-    return x && isString(x.kind) && x.sourceAstNode;
-}
-
-export type NodesMap = Map<ts.Node, TsxAirNode[]>;
-export function addToNodesMap(target: NodesMap, added: NodesMap | TsxAirNode) {
+export type NodesMap = Map<ts.Node, AnalyzedNode[]>;
+export function addToNodesMap(target: NodesMap, added: NodesMap | AnalyzedNode) {
     if (isTsxAirNode(added)) {
         addNodeToMap(target, added);
     } else {
@@ -40,7 +33,7 @@ export function addToNodesMap(target: NodesMap, added: NodesMap | TsxAirNode) {
     }
 }
 
-function addNodeToMap(target: NodesMap, node: TsxAirNode) {
+function addNodeToMap(target: NodesMap, node: AnalyzedNode) {
     const { sourceAstNode } = node;
     const nodeResults = target.get(sourceAstNode) || [];
     if (!nodeResults.find(i => i === node)) {
@@ -49,8 +42,8 @@ function addNodeToMap(target: NodesMap, node: TsxAirNode) {
     }
 }
 
-export function aggregateAstNodeMapping(nodes: TsxAirNode[]): NodesMap {
-    const agg = new Map<ts.Node, TsxAirNode[]>();
+export function aggregateAstNodeMapping(nodes: AnalyzedNode[]): NodesMap {
+    const agg = new Map<ts.Node, AnalyzedNode[]>();
     const visited = new Set();
     const walk = (node: any) => {
         if (visited.has(node)) {
@@ -75,11 +68,7 @@ export function aggregateAstNodeMapping(nodes: TsxAirNode[]): NodesMap {
     return agg;
 }
 
-export function isNotNull<T extends TsxAirNode>(input: null | undefined | T): input is T {
-    return !!input;
-}
-
-export function filterResults<T extends TsxAirNode<any>>(result: Array<NodeMetaData<AnalyzerResult<T>>>): T[] {
+export function filterResults<T extends AnalyzedNode<any>>(result: Array<NodeMetaData<AnalyzerResult<T>>>): T[] {
     const specifiersInfo = result.map(res => {
         const inner = res.metadata.tsxAir;
         if (hasError(inner)) {

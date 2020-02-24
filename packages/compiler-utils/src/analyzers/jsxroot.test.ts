@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { expect } from 'chai';
-import { getCompDef } from './component.definition.test';
+import { getCompDef } from './test.helpers';
 // tslint:disable: no-unused-expression
 // tslint:disable: no-shadowed-variable
 
@@ -28,8 +28,6 @@ describe('TSXAir component analyzer: Jsx', () => {
                 return <div>{props.name}</div>;})`);
 
             const dynamicExpression = comp.jsxRoots[0].expressions[0];
-            expect(dynamicExpression.dependencies).to.have.length(1);
-            expect(dynamicExpression.dependencies[0]).to.deep.equal(comp.usedProps[0]);
             expect(dynamicExpression.expression).to.equal('props.name');
         });
 
@@ -121,7 +119,6 @@ describe('TSXAir component analyzer: Jsx', () => {
                 return <div>{3}</div>;})`);
 
             const staticExpression = comp.jsxRoots[0].expressions[0];
-            expect(staticExpression.dependencies).to.deep.equal([]);
             expect(staticExpression.expression).to.equal('3');
         });
 
@@ -133,7 +130,6 @@ describe('TSXAir component analyzer: Jsx', () => {
                 kind: 'JsxExpression',
                 expression: 'props.name'
             });
-            expect(prop.dependencies[0]).to.eql(comp.usedProps[0]);
             expect(prop.sourceAstNode.parent.kind).to.equal(ts.SyntaxKind.JsxAttribute);
         });
 

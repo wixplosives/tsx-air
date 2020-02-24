@@ -94,3 +94,6 @@ typings/
 .dynamodb/
 
 .tmp/
+tmp/
+src.js/
+src.tmp/

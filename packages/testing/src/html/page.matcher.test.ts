@@ -1,3 +1,5 @@
+import  defaults  from 'lodash/defaults';
+import { HTMLMatcher } from './page.matcher.types';
 import fixtures from '../../fixtures';
 import { expect } from 'chai';
 import { htmlMatch } from './page.matcher';
@@ -65,9 +67,48 @@ describe('htmlMatch', () => {
                         contains: 'three'
                     }
                 });
-                expect.fail('Not all .child contain that text');
+                expect.fail('Not mismatch was found');
             } catch (e) {
                 expect(() => { throw e; }).to.throw(`Text missing from some children`);
+            }
+        });
+      
+        it('should match by text of children', async () => {
+            const page = await api.afterLoading;
+            const shouldPass: HTMLMatcher = {
+                name: 'Text missing from some children',
+                cssQuery: '.child.one',
+                textContent: {
+                    contains: '[content of child one]'
+                },
+                children: [
+                    {
+                        // cssQuery: '*',
+                        textContent: '[content of descendant]'
+                    }
+                ]
+            };
+
+            await htmlMatch(page, shouldPass);
+           
+            try {
+                const wrongRootText = defaults({
+                    textContent: 'wrong text'
+                }, shouldPass);
+                await htmlMatch(page, wrongRootText);
+                expect.fail('Not mismatch was found');
+            } catch (e) {
+                expect(e.message).to.match(/(Text missing from some children).*('wrong text')/g);
+            }
+           
+            try {
+                const wrongChildText = shouldPass;
+                // @ts-ignore
+                wrongChildText.children[0].textContent = 'other wrong text';
+                await htmlMatch(page, wrongChildText);
+                expect.fail('Not mismatch was found');
+            } catch (e) {
+                expect(e.message).to.match(/(Text missing from some children).*('other wrong text')/g);
             }
         });
 

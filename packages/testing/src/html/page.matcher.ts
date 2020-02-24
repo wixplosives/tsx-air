@@ -53,10 +53,15 @@ export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMa
     const scopeQuery = buildFullQuery(matcher);
 
     if (isText(textContent) || typeof textContent === 'string') {
-        pending.push(new Promise((resolve, reject) => {
-            check(cssQuery, { cssQuery, pageInstances }, found => Promise.all(found.map(elm =>
-                (elm.evaluate(t => t.textContent).then(t => expectText(t, textContent!, name)))
-            )).then(() => resolve()).catch(reject));
+        pending.push(new Promise(resolve => {
+            check(scopeQuery, { cssQuery, pageInstances },
+                found => Promise.all(
+                    found.map(elm =>
+                        (elm.evaluate(t => t.textContent)
+                            .then(t => expectText(t, textContent!, name)))
+                    ))
+                    .finally(resolve)
+            );
         }));
     }
 

@@ -3,7 +3,7 @@ import { join } from 'path';
 import { createReadStream, createWriteStream } from 'fs';
 import pixelmatch from 'pixelmatch';
 import { expect } from 'chai';
-import { delay } from '@tsx-air/utils/src';
+import { delay } from '@tsx-air/utils';
 
 type RGBTuple = [number, number, number];
 interface PMOptions {

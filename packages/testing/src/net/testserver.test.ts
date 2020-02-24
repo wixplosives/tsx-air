@@ -6,10 +6,17 @@ import fixtures from '../../fixtures';
 import { block } from './block.thread';
 import { join } from 'path';
 
-describe('test server', () => {
+describe('test server', function () {
+    this.retries(this.retries() + 5);
+    let _timeScaler = 1;
+    const ms = (_duration:number) => _duration * _timeScaler;
+
     let server: TestServer;
-    afterEach(() => {
+    afterEach(function ()  {
         server?.close();
+        if (!this.currentTest?.isPassed()) {
+            _timeScaler++;
+        }
     });
 
     describe('createServer', () => {
@@ -69,29 +76,29 @@ describe('test server', () => {
         it('should return a value only after the delay period', async () => {
             server = await createTestServer();
             await server.addEndpoint('/endpoint', 'with delay');
-            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(40);
-            await server.setDelay('/endpoint', 50);
-            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.within(50, 120);
-            await server.setDelay(/\/end.*/, 121);
-            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.above(120);
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(ms(10));
+            await server.setDelay('/endpoint', ms(11));
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.within(ms(10), ms(20));
+            await server.setDelay(/\/end.*/, ms(21));
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.above(ms(20));
         });
         it('should return a killswitch function', async () => {
             server = await createTestServer();
             await server.addEndpoint('/endpoint', 'with delay');
-            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(40);
-            const kill = await server.setDelay('/endpoint', 200);
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(ms(10));
+            const kill = await server.setDelay('/endpoint', ms(100));
             const cancelledDelayDuration = duration(get(server.baseUrl + '/endpoint'));
-            await delay(40);
+            await delay(ms(40));
             await kill();
-            expect(await cancelledDelayDuration).to.be.within(40,150);
-            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(40);
+            expect(await cancelledDelayDuration).to.be.within(ms(40),ms(80));
+            expect(await duration(get(server.baseUrl + '/endpoint'))).to.be.below(ms(10));
         });
-        it('delay static resources', async()=>{
+        it('delay static resources', async () => {
             server = await createTestServer();
             await server.addStaticRoot(fixtures);
-            expect(await duration(get(server.baseUrl + '/first.static.root'))).to.be.below(40);
-            await server.setDelay('/first.static.root', 50);
-            expect(await duration(get(server.baseUrl + '/first.static.root'))).to.be.above(50);
+            expect(await duration(get(server.baseUrl + '/first.static.root'))).to.be.below(ms(15));
+            await server.setDelay('/first.static.root', ms(16));
+            expect(await duration(get(server.baseUrl + '/first.static.root'))).to.be.above(ms(15));
         });
     });
 
@@ -139,7 +146,7 @@ describe('test server', () => {
         server = await createTestServer();
         await server.addEndpoint('/got', 'ok');
         const done = threadedGet(server.baseUrl + '/got');
-        const [start, end] = block(300);
+        const [start, end] = block(ms(200));
         const { result, time } = await done;
 
         expect(result).to.eql('ok');

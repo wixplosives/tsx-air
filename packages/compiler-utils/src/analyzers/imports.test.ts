@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { asSourceFile } from '../astUtils/parser';
+import { asSourceFile } from '../ast-utils/parser';
 import { analyze, TsxFile } from '.';
 // tslint:disable: no-unused-expression
 
