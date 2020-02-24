@@ -5,7 +5,6 @@ import { createWebpackFs } from '@file-services/webpack';
 import webpack from 'webpack';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { compile } from './compile';
-import cpy from 'cpy';
 import { packagePath } from '@tsx-air/utils/packages';
 import { Compiler } from '@tsx-air/types';
 import { asJs } from '@tsx-air/utils';
@@ -22,11 +21,14 @@ export interface BrowserifyOptions {
 export const browserifyPath = packagePath('@tsx-air/browserify');
 
 export async function browserify(options: BrowserifyOptions): Promise<string> {
-    const { base, entry, output,
-        debug = false, configFilePath } = options;
+    const { base, entry, output, debug = false, configFilePath } = options;
     const outDir = dirname(output);
+
     compile([join(base, entry)], options.compiler, join(outDir, 'src.js'));
-    await cpy(join(base, `/*.compiled.ts`), join(outDir, 'src.js'));
+    const files = (await nodeFs.promises.readdir(base)).filter(name => name.endsWith('.compiled.ts'));
+    await Promise.all(
+        files.map(file => nodeFs.promises.copyFile(nodeFs.join(base, file), nodeFs.join(outDir, 'src.js', file)))
+    );
 
     const wp = webpack({
         entry: join(outDir, 'src.js', asJs(entry)),
@@ -54,9 +56,11 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         },
         resolve: {
             extensions: ['.tsx', '.ts', '.js', '.jsx', '.json'],
-            plugins: [new TsconfigPathsPlugin({
-                configFile: join(browserifyPath, '..', '..', 'tsconfig.json')
-            })]
+            plugins: [
+                new TsconfigPathsPlugin({
+                    configFile: join(browserifyPath, '..', '..', 'tsconfig.json')
+                })
+            ]
         },
         performance: {
             hints: false
@@ -73,7 +77,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
     const res = await run();
     if (res.hasErrors()) {
         throw new Error(`Error browserifying ${join(base, entry)}
-        ${ res.toString()} `);
+        ${res.toString()} `);
     }
     return (await readFile(output)).toString();
 }

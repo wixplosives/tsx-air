@@ -46,7 +46,7 @@ describe('browserify', () => {
         });
     });
 
-    it('copies all .compiled.* files to the target folder', async () => {
+    it('copies all .compiled. files to the target folder', async () => {
         await browserify({
             base: fixtures,
             entry: 'with.imports.ts',
@@ -57,8 +57,7 @@ describe('browserify', () => {
     });
 
     it('should package import.examples.ts into a single js file', async () => {
-        expect(exampleSrcPath).to.equal(
-            nodeFs.join(browserifyPath, '..', 'examples', 'src', 'examples'));
+        expect(exampleSrcPath).to.equal(nodeFs.join(browserifyPath, '..', 'examples', 'src', 'examples'));
         const built = await browserify({
             base: fixtures,
             entry: 'import.examples.ts',
@@ -81,26 +80,27 @@ describe('browserify', () => {
                 label: 'transformer',
                 features: [],
                 transformers: {
-                    before: [ctx => node => {
-                        const visitor: ts.Visitor = (n: ts.Node) => {
-                            if (ts.isIdentifier(n) && n.text === 'wasExported') {
-                                return ts.createIdentifier('wasTransformed');
-                            }
-                            return visitEachChild(n, visitor, ctx);
-                        };
-                        return visitEachChild(node, visitor, ctx);
-                    }]
+                    before: [
+                        ctx => node => {
+                            const visitor: ts.Visitor = (n: ts.Node) => {
+                                if (ts.isIdentifier(n) && n.text === 'wasExported') {
+                                    return ts.createIdentifier('wasTransformed');
+                                }
+                                return visitEachChild(n, visitor, ctx);
+                            };
+                            return visitEachChild(node, visitor, ctx);
+                        }
+                    ]
                 }
             }
         });
         expect(execute(built)).to.eql({ wasTransformed: true });
     });
 
-
-    beforeEach(function () {
+    beforeEach(function() {
         tmp = packagePath('@tsx-air/browserify', 'tmp', this.currentTest!.title);
     });
-    afterEach(function (done) {
+    afterEach(function(done) {
         this.test?.isPassed() ? rimraf(tmp, done) : done();
     });
 });
