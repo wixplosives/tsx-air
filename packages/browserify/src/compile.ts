@@ -3,16 +3,17 @@ import { compilerOptions } from '@tsx-air/compiler-utils';
 import { Compiler } from '@tsx-air/types';
 // @ts-ignore
 import { createReporter } from './reporter';
+import isString from 'lodash/isString';
 
-export function compile(fileNames: string[], compiler: Compiler, outDir: string) {
+export function compile(fileNames: string[], compiler: Compiler, outDir: string, report?: string | boolean) {
     const program = ts.createProgram(fileNames,
         { ...compilerOptions, outDir, noEmit: !outDir, sourceMap: true });
 
-
     const emitResult = program.emit(
         undefined, undefined, undefined, undefined,
-        compiler.transformers
-        // createReporter(fileNames, compiler)
+        report
+            ? createReporter(fileNames, compiler, isString(report) ? report : undefined)
+            : compiler.transformers
     );
 
     const allDiagnostics = ts

@@ -3,22 +3,24 @@ import { TSXAir, store } from '@tsx-air/framework';
 export class Comp extends Component {
     constructor() {
         super(...arguments);
-        this.$$processUpdate = (__0, { state }, changeMap, externalUpdatesCount) => {
-            if (changeMap & Comp.changeBitmask['state.count']) {
-                this.context.exp1.textContent = state.count;
-            }
-        };
+        this.handler = this._handler.bind(this);
+    }
 
-        this.handler = () => {
-            TSXAir.runtime.updateState(this, ({ state }) => {
-                state.count++;
-                return Comp.changeBitmask['state.count'];
-            });
+    $$processUpdate(__0, { state }, changeMap, externalUpdatesCount) {
+        if (changeMap & Comp.changeBitmask['state.count']) {
+            this.context.exp1.textContent = state.count;
         }
+    }; 
 
-        this.$afterMount = () => {
-            this.context.elm0.addEventListener('click', this.handler);
-        }
+    _handler() {
+        TSXAir.runtime.updateState(this, ({ state }) => {
+            state.count++;
+            return Comp.changeBitmask['state.count'];
+        });
+    }
+
+    $afterMount() {
+        this.context.elm0.addEventListener('click', this.handler);
     }
 }
 

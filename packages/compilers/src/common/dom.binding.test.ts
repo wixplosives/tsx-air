@@ -1,6 +1,7 @@
-import { CompDefinition, generateDomBindings } from '@tsx-air/compiler-utils';
+import { CompDefinition } from '@tsx-air/compiler-utils';
 import { analyzeFixtureComponents } from '../test.helpers';
 import { expect } from 'chai';
+import { generateDomBindings } from './dom.binding';
 
 describe('generateDomBindings', () => {
     let fixture: CompDefinition[];

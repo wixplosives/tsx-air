@@ -1,9 +1,8 @@
-import { getComponentTag } from './../../visitors/jsx';
-import { asSourceFile } from '../../ast-utils/parser';
-import { printAstText } from '@tsx-air/compiler-utils';
+import { getComponentTag } from '../../visitors/jsx';
+import { asSourceFile } from '../parser';
+import { printAstText, cloneDeep } from '../..';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
-import { cloneDeep } from './ast-generators';
 import { nativeAttributeMapping } from './native-attribute-mapping';
 import last from 'lodash/last';
 import repeat from 'lodash/repeat';

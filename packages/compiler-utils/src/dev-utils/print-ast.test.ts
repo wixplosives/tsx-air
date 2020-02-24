@@ -1,8 +1,7 @@
-import { printAst } from '@tsx-air/compiler-utils';
+import { printAst, cObject } from '@tsx-air/compiler-utils';
 import { parseValue, parseStatement } from '../ast-utils/parser';
 import { expect, use } from 'chai';
-import { cObject } from '../transformers/generators/ast-generators';
-import {chaiPlugin } from '@tsx-air/testing';
+import { chaiPlugin } from '@tsx-air/testing';
 use(chaiPlugin);
 
 describe('print ast', () => {
@@ -35,7 +34,7 @@ describe('print ast', () => {
                 b: 'baga'
             }, {
                 multiline: true,
-                useSingleQuates: true
+                useSingleQuatres: true
             });
             expect(printAst(ast)).to.be.eqlCode(`{
                 a: 'gaga',
@@ -43,13 +42,13 @@ describe('print ast', () => {
             }`);
 
         });
-        it('should support double quates', () => {
+        it('should support double quatres', () => {
             const ast = cObject({
                 a: 'gaga',
                 b: 'baga'
             }, {
                 multiline: true,
-                useSingleQuates: false
+                useSingleQuatres: false
             });
             expect(printAst(ast)).to.be.eqlCode(`{
                 a: "gaga",

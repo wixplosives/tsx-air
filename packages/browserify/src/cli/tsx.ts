@@ -1,11 +1,12 @@
 import { compile } from '../compile';
-import { compilers } from 'packages/playground/src/compilers';
+import { transformerCompilers } from '@tsx-air/compilers';
 import { kebabCase } from 'lodash';
 
 const files: string[] = [];
 let compiler = 'ast';
 let out = 'src.js';
 let error;
+let log = false;
 
 // tslint:disable: no-console
 const parsArgs = () => {
@@ -19,6 +20,10 @@ const parsArgs = () => {
             case '--outDir':
                 out = process.argv[++i];
                 break;
+            case '-l':
+            case '--log':
+                log = true;
+                break;
             default:
                 if (process.argv[i].startsWith('-')) {
                     error = ('Invalid option: ${process.argv[i]}');
@@ -30,9 +35,9 @@ const parsArgs = () => {
 };
 
 parsArgs();
-const cmp = compilers.find(c => kebabCase(c.label).startsWith(compiler));
+const cmp = transformerCompilers.find(c => kebabCase(c.label).startsWith(compiler));
 if (files.length && cmp && out && !error) {
-    compile(files, cmp, out);
+    compile(files, cmp, out, log);
 } else {
     if (error) {
         console.log(error, '\n');
@@ -41,6 +46,8 @@ if (files.length && cmp && out && !error) {
         console.log(`Missing compiler ${compiler}`);
     }
     console.log(`Usage: tsx SOURCE... [-co]
-    -c --compiler ${compilers.map(c => kebabCase(c.label)).join('|')}
-    -o --outDir DEST`);
+    -c --compiler ${transformerCompilers.map(c => kebabCase(c.label)).join('|')}
+    -o --outDir DEST
+    -l --log log compilation graph to db
+    `);
 }

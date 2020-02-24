@@ -6,7 +6,9 @@ export const features: Features = [
     feature('stateful', 'component'),
     feature('single', 'store'),
     feature('event', 'handler'),
-    feature('when','props','change', 'handler')
+    feature('when','props','change', 'handler'),
+    feature('lambda', 'handler'),
+    feature('conditional', 'dom'),
 ];
 
 export function suite (api: ExampleSuiteApi) {

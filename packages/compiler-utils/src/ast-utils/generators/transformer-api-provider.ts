@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { TsxFile, TsNodeToAirNode, AnalyzerResult } from '../../analyzers/types';
 import { analyze } from '../../analyzers';
-import { cObject, cAccess, cImport, ImportDefinition } from './ast-generators';
+import { cObject, cAccess, cImport, ImportDefinition } from '.';
 
 
 export interface FileTransformerAPI {

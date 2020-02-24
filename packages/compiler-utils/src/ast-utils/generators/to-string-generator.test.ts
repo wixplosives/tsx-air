@@ -1,4 +1,4 @@
-import { parseValue } from '../../ast-utils/parser';
+import { parseValue } from '../parser';
 import { jsxToStringTemplate, jsxAttributeReplacer,  jsxAttributeNameReplacer } from './to-string-generator';
 import ts from 'typescript';
 import { expect } from 'chai';

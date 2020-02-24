@@ -1,4 +1,6 @@
-import { CompDefinition, cNew, cObject, parseValue, cArrow, cloneDeep, cCall, JsxExpression, DomBindings } from '@tsx-air/compiler-utils';
+import { DomBindings } from './../../../common/dom.binding';
+import { CompDefinition, cNew, cObject, parseValue, cArrow, 
+    cloneDeep, cCall, JsxExpression } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 
 export const generateHydrate = (comp: CompDefinition, domBindings: DomBindings) => {

@@ -2,9 +2,7 @@ import { Component } from '@tsx-air/framework';
 import { TSXAir } from '@tsx-air/framework';
 
 export class Comp extends Component {
-    constructor() {
-        super(...arguments);
-        this.$$processUpdate = () => { };
+    $$processUpdate() {        
     }
 }
 

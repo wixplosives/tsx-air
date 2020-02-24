@@ -1,5 +1,5 @@
+import { basicPatterns } from './../../../test.helpers';
 import { generateInitialState } from './initial.state';
-import { basicPatterns } from 'packages/compilers/src/test.helpers';
 import { expect } from 'chai';
 import { mapValues } from 'lodash';
 

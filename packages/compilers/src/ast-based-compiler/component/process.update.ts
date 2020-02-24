@@ -1,14 +1,17 @@
 import { propsAndStateParams, accessedVars } from './helpers';
 import ts from 'typescript';
-import { CompDefinition, JsxExpression, JsxRoot, cAccess, 
-    cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute, 
-    isJsxExpression, JsxComponent, DomBindings, printAstText } from '@tsx-air/compiler-utils';
+import {
+    CompDefinition, JsxExpression, JsxRoot, cAccess,
+    cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute,
+    isJsxExpression, JsxComponent, printAstText, cMethod
+} from '@tsx-air/compiler-utils';
 import { cBitMaskIf } from './bitmask';
 import get from 'lodash/get';
 import { safely } from '@tsx-air/utils';
 import { extractPreRender } from './function';
+import { DomBindings } from '../../common/dom.binding';
 
-export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: DomBindings) => {
+export const createProcessUpdateMethod = (comp: CompDefinition, domBindings: DomBindings) => {
     const params = propsAndStateParams(comp);
     if (params[0] || params[1]) {
         params.push('changeMap');
@@ -21,7 +24,7 @@ export const createProcessUpdateForComp = (comp: CompDefinition, domBindings: Do
         ...updateComponentExpressions(comp, comp.jsxRoots[0], prop, domBindings)
     ]));
 
-    return cArrow(params, createUpdateBody(extractPreRender(comp), changeHandlers));
+    return cMethod('$$processUpdate', params, createUpdateBody(extractPreRender(comp), changeHandlers));
 };
 
 export const createUpdateBody = (preRender: ts.Statement[], changeHandlers: ts.IfStatement[]) => {
