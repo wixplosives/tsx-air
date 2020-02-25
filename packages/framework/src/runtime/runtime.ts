@@ -1,6 +1,7 @@
 import { Component, Dom } from '../types/component';
 import { PropsOf, StateOf, Factory } from '../types/factory';
 import cloneDeep from 'lodash/cloneDeep';
+import { RuntimeCycle } from './stats';
 
 type Mutator = (obj: any) => number;
 type StateMutator<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State> ? (state: State) => number : never;
@@ -8,12 +9,6 @@ type PropsMutator<Comp> = Comp extends Component<infer _Dom, infer Props, infer 
 type PropMutation<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State> ? [Comp, PropsMutator<Props>] : never;
 type StateMutation<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State> ? [Comp, StateMutator<State>] : never;
 
-export interface RuntimeCycle {
-    readonly stateTime: number;
-    readonly endTime: number;
-    readonly actions: number;
-    readonly changed: number;
-}
 
 const flags = {
     preRender: 1 << 63
@@ -75,22 +70,18 @@ export class Runtime {
         const modMapping = mutator(mutatedData.get(instance));
         const oldChangeMap = changeBitmasks.get(instance) || 0;
         const newChangeMap = oldChangeMap | modMapping;
-        // if (oldChangeMap) {
-        //     console.log(oldChangeMap & modMapping & flags.preRender);
-        // }
         changeBitmasks.set(instance, newChangeMap);
         return !(modMapping & flags.preRender);
     }
 
-    private updateViewOnce(
-        props: Array<PropMutation<Component>>,
-        states: Array<StateMutation<Component>>,
-        requested: Map<Component, IterableIterator<void>>) {
-
-        const changeBitmasks = new Map<Component, number>([...requested.keys()].map(k => [k, 0]));
-        const updatesCount = new Map<Component, number>();
-        const latestProps = new Map<Component, {}>();
-        const latestStates = new Map<Component, {}>();
+    private runAllMutations(
+        changeBitmasks: Map<Component, number>,
+        updatesCount: Map<Component, number>,
+        latestProps: Map<Component, {}>,
+        latestStates: Map<Component, {}>
+    ) {
+        const { props, states, requested } = this.pending;
+        this.pending = { props: [], states: [], requested };
 
         props.forEach(([instance, mutator]) => {
             if (this.mutate(mutator, instance, instance.props, latestProps, changeBitmasks)) {
@@ -102,12 +93,31 @@ export class Runtime {
                 updatesCount.set(instance, (updatesCount.get(instance) || 0) + 1);
             }
         });
+    }
+
+    private updateViewOnce() {
+        const changeBitmasks = new Map<Component, number>([...this.pending.requested.keys()].map(k => [k, 0]));
+        const updatesCount = new Map<Component, number>();
+        const latestProps = new Map<Component, {}>();
+        const latestStates = new Map<Component, {}>();
+
+        this.runAllMutations(changeBitmasks, updatesCount, latestProps, latestStates);
 
         changeBitmasks.forEach((changeMap, instance) => {
-            const newProps = latestProps.get(instance) || instance.props;
-            const newState = latestStates.get(instance) || instance.state;
+            const getNew = () => [
+                latestProps.get(instance) || instance.props,
+                latestStates.get(instance) || instance.state
+            ];
+            let [newProps, newState] = getNew();
 
-            instance.$$processUpdate(newProps, newState, changeMap, updatesCount.get(instance) || 0);
+            let volatile: any;
+            for (let i = 0; updatesCount.get(instance) || 0; i++) {
+                volatile = instance.$preRender(newProps, newState);
+                this.runAllMutations(changeBitmasks, updatesCount, latestProps, latestStates);
+                [newProps, newState] = getNew();
+            }
+
+            instance.$updateView(newProps, newState, volatile, changeMap);
             // @ts-ignore
             instance.props = newProps;
             // @ts-ignore
@@ -121,10 +131,7 @@ export class Runtime {
 
         this.viewUpdatePending = false;
         const changed = new Set<Component>();
-        const { props, states, requested } = this.pending;
-        const actions = props.length + states.length + requested.size;
-        this.pending = { props: [], states: [], requested };
-        for (const i of this.updateViewOnce(props, states, requested)) {
+        for (const i of this.updateViewOnce()) {
             changed.add(i);
         }
 
@@ -143,7 +150,6 @@ export class Runtime {
         this.$stats.push({
             stateTime,
             endTime: performance.now(),
-            actions,
             changed: changed.size
         });
     };

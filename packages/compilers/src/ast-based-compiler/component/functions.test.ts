@@ -2,7 +2,9 @@ import { functions } from '../../test.helpers';
 import { expect, use } from 'chai';
 import { generateStateAwareFunction, extractPreRender } from './function';
 import { chaiPlugin } from '@tsx-air/testing';
-import {  cArrow } from '@tsx-air/compiler-utils/src';
+import {  cClass } from '@tsx-air/compiler-utils';
+// import '../../../fixtures/functions';
+
 use(chaiPlugin);
 
 describe('functions', () => {
@@ -47,23 +49,54 @@ describe('functions', () => {
     describe('extractPreRender', () => {
         it('remove store creation, functions and return statement from a component function', () => {
             const comp = functions().WithStateChangeOnly;
-            const asFunc = cArrow([], extractPreRender(comp));
-            expect(asFunc).
-                to.have.astLike(`() => {
-                   if (externalUpdatesCount) {
-                        TSXAir.runtime.updateState(this, ({s}) => {
-                            s.a=3;
-                            return WithStateChangeOnly.changeBitmask['s.a'] | TSXAir.runtime.flags['preRender'];
-                        });
-                    }
-                }`);
+            const asClass = cClass('', undefined, undefined, [
+                extractPreRender(comp)
+            ]);
+            expect(asClass).
+                to.have.astLike(`export class {
+                $preRender(__0, {s}) {
+                    TSXAir.runtime.updateState(this, ({s}) => {
+                        s.a=3;
+                        return WithStateChangeOnly.changeBitmask['s.a'] | TSXAir.runtime.flags['preRender'];
+                    });
+                    return {};
+                }
+            }`);
         });
 
-        describe('when the "removeStateChanges" param is true', ()=>{
-            it('remove all store modification as well', () => {
-                const comp = functions().WithStateChangeOnly;
-                expect(extractPreRender(comp, true)).to.eql([]);
-            });
+        it('return the closure variables', () => {
+            const comp = functions().WithVolatileVars;
+            const asClass = cClass('', undefined, undefined, [
+                extractPreRender(comp)
+            ]);
+            expect(asClass).
+                to.have.astLike(`export class {
+                $preRender(props) {
+                    var a = props.p;
+                    var b = a + 1;
+                    b++;
+                    return {a,b};
+                }
+            }`);
+        });
+
+        it('return the closure variables', () => {
+            const comp = functions().WithVolatileAndStateChange;
+            const asClass = cClass('', undefined, undefined, [
+                extractPreRender(comp)
+            ]);
+            expect(asClass).
+                to.have.astLike(`export class {
+                $preRender(props, {s}) {
+                    var b = s.a + 1;
+                    b++;
+                        TSXAir.runtime.updateState(this, ({s}) => {
+                        s.a=s.a + b;
+                        return WithVolatileAndStateChange.changeBitmask['s.a'] | TSXAir.runtime.flags['preRender'];
+                    });
+                    return {b};
+                }
+            }`);
         });
     });
 });

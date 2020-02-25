@@ -25,7 +25,7 @@ export function _cFunc(params:
                     : item)
             : params,
         _body: body instanceof Array
-            ? ts.createBlock(body)
+            ? ts.createBlock(body, true)
             : body
     };
 }

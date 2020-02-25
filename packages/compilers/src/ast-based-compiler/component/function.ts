@@ -1,7 +1,8 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep, cCall, cArrow } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep, cCall, cArrow, cMethod, cReturnLiteral, printAstText } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import get from 'lodash/get';
+import { propsAndStateParams } from './helpers';
 
 export function generateStateAwareFunction(comp: CompDefinition, func: FuncDefinition) {
     const clone = withBlockBody(func.sourceAstNode);
@@ -21,44 +22,56 @@ export function generateStateAwareFunction(comp: CompDefinition, func: FuncDefin
     return clone;
 }
 
-export function extractPreRender(comp: CompDefinition, removeStateChanges = false): ts.Statement[] {
+export function extractPreRender(comp: CompDefinition, removeStateChanges = false): ts.MethodDeclaration {
     const statements =
         get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
-
+    const params = propsAndStateParams(comp);
     if (!statements?.length) {
-        return [];
+        return cMethod('$preRender', [], [cReturnLiteral([])]);
     }
+
+    const defined = new Set<string>();
+
     const modified = statements.map(s => {
-        if (isStoreDefinition(comp, s)) {
-            return;
-        }
         if (ts.isExpressionStatement(s)) {
             const stateChange = cStateCall(comp, s.expression, true);
             if (removeStateChanges && stateChange) {
                 return;
             }
-            return stateChange
-                ? cIfNotPreRender(stateChange)
-                : cloneDeep(s);
+            return stateChange || cloneDeep(s);
         }
         if (ts.isReturnStatement(s)) {
             return;
         }
         if (ts.isVariableStatement(s)) {
-            return removeClosureFunctions(s);
+            const vars = volatileVars(comp, s);
+            if (vars) {
+                vars.declarationList.declarations.forEach(
+                    v => defined.add(printAstText(v.name)));
+                return vars;
+            }
+            return;
         }
         return cloneDeep(s);
     }).filter(i => i) as ts.Statement[];
-    return modified;
+
+    modified.push(cReturnLiteral([...defined.values()]));
+    return cMethod(
+        '$preRender', params, modified
+    );
 }
 
-const removeClosureFunctions = (vars: ts.VariableStatement) => {
-    const noFuncs = vars.declarationList.declarations.filter(({ initializer }) => initializer &&
-        !ts.isArrowFunction(initializer) && !ts.isFunctionExpression(initializer));
+const volatileVars = (comp: CompDefinition, vars: ts.VariableStatement) => {
+    const noFuncs = vars.declarationList.declarations.filter(v =>
+        !v.initializer ||
+        !ts.isArrowFunction(v.initializer) &&
+        !ts.isFunctionExpression(v.initializer) &&
+        !isStoreDefinition(comp, v)
+    );
+
     if (noFuncs.length) {
-        const clone = cloneDeep(vars);
-        clone.declarationList.declarations = ts.createNodeArray(noFuncs);
-        return clone;
+        return ts.createVariableStatement(vars.modifiers,
+            ts.createNodeArray(noFuncs.map(v => cloneDeep(v)!)));
     } else {
         return undefined;
     }
@@ -67,7 +80,6 @@ const removeClosureFunctions = (vars: ts.VariableStatement) => {
 interface ArrowFunctionWithBlockBody extends ts.ArrowFunction {
     body: ts.FunctionBody;
 }
-
 
 function withBlockBody(src: ts.ArrowFunction | ts.FunctionExpression): ArrowFunctionWithBlockBody {
     const clone = cloneDeep(src);
@@ -85,13 +97,17 @@ function withBlockBody(src: ts.ArrowFunction | ts.FunctionExpression): ArrowFunc
     return clone as ArrowFunctionWithBlockBody;
 }
 
-const isStoreDefinition = (comp: CompDefinition, node: ts.Statement) => {
+function isStoreDefinition(comp: CompDefinition, node: ts.Statement | ts.VariableDeclaration) {
     if (ts.isVariableStatement(node)) {
         const used = findUsedVariables(node);
         return comp.stores.some(store => used.defined[store.name]);
     }
+    if (ts.isVariableDeclaration(node)) {
+        const name = printAstText(node.name);
+        return comp.stores.some(store => store.name === name);
+    }
     return false;
-};
+}
 
 const cStateCall = (comp: CompDefinition, exp: ts.Expression, preRender: boolean) => {
     const used = findUsedVariables(exp);
@@ -123,13 +139,3 @@ const cStateCall = (comp: CompDefinition, exp: ts.Expression, preRender: boolean
             ]
         ));
 };
-
-const cIfNotPreRender = (ifTrue: ts.ExpressionStatement) =>
-    ts.createIf(
-        ts.createIdentifier('externalUpdatesCount'),
-        ts.createBlock(
-            [ifTrue],
-            true
-        ),
-        undefined
-    );

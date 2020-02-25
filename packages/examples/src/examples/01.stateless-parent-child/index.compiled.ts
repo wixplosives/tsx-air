@@ -12,7 +12,7 @@ export class ParentComp extends Component<ParentCompCtx, ParentCompProps> {
         'props.name': 1 << 0
     };
 
-    public $$processUpdate(newProps: ParentCompProps, _: {}, changeMap: number): void {
+    public $updateView(newProps: ParentCompProps, _: {}, changeMap: number): void {
         if (changeMap & ParentComp.changeBitmask['props.name']) {
             this.context.text1.textContent = newProps.name;
             runtime.updateProps(this.context.childComp1 as ChildComp, (p: ParentCompProps) => {
@@ -48,7 +48,7 @@ export class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
         'props.name': 1 << 0
     };
 
-    public $$processUpdate(newProps: ChildCompProps, _: {}, changeMap: number): void {
+    public $updateView(newProps: ChildCompProps, _: {}, changeMap: number): void {
         if (changeMap & ChildComp.changeBitmask['props.name']) {
             this.context.text1.textContent = newProps.name;
         }

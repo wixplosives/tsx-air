@@ -45,6 +45,8 @@ export const functions = () => {
     fcache = fcache || analyzeFixtureComponents(`functions.tsx`);
     return {
         WithStateChangeOnly: fcache[0],
-        WithNonStateChangingCode: fcache[1]
+        WithNonStateChangingCode: fcache[1],
+        WithVolatileVars: fcache[2],
+        WithVolatileAndStateChange: fcache[3],
     };
 };

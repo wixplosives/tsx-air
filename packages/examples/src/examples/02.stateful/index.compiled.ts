@@ -18,7 +18,7 @@ export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, 
         'state.changeCount': 1 << 3
     };
 
-    public $$processUpdate(_: StatefulCompProps, { state }: StatefulCompState, changeMap: number): void {
+    public $updateView(_: StatefulCompProps, { state }: StatefulCompState, changeMap: number): void {
         if (changeMap !== StatefulComp.changeBitmask['state.changeCount']) {
             // tslint:disable-next-line: no-shadowed-variable
             runtime.updateState(this as StatefulComp, ({ state }: StatefulCompState) => {
