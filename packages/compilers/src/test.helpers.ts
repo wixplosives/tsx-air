@@ -37,6 +37,7 @@ export const basicPatterns = () => {
         EventListener: cache[5],
         DynamicAttributes: cache[6],
         DynamicAttributesSelfClosing: cache[7],
+        WithVolatile: cache[8],
     };
 };
 

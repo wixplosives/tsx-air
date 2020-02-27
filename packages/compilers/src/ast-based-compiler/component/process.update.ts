@@ -8,14 +8,12 @@ import {
 import { cBitMaskIf } from './bitmask';
 import get from 'lodash/get';
 import { safely } from '@tsx-air/utils';
-import { extractPreRender } from './function';
 import { DomBindings } from '../../common/dom.binding';
 
 export const createProcessUpdateMethod = (comp: CompDefinition, domBindings: DomBindings) => {
     const params = propsAndStateParams(comp);
     if (params[0] || params[1]) {
         params.push('changeMap');
-        params.push('externalUpdatesCount');
     }
     const vars = accessedVars(comp);
 
@@ -24,44 +22,9 @@ export const createProcessUpdateMethod = (comp: CompDefinition, domBindings: Dom
         ...updateComponentExpressions(comp, comp.jsxRoots[0], prop, domBindings)
     ]));
 
-    return cMethod('$$processUpdate', params, createUpdateBody(extractPreRender(comp), changeHandlers));
+    return cMethod('$$processUpdate', params,  changeHandlers);
 };
 
-export const createUpdateBody = (preRender: ts.Statement[], changeHandlers: ts.IfStatement[]) => {
-    if (!changeHandlers.length) {
-        return [];
-    }
-    if (preRender.length) {
-        return [ts.createDo(
-            ts.createBlock(
-                [
-                    ...preRender,
-                    ts.createIf(
-                        ts.createPrefix(
-                            ts.SyntaxKind.ExclamationToken,
-                            ts.createIdentifier('externalUpdatesCount')
-                        ),
-                        ts.createBlock(
-                            changeHandlers,
-                            true
-                        ),
-                        undefined
-                    )
-                ],
-                true
-            ),
-            ts.createBinary(
-                ts.createPostfix(
-                    ts.createIdentifier('externalUpdatesCount'),
-                    ts.SyntaxKind.MinusMinusToken
-                ),
-                ts.createToken(ts.SyntaxKind.GreaterThanToken),
-                ts.createNumericLiteral('0')
-            )
-        )];
-    }
-    return changeHandlers;
-};
 
 export const updateNativeExpressions = (root: JsxRoot, changed: string, domBindings: DomBindings) => {
     const dependentExpressions = root.expressions.filter(

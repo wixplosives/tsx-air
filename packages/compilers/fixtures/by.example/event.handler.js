@@ -6,7 +6,7 @@ export class Comp extends Component {
         this.handler = this._handler.bind(this);
     }
 
-    $$processUpdate(__0, { state }, changeMap, externalUpdatesCount) {
+    $$processUpdate(__0, { state }, __2, changeMap) {
         if (changeMap & Comp.changeBitmask['state.count']) {
             this.context.exp1.textContent = state.count;
         }

@@ -1,5 +1,5 @@
-import { parseValue } from '../parser';
-import { jsxToStringTemplate, jsxAttributeReplacer,  jsxAttributeNameReplacer } from './to-string-generator';
+import { parseValue, parseStatement } from '../parser';
+import { jsxToStringTemplate, jsxAttributeReplacer, jsxAttributeNameReplacer } from './to-string-generator';
 import ts from 'typescript';
 import { expect } from 'chai';
 import { analyze } from '../../analyzers';
@@ -29,11 +29,14 @@ describe('jsxToStringTemplate', () => {
 
 describe('replace attribute expression', () => {
     it('should replace jsx attributes and leave other jsx expressions alone', () => {
-        const ast = parseValue(`TSXAir((props)=>{
+        const ast = parseStatement(`const Comp=TSXAir((props)=>{
             return <div id={props.shouldBeReplaced}>{props.shouldNotBeReplaced}</div>
         })`);
 
-        const info = analyze(ast).tsxAir as CompDefinition;
+        const info = analyze(
+            // @ts-ignore
+            ast.declarationList.declarations[0].initializer
+        ).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
@@ -44,11 +47,14 @@ describe('replace attribute expression', () => {
 
 describe('replace attribute name', () => {
     it('should replace jsx attribute names in native elements', () => {
-        const ast = parseValue(`TSXAir((props)=>{
+        const ast = parseStatement(`let A=TSXAir((props)=>{
             return <div className="gaga"></div>
         })`);
 
-        const info = analyze(ast).tsxAir as CompDefinition;
+        const info = analyze(
+            // @ts-ignore
+            ast.declarationList.declarations[0].initializer
+        ).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeNameReplacer]);
@@ -57,11 +63,14 @@ describe('replace attribute name', () => {
     });
 
     it('should not replace attribute names for components', () => {
-        const ast = parseValue(`TSXAir((props)=>{
+        const ast = parseStatement(`let Comp = TSXAir((props)=>{
             return <Comp className="gaga"></Comp>
         })`);
 
-        const info = analyze(ast).tsxAir as CompDefinition;
+        const info = analyze(
+            // @ts-ignore
+            ast.declarationList.declarations[0].initializer
+        ).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeNameReplacer]);

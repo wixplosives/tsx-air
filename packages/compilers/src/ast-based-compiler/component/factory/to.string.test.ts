@@ -1,9 +1,10 @@
 import { basicPatterns } from '../../../test.helpers';
-import { parseValue, analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer } from '@tsx-air/compiler-utils';
+import { parseValue, analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, parseStatement, cAccess, printAst } from '@tsx-air/compiler-utils';
 import { expect } from 'chai';
 import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } from './to.string';
 import ts from 'typescript';
 import { mapValues } from 'lodash';
+import { generateComponentClass } from '../component.class';
 
 describe('generateToString', () => {
     it('should generate at toString method based on the used props and state', () => {
@@ -48,11 +49,13 @@ describe('generateToString', () => {
     describe('helpers', () => {
         describe('component node replacer', () => {
             it('should replace jsx nodes with upper case into calls to the component to string', () => {
-                const ast = parseValue(`TSXAir((props)=>{
-            return <div id={props.id}><Comp name="gaga" title={props.title}></Comp></div>
-        })`);
-
-                const info = analyze(ast).tsxAir as CompDefinition;
+                const ast = parseStatement(`const  Comp=TSXAir((props)=>{
+                    return <div id={props.id}><Comp name="gaga" title={props.title}></Comp></div>
+                })`);
+                const info = analyze(
+                    // @ts-ignore
+                    ast.declarationList.declarations[0].initializer
+                ).tsxAir as CompDefinition;
                 const jsxRootInfo = info.jsxRoots[0];
                 const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxComponentReplacer]);
                 expect(templateAst).to.have.astLike(`\`<div id={props.id}>\${Comp.factory.toString({ name: "gaga", title: props.title })}</div>\``);
@@ -61,11 +64,14 @@ describe('generateToString', () => {
 
         describe('jsx text expression replacer', () => {
             it('should replace jsx text expressions and leave other jsx expressions unchanged', () => {
-                const ast = parseValue(`TSXAir((props)=>{
+                const ast = parseStatement(`const Comp=TSXAir((props)=>{
                     return <div id={props.shouldNotBeChanged}>{props.shouldChange}</div>
                 })`);
 
-                const info = analyze(ast).tsxAir as CompDefinition;
+                const info = analyze(
+                    // @ts-ignore
+                    ast.declarationList.declarations[0].initializer
+                ).tsxAir as CompDefinition;
                 const jsxRootInfo = info.jsxRoots[0];
 
                 const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer]);
@@ -73,11 +79,14 @@ describe('generateToString', () => {
             });
 
             it('should handle quotes', () => {
-                const ast = parseValue(`TSXAir((props)=>{
+                const ast = parseStatement(`const Comp = TSXAir((props)=>{
                         return <div id={\`"gaga"\`}>{props.title}</div>
                     })`);
 
-                const info = analyze(ast).tsxAir as CompDefinition;
+                const info = analyze(
+                    // @ts-ignore
+                    ast.declarationList.declarations[0].initializer
+                ).tsxAir as CompDefinition;
                 const jsxRootInfo = info.jsxRoots[0];
 
                 const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);

@@ -39,6 +39,19 @@ export const cPrimitive = (input: any, options: AstGeneratorsOptions = defaultOb
     return null;
 };
 
+export const cConst = (name: string, init: ts.Expression) =>
+    ts.createVariableStatement(
+        undefined,
+        ts.createVariableDeclarationList(
+            [ts.createVariableDeclaration(
+                ts.createIdentifier(name),
+                undefined,
+                init
+            )],
+            ts.NodeFlags.Const
+        ));
+
+
 export const cAssign = (to: string[], from: string[] | ts.Expression) => {
     if (isTSNode(from)) {
         return ts.createStatement(

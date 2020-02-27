@@ -24,7 +24,11 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
         const accessParent = n.parent;
         if (isVariableLikeDeclaration(accessParent) && printAstText(accessParent.name) === printAstText(n)) {
             if (isVariableDeclaration(accessParent)) {
-                res.defined[printAstText(n)] = {};
+                if (!accessParent.initializer || (accessParent.initializer
+                    && !ts.isFunctionExpression(accessParent.initializer)
+                    && !ts.isArrowFunction(accessParent.initializer))) {
+                    res.defined[printAstText(n)] = {};
+                }
             }
             return;
         }

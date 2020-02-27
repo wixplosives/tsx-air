@@ -123,7 +123,7 @@ describe('TSXAir component analyzer: Jsx', () => {
         });
 
         it('should find attributes with expressions', () => {
-            const { comp } = getCompDef(`TSXAir(props => (<span att="3" exp={props.name}>!</span>)`);
+            const { comp } = getCompDef(`const Comp=TSXAir(props => (<span att="3" exp={props.name}>!</span>)`);
             const prop = comp.jsxRoots[0].expressions[0];
 
             expect(prop).to.deep.include({
@@ -134,7 +134,7 @@ describe('TSXAir component analyzer: Jsx', () => {
         });
 
         it('should handle jsx text expressions trivial value', () => {
-            const { comp } = getCompDef(`TSXAir(props => (<span>{/* trivial expression */}</span>)`);
+            const { comp } = getCompDef(`const Comp=TSXAir(props => (<span>{/* trivial expression */}</span>)`);
 
             expect(comp.jsxRoots[0].expressions).to.eql([]);
         });

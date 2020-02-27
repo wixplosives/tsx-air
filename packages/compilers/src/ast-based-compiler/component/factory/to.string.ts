@@ -1,10 +1,8 @@
 import { propsAndStateParams } from '../helpers';
-import { cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer, JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep, jsxSelfClosingElementReplacer, jsxEventHandlerRemover, printAst } from '@tsx-air/compiler-utils';
+import { cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer, JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep, jsxSelfClosingElementReplacer, jsxEventHandlerRemover, printAst, cConst } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { extractPreRender } from '../function';
 
 export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
-    const preRender = extractPreRender(comp, true);
     const template = jsxToStringTemplate(node.sourceAstNode, [
         jsxComponentReplacer,
         jsxEventHandlerRemover,
@@ -13,10 +11,28 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
         jsxAttributeNameReplacer,
         jsxSelfClosingElementReplacer,
     ]);
-    return cArrow(propsAndStateParams(comp),
-        preRender?.length
-            ? [...preRender, ts.createReturn(template)]
-            : template);
+    const params = propsAndStateParams(comp, true);
+
+    if (comp.volatileVariables.length) {
+        const volatile = cConst('volatile', cCall([comp.name!, '$preRender'], [
+            ts.createIdentifier(comp.propsIdentifier || 'props'),
+            ts.createIdentifier('state')
+        ]));
+        const execute = cArrow(params, template);
+        return cArrow(['props', 'state'], [
+            volatile,
+            ts.createReturn(
+                ts.createCall(
+                    ts.createParen(execute),
+                    undefined,
+                    [
+                        ts.createIdentifier('volatile'),
+                        ts.createIdentifier('props'),
+                        ts.createIdentifier('state')]
+                ))]);
+    } else {
+        return cArrow(params, template);
+    }
 };
 
 export const jsxTextExpressionReplacer: AstNodeReplacer =

@@ -92,6 +92,7 @@ export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     jsxRoots: JsxRoot[];
     functions: FuncDefinition[];
     stores: StoreDefinition[];
+    volatileVariables: string[];
 }
 
 export interface Namespace extends NodeWithVariables<ts.ParameterDeclaration | ts.VariableDeclaration> {

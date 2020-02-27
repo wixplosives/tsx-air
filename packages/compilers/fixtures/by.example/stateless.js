@@ -1,7 +1,7 @@
 import { Component } from '@tsx-air/framework';
 import { TSXAir } from '@tsx-air/framework';
 export class Comp extends Component {
-    $$processUpdate(props, __1, changeMap, externalUpdatesCount) {
+    $$processUpdate(props, __1, __2, changeMap) {
         if (changeMap & Comp.changeBitmask['props.a']) {
             this.context.exp0.textContent = props.a;
         }

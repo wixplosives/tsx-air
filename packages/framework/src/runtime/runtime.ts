@@ -112,7 +112,7 @@ export class Runtime {
 
             let volatile: any;
             for (let i = 0; updatesCount.get(instance) || 0; i++) {
-                volatile = instance.$preRender(newProps, newState);
+                volatile = instance.$preRender ? instance.$preRender(newProps, newState) : {};
                 this.runAllMutations(changeBitmasks, updatesCount, latestProps, latestStates);
                 [newProps, newState] = getNew();
             }

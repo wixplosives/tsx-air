@@ -1,20 +1,26 @@
 import { CompDefinition, NodeWithVariables } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
-export const propsAndStateParams = (comp: CompDefinition) => {
+export const propsAndStateParams = (comp: CompDefinition, includeVolatile=false) => {
     const props = comp.propsIdentifier && comp.aggregatedVariables.accessed[comp.propsIdentifier]
         ? comp.propsIdentifier
         : undefined;
-    const stores = comp.stores.map(s =>
-        ts.createBindingElement(
-            undefined,
-            undefined,
-            ts.createIdentifier(s.name),
-            undefined
-        ));
-    const state = stores.length ? ts.createObjectBindingPattern(stores) : undefined;
-    return [props, state];
+
+    const state = destructure(comp.stores.map(i => i.name));
+    const volatile = includeVolatile ? destructure(comp.volatileVariables) : undefined;
+    return [props, state, volatile];
 };
+
+const destructure = (keys: string[]) =>
+    keys.length ? ts.createObjectBindingPattern(
+        keys.map(key =>
+            ts.createBindingElement(
+                undefined,
+                undefined,
+                ts.createIdentifier(key),
+                undefined
+            ))
+    ) : undefined;
 
 
 const accessedNsVars =

@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import { printAstText } from '..';
 import { CompDefinition, Analyzer, AnalyzerResult } from './types';
 import { isCallExpression } from 'typescript';
 import { jsxRoots } from './jsxroot';
@@ -7,6 +7,7 @@ import { findUsedVariables } from './find-used-variables';
 import { functions } from './func-definition';
 import { getStoresDefinitions } from './store-definition';
 import { isTsFunction, isTsJsxRoot } from './types.is.type';
+import { safely } from '@tsx-air/utils/src';
 
 
 export const compDefinition: Analyzer<CompDefinition> = astNode => {
@@ -20,24 +21,40 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
     ) {
         return errorNode<CompDefinition>(astNode, 'TSXAir must be called with a single (function) argument', 'code');
     }
+    let name;
+    try {
+        name = safely(() =>
+            // @ts-ignore
+            printAstText(astNode.parent.name),
+            `Components name must start with a capital letter`,
+            i => /^[A-Z].*/.test(i));
+    } catch (e) {
+        return errorNode<CompDefinition>(astNode, e.message, 'code');
+    }
+
 
     const variables = findUsedVariables(compFunc, node => isTsJsxRoot(node) || isTsFunction(node));
     const aggregatedVariables = findUsedVariables(compFunc);
     const propsName = compFunc.parameters[0]?.name?.getText();
-
+    const stores = getStoresDefinitions(compFunc.body);
     const propsIdentifier = aggregatedVariables.accessed[propsName]
         ? propsName : undefined;
+    const volatileVariables = Object.keys(variables.defined).filter(ns =>
+        ns !== propsIdentifier &&        
+        !stores.some(s => s.name === ns)
+    );
 
     const tsxAir: CompDefinition = {
         kind: 'CompDefinition',
-        name: ts.isVariableDeclaration(astNode.parent) ? astNode.parent.name.getText() : undefined,
+        name,
         propsIdentifier,
         aggregatedVariables,
         variables,
+        volatileVariables,
         sourceAstNode: astNode,
         jsxRoots: jsxRoots(astNode, propsIdentifier),
         functions: functions(compFunc.body),
-        stores: getStoresDefinitions(compFunc.body)
+        stores
     };
     const astToTsxAir = aggregateAstNodeMapping(tsxAir.jsxRoots);
     addToNodesMap(astToTsxAir, tsxAir);
