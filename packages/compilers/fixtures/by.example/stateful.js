@@ -1,7 +1,7 @@
 import { Component } from '@tsx-air/framework';
 import { TSXAir, store } from '@tsx-air/framework';
 export class Comp extends Component {
-    $$processUpdate(__0, { store1 }, __2, changeMap) {
+    $updateView(__0, { store1 }, __2, changeMap) {
         if (changeMap & Comp.changeBitmask['store1.a']) {
             this.context.exp0.textContent = store1.a;
         }

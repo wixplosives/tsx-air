@@ -1,5 +1,5 @@
-import { cClass, cObject, FileTransformerAPI, CompDefinition, cStatic, cAccess } from '@tsx-air/compiler-utils';
-import { createProcessUpdateMethod } from './process.update';
+import { cClass, cObject, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
+import { createProcessUpdateMethod } from './update.view';
 import { generateToString } from './factory/to.string';
 import { generateHydrate } from './factory/hydrate';
 import { generateInitialState } from './factory/initial.state';

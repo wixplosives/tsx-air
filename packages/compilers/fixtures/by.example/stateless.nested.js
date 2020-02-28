@@ -2,7 +2,7 @@ import { Component } from '@tsx-air/framework';
 import { TSXAir } from '@tsx-air/framework';
 
 export class Child extends Component {
-    $$processUpdate(props, __1, __2, changeMap) {
+    $updateView(props, __1, __2, changeMap) {
         if (changeMap & Child.changeBitmask['props.b']) {
             this.context.exp0.textContent = props.b;
         }
@@ -22,7 +22,7 @@ Child.changeBitmask = {
 };
 
 export class Parent extends Component {
-    $$processUpdate(props, __1, __2, changeMap) {
+    $updateView(props, __1, __2, changeMap) {
         if (changeMap & Parent.changeBitmask['props.a']) {
             TSXAir.runtime.updateProps(this.context.Child0, p => {
                 p.b = props.a;

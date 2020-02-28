@@ -26,7 +26,7 @@ export function suite(api: ExampleSuiteApi) {
         });
     });
     
-    it.only('should update the view', async () => {
+    it('should update the view', async () => {
         const page = await api.afterLoading;
         await page.evaluate(() => (window as any).app.updateProps({ name: 'changed' }));
         await page.waitFor(50);

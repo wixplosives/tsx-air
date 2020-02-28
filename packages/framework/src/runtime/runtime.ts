@@ -110,13 +110,13 @@ export class Runtime {
             ];
             let [newProps, newState] = getNew();
 
-            let volatile: any;
-            for (let i = 0; updatesCount.get(instance) || 0; i++) {
+            let volatile: any = {};
+            for (let i = 0; i < (updatesCount.get(instance) || 0); i++) {
                 volatile = instance.$preRender ? instance.$preRender(newProps, newState) : {};
                 this.runAllMutations(changeBitmasks, updatesCount, latestProps, latestStates);
                 [newProps, newState] = getNew();
             }
-
+            changeMap = changeBitmasks.get(instance)!;
             instance.$updateView(newProps, newState, volatile, changeMap);
             // @ts-ignore
             instance.props = newProps;

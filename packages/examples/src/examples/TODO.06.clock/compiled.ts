@@ -40,7 +40,7 @@ export class Digit extends Component<DigitContext, DigitProps, DigitState>{
 
     private runningAnimateSequence: IterableIterator<void> | null = null;
 
-    public $$processUpdate(newProps: DigitProps, newState: DigitState, changeMap: number): void {
+    public $updateView(newProps: DigitProps, newState: DigitState, changeMap: number): void {
         const done = new Set();
         const once = (f: () => void) => () => {
             if (!done.has(f)) {

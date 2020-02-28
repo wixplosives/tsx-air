@@ -26,9 +26,10 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
                     ts.createParen(execute),
                     undefined,
                     [
-                        ts.createIdentifier('volatile'),
                         ts.createIdentifier('props'),
-                        ts.createIdentifier('state')]
+                        ts.createIdentifier('state'),
+                        ts.createIdentifier('volatile')
+                    ],
                 ))]);
     } else {
         return cArrow(params, template);

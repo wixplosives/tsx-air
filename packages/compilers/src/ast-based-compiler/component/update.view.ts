@@ -22,7 +22,7 @@ export const createProcessUpdateMethod = (comp: CompDefinition, domBindings: Dom
         ...updateComponentExpressions(comp, comp.jsxRoots[0], prop, domBindings)
     ]));
 
-    return cMethod('$$processUpdate', params,  changeHandlers);
+    return cMethod('$updateView', params,  changeHandlers);
 };
 
 
