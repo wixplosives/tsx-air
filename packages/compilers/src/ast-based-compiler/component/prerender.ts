@@ -4,12 +4,11 @@ import ts from 'typescript';
 import { cStateCall, isStoreDefinition } from './function';
 import get from 'lodash/get';
 
-export function generatePreRender(comp: CompDefinition, staticVersion: boolean): ts.MethodDeclaration | void {
+export function generatePreRender(comp: CompDefinition, staticVersion: boolean): ts.MethodDeclaration | undefined {
     const statements =
         get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
     const params = propsAndStateParams(comp);
     if (!statements?.length) {
-        //return cMethod('$preRender', [], [cReturnLiteral([])], staticVersion);
         return;
     }
 

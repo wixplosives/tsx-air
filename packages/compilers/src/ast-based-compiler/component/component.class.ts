@@ -1,5 +1,5 @@
 import { cClass, cObject, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
-import { createProcessUpdateMethod } from './update.view';
+import { generateUpdateView } from './update.view';
 import { generateToString } from './factory/to.string';
 import { generateHydrate } from './factory/hydrate';
 import { generateInitialState } from './factory/initial.state';
@@ -25,7 +25,7 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
         generatePreRender(comp, false),
         generatePreRender(comp, true),
         cStatic('changeBitmask', generateChangeBitMask(comp)),
-        createProcessUpdateMethod(comp, binding),
+        generateUpdateView(comp, binding),
         ...eventHandlers(comp, binding)
     ].filter(i => !!i) as Array<ts.PropertyDeclaration | ts.MethodDeclaration>);
     return res;

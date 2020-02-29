@@ -18,7 +18,6 @@ export const WithNonStateChangingCode = TSXAir(() => {
         if (a === 2) {
             console.log(s.a);
         }
-        s.a++;
     };
     return <div onClick={onClick} />;
 });
@@ -35,5 +34,6 @@ export const WithVolatileAndStateChange = TSXAir((props: { p: number }) => {
     let b = s.a + 1;
     b++;
     s.a = s.a + b;
+    const someFunc = () => s.a++;
     return <div>{s.a}{b}</div>;
 });

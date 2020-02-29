@@ -10,7 +10,7 @@ import get from 'lodash/get';
 import { safely } from '@tsx-air/utils';
 import { DomBindings } from '../../common/dom.binding';
 
-export const createProcessUpdateMethod = (comp: CompDefinition, domBindings: DomBindings) => {
+export const generateUpdateView = (comp: CompDefinition, domBindings: DomBindings) => {
     const params = propsAndStateParams(comp);
     if (params[0] || params[1]) {
         params.push('changeMap');

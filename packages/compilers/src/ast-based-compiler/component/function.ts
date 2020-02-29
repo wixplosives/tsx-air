@@ -1,11 +1,12 @@
 import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep, cCall, cArrow, cMethod, cReturnLiteral, printAstText } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
+import { uniqueId } from 'lodash';
 
-export function generateStateAwareFunction(comp: CompDefinition, func: FuncDefinition) {
-    const clone = withBlockBody(func.sourceAstNode);
-    const { statements } = (clone.body as ts.Block);
-    clone.body.statements = ts.createNodeArray(statements.map(s => {
+export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinition) {
+    const method = asMethod(func);
+    const { statements } = method.body!;
+    method.body!.statements = ts.createNodeArray(statements.map(s => {
         if (isStoreDefinition(comp, s)) {
             throw new Error('stores may only be declared in the main component body');
         }
@@ -17,27 +18,16 @@ export function generateStateAwareFunction(comp: CompDefinition, func: FuncDefin
         }
         return s;
     }));
-    return clone;
+    return method;
 }
 
-interface ArrowFunctionWithBlockBody extends ts.ArrowFunction {
-    body: ts.FunctionBody;
-}
-
-function withBlockBody(src: ts.ArrowFunction | ts.FunctionExpression): ArrowFunctionWithBlockBody {
+function asMethod(func: FuncDefinition): ts.MethodDeclaration {
+    const { sourceAstNode: src, name } = func;
     const clone = cloneDeep(src);
     if (!ts.isBlock(clone.body!)) {
         clone.body = ts.createBlock([ts.createReturn(clone.body)]);
     }
-    if (ts.isFunctionExpression(src)) {
-        return ts.createArrowFunction(
-            undefined,
-            clone.typeParameters, clone.parameters, clone.type,
-            undefined,
-            clone.body
-        ) as ArrowFunctionWithBlockBody;
-    }
-    return clone as ArrowFunctionWithBlockBody;
+    return cMethod(name ? `_${name}` : uniqueId('_anonymous'), src.parameters, clone.body);
 }
 
 export function isStoreDefinition(comp: CompDefinition, node: ts.Statement | ts.VariableDeclaration) {
@@ -82,3 +72,6 @@ export const cStateCall = (comp: CompDefinition, exp: ts.Expression, preRender: 
             ]
         ));
 };
+
+export const asFunction = (method: ts.MethodDeclaration) =>
+    cArrow(method.parameters.map(i => i), method.body!);  
