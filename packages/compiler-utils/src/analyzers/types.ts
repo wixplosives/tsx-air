@@ -87,7 +87,7 @@ export interface StoreDefinition extends Namespace {
 
 export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     kind: 'CompDefinition';
-    name?: string;
+    name: string;
     propsIdentifier?: string;
     jsxRoots: JsxRoot[];
     functions: FuncDefinition[];

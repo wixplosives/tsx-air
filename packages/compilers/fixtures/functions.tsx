@@ -34,6 +34,16 @@ export const WithVolatileAndStateChange = TSXAir((props: { p: number }) => {
     let b = s.a + 1;
     b++;
     s.a = s.a + b;
-    const someFunc = () => s.a++;
-    return <div>{s.a}{b}</div>;
+    const someFunc = (c:string) => s.a + b + c;
+    const unused = () => s.a;
+    return <div>{someFunc('const')}</div>;
+});
+
+export const InvalidFunctionUse = TSXAir(() => {
+    const store1 = store({ a: 'initial' });
+    const getDisplayedStr = () => {
+        store1.a = 'Invalid in return statement';
+        return `${store1.a} volatile`;
+    };
+    return <div>{getDisplayedStr()}</div>;
 });

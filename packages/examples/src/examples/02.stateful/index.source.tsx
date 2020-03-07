@@ -14,8 +14,8 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
     /* shorthand for
         when(always, () => state.changeCount++);
     */
-    state.changeCount++;
-    volatile++;
+   volatile++; // should always be 1
+   state.changeCount+=volatile;
 
     return <div>
         <div className="btn" onClick={onClickA}>

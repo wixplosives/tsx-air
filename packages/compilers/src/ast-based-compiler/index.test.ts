@@ -8,6 +8,7 @@ describe('c-AST based compiler', () => {
         'by.example/stateless',
         'by.example/stateful',
         'by.example/stateless.nested',
+        'by.example/functions',
         'by.example/event.handler'
     ].forEach(
         name => {

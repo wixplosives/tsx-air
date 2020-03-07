@@ -1,10 +1,32 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep, cCall, cArrow, cMethod, cReturnLiteral, printAstText } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, cloneDeep, cCall, cArrow, cMethod, printAstText, cProperty, cAccess } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import { uniqueId } from 'lodash';
+import { propsAndStateParams } from './helpers';
+
+export function* generateMethods(comp: CompDefinition) {
+    let lambdaId = 0;
+    for (const func of comp.functions) {
+        func.name = func.name || `lambda${lambdaId++}`;
+        yield generateStateAwareMethod(comp, func);
+        yield generateMethodBind(func);
+    }
+}
+
+export function generateMethodBind(func: FuncDefinition) {
+    return cProperty(func.name!,
+        cArrow(func.arguments!,
+            cCall(['TSXAir', 'runtime', 'execute'],
+                [
+                    ts.createThis(),
+                    cAccess('this', `_${func.name}`),
+                    ...func.arguments!.map(a => ts.createIdentifier(a))
+                ]
+            )));
+}
 
 export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinition) {
-    const method = asMethod(func);
+    const method = asMethod(comp, func);
     const { statements } = method.body!;
     method.body!.statements = ts.createNodeArray(statements.map(s => {
         if (isStoreDefinition(comp, s)) {
@@ -21,13 +43,17 @@ export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinit
     return method;
 }
 
-function asMethod(func: FuncDefinition): ts.MethodDeclaration {
+function asMethod(comp: CompDefinition, func: FuncDefinition): ts.MethodDeclaration {
     const { sourceAstNode: src, name } = func;
     const clone = cloneDeep(src);
     if (!ts.isBlock(clone.body!)) {
         clone.body = ts.createBlock([ts.createReturn(clone.body)]);
     }
-    return cMethod(name ? `_${name}` : uniqueId('_anonymous'), src.parameters, clone.body);
+
+    const params = propsAndStateParams(comp, true);
+    src.parameters.forEach(p => params.push(printAstText(p.name)));
+
+    return cMethod(name ? `_${name}` : uniqueId('_anonymous'), params, clone.body);
 }
 
 export function isStoreDefinition(comp: CompDefinition, node: ts.Statement | ts.VariableDeclaration) {

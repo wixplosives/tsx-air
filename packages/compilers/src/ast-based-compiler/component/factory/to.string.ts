@@ -1,49 +1,64 @@
-import { propsAndStateParams } from '../helpers';
-import { cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer, JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep, jsxSelfClosingElementReplacer, jsxEventHandlerRemover, printAst, cConst } from '@tsx-air/compiler-utils';
+import { propsAndStateParams, destructureStateAndVolatile } from '../helpers';
+import {
+    cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer,
+    JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep,
+    jsxSelfClosingElementReplacer, jsxEventHandlerRemover, printAst,
+    printAstText, cLet, cConst
+} from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 
 export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
     const template = jsxToStringTemplate(node.sourceAstNode, [
         jsxComponentReplacer,
         jsxEventHandlerRemover,
-        jsxTextExpressionReplacer,
+        jsxTextExpressionReplacer(comp),
         jsxAttributeReplacer,
         jsxAttributeNameReplacer,
         jsxSelfClosingElementReplacer,
     ]);
     const params = propsAndStateParams(comp, true);
+    const destructured = destructureStateAndVolatile(comp);
 
     if (comp.volatileVariables.length) {
         const volatile = cConst('volatile', cCall([comp.name!, '$preRender'], [
             ts.createIdentifier(comp.propsIdentifier || 'props'),
             ts.createIdentifier('state')
         ]));
-        const execute = cArrow(params, template);
         return cArrow(['props', 'state'], [
             volatile,
-            ts.createReturn(
-                ts.createCall(
-                    ts.createParen(execute),
-                    undefined,
-                    [
-                        ts.createIdentifier('props'),
-                        ts.createIdentifier('state'),
-                        ts.createIdentifier('volatile')
-                    ],
-                ))]);
+            ...destructured,
+            ts.createReturn(template)]);
     } else {
         return cArrow(params, template);
     }
 };
 
-export const jsxTextExpressionReplacer: AstNodeReplacer =
-    node => ts.isJsxExpression(node) &&
+export const jsxTextExpressionReplacer: (comp: CompDefinition) => AstNodeReplacer =
+    comp => node => ts.isJsxExpression(node) &&
         !ts.isJsxAttribute(node.parent) &&
     {
         prefix: `<!-- ${node.expression ? printAst(node.expression) : 'empty expression'} -->`,
-        expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
+        expression: node.expression ? swapCalls(node.expression, comp) : ts.createTrue(),
         suffix: `<!-- -->`
     };
+
+const swapCalls = (node: ts.Expression, comp: CompDefinition): ts.Expression => {
+    const toProto = (n: ts.Node) => {
+        const clone = ts.getMutableClone(n);
+
+        if (ts.isCallExpression(n)) {
+            const newArgs: ts.Expression[] = ['props', 'state', 'volatile'].map(a => ts.createIdentifier(a));
+            n.arguments.forEach(a => newArgs.push(cloneDeep(a)));
+            return cCall(
+                [comp.name, 'prototype', `_${printAstText(n.expression)}`],
+                newArgs
+            );
+        }
+        clone.forEachChild(toProto);
+        return clone;
+    };
+    return toProto(node) as ts.Expression;
+};
 
 export const jsxComponentReplacer: AstNodeReplacer =
     node => {

@@ -1,7 +1,7 @@
-import { CompDefinition, NodeWithVariables } from '@tsx-air/compiler-utils';
+import { CompDefinition, NodeWithVariables, cConst, cLet } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
-export const propsAndStateParams = (comp: CompDefinition, includeVolatile=false) => {
+export const propsAndStateParams = (comp: CompDefinition, includeVolatile = false) => {
     const props = comp.propsIdentifier && comp.aggregatedVariables.accessed[comp.propsIdentifier]
         ? comp.propsIdentifier
         : undefined;
@@ -10,6 +10,19 @@ export const propsAndStateParams = (comp: CompDefinition, includeVolatile=false)
     const volatile = includeVolatile ? destructure(comp.volatileVariables) : undefined;
     return [props, state, volatile];
 };
+
+export function* destructureStateAndVolatile(comp: CompDefinition) {
+    if (comp.stores.length) {
+        yield cLet(
+            destructure(comp.stores.map(i => i.name))!,
+            ts.createIdentifier('state'));
+    }
+    if (comp.volatileVariables.length) {
+        yield cLet(
+            destructure(comp.volatileVariables)!,
+            ts.createIdentifier('volatile'));
+    }
+}
 
 const destructure = (keys: string[]) =>
     keys.length ? ts.createObjectBindingPattern(

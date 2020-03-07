@@ -8,6 +8,7 @@ import { eventHandlers } from './event.handlers';
 import { generateDomBindings } from '../../common/dom.binding';
 import { generatePreRender } from './prerender';
 import ts from 'typescript';
+import { generateMethods } from './function';
 
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
     const importedComponent = api.ensureImport('Component', '@tsx-air/framework');
@@ -17,16 +18,17 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
         comp.name!,
         importedComponent,
         undefined, [
-        cStatic('factory', cObject({
-            toString: generateToString(info, comp),
-            hydrate: generateHydrate(comp, binding),
-            initialState: generateInitialState(comp),
-        })),
-        generatePreRender(comp, false),
-        generatePreRender(comp, true),
-        cStatic('changeBitmask', generateChangeBitMask(comp)),
-        generateUpdateView(comp, binding),
-        ...eventHandlers(comp, binding)
-    ].filter(i => !!i) as Array<ts.PropertyDeclaration | ts.MethodDeclaration>);
+            cStatic('factory', cObject({
+                toString: generateToString(info, comp),
+                hydrate: generateHydrate(comp, binding),
+                initialState: generateInitialState(comp),
+            })),
+            generatePreRender(comp, false),
+            generatePreRender(comp, true),
+            cStatic('changeBitmask', generateChangeBitMask(comp)),
+            generateUpdateView(comp, binding),
+            ...generateMethods(comp),
+            ...eventHandlers(comp, binding)
+        ].filter(i => !!i) as Array<ts.PropertyDeclaration | ts.MethodDeclaration>);
     return res;
 };

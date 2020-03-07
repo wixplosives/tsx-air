@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { _cFunc } from './helpers';
 import { cAccess } from '.';
+import { parseExpression } from '../../analyzers/jsx.expression';
 
 export const cFunction = (params: string[], statements: ts.Statement[]) => {
     return ts.createFunctionExpression(undefined, undefined, undefined, undefined,
@@ -8,6 +9,13 @@ export const cFunction = (params: string[], statements: ts.Statement[]) => {
 };
 
 export const cParams = (params: string[]) => params.map(val => ts.createParameter(undefined, undefined, undefined, val));
+
+export const cCallArgs = (args: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>) =>
+    args.map(a => {
+        if (typeof a === 'string') {
+            return parseExpression(a);
+        }
+    });
 
 export const cCall = (callPath: string[], args: ts.Expression[]) => {
     let identifier: ts.Expression = ts.createIdentifier(callPath[0]);

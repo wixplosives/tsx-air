@@ -1,10 +1,9 @@
 import { basicPatterns } from '../../../test.helpers';
-import { parseValue, analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, parseStatement, cAccess, printAst } from '@tsx-air/compiler-utils';
+import { analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, parseStatement} from '@tsx-air/compiler-utils';
 import { expect } from 'chai';
 import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } from './to.string';
 import ts from 'typescript';
 import { mapValues } from 'lodash';
-import { generateComponentClass } from '../component.class';
 
 describe('generateToString', () => {
     it('should generate at toString method based on the used props and state', () => {
@@ -74,7 +73,7 @@ describe('generateToString', () => {
                 ).tsxAir as CompDefinition;
                 const jsxRootInfo = info.jsxRoots[0];
 
-                const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer]);
+                const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer(info)]);
                 expect(templateAst).to.have.astLike('`<div id={props.shouldNotBeChanged}><!-- props.shouldChange -->${props.shouldChange}<!-- --></div>`');
             });
 

@@ -3,7 +3,7 @@ import { TSXAir, store } from '@tsx-air/framework';
 export class PreDefinedHandler extends Component {
     constructor() {
         super(...arguments);
-        this.handler = this._handler.bind(this);
+        this.handler = event => TSXAir.runtime.execute(this, this._handler, event);
     }
 
     $updateView(__0, { state }, __2, changeMap) {
@@ -12,7 +12,7 @@ export class PreDefinedHandler extends Component {
         }
     };
 
-    _handler() {
+    _handler(__0, { state }, __2, event) {
         TSXAir.runtime.updateState(this, ({ state }) => {
             state.count++;
             return PreDefinedHandler.changeBitmask['state.count'];
@@ -36,5 +36,44 @@ PreDefinedHandler.factory = {
     })
 };
 PreDefinedHandler.changeBitmask = {
+    'state.count': 1 << 0
+};
+
+export class LambdaHandler extends Component {
+    constructor() {
+        super(...arguments);
+        this.lambda0 = () => TSXAir.runtime.execute(this, this._lambda0);
+    }
+
+    $updateView(__0, { state }, __2, changeMap) {
+        if (changeMap & LambdaHandler.changeBitmask['state.count']) {
+            this.context.exp1.textContent = state.count;
+        }
+    };
+
+    _lambda0(__0, { state }) {
+        TSXAir.runtime.updateState(this, ({ state }) => {
+            state.count++;
+            return LambdaHandler.changeBitmask['state.count'];
+        });
+    }
+
+    $afterMount() {
+        this.context.elm0.addEventListener('click', this.lambda0);
+    }
+}
+
+LambdaHandler.factory = {
+    toString: (__0, { state }) => `<div><!-- state.count -->${state.count}<!-- --></div>`,
+    hydrate: (root, props, state) => new LambdaHandler({
+        root: root,
+        elm0: root,
+        exp1: root.childNodes[1]
+    }, props, state),
+    initialState: () => ({
+        state: { count: 0 }
+    })
+};
+LambdaHandler.changeBitmask = {
     'state.count': 1 << 0
 };

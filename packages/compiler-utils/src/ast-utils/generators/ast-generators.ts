@@ -39,16 +39,32 @@ export const cPrimitive = (input: any, options: AstGeneratorsOptions = defaultOb
     return null;
 };
 
-export const cConst = (name: string, init: ts.Expression) =>
+export const cConst = (name: string | ts.Identifier | ts.ObjectBindingPattern, init: ts.Expression) =>
     ts.createVariableStatement(
         undefined,
         ts.createVariableDeclarationList(
             [ts.createVariableDeclaration(
-                ts.createIdentifier(name),
+                typeof name === 'string'
+                    ? ts.createIdentifier(name)
+                    : name,
                 undefined,
                 init
             )],
             ts.NodeFlags.Const
+        ));
+
+export const cLet = (name: string | ts.Identifier | ts.ObjectBindingPattern, init: ts.Expression) =>
+    ts.createVariableStatement(
+        undefined,
+        ts.createVariableDeclarationList(
+            [ts.createVariableDeclaration(
+                typeof name === 'string'
+                    ? ts.createIdentifier(name)
+                    : name,
+                undefined,
+                init
+            )],
+            ts.NodeFlags.Let
         ));
 
 
