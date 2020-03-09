@@ -1,7 +1,6 @@
 import ts from 'typescript';
 import { _cFunc } from './helpers';
 import { cAccess } from '.';
-import { parseExpression } from '../../analyzers/jsx.expression';
 
 export const cFunction = (params: string[], statements: ts.Statement[]) => {
     return ts.createFunctionExpression(undefined, undefined, undefined, undefined,
@@ -9,13 +8,6 @@ export const cFunction = (params: string[], statements: ts.Statement[]) => {
 };
 
 export const cParams = (params: string[]) => params.map(val => ts.createParameter(undefined, undefined, undefined, val));
-
-export const cCallArgs = (args: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>) =>
-    args.map(a => {
-        if (typeof a === 'string') {
-            return parseExpression(a);
-        }
-    });
 
 export const cCall = (callPath: string[], args: ts.Expression[]) => {
     let identifier: ts.Expression = ts.createIdentifier(callPath[0]);
@@ -31,6 +23,14 @@ export const cArrow = (
     const { _params, _body } = _cFunc(params, body as ts.Expression);
     return ts.createArrowFunction(undefined, undefined, _params, undefined, undefined, _body);
 };
+
+export const cSpreadParams = (name: string) =>
+    ts.createParameter(
+        undefined,
+        undefined,
+        ts.createToken(ts.SyntaxKind.DotDotDotToken),
+        ts.createIdentifier(name));
+
 
 export function cReturnLiteral(keys: string[]): ts.ReturnStatement {
     return ts.createReturn(ts.createObjectLiteral(

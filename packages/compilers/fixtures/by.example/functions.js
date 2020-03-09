@@ -13,11 +13,12 @@ export class NamedFunction extends Component {
         return { vol };
     }
 
-    static $preRender(__0, { store1 }) {
-        var vol = `volatile`;
-        return { vol };
+    static $preRender(props, state) {
+        let vol = `volatile`;
+        let getDisplayedStr = 
+        (...args) => NamedFunction.prototype._getDisplayedStr(props, state, ...args)
+        return { vol, getDisplayedStr };
     }
-
 
     $updateView(__0, { store1 }, __2, changeMap) {
         if (changeMap & NamedFunction.changeBitmask['store1.a']) {
@@ -34,9 +35,9 @@ NamedFunction.factory = {
     toString: (props, state) => {
         const volatile = NamedFunction.$preRender(props, state);
         let { store1 } = state;
-        let { vol } = volatile;
+        let { vol, getDisplayedStr } = volatile;
         return `<div><!-- getDisplayedStr('param') -->${
-            NamedFunction.prototype._getDisplayedStr(props, state, volatile, 'param')
+                getDisplayedStr('param')
             }<!-- --></div>`;
     },
     hydrate: (root, props, state) => new NamedFunction({

@@ -26,3 +26,16 @@ export const cObject = (properties: Record<string, any>, options: AstGeneratorsO
                 cLiteralAst(value, options));
         }), options.multiline);
 };
+
+export const cAssignLiteral = (target: string, keys: string[]) =>
+    ts.createExpressionStatement(ts.createBinary(
+        ts.createIdentifier(target),
+        ts.createToken(ts.SyntaxKind.EqualsToken),
+        ts.createObjectLiteral(
+            keys.map(k => ts.createShorthandPropertyAssignment(
+                ts.createIdentifier(k),
+                undefined
+            )),
+            false
+        )
+    ));

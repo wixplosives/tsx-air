@@ -1,7 +1,7 @@
+import { UsedVariables } from './types';
 // tslint:disable: no-unused-expression
 import { parseValue, asSourceFile } from '../ast-utils/parser';
 import { expect } from 'chai';
-import { UsedVariables } from './types';
 import { findUsedVariables } from './find-used-variables';
 import '../dev-utils/global-dev-tools';
 import ts from 'typescript';

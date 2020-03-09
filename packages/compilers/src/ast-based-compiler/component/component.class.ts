@@ -28,7 +28,6 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
             cStatic('changeBitmask', generateChangeBitMask(comp)),
             generateUpdateView(comp, binding),
             ...generateMethods(comp),
-            ...eventHandlers(comp, binding)
         ].filter(i => !!i) as Array<ts.PropertyDeclaration | ts.MethodDeclaration>);
     return res;
 };

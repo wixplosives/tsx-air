@@ -22,39 +22,40 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
             return;
         }
         const accessParent = n.parent;
-        if (isVariableLikeDeclaration(accessParent) && printAstText(accessParent.name) === printAstText(n)) {
-            if (isVariableDeclaration(accessParent)) {
-                if (!accessParent.initializer || (accessParent.initializer
-                    && !ts.isFunctionExpression(accessParent.initializer)
-                    && !ts.isArrowFunction(accessParent.initializer))) {
+        if (accessParent) {
+            if (isVariableLikeDeclaration(accessParent) && printAstText(accessParent.name) === printAstText(n)) {
+                if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
                     res.defined[printAstText(n)] = {};
                 }
-            }
-            return;
-        }
-
-        if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
-            if (ts.isJsxSelfClosingElement(accessParent) || ts.isJsxOpeningElement(accessParent) || ts.isJsxClosingElement(accessParent) && n === accessParent.tagName) {
                 return;
             }
-            let isModification = false;
-            if (ts.isBinaryExpression(accessParent) && printAstText(accessParent.left) === printAstText(n)) {
-                if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
+
+            if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
+                if (ts.isJsxSelfClosingElement(accessParent) || ts.isJsxOpeningElement(accessParent) || ts.isJsxClosingElement(accessParent) && n === accessParent.tagName) {
+                    return;
+                }
+                let isModification = false;
+                if (ts.isBinaryExpression(accessParent) && printAstText(accessParent.left) === printAstText(n)) {
+                    if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
+                        isModification = true;
+                    }
+                } else if (ts.isPostfixUnaryExpression(accessParent) || ts.isPrefixUnaryExpression(accessParent)) {
                     isModification = true;
                 }
-            } else if (ts.isPostfixUnaryExpression(accessParent) || ts.isPrefixUnaryExpression(accessParent)) {
-                isModification = true;
-            }
-            const paths = accessToStringArr(n);
+                const paths = accessToStringArr(n);
 
-            addToAccessMap(paths.path, isModification, res);
-            for (const path of paths.nestedAccess) {
-                addToAccessMap(path, isModification, res);
+                addToAccessMap(paths.path, isModification, res);
+                for (const path of paths.nestedAccess) {
+                    addToAccessMap(path, isModification, res);
+                }
+            } else {
+                ts.forEachChild(n, visitor);
             }
+            return;
         } else {
             ts.forEachChild(n, visitor);
+            return;
         }
-        return;
     };
     ts.forEachChild(node, visitor);
     return res;
@@ -93,7 +94,8 @@ export function isVariableLikeDeclaration(node: ts.Node): node is ts.VariableLik
         ts.isShorthandPropertyAssignment(node) ||
         ts.isEnumMember(node) ||
         ts.isJSDocPropertyTag(node) ||
-        ts.isJSDocParameterTag(node);
+        ts.isJSDocParameterTag(node) ||
+        ts.isFunctionDeclaration(node);
 }
 
 export function isVariableDeclaration(node: ts.Node): node is ts.VariableDeclaration | ts.ParameterDeclaration {

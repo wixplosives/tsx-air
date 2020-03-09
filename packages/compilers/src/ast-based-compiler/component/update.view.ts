@@ -1,4 +1,4 @@
-import { propsAndStateParams, accessedVars } from './helpers';
+import {  accessedVars, getGenericMethodParams } from './helpers';
 import ts from 'typescript';
 import {
     CompDefinition, JsxExpression, JsxRoot, cAccess,
@@ -11,7 +11,7 @@ import { safely } from '@tsx-air/utils';
 import { DomBindings } from '../../common/dom.binding';
 
 export const generateUpdateView = (comp: CompDefinition, domBindings: DomBindings) => {
-    const params = propsAndStateParams(comp);
+    const params = getGenericMethodParams(comp, comp.jsxRoots[0].aggregatedVariables);
     if (params[0] || params[1]) {
         params.push('changeMap');
     }
@@ -22,13 +22,14 @@ export const generateUpdateView = (comp: CompDefinition, domBindings: DomBinding
         ...updateComponentExpressions(comp, comp.jsxRoots[0], prop, domBindings)
     ]));
 
-    return cMethod('$updateView', params,  changeHandlers);
+    return cMethod('$updateView', params, changeHandlers);
 };
 
 
 export const updateNativeExpressions = (root: JsxRoot, changed: string, domBindings: DomBindings) => {
     const dependentExpressions = root.expressions.filter(
         ex => get(ex.variables.accessed, changed)
+
     );
 
     return dependentExpressions.map(exp => {

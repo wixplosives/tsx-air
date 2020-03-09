@@ -1,25 +1,52 @@
-import { CompDefinition, NodeWithVariables, cConst, cLet } from '@tsx-air/compiler-utils';
+import { CompDefinition, NodeWithVariables, cConst, cLet, UsedVariables } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
-export const propsAndStateParams = (comp: CompDefinition, includeVolatile = false) => {
-    const props = comp.propsIdentifier && comp.aggregatedVariables.accessed[comp.propsIdentifier]
-        ? comp.propsIdentifier
-        : undefined;
 
-    const state = destructure(comp.stores.map(i => i.name));
-    const volatile = includeVolatile ? destructure(comp.volatileVariables) : undefined;
-    return [props, state, volatile];
+export const getGenericMethodParams = (comp: CompDefinition,
+    scope: UsedVariables,
+    includeVolatile = false,
+    deStructure = true,
+) => {
+    const used = usedInScope(comp, scope);
+    const retValue = (usedKeys: string[], name: string) => {
+        if (usedKeys.length) {
+            return deStructure ? destructure(usedKeys) : name;
+        }
+        return undefined;
+    };
+
+    const volatile = includeVolatile
+        ? retValue(used.volatile, 'volatile')
+        : undefined;
+    const state = retValue(used.stores.map(s => s.name), 'state');
+    return [used.props, state, volatile];
 };
 
-export function* destructureStateAndVolatile(comp: CompDefinition) {
-    if (comp.stores.length) {
-        yield cLet(
-            destructure(comp.stores.map(i => i.name))!,
+function usedInScope(comp: CompDefinition, scope?: UsedVariables) {
+    scope = scope ? scope! :comp.aggregatedVariables ;
+    const _usedInScope = (name: string) =>
+        name in scope!.accessed
+        || name in scope!.modified
+        || name in scope!.defined;
+
+    const props = comp.propsIdentifier && scope.accessed[comp.propsIdentifier]
+        ? comp.propsIdentifier
+        : undefined;
+    const stores = comp.stores.filter(({ name }) => _usedInScope(name));
+    const volatile = comp.volatileVariables.filter(_usedInScope);
+    return { props, stores, volatile };
+}
+
+export function* destructureStateAndVolatile(comp: CompDefinition, scope: UsedVariables) {
+    const used = usedInScope(comp, scope);
+    if (used.stores.length) {
+        yield cConst(
+            destructure(used.stores.map(i => i.name))!,
             ts.createIdentifier('state'));
     }
-    if (comp.volatileVariables.length) {
+    if (used.volatile.length) {
         yield cLet(
-            destructure(comp.volatileVariables)!,
+            destructure(used.volatile)!,
             ts.createIdentifier('volatile'));
     }
 }

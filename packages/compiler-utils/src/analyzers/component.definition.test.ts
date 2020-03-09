@@ -5,8 +5,8 @@ describe('TSXAir component definition', () => {
     describe('invalid calls', () => {
         it('should return error for invalid TSXAir calls', () => {
             const [noArgs, tooManyArgs, argNotAFunction, anonymous] = [
-                `let A=TSXAir()`, 
-                `let A=TSXAir(()=>(<div/>), 'Extra argument')`, 
+                `let A=TSXAir()`,
+                `let A=TSXAir(()=>(<div/>), 'Extra argument')`,
                 `let A=TSXAir('not a function')`,
                 `TSXAir(()=>(<div />))`
             ]
@@ -21,10 +21,10 @@ describe('TSXAir component definition', () => {
                     }]
                 }));
             expect(anonymous).to.deep.include({
-                kind:'error',
+                kind: 'error',
                 errors: [{
                     message: 'Components name must start with a capital letter',
-                    type: 'code' 
+                    type: 'code'
                 }]
             });
         });
@@ -66,7 +66,7 @@ describe('TSXAir component definition', () => {
             });
         });
 
-        it('analyzes volatile variables', ()=>{
+        it('analyzes volatile variables', () => {
             const { comp } = getCompDef(`const Comp = TSXAir(props => {
                 var a=3;
                 var b = props.c + a;
@@ -75,7 +75,7 @@ describe('TSXAir component definition', () => {
                 function e(){}
                 return <div />;
             })`);
-            expect(comp.volatileVariables).to.eql(['a','b','c']);
+            expect(comp.volatileVariables).to.eql(['a', 'b', 'c', 'd', 'e']);
         });
     });
 });

@@ -3,7 +3,7 @@ import { generatePreRender } from './prerender';
 import { expect } from 'chai';
 import { asClass } from '../ast.test.helpers';
 
-describe('generatePreRender', () => {
+describe.only('generatePreRender', () => {
     describe('as method', () => {
         it('remove store creation, functions and return statement from a component function', () => {
             const comp = functions().WithStateChangeOnly;
@@ -34,8 +34,8 @@ describe('generatePreRender', () => {
             }`);
         });
 
-        it('return the closure variables', () => {
-            const comp = functions().WithVolatileAndStateChange;
+        it('return the closure variables and functions', () => {
+            const comp = functions().WithVolatileFunction;
             const clazz = asClass(generatePreRender(comp, false)!);
             expect(clazz).
                 to.have.astLike(`export class {
@@ -44,9 +44,9 @@ describe('generatePreRender', () => {
                     b++;
                         TSXAir.runtime.updateState(this, ({s}) => {
                         s.a=s.a + b;
-                        return WithVolatileAndStateChange.changeBitmask['s.a'] | TSXAir.runtime.flags['preRender'];
+                        return WithVolatileFunction.changeBitmask['s.a'] | TSXAir.runtime.flags['preRender'];
                     });
-                    return {b};
+                    return {b, someFunc: this._someFunc};
                 }
             }`);
         });
@@ -79,7 +79,7 @@ describe('generatePreRender', () => {
         });
 
         it('return the closure variables', () => {
-            const comp = functions().WithVolatileAndStateChange;
+            const comp = functions().WithVolatileFunction;
             const clazz = asClass(generatePreRender(comp, true)!);
             expect(clazz).
                 to.have.astLike(`export class {

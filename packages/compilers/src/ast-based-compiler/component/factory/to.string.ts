@@ -1,9 +1,9 @@
-import { propsAndStateParams, destructureStateAndVolatile } from '../helpers';
+import { getGenericMethodParams, destructureStateAndVolatile } from '../helpers';
 import {
     cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer,
     JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep,
     jsxSelfClosingElementReplacer, jsxEventHandlerRemover, printAst,
-    printAstText, cLet, cConst
+    printAstText, cConst, findUsedVariables
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 
@@ -16,21 +16,25 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
         jsxAttributeNameReplacer,
         jsxSelfClosingElementReplacer,
     ]);
-    const params = propsAndStateParams(comp, true);
-    const destructured = destructureStateAndVolatile(comp);
 
-    if (comp.volatileVariables.length) {
-        const volatile = cConst('volatile', cCall([comp.name!, '$preRender'], [
-            ts.createIdentifier(comp.propsIdentifier || 'props'),
-            ts.createIdentifier('state')
-        ]));
-        return cArrow(['props', 'state'], [
-            volatile,
-            ...destructured,
-            ts.createReturn(template)]);
-    } else {
+    const usedVars = findUsedVariables(template);
+    const params = getGenericMethodParams(comp, usedVars, true, true);
+    if (params[2] === undefined) {
         return cArrow(params, template);
+    } else {
+        params.pop();
     }
+
+    const destructured = destructureStateAndVolatile(comp, usedVars);
+    const volatile = cConst('volatile', cCall([comp.name!, '$preRender'], [
+        ts.createIdentifier(comp.propsIdentifier || 'props'),
+        ts.createIdentifier('state')
+    ]));
+    params[1] = params[1] && 'state';
+    return cArrow(params, [
+        volatile,
+        ...destructured,
+        ts.createReturn(template)]);
 };
 
 export const jsxTextExpressionReplacer: (comp: CompDefinition) => AstNodeReplacer =

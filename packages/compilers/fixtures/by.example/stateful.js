@@ -42,9 +42,9 @@ export class WithVolatile extends Component {
 }
 
 WithVolatile.factory = {
-    toString: (props, state) => {
+    toString: (__0, state) => {
         const volatile = WithVolatile.$preRender(props, state);
-        let { store1 } = state;
+        const { store1 } = state;
         let { vol } = volatile;
         return `<div><!-- store1.a -->${store1.a}<!-- --> <!-- vol -->${vol}<!-- --></div>`;
     },

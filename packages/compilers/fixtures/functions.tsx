@@ -29,7 +29,7 @@ export const WithVolatileVars = TSXAir((props: { p: number }) => {
     return <div>{b}</div>;
 });
 
-export const WithVolatileAndStateChange = TSXAir((props: { p: number }) => {
+export const WithVolatileFunction = TSXAir((props: { p: number }) => {
     const s = store({ a: props.p });
     let b = s.a + 1;
     b++;

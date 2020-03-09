@@ -42,11 +42,11 @@ describe('functions', () => {
             }`);
         });
         
-        it(`leaves code that doesn't change the state as is`, () => {
+        it(`destructures the state and volatile params`, () => {
             const comp = functions().WithVolatileAndStateChange;
             expect(asClass(generateStateAwareMethod(comp, comp.functions[0]))).
                 to.have.astLike(`export class {
-                _someFunc(props, {s}, {b}, c){
+                _someFunc(__0, {s}, {b}, c){
                     return s.a + b + c;
                 }
             }`);

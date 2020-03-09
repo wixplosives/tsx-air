@@ -2,7 +2,7 @@ import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, clo
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import { uniqueId } from 'lodash';
-import { propsAndStateParams } from './helpers';
+import { getGenericMethodParams } from './helpers';
 
 export function* generateMethods(comp: CompDefinition) {
     let lambdaId = 0;
@@ -50,7 +50,7 @@ function asMethod(comp: CompDefinition, func: FuncDefinition): ts.MethodDeclarat
         clone.body = ts.createBlock([ts.createReturn(clone.body)]);
     }
 
-    const params = propsAndStateParams(comp, true);
+    const params = getGenericMethodParams(comp, func.aggregatedVariables, true);
     src.parameters.forEach(p => params.push(printAstText(p.name)));
 
     return cMethod(name ? `_${name}` : uniqueId('_anonymous'), params, clone.body);
@@ -78,6 +78,7 @@ export const cStateCall = (comp: CompDefinition, exp: ts.Expression, preRender: 
         : ts.createExpressionStatement(cCall(['TSXAir', 'runtime', 'updateState'],
             [
                 ts.createThis(),
+                ts.createIdentifier('state'),
                 cArrow([ts.createObjectBindingPattern(
                     comp.stores.map(s =>
                         ts.createBindingElement(

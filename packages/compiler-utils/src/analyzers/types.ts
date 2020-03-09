@@ -144,7 +144,7 @@ export interface RecursiveMap {
     [key: string]: RecursiveMap;
 }
 
-export interface UsedVariables extends RecursiveMap {
+export interface UsedVariables {
     accessed: RecursiveMap;
     modified: RecursiveMap;
     defined: RecursiveMap;
