@@ -24,14 +24,12 @@ Comp.changeBitmask = {
 };
 
 export class WithVolatile extends Component {
-    $preRender(__0, { store1 }) {
+    $preRender(__0, $s) {
+        let $v = null;
+        const { store1 } = $s;
         var vol = `volatile`;
-        return { vol };
-    }
-
-    static $preRender(__0, { store1 }) {
-        var vol = `volatile`;
-        return { vol };
+        $v = { vol };
+        return $v;
     }
 
     $updateView(__0, { store1 }, __2, changeMap) {
@@ -42,10 +40,10 @@ export class WithVolatile extends Component {
 }
 
 WithVolatile.factory = {
-    toString: (__0, state) => {
-        const volatile = WithVolatile.$preRender(props, state);
-        const { store1 } = state;
-        let { vol } = volatile;
+    toString: (__0, $s) => {
+        const $v = WithVolatile.prototype.$preRender(__0, $s);
+        const { store1 } = $s;
+        let { vol } = $v;
         return `<div><!-- store1.a -->${store1.a}<!-- --> <!-- vol -->${vol}<!-- --></div>`;
     },
 

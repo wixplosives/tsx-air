@@ -1,10 +1,10 @@
 import { TSXAir, store } from '@tsx-air/framework';
 
 export const WithStateChangeOnly = TSXAir(() => {
-    const s = store({ a: 1 });
+    const s = store({ a: 1, b: null });
     const onClick = () => {
         s.a = 1;
-        s.a = s.a + 1;
+        s.b = s.a + 1;
         s.a++;
     };
     s.a = 3;
@@ -15,7 +15,7 @@ export const WithNonStateChangingCode = TSXAir(() => {
     const s = store({ a: 1 });
     const onClick = () => {
         const a = 1;
-        if (a === 2) {
+        if (a === 1) {
             console.log(s.a);
         }
     };
@@ -34,8 +34,8 @@ export const WithVolatileFunction = TSXAir((props: { p: number }) => {
     let b = s.a + 1;
     b++;
     s.a = s.a + b;
-    const someFunc = (c:string) => s.a + b + c;
-    const unused = () => s.a;
+    const someFunc = (c: string) => props.p + s.a + b + c;
+    const unusedVar = null;
     return <div>{someFunc('const')}</div>;
 });
 

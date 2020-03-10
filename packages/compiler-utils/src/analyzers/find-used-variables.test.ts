@@ -42,7 +42,7 @@ describe('findUsedVariables', () => {
         });
     });
 
-    it('should find modifed members', () => {
+    it('should find modified members', () => {
         const ast = parseValue(`(aParam)=>{
                 aParam.replacedProperty = aParam.internalObject.accessedProperty;
                 /* with leading comment */
@@ -93,7 +93,22 @@ describe('findUsedVariables', () => {
         };
         expect(findUsedVariables(ast), 'Should not include "title"').to.eql(expected);
     });
-    it('should ignore refernce to jsx Types', () => {
+    it('should find vars in jsx', () => {
+        const ast = asSourceFile(`
+            export const aJSXRoot () => <div onClick={onClickHandler}/>
+            `);
+        const expected: UsedVariables = {
+            accessed: {
+                onClickHandler: {}
+            },
+            defined: {
+                aJSXRoot: {}
+            },
+            modified: {}
+        };
+        expect(findUsedVariables(ast), 'Should find the click handler').to.eql(expected);
+    });
+    it('should ignore reference to html elements and components', () => {
         const ast = asSourceFile(`
             export const aJSXRoot = <div><Comp>hello<Comp></div>
             `);
@@ -132,8 +147,8 @@ describe('findUsedVariables', () => {
             }
             `);
 
-        expect(findUsedVariables(ast).accessed.aParam.internalObject.methodProperty, 'methods calls are constiderd as access').not.to.be.undefined;
-        expect(findUsedVariables(ast).accessed.aParam.internalObject.accessedProperty, 'accesss in call arguments is found').not.to.be.undefined;
+        expect(findUsedVariables(ast).accessed.aParam.internalObject.methodProperty, 'methods calls are considered as access').not.to.be.undefined;
+        expect(findUsedVariables(ast).accessed.aParam.internalObject.accessedProperty, 'access in call arguments is found').not.to.be.undefined;
         expect(findUsedVariables(ast).accessed.aParam.internalObject.methodProperty.name, 'methods can also have fields').not.to.be.undefined;
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
@@ -145,7 +160,6 @@ describe('findUsedVariables', () => {
                 }
             }
         });
-
     });
     it('should mark reference by literal strings as access', () => {
         const ast = parseValue(`(aParam)=>{

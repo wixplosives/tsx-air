@@ -1,4 +1,4 @@
-import { getGenericMethodParams, destructureStateAndVolatile } from '../helpers';
+import { getGenericMethodParams, destructureState, destructureVolatile } from '../helpers';
 import {
     cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer,
     JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep,
@@ -6,6 +6,7 @@ import {
     printAstText, cConst, findUsedVariables
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
+import { VOLATILE, STATE, PROPS } from '../../consts';
 
 export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
     const template = jsxToStringTemplate(node.sourceAstNode, [
@@ -25,12 +26,14 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
         params.pop();
     }
 
-    const destructured = destructureStateAndVolatile(comp, usedVars);
-    const volatile = cConst('volatile', cCall([comp.name!, '$preRender'], [
-        ts.createIdentifier(comp.propsIdentifier || 'props'),
-        ts.createIdentifier('state')
+    const destructured = [destructureState(comp, usedVars), destructureVolatile(comp, usedVars)].filter(i => i) as ts.VariableStatement[];
+    const volatile = cConst(VOLATILE, cCall([comp.name!, 'prototype', '$preRender'], [
+        ts.createIdentifier(params[0]
+            ? comp.propsIdentifier || PROPS
+            : '__0'),
+        ts.createIdentifier(STATE)
     ]));
-    params[1] = params[1] && 'state';
+    params[1] = params[1] && STATE;
     return cArrow(params, [
         volatile,
         ...destructured,
@@ -51,7 +54,7 @@ const swapCalls = (node: ts.Expression, comp: CompDefinition): ts.Expression => 
         const clone = ts.getMutableClone(n);
 
         if (ts.isCallExpression(n)) {
-            const newArgs: ts.Expression[] = ['props', 'state', 'volatile'].map(a => ts.createIdentifier(a));
+            const newArgs: ts.Expression[] = [PROPS, STATE, VOLATILE].map(a => ts.createIdentifier(a));
             n.arguments.forEach(a => newArgs.push(cloneDeep(a)));
             return cCall(
                 [comp.name, 'prototype', `_${printAstText(n.expression)}`],

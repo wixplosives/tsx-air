@@ -15,6 +15,11 @@
         "test": "mocha \"src/**/*.test.ts?(x)\""
     },
     "files": [
-        "dist", "src"
-    ]
+        "dist",
+        "src"
+    ],
+    "devDependencies": {
+        "@types/sinon": "^7.5.2",
+        "sinon": "^9.0.0"
+    }
 }

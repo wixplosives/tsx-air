@@ -39,10 +39,13 @@ export class Runtime {
     }
 
     public updateState<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>
-        (instance: Comp, mutator: StateMutator<Comp>) {
-        // @ts-ignore
-        this.pending.states.push([instance, mutator]);
-        this.triggerViewUpdate();
+        (instance: Comp|typeof globalThis, localState: State, mutator: StateMutator<Comp>) {
+        mutator(localState);
+        if (instance !== globalThis) {
+            // @ts-ignore
+            this.pending.states.push([instance, mutator]);
+            this.triggerViewUpdate();
+        }
     }
 
     public render<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(

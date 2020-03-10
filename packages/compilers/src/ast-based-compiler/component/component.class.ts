@@ -4,10 +4,8 @@ import { generateToString } from './factory/to.string';
 import { generateHydrate } from './factory/hydrate';
 import { generateInitialState } from './factory/initial.state';
 import { generateChangeBitMask } from './bitmask';
-import { eventHandlers } from './event.handlers';
 import { generateDomBindings } from '../../common/dom.binding';
 import { generatePreRender } from './prerender';
-import ts from 'typescript';
 import { generateMethods } from './function';
 
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
@@ -18,16 +16,15 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
         comp.name!,
         importedComponent,
         undefined, [
-            cStatic('factory', cObject({
-                toString: generateToString(info, comp),
-                hydrate: generateHydrate(comp, binding),
-                initialState: generateInitialState(comp),
-            })),
-            generatePreRender(comp, false),
-            generatePreRender(comp, true),
-            cStatic('changeBitmask', generateChangeBitMask(comp)),
-            generateUpdateView(comp, binding),
-            ...generateMethods(comp),
-        ].filter(i => !!i) as Array<ts.PropertyDeclaration | ts.MethodDeclaration>);
+        cStatic('factory', cObject({
+            toString: generateToString(info, comp),
+            hydrate: generateHydrate(comp, binding),
+            initialState: generateInitialState(comp),
+        })),
+        ...generatePreRender(comp),
+        cStatic('changeBitmask', generateChangeBitMask(comp)),
+        generateUpdateView(comp, binding),
+        ...generateMethods(comp),
+    ]);
     return res;
 };

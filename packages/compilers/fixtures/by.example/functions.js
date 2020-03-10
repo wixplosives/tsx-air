@@ -8,16 +8,14 @@ export class NamedFunction extends Component {
             this, this._getDisplayedStr, b
         );
     }
-    $preRender(__0, { store1 }) {
+    $preRender(__0, $s) {
+        const { store1 } = $s;
+        let $v = null;
         var vol = `volatile`;
-        return { vol };
-    }
-
-    static $preRender(props, state) {
-        let vol = `volatile`;
-        let getDisplayedStr = 
-        (...args) => NamedFunction.prototype._getDisplayedStr(props, state, ...args)
-        return { vol, getDisplayedStr };
+        var getDisplayedStr = (...args) =>
+            NamedFunction.prototype.getDisplayedStr.call(this, null, $s, $v, ...args);
+        $v = { vol, getDisplayedStr };
+        return $v;
     }
 
     $updateView(__0, { store1 }, __2, changeMap) {
@@ -26,18 +24,20 @@ export class NamedFunction extends Component {
         }
     };
 
-    _getDisplayedStr(__0, { store1 }, { vol }, b) {
+    _getDisplayedStr(__0, $s, $v, b) {
+        const { store1 } = $s
+        let { vol } = $v;
         return `${store1.a} ${vol} ${b}`;
     }
 }
 
 NamedFunction.factory = {
-    toString: (props, state) => {
-        const volatile = NamedFunction.$preRender(props, state);
-        let { store1 } = state;
-        let { vol, getDisplayedStr } = volatile;
+    toString: (props, $s) => {
+        const $v = NamedFunction.prototype.$preRender(props, state);
+        let { store1 } = $s;
+        let { vol, getDisplayedStr } = $v;
         return `<div><!-- getDisplayedStr('param') -->${
-                getDisplayedStr('param')
+            NamedFunction.prototype._getDisplayedStr(props, $s, $v, 'param')
             }<!-- --></div>`;
     },
     hydrate: (root, props, state) => new NamedFunction({

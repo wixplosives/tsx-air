@@ -2,7 +2,8 @@ import { findUsedVariables, CompDefinition, FuncDefinition, createBitWiseOr, clo
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import { uniqueId } from 'lodash';
-import { getGenericMethodParams } from './helpers';
+import { getGenericMethodParams, destructureState, destructureVolatile } from './helpers';
+import { STATE } from '../consts';
 
 export function* generateMethods(comp: CompDefinition) {
     let lambdaId = 0;
@@ -28,7 +29,9 @@ export function generateMethodBind(func: FuncDefinition) {
 export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinition) {
     const method = asMethod(comp, func);
     const { statements } = method.body!;
-    method.body!.statements = ts.createNodeArray(statements.map(s => {
+    method.body!.statements = ts.createNodeArray([
+        ...[destructureState(comp, func.aggregatedVariables), destructureVolatile(comp, func.aggregatedVariables)].filter(i => i) as ts.VariableStatement[],
+       ...statements.map(s => {
         if (isStoreDefinition(comp, s)) {
             throw new Error('stores may only be declared in the main component body');
         }
@@ -39,7 +42,7 @@ export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinit
             return cStateCall(comp, s.expression, false) || s;
         }
         return s;
-    }));
+    })]);
     return method;
 }
 
@@ -50,7 +53,7 @@ function asMethod(comp: CompDefinition, func: FuncDefinition): ts.MethodDeclarat
         clone.body = ts.createBlock([ts.createReturn(clone.body)]);
     }
 
-    const params = getGenericMethodParams(comp, func.aggregatedVariables, true);
+    const params = getGenericMethodParams(comp, func.aggregatedVariables, true, false);
     src.parameters.forEach(p => params.push(printAstText(p.name)));
 
     return cMethod(name ? `_${name}` : uniqueId('_anonymous'), params, clone.body);
@@ -78,7 +81,7 @@ export const cStateCall = (comp: CompDefinition, exp: ts.Expression, preRender: 
         : ts.createExpressionStatement(cCall(['TSXAir', 'runtime', 'updateState'],
             [
                 ts.createThis(),
-                ts.createIdentifier('state'),
+                ts.createIdentifier(STATE),
                 cArrow([ts.createObjectBindingPattern(
                     comp.stores.map(s =>
                         ts.createBindingElement(

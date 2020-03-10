@@ -1,10 +1,11 @@
-import { CompDefinition, cMethod, cReturnLiteral, cloneDeep, printAstText, cArrow, cCall, cLet, cAssignLiteral, cSpreadParams } from '@tsx-air/compiler-utils';
-import { getGenericMethodParams, destructureStateAndVolatile } from './helpers';
+import { CompDefinition, cMethod, cloneDeep, printAstText, cArrow, cCall, cLet, cAssignLiteral, cSpreadParams } from '@tsx-air/compiler-utils';
+import { getGenericMethodParams, destructureState } from './helpers';
 import ts from 'typescript';
 import { cStateCall, isStoreDefinition } from './function';
 import get from 'lodash/get';
+import {VOLATILE} from '../consts';
 
-export function generatePreRender(comp: CompDefinition): ts.MethodDeclaration | undefined {
+export function* generatePreRender(comp: CompDefinition) {
     const statements =
         get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
     const params = getGenericMethodParams(comp, comp.aggregatedVariables, false, false);
@@ -42,21 +43,23 @@ export function generatePreRender(comp: CompDefinition): ts.MethodDeclaration | 
         return;
     }
 
-    const d = destructureStateAndVolatile(
+    const state = destructureState(
         comp, comp.aggregatedVariables
     );
-    modified.unshift(d.next().value as ts.Statement);
-    modified.unshift(cLet('volatile', ts.createNull()));
+    if (state) {
+        modified.unshift(state);
+    }
+    modified.unshift(cLet(VOLATILE, ts.createNull()));
+    modified.push(cAssignLiteral(VOLATILE, [...defined.values()]));
+    modified.push(ts.createReturn(ts.createIdentifier(VOLATILE)));
 
-    modified.push(cAssignLiteral('volatile', [...defined.values()]));
-    modified.push(cReturnLiteral([...defined.values()]));
-
-    return cMethod('$preRender', params, modified);
+    yield cMethod('$preRender', params, modified);
 }
 
 const volatileVars = (comp: CompDefinition, vars: ts.VariableStatement) => {
     const withoutStores = vars.declarationList.declarations.filter(
-        v => !v.initializer || !isStoreDefinition(comp, v)
+        v => (!v.initializer || !isStoreDefinition(comp, v))
+            && printAstText(v.name) in comp.aggregatedVariables.accessed
     );
 
     if (withoutStores.length) {
@@ -79,7 +82,7 @@ function replaceFunc(v: ts.VariableDeclaration, comp: CompDefinition, params: an
                     ts.createThis(),
                     params[0] ? ts.createIdentifier(params[0] as string) : ts.createNull(),
                     params[1] ? ts.createIdentifier(params[1] as string) : ts.createNull(),
-                    ts.createIdentifier('volatile'),
+                    ts.createIdentifier(VOLATILE),
                     ts.createSpread(ts.createIdentifier('args'))
                 ]));
     }

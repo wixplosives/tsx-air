@@ -12,8 +12,9 @@ export class PreDefinedHandler extends Component {
         }
     };
 
-    _handler(__0, { state }, __2, event) {
-        TSXAir.runtime.updateState(this, ({ state }) => {
+    _handler(__0, $s, __2, event) {
+        const { state } = $s;
+        TSXAir.runtime.updateState(this, $s, ({ state }) => {
             state.count++;
             return PreDefinedHandler.changeBitmask['state.count'];
         });
@@ -51,8 +52,9 @@ export class LambdaHandler extends Component {
         }
     };
 
-    _lambda0(__0, { state }) {
-        TSXAir.runtime.updateState(this, ({ state }) => {
+    _lambda0(__0, $s) {
+        const { state } = $s;
+        TSXAir.runtime.updateState(this, $s, ({ state }) => {
             state.count++;
             return LambdaHandler.changeBitmask['state.count'];
         });

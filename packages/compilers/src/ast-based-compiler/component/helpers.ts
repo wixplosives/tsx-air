@@ -1,6 +1,7 @@
 import { CompDefinition, NodeWithVariables, cConst, cLet, UsedVariables } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
+import { VOLATILE, STATE } from '../consts';
 
 export const getGenericMethodParams = (comp: CompDefinition,
     scope: UsedVariables,
@@ -16,14 +17,14 @@ export const getGenericMethodParams = (comp: CompDefinition,
     };
 
     const volatile = includeVolatile
-        ? retValue(used.volatile, 'volatile')
+        ? retValue(used.volatile, VOLATILE)
         : undefined;
-    const state = retValue(used.stores.map(s => s.name), 'state');
+    const state = retValue(used.stores.map(s => s.name), STATE);
     return [used.props, state, volatile];
 };
 
 function usedInScope(comp: CompDefinition, scope?: UsedVariables) {
-    scope = scope ? scope! :comp.aggregatedVariables ;
+    scope = scope ? scope! : comp.aggregatedVariables;
     const _usedInScope = (name: string) =>
         name in scope!.accessed
         || name in scope!.modified
@@ -37,19 +38,24 @@ function usedInScope(comp: CompDefinition, scope?: UsedVariables) {
     return { props, stores, volatile };
 }
 
-export function* destructureStateAndVolatile(comp: CompDefinition, scope: UsedVariables) {
+export function destructureState(comp: CompDefinition, scope: UsedVariables) {
     const used = usedInScope(comp, scope);
-    if (used.stores.length) {
-        yield cConst(
+    return (used.stores.length) ?
+        cConst(
             destructure(used.stores.map(i => i.name))!,
-            ts.createIdentifier('state'));
-    }
-    if (used.volatile.length) {
-        yield cLet(
-            destructure(used.volatile)!,
-            ts.createIdentifier('volatile'));
-    }
+            ts.createIdentifier(STATE))
+        : undefined;
 }
+
+export function destructureVolatile(comp: CompDefinition, scope: UsedVariables) {
+    const used = usedInScope(comp, scope);
+    return (used.volatile.length)
+        ? cLet(
+            destructure(used.volatile)!,
+            ts.createIdentifier(VOLATILE))
+        : undefined;
+}
+
 
 const destructure = (keys: string[]) =>
     keys.length ? ts.createObjectBindingPattern(
