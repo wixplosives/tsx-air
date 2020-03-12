@@ -1,5 +1,5 @@
 import { basicPatterns } from '../../../test.helpers';
-import { analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, parseStatement} from '@tsx-air/compiler-utils';
+import { analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, asAst} from '@tsx-air/compiler-utils';
 import { expect } from 'chai';
 import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } from './to.string';
 import ts from 'typescript';
@@ -48,9 +48,9 @@ describe('generateToString', () => {
     describe('helpers', () => {
         describe('component node replacer', () => {
             it('should replace jsx nodes with upper case into calls to the component to string', () => {
-                const ast = parseStatement(`const  Comp=TSXAir((props)=>{
+                const ast = asAst(`const Comp=TSXAir((props)=>{
                     return <div id={props.id}><Comp name="gaga" title={props.title}></Comp></div>
-                })`);
+                })`, true);
                 const info = analyze(
                     // @ts-ignore
                     ast.declarationList.declarations[0].initializer
@@ -63,9 +63,9 @@ describe('generateToString', () => {
 
         describe('jsx text expression replacer', () => {
             it('should replace jsx text expressions and leave other jsx expressions unchanged', () => {
-                const ast = parseStatement(`const Comp=TSXAir((props)=>{
+                const ast = asAst(`const Comp=TSXAir((props)=>{
                     return <div id={props.shouldNotBeChanged}>{props.shouldChange}</div>
-                })`);
+                })`, true);
 
                 const info = analyze(
                     // @ts-ignore
@@ -78,9 +78,9 @@ describe('generateToString', () => {
             });
 
             it('should handle quotes', () => {
-                const ast = parseStatement(`const Comp = TSXAir((props)=>{
+                const ast = asAst(`const Comp = TSXAir((props)=>{
                         return <div id={\`"gaga"\`}>{props.title}</div>
-                    })`);
+                    })`, true);
 
                 const info = analyze(
                     // @ts-ignore

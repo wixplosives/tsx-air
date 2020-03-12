@@ -1,4 +1,4 @@
-import { parseStatement } from '../parser';
+import { asAst } from '../parser';
 import { expect } from 'chai';
 import ts from 'typescript';
 import { cCall, cLiteralAst, cObject } from '.';
@@ -7,7 +7,7 @@ import { transformerApiProvider, getFileTransformationAPI } from '../..';
 describe('transformerApiProvider', () => {
     it('should wrap transformers providing extra API and not change the ast', () => {
 
-        const ast = parseStatement(`console.log('hello')`).getSourceFile();
+        const ast = asAst(`console.log('hello')`).getSourceFile();
         const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
             return (node: ts.Node) => {
                 const api = getFileTransformationAPI(node.getSourceFile());
@@ -21,7 +21,7 @@ describe('transformerApiProvider', () => {
 
     it('should allow prepanding statements', () => {
 
-        const ast = parseStatement(`console.log('hello')`).getSourceFile();
+        const ast = asAst(`console.log('hello')`).getSourceFile();
         const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
 
             return node => {
@@ -42,7 +42,7 @@ describe('transformerApiProvider', () => {
 
     it('should allow appending statements', () => {
 
-        const ast = parseStatement(`console.log('hello')`).getSourceFile();
+        const ast = asAst(`console.log('hello')`).getSourceFile();
         const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
 
             return (node: ts.Node) => {
@@ -63,7 +63,7 @@ describe('transformerApiProvider', () => {
 
     it('should allow appending private vars', () => {
 
-        const ast = parseStatement(`console.log('hello')`).getSourceFile();
+        const ast = asAst(`console.log('hello')`).getSourceFile();
         const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
 
             return (node: ts.Node) => {
@@ -83,7 +83,7 @@ describe('transformerApiProvider', () => {
     describe('ensure import', () => {
         it('should allow adding imports', () => {
 
-            const ast = parseStatement(`console.log('hello')`).getSourceFile();
+            const ast = asAst(`console.log('hello')`).getSourceFile();
             const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
                 return node => {
                     const api = getFileTransformationAPI(node.getSourceFile());

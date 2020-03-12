@@ -1,4 +1,4 @@
-import { parseStatement } from './../ast-utils/parser';
+import { asAst } from './../ast-utils/parser';
 import { expect } from 'chai';
 import { analyze } from '.';
 import { parseValue, asSourceFile } from '../ast-utils/parser';
@@ -35,7 +35,7 @@ describe('analyze', () => {
 
     describe('valid input node identification', () => {
         it('should identify TsxAir component definition', () => {
-            const ast = parseStatement('const Comp=TSXAir(() => <div>TsxAir Component</div>))');
+            const ast = asAst('const Comp=TSXAir(() => <div>TsxAir Component</div>))');
             const result = analyze(
                 // @ts-ignore
                 ast.declarationList.declarations[0].initializer
@@ -46,7 +46,7 @@ describe('analyze', () => {
 
     describe('astToTsxAir', () => {
         it('should collect all referenced AST nodes', () => {
-            const ast = parseStatement(`const Comp=TSXAir(() => <div>TsxAir Component{'with expression'}</div>))`);
+            const ast = asAst(`const Comp=TSXAir(() => <div>TsxAir Component{'with expression'}</div>))`);
             const { tsxAir, astToTsxAir } = analyze(
                 // @ts-ignore
                 ast.declarationList.declarations[0].initializer

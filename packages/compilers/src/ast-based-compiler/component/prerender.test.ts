@@ -1,13 +1,25 @@
 // tslint:disable: no-unused-expression
 import { functions } from '../../test.helpers';
 import { expect } from 'chai';
-import { getPreRenderOf } from './prerender.test.helpers';
+import { getPreRenderOf, mockRuntime } from './prerender.test.helpers';
+import { createSandbox } from 'sinon';
 
 describe('generatePreRender', () => {
+    const sandbox = createSandbox();
+    beforeEach(() => {
+        sandbox.spy(mockRuntime.TSXAir.runtime, 'updateState');
+    });
+    afterEach(() => sandbox.restore());
+
     it('returns an object with all the component scope variables', () => {
-        const preRenderOf = getPreRenderOf(functions());
-        expect(preRenderOf.WithStateChangeOnly(null, { s: { a: 1 } }).onClick, 'WithStateChangeOnly').to.be.a('function');
-        expect(preRenderOf.WithNonStateChangingCode(null, { s: { a: 1 } }), 'WithNonStateChangingCode').to.have.keys(['onClick']);
+        const preRenderOf = getPreRenderOf(functions());        
+        const state = {s:{a:0}};
+
+        expect(preRenderOf.WithStateChangeOnly(null, state), 'WithStateChangeOnly').to.eql({});
+        expect(state).to.eql({s:{a:3}});
+        sandbox.restore();
+
+        expect(preRenderOf.WithNonStateChangingCode, 'WithNonStateChangingCode').to.be.undefined;
         expect(preRenderOf.WithVolatileVars({ p: 1 }, null), 'WithVolatileVars')
             .to.eql({ a: 1, b: 3 });
         

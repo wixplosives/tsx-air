@@ -1,9 +1,11 @@
-import { CompDefinition, cMethod, cloneDeep, printAstText, cArrow, cCall, cLet, cAssignLiteral, cSpreadParams } from '@tsx-air/compiler-utils';
+import { VOLATILE } from './../consts';
+import { CompDefinition, cMethod, cloneDeep, asCode, cLet, cAssignLiteral, asAst } from '@tsx-air/compiler-utils';
 import { getGenericMethodParams, destructureState } from './helpers';
 import ts from 'typescript';
 import { cStateCall, isStoreDefinition } from './function';
 import get from 'lodash/get';
-import {VOLATILE} from '../consts';
+import { postAnalysisData } from '../../common/post.analysis.data';
+import { cleanParams } from 'packages/compiler-utils/src/ast-utils/generators/helpers';
 
 export function* generatePreRender(comp: CompDefinition) {
     const statements =
@@ -14,27 +16,21 @@ export function* generatePreRender(comp: CompDefinition) {
     }
 
     const defined = new Set<string>();
-
     const modified = statements.map(s => {
         if (ts.isExpressionStatement(s)) {
-            const stateChange = cStateCall(comp, s.expression, true);
+            const stateChange = cStateCall(comp, s.expression);
             return stateChange || cloneDeep(s);
         }
         if (ts.isReturnStatement(s)) {
             return;
         }
         if (ts.isVariableStatement(s)) {
-            const vars = volatileVars(comp, s);
-            if (vars) {
-                vars.declarationList.declarations.forEach(
-                    v => {
-                        defined.add(printAstText(v.name));
-                        replaceFunc(v, comp, params as string[]);
-                    }
-                );
-                return vars;
-            }
-            return;
+            const vars = volatileVars(comp, s).map(v =>
+                replaceFunc(v, comp, params as string[], defined)
+            ).filter(i => i) as ts.VariableDeclaration[];
+            return vars?.length
+                ? ts.createVariableStatement(s.modifiers, ts.createNodeArray(vars))
+                : undefined;
         }
         return cloneDeep(s);
     }).filter(i => i) as ts.Statement[];
@@ -59,31 +55,47 @@ export function* generatePreRender(comp: CompDefinition) {
 const volatileVars = (comp: CompDefinition, vars: ts.VariableStatement) => {
     const withoutStores = vars.declarationList.declarations.filter(
         v => (!v.initializer || !isStoreDefinition(comp, v))
-            && printAstText(v.name) in comp.aggregatedVariables.accessed
+            && asCode(v.name) in comp.aggregatedVariables.accessed
     );
+    return withoutStores;
 
-    if (withoutStores.length) {
-        return ts.createVariableStatement(vars.modifiers,
-            ts.createNodeArray(withoutStores.map(v => cloneDeep(v)!)));
-    } else {
-        return undefined;
-    }
+    // if (withoutStores.length) {
+    //     return ts.createVariableStatement(vars.modifiers,
+    //         ts.createNodeArray(withoutStores.map(v => cloneDeep(v)!)));
+    // } else {
+    //     return undefined;
+    // }
 };
 
 const isFunc = (v: ts.VariableDeclaration) => (v.initializer && (
     ts.isArrowFunction(v.initializer) ||
     ts.isFunctionExpression(v.initializer)));
 
-function replaceFunc(v: ts.VariableDeclaration, comp: CompDefinition, params: any[]) {
+function replaceFunc(v: ts.VariableDeclaration, comp: CompDefinition, params: any[], defined: Set<string>) {
     if (isFunc(v)) {
-        v.initializer = cArrow([cSpreadParams('args')],
-            cCall([comp.name, 'prototype', printAstText(v.name), 'call'],
-                [
-                    ts.createThis(),
-                    params[0] ? ts.createIdentifier(params[0] as string) : ts.createNull(),
-                    params[1] ? ts.createIdentifier(params[1] as string) : ts.createNull(),
-                    ts.createIdentifier(VOLATILE),
-                    ts.createSpread(ts.createIdentifier('args'))
-                ]));
+        const def = comp.functions.find(f => f.sourceAstNode === v.initializer);
+        if (postAnalysisData.read(def!, 'handlerOf')) {
+            return;
+        }
+        const name = postAnalysisData.read(def!, 'name')!;
+        const _params = cleanParams([params[0], params[1], VOLATILE])
+            .map(p => asCode(p.name)).join(',');
+        defined.add(name);
+        const clone = ts.getMutableClone(v);
+        clone.initializer = asAst(`this.${name} || ((...args)=>${comp.name}.prototype._${name}(${_params}, ...args))`) as ts.Expression;
+
+        // cArrow([cSpreadParams('args')],
+        //     cCall([comp.name, 'prototype', asCode(v.name), 'call'],
+        //         [
+        //             ts.createThis(),
+        //             params[0] ? ts.createIdentifier(params[0] as string) : ts.createNull(),
+        //             params[1] ? ts.createIdentifier(params[1] as string) : ts.createNull(),
+        //             ts.createIdentifier(VOLATILE),
+        //             ts.createSpread(ts.createIdentifier('args'))
+        //         ]));
+        return clone;
+    } else {
+        defined.add(asCode(v.name));
+        return cloneDeep(v);
     }
 }

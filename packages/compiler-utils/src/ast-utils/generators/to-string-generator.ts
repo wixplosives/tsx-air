@@ -1,6 +1,6 @@
 import { getComponentTag } from '../../visitors/jsx';
 import { asSourceFile } from '../parser';
-import { printAstText, cloneDeep } from '../..';
+import { asCode, cloneDeep } from '../..';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import { nativeAttributeMapping } from './native-attribute-mapping';
@@ -67,7 +67,7 @@ export function nodeToStringParts(node: ts.Node, replacers: AstNodeReplacer[], l
     replacers.find(r => (replaced = r(node)) !== false);
     if (replaced !== false) {
         if (ts.isJsxElement(replaced)) {
-            replaced = asSourceFile(repeat(' ', leadingTriviaWidth) + printAstText(replaced));
+            replaced = asSourceFile(repeat(' ', leadingTriviaWidth) + asCode(replaced));
             const ret = nodeToStringParts(replaced, replacers, 0);
             return ret;
         }
@@ -93,7 +93,7 @@ export const jsxAttributeReplacer: AstNodeReplacer =
 export const jsxEventHandlerRemover: AstNodeReplacer =
     node => {
         if (ts.isJsxAttribute(node)) {
-            return printAstText(node.name).match(/^on[A-Z].*/)
+            return asCode(node.name).match(/^on[A-Z].*/)
                 ? ''
                 : false;
         }
@@ -105,7 +105,7 @@ export const jsxAttributeNameReplacer: AstNodeReplacer =
         if (ts.isIdentifier(node) && node.parent && ts.isJsxAttribute(node.parent)
             && !getComponentTag(node.parent.parent.parent.parent)
         ) {
-            const attrName = printAstText(node);
+            const attrName = asCode(node);
             const replacement = nativeAttributeMapping[attrName];
             return ' ' + (replacement || attrName);
         }
@@ -126,6 +126,6 @@ export const jsxSelfClosingElementReplacer: AstNodeReplacer = node => {
 };
 
 export const isComponentTag = (node: ts.JsxTagNameExpression) => {
-    const text = printAstText(node);
+    const text = asCode(node);
     return text[0].toLowerCase() !== text[0] || text.indexOf('.') !== -1;
 };

@@ -1,5 +1,5 @@
 import { printAst, cObject } from '@tsx-air/compiler-utils';
-import { parseValue, parseStatement } from '../ast-utils/parser';
+import { parseValue, asAst } from '../ast-utils/parser';
 import { expect, use } from 'chai';
 import { chaiPlugin } from '@tsx-air/testing';
 use(chaiPlugin);
@@ -18,12 +18,12 @@ describe('print ast', () => {
 
 
         it('should print statements', () => {
-            const ast = parseStatement(`const a = 'baga'`);
+            const ast = asAst(`const a = 'baga'`);
             expect(printAst(ast)).to.to.equal(ast.getText());
         });
 
         it('should include types', () => {
-            const ast = parseStatement(`const a: string = 'baga'`);
+            const ast = asAst(`const a: string = 'baga'`);
             expect(printAst(ast)).to.to.equal(ast.getText());
         });
     });

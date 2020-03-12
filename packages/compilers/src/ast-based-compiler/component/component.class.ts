@@ -7,6 +7,7 @@ import { generateChangeBitMask } from './bitmask';
 import { generateDomBindings } from '../../common/dom.binding';
 import { generatePreRender } from './prerender';
 import { generateMethods } from './function';
+import { generateAfterMount } from './event.handlers';
 
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
     const importedComponent = api.ensureImport('Component', '@tsx-air/framework');
@@ -21,10 +22,11 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
             hydrate: generateHydrate(comp, binding),
             initialState: generateInitialState(comp),
         })),
-        ...generatePreRender(comp),
         cStatic('changeBitmask', generateChangeBitMask(comp)),
         generateUpdateView(comp, binding),
         ...generateMethods(comp),
+        ...generateAfterMount(comp, binding),
+        ...generatePreRender(comp),
     ]);
     return res;
 };

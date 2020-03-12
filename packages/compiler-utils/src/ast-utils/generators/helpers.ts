@@ -18,12 +18,7 @@ export function _cFunc(params:
         params.pop();
     }
     return {
-        _params: params instanceof Array
-            ? params.map((item, i) =>
-                !item || isString(item) || ts.isObjectBindingPattern(item)
-                    ? ts.createParameter(undefined, undefined, undefined, item || `__${i}`, undefined, undefined, undefined)
-                    : item)
-            : params,
+        _params: cleanParams(params),
         _body: body instanceof Array
             ? ts.createBlock(body, true)
             : body
@@ -47,3 +42,12 @@ export const _cAccess = (safe: boolean, callPath: string[]) => {
     });
     return ret!;
 };
+
+export function cleanParams(params: ts.NodeArray<ts.ParameterDeclaration> | Array<string | ts.ParameterDeclaration | ts.ObjectBindingPattern | undefined>) {
+    return (params instanceof Array
+        ? params.map((item, i) => !item || isString(item) || ts.isObjectBindingPattern(item)
+            ? ts.createParameter(undefined, undefined, undefined, item || `__${i}`, undefined, undefined, undefined)
+            : item)
+        : params ) as ReadonlyArray<ts.ParameterDeclaration>;
+}
+

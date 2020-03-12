@@ -3,7 +3,7 @@ import {
     cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer,
     JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep,
     jsxSelfClosingElementReplacer, jsxEventHandlerRemover, printAst,
-    printAstText, cConst, findUsedVariables
+    asCode, cConst, findUsedVariables
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { VOLATILE, STATE, PROPS } from '../../consts';
@@ -19,22 +19,19 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
     ]);
 
     const usedVars = findUsedVariables(template);
-    const params = getGenericMethodParams(comp, usedVars, true, true);
-    if (params[2] === undefined) {
-        return cArrow(params, template);
-    } else {
-        params.pop();
-    }
+    const [propsParam, stateParams, volatileParams] = getGenericMethodParams(comp, usedVars, true, true);
+    if (volatileParams === undefined) {
+        return cArrow([propsParam, stateParams], template);
+    } 
 
     const destructured = [destructureState(comp, usedVars), destructureVolatile(comp, usedVars)].filter(i => i) as ts.VariableStatement[];
     const volatile = cConst(VOLATILE, cCall([comp.name!, 'prototype', '$preRender'], [
-        ts.createIdentifier(params[0]
+        ts.createIdentifier(propsParam
             ? comp.propsIdentifier || PROPS
             : '__0'),
         ts.createIdentifier(STATE)
     ]));
-    params[1] = params[1] && STATE;
-    return cArrow(params, [
+    return cArrow([propsParam, stateParams && STATE], [
         volatile,
         ...destructured,
         ts.createReturn(template)]);
@@ -57,7 +54,7 @@ const swapCalls = (node: ts.Expression, comp: CompDefinition): ts.Expression => 
             const newArgs: ts.Expression[] = [PROPS, STATE, VOLATILE].map(a => ts.createIdentifier(a));
             n.arguments.forEach(a => newArgs.push(cloneDeep(a)));
             return cCall(
-                [comp.name, 'prototype', `_${printAstText(n.expression)}`],
+                [comp.name, 'prototype', `_${asCode(n.expression)}`],
                 newArgs
             );
         }

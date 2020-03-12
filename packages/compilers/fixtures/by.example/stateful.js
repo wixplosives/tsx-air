@@ -24,18 +24,18 @@ Comp.changeBitmask = {
 };
 
 export class WithVolatile extends Component {
+    $updateView(__0, { store1 }, __2, changeMap) {
+        if (changeMap & WithVolatile.changeBitmask['store1.a']) {
+            this.context.exp0.textContent = store1.a;
+        }
+    }
+    
     $preRender(__0, $s) {
         let $v = null;
         const { store1 } = $s;
         var vol = `volatile`;
         $v = { vol };
         return $v;
-    }
-
-    $updateView(__0, { store1 }, __2, changeMap) {
-        if (changeMap & WithVolatile.changeBitmask['store1.a']) {
-            this.context.exp0.textContent = store1.a;
-        }
     }
 }
 

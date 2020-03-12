@@ -1,4 +1,4 @@
-import { evalAst, CompDefinition, printAst } from '@tsx-air/compiler-utils';
+import { evalAst, CompDefinition } from '@tsx-air/compiler-utils';
 import { asFunction, generateStateAwareMethod } from './function';
 import { TSXAir } from '@tsx-air/framework/src';
 

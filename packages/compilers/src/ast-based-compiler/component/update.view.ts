@@ -3,7 +3,7 @@ import ts from 'typescript';
 import {
     CompDefinition, JsxExpression, JsxRoot, cAccess,
     cAssign, createBitWiseOr, cCall, cArrow, JsxAttribute,
-    isJsxExpression, JsxComponent, printAstText, cMethod
+    isJsxExpression, JsxComponent, asCode, cMethod
 } from '@tsx-air/compiler-utils';
 import { cBitMaskIf } from './bitmask';
 import get from 'lodash/get';
@@ -41,7 +41,7 @@ export const updateNativeExpressions = (root: JsxRoot, changed: string, domBindi
         } else {
             const attr = exp.sourceAstNode.parent;
             if (ts.isJsxAttribute(attr)) {
-                const name = printAstText(attr.name);
+                const name = asCode(attr.name);
                 const element = (domBindings.get(attr.parent.parent) ||
                     domBindings.get(attr.parent.parent.parent))?.ctxName;
                 if (name && element) {
@@ -52,7 +52,7 @@ export const updateNativeExpressions = (root: JsxRoot, changed: string, domBindi
                         ));
                 }
             }
-            throw new Error('Dom binding error with\n' + printAstText(exp.sourceAstNode));
+            throw new Error('Dom binding error with\n' + asCode(exp.sourceAstNode));
         }
     });
 };

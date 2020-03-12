@@ -1,6 +1,6 @@
 import { importedTsx } from './../fixtures/local.imports/b';
 import ts from 'typescript';
-import { tsKindInverse, printAstText, printAstFullText } from '@tsx-air/compiler-utils';
+import { tsKindInverse, asCode, printAstFullText } from '@tsx-air/compiler-utils';
 // @ts-ignore
 import { DateTime } from 'neo4j-driver/lib/temporal-types.js';
 import nodeFs from '@file-services/node';
@@ -28,8 +28,8 @@ export const getNodeParams = (node: ts.Node, fileName: string) => {
     const relMapping = Object.keys(rel).map(k=>`${k} : $${k}`).join(', ');
     rel.relParams = relMapping ? `{ ${relMapping} }` : '';
     const text = rel.rel === 'moduleSpecifier'
-        ? filePath(printAstText(node).replace(/^.(.*).$/g, '$1'), nodeFs.dirname(fileName))
-        : printAstText(node);
+        ? filePath(asCode(node).replace(/^.(.*).$/g, '$1'), nodeFs.dirname(fileName))
+        : asCode(node);
 
     
 

@@ -1,26 +1,19 @@
-import { asFunction } from './function';
-import { CompDefinition, evalAst, printAst } from '@tsx-air/compiler-utils';
+import { asFunction, nameFunctions } from './function';
+import { CompDefinition, evalAst } from '@tsx-air/compiler-utils';
 import { mapValues } from 'lodash';
 import { generatePreRender } from './prerender';
+import { tagHandlersUsed } from './event.handlers';
+import { mockRuntime } from './functions.test.helper';
+export { mockRuntime } from './functions.test.helper';
 
-const mockComp = {
-    changeBitmask: {},
-    prototype: {}
+const evalPreRenderAsFunc = (comp: CompDefinition) => {
+    nameFunctions(comp);
+    tagHandlersUsed(comp);
+    for (const f of generatePreRender(comp)) {
+        return evalAst(asFunction(f), mockRuntime) as (props: any, state: any) => any;
+    }
+    return undefined;
 };
-const mockRuntime = {
-    TSXAir: {
-        runtime: {
-            // @ts-ignore
-            updateState: (scope, state, mutator) => mutator(state),
-            flags: {}
-        }
-    },
-    WithStateChangeOnly: mockComp,
-    WithVolatileFunction: mockComp,
-};
-
-const evalPreRenderAsFunc = (comp: CompDefinition) =>
-    evalAst(asFunction([...generatePreRender(comp)][0]), mockRuntime) as (props: any, state: any) => any;
 
 export const getPreRenderOf = (components: object): any =>
     mapValues(components, (comp, name) => {

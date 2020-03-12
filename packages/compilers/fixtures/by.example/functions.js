@@ -4,18 +4,8 @@ import { store, TSXAir } from '@tsx-air/framework';
 export class NamedFunction extends Component {
     constructor() {
         super(...arguments);
-        this.getDisplayedStr = b => TSXAir.runtime.execute(
-            this, this._getDisplayedStr, b
-        );
-    }
-    $preRender(__0, $s) {
-        const { store1 } = $s;
-        let $v = null;
-        var vol = `volatile`;
-        var getDisplayedStr = (...args) =>
-            NamedFunction.prototype.getDisplayedStr.call(this, null, $s, $v, ...args);
-        $v = { vol, getDisplayedStr };
-        return $v;
+        this.getDisplayedStr = (...args) =>
+            TSXAir.runtime.execute(this, this._getDisplayedStr, args);
     }
 
     $updateView(__0, { store1 }, __2, changeMap) {
@@ -28,6 +18,16 @@ export class NamedFunction extends Component {
         const { store1 } = $s
         let { vol } = $v;
         return `${store1.a} ${vol} ${b}`;
+    }
+
+    $preRender(__0, $s) {
+        let $v = null;
+        const { store1 } = $s;
+        var vol = `volatile`;
+        var getDisplayedStr = this.getDisplayedStr || ((...args) =>
+            NamedFunction.prototype._getDisplayedStr(__0, $s, $v, ...args));
+        $v = { vol, getDisplayedStr };
+        return $v;
     }
 }
 

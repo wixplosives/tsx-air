@@ -4,15 +4,16 @@ import { isEventHandler, findBinding, getAttrName } from '../../common/jsx.event
 import { nonEmptyStr } from '@tsx-air/utils';
 import camelCase from 'lodash/camelCase';
 import { DomBindings, DomBinding } from '../../common/dom.binding';
+import { postAnalysisData } from '../../common/post.analysis.data';
 
-export function* eventHandlers(comp: CompDefinition, domBinding: DomBindings) {
-    const handlers = findHandlersUsed(comp);
+export function* generateAfterMount(comp: CompDefinition, domBinding: DomBindings) {
+    const handlers = tagHandlersUsed(comp);
     if (handlers.size > 0) {
-        yield cMethod('$afterMount', [], generateAfterMount(handlers, domBinding));
+        yield cMethod('$afterMount', [], afterMount(handlers, domBinding));
     }
 }
 
-const generateAfterMount = (handlers: Handlers, domBinding: DomBindings) => {
+const afterMount = (handlers: Handlers, domBinding: DomBindings) => {
     function* addListeners() {
         for (const [handler, uses] of handlers) {
             for (const usage of uses) {
@@ -33,12 +34,12 @@ const generateAddListener = (dom: DomBinding, event: string, handler: FuncDefini
             ['this', 'context', dom.ctxName, 'addEventListener'],
             [
                 ts.createStringLiteral(camelCase(event.replace(/^on/, ''))),
-                cAccess('this', handler.name!)
+                cAccess('this', postAnalysisData.read(handler, 'name')!)
             ]));
 
 type Handlers = Map<FuncDefinition, JsxExpression[]>;
 
-const findHandlersUsed = (comp: CompDefinition) => {
+export const tagHandlersUsed = (comp: CompDefinition) => {
     const expressionsWithHandlers =
         comp.jsxRoots[0].expressions.filter(isEventHandler);
 
@@ -51,7 +52,11 @@ const findHandlersUsed = (comp: CompDefinition) => {
         );
         if (uses.length) {
             handlersToUses.set(f, uses);
-            uses.forEach(e => missingHandlers.delete(e));
+            postAnalysisData.write(f, 'handlerOf', uses);            
+            uses.forEach(e => {
+                missingHandlers.delete(e);
+                postAnalysisData.write(e, 'handler', f);
+            });
         }
     });
 

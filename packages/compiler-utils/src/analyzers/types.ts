@@ -75,7 +75,7 @@ export interface ReExport extends AnalyzedNode<ts.ExportDeclaration> {
 export interface FuncDefinition extends NodeWithVariables<ts.FunctionExpression | ts.ArrowFunction> {
     kind: 'funcDefinition';
     name?: string;
-    arguments?: string[];
+    arguments: string[];
     jsxRoots: JsxRoot[];
     definedFunctions: FuncDefinition[];
 }

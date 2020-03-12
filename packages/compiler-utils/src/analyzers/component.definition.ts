@@ -1,4 +1,4 @@
-import { printAstText } from '..';
+import { asCode } from '..';
 import { CompDefinition, Analyzer, AnalyzerResult } from './types';
 import { isCallExpression } from 'typescript';
 import { jsxRoots } from './jsxroot';
@@ -25,7 +25,7 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
     try {
         name = safely(() =>
             // @ts-ignore
-            printAstText(astNode.parent.name),
+            asCode(astNode.parent.name),
             `Components name must start with a capital letter`,
             i => /^[A-Z].*/.test(i));
     } catch (e) {

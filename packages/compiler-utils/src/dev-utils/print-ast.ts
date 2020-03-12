@@ -11,7 +11,7 @@ export function printAst(n: ts.Node): string {
     return res;
 }
 
-export function printAstText(n: ts.Node): string {
+export function asCode(n: ts.Node): string {
     if (!n) { return ''; }
     try {
         if (n.pos > -1 && n.end > -1 && n.getText && !ts.isSourceFile(n)) {

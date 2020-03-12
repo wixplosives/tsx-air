@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { find } from './scanner';
 import isString from 'lodash/isString';
+import { cloneDeep } from '.';
 
 export const asSourceFile = (statement: string, filename = 'mock.ts') =>
     ts.createSourceFile(filename, statement, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -30,15 +31,18 @@ export const parseValue = (obj: string | object) => {
 };
 
 
-export const parseStatement = (statement: string) => {
+export const asAst = (statement: string, returnStatement = false) => {
     const mockFile = asSourceFile(statement);
 
-    let validValue: any;
-    mockFile.forEachChild(c => validValue = validValue || c);
+    const validValue = returnStatement
+        ? mockFile.statements[0]
+        : mockFile.statements[0].getChildAt(0);
 
     if (validValue &&
         !(validValue.flags & ts.NodeFlags.ThisNodeHasError)) {
-        return validValue as ts.Node;
+        return returnStatement
+            ? validValue
+            : cloneDeep(validValue) as ts.Node;
     }
     throw new Error('Invalid value object');
 };

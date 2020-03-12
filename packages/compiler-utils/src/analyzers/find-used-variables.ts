@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { UsedVariables, RecursiveMap } from './types';
 import { update, merge } from 'lodash';
-import { printAstText } from '..';
+import { asCode } from '..';
 
 /**
  * 
@@ -23,9 +23,9 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
         }
         const accessParent = n.parent;
         if (accessParent) {
-            if (isVariableLikeDeclaration(accessParent) && printAstText(accessParent.name) === printAstText(n)) {
+            if (isVariableLikeDeclaration(accessParent) && asCode(accessParent.name) === asCode(n)) {
                 if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
-                    res.defined[printAstText(n)] = {};
+                    res.defined[asCode(n)] = {};
                 }
                 return;
             }
@@ -35,7 +35,7 @@ export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boo
                     return;
                 }
                 let isModification = false;
-                if (ts.isBinaryExpression(accessParent) && printAstText(accessParent.left) === printAstText(n)) {
+                if (ts.isBinaryExpression(accessParent) && asCode(accessParent.left) === asCode(n)) {
                     if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
                         isModification = true;
                     }
@@ -125,7 +125,7 @@ export function accessToStringArr(node: AccessNodes): { path: string[], nestedAc
             n = n.expression;
         } else {
 
-            path.unshift(printAstText(n.name));
+            path.unshift(asCode(n.name));
             n = n.expression;
         }
     }
@@ -133,7 +133,7 @@ export function accessToStringArr(node: AccessNodes): { path: string[], nestedAc
     if (!ts.isIdentifier(n)) {
         throw new Error('unhandled input in accessToStringArr');
     }
-    path.unshift(printAstText(n));
+    path.unshift(asCode(n));
     return {
         path,
         nestedAccess

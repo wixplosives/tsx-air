@@ -3,7 +3,7 @@ import { TSXAir, store } from '@tsx-air/framework';
 export class PreDefinedHandler extends Component {
     constructor() {
         super(...arguments);
-        this.handler = event => TSXAir.runtime.execute(this, this._handler, event);
+        this.handler = (...args) => TSXAir.runtime.execute(this, this._handler, args);
     }
 
     $updateView(__0, { state }, __2, changeMap) {
@@ -43,7 +43,7 @@ PreDefinedHandler.changeBitmask = {
 export class LambdaHandler extends Component {
     constructor() {
         super(...arguments);
-        this.lambda0 = () => TSXAir.runtime.execute(this, this._lambda0);
+        this.lambda0 = (...args) => TSXAir.runtime.execute(this, this._lambda0, args);
     }
 
     $updateView(__0, { state }, __2, changeMap) {
