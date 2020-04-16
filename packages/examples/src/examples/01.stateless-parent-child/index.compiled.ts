@@ -12,7 +12,7 @@ export class ParentComp extends Component<ParentCompCtx, ParentCompProps> {
         'props.name': 1 << 0
     };
 
-    public $updateView(newProps: ParentCompProps, _: {}, changeMap: number): void {
+    public $updateView(newProps: ParentCompProps, _stores:{}, _volatile:{}, changeMap: number): void {
         if (changeMap & ParentComp.changeBitmask['props.name']) {
             this.context.text1.textContent = newProps.name;
             runtime.updateProps(this.context.childComp1 as ChildComp, (p: ParentCompProps) => {
@@ -29,12 +29,12 @@ ParentComp.factory = {
       Parent: <!-- start props.name -->${props.name}<!-- end props.name -->
       ${ChildComp.factory.toString(props)}
     </div>`,
-    hydrate: (root, props, $s) => new ParentComp(
+    hydrate: (root, props, state) => new ParentComp(
         {
             root,
             text1: root.childNodes[2],
             childComp1: ChildComp.factory.hydrate(root.children[0] as HTMLElement, props)
-        }, props, $s!),
+        }, props, state!),
     initialState: (_: any) => ({})
 };
 
@@ -48,7 +48,7 @@ export class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
         'props.name': 1 << 0
     };
 
-    public $updateView(newProps: ChildCompProps, _: {}, changeMap: number): void {
+    public $updateView(newProps: ChildCompProps, _stores:{}, _volatile:{}, changeMap: number): void {
         if (changeMap & ChildComp.changeBitmask['props.name']) {
             this.context.text1.textContent = newProps.name;
         }

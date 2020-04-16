@@ -15,7 +15,7 @@ export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {
         'state.zoomedOutSize': 1 << 8
     };
 
-    public $updateView(newProps: ZoomProps, { state }: ZoomState, changeMap: number): void {
+    public $updateView(newProps: ZoomProps, { state }: ZoomState, _:any, changeMap: number): void {
         if (changeMap & Zoom.changeBitmask['props.url']) {
             this.context.zoomedIn.src = this.context.zoomedOut.src = newProps.url;
         }
