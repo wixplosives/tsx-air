@@ -18,8 +18,8 @@ describe('print ast', () => {
 
 
         it('should print statements', () => {
-            const ast = asAst(`const a = 'baga'`);
-            expect(printAst(ast)).to.to.equal(ast.getText());
+            const ast = asAst(`const a = 'baga'`, true);
+            expect(printAst(ast)).to.to.equal(`const a = 'baga'`);
         });
 
         it('should include types', () => {

@@ -31,7 +31,9 @@ export const parseValue = (obj: string | object) => {
 };
 
 
-export const asAst = (statement: string, returnStatement = false) => {
+export function asAst(statement: string, returnStatement:true): ts.Statement;
+export function asAst(statement: string, returnStatement?:boolean): ts.Node;
+export function asAst(statement: string, returnStatement = false) {
     const mockFile = asSourceFile(statement);
 
     const validValue = returnStatement
