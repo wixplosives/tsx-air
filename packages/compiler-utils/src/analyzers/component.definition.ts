@@ -8,7 +8,6 @@ import { functions } from './func-definition';
 import { getStoresDefinitions } from './store-definition';
 import { isTsFunction, isTsJsxRoot } from './types.is.type';
 import { safely } from '@tsx-air/utils/src';
-import { printAst } from '../dev-utils';
 
 export const compDefinition: Analyzer<CompDefinition> = astNode => {
     if (!ts.isCallExpression(astNode) || astNode.expression.getText()  !== 'TSXAir') {

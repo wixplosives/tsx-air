@@ -31,7 +31,7 @@ describe('replace attribute expression', () => {
     it('should replace jsx attributes and leave other jsx expressions alone', () => {
         const ast = asAst(`const Comp=TSXAir((props)=>{
             return <div id={props.shouldBeReplaced}>{props.shouldNotBeReplaced}</div>
-        })`);
+        })`, true);
 
         const info = analyze(
             // @ts-ignore
@@ -49,7 +49,7 @@ describe('replace attribute name', () => {
     it('should replace jsx attribute names in native elements', () => {
         const ast = asAst(`let A=TSXAir((props)=>{
             return <div className="gaga"></div>
-        })`);
+        })`, true);
 
         const info = analyze(
             // @ts-ignore
@@ -65,7 +65,7 @@ describe('replace attribute name', () => {
     it('should not replace attribute names for components', () => {
         const ast = asAst(`let Comp = TSXAir((props)=>{
             return <Comp className="gaga"></Comp>
-        })`);
+        })`, true);
 
         const info = analyze(
             // @ts-ignore
