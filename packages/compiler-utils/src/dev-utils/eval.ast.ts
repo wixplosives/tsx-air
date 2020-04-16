@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { compilerOptions } from '@tsx-air/compiler-utils';
+// @ts-ignore
 import { Script } from 'vm';
 
 export const evalAst = (obj: ts.Expression, context?: object) => {
