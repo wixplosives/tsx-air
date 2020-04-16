@@ -1,32 +1,32 @@
 import { expect } from 'chai';
 import { getCompDef } from './test.helpers';
+// tslint:disable: no-unused-expression
 
 describe('TSXAir component definition', () => {
     describe('invalid calls', () => {
         it('should return error for invalid TSXAir calls', () => {
-            const [noArgs, tooManyArgs, argNotAFunction, anonymous] = [
-                `let A=TSXAir()`,
-                `let A=TSXAir(()=>(<div/>), 'Extra argument')`,
-                `let A=TSXAir('not a function')`,
-                `TSXAir(()=>(<div />))`
-            ]
-                .map(getCompDef).map(i => i.comp);
-
-            [noArgs, tooManyArgs, argNotAFunction].forEach(invalidComp =>
-                expect(invalidComp).to.deep.include({
-                    kind: 'error',
-                    errors: [{
-                        message: 'TSXAir must be called with a single (function) argument',
-                        type: 'code'
-                    }]
-                }));
-            expect(anonymous).to.deep.include({
+            const expected = {
                 kind: 'error',
                 errors: [{
-                    message: 'Components name must start with a capital letter',
+                    message: 'TSXAir must be called with a single (function) argument',
                     type: 'code'
                 }]
-            });
+            };
+            expect(getCompDef(`const A=TSXAir()`).comp).to.deep.include(expected);
+            expect(getCompDef(`const A=TSXAir(()=>(<div/>), 'Extra argument')`).comp).to.deep.include(expected);
+            expect(getCompDef(`const A=TSXAir('not a function')`).comp).to.deep.include(expected);
+        });
+        it('should return error for invalid names', () => {
+            const expected = {
+                kind: 'error',
+                errors: [{
+                    message: `Components name must start with a capital letter`,
+                    type: 'code'
+                }]
+            };
+            expect(getCompDef(`const Valid=TSXAir(()=>(<div/>))`).comp.errors).to.be.undefined;
+            expect(getCompDef(`const a=TSXAir(()=>(<div/>))`).comp).to.deep.include(expected);
+            expect(getCompDef(`TSXAir(()=>(<div/>))`).comp).to.deep.include(expected);
         });
     });
 

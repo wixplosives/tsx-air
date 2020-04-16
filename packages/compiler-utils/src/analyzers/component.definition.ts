@@ -1,6 +1,6 @@
 import { asCode } from '..';
 import { CompDefinition, Analyzer, AnalyzerResult } from './types';
-import { isCallExpression } from 'typescript';
+import ts from 'typescript';
 import { jsxRoots } from './jsxroot';
 import { errorNode, aggregateAstNodeMapping, addToNodesMap } from './types.helpers';
 import { findUsedVariables } from './find-used-variables';
@@ -8,10 +8,10 @@ import { functions } from './func-definition';
 import { getStoresDefinitions } from './store-definition';
 import { isTsFunction, isTsJsxRoot } from './types.is.type';
 import { safely } from '@tsx-air/utils/src';
-
+import { printAst } from '../dev-utils';
 
 export const compDefinition: Analyzer<CompDefinition> = astNode => {
-    if (!isCallExpression(astNode) || astNode.expression.getText() !== 'TSXAir') {
+    if (!ts.isCallExpression(astNode) || astNode.expression.getText()  !== 'TSXAir') {
         return errorNode<CompDefinition>(astNode, 'Not a component definition', 'internal');
     }
 
@@ -40,7 +40,7 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
     const propsIdentifier = aggregatedVariables.accessed[propsName]
         ? propsName : undefined;
     const volatileVariables = Object.keys(variables.defined).filter(ns =>
-        ns !== propsIdentifier &&        
+        ns !== propsIdentifier &&
         !stores.some(s => s.name === ns)
     );
 
