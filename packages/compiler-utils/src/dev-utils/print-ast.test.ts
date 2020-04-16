@@ -23,7 +23,7 @@ describe('print ast', () => {
         });
 
         it('should include types', () => {
-            const ast = asAst(`const a: string = 'baga'`);
+            const ast = asAst(`const a: string = 'baga'`, true);
             expect(printAst(ast)).to.to.equal(ast.getText());
         });
     });
