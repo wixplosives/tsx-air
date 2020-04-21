@@ -1,6 +1,8 @@
 import { compileFixture, fixture } from '../test.helpers';
 import compiler from '.';
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import { chaiPlugin } from '@tsx-air/testing';
+use(chaiPlugin);
 
 describe('c-AST based compiler', () => {
     [

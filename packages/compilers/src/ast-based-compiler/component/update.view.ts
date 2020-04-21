@@ -1,4 +1,4 @@
-import {  accessedVars, getGenericMethodParams } from './helpers';
+import {  readVars, getGenericMethodParams } from './helpers';
 import ts from 'typescript';
 import {
     CompDefinition, JsxExpression, JsxRoot, cAccess,
@@ -15,7 +15,7 @@ export const generateUpdateView = (comp: CompDefinition, domBindings: DomBinding
     if (params[0] || params[1]) {
         params.push('changeMap');
     }
-    const vars = accessedVars(comp);
+    const vars = readVars(comp);
 
     const changeHandlers = vars.map(prop => cBitMaskIf(prop, comp.name!, [
         ...updateNativeExpressions(comp.jsxRoots[0], prop, domBindings),
@@ -29,7 +29,6 @@ export const generateUpdateView = (comp: CompDefinition, domBindings: DomBinding
 export const updateNativeExpressions = (root: JsxRoot, changed: string, domBindings: DomBindings) => {
     const dependentExpressions = root.expressions.filter(
         ex => get(ex.variables.accessed, changed)
-
     );
 
     return dependentExpressions.map(exp => {

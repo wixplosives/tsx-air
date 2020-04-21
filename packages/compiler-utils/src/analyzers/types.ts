@@ -145,6 +145,7 @@ export interface RecursiveMap {
 }
 
 export interface UsedVariables {
+    read: RecursiveMap;
     accessed: RecursiveMap;
     modified: RecursiveMap;
     defined: RecursiveMap;

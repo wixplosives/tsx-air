@@ -6,6 +6,7 @@ type NotFunc<T> = T extends () => any ? never : T;
 
 export class PostAnalysisData {
     private _data = new Map<AnalyzedNode, any>();
+    // public write(node: NodeWithVariables, key: 'dependencies', value: string[], override?: boolean): string;
     public write(node: AnalyzedNode, key: 'name', value: string, override?: boolean): string;
     public write(node: AnalyzedNode, key: 'handlerOf', value: JsxExpression[], override?: boolean): JsxExpression[];
     public write(node: AnalyzedNode, key: 'handler', value: FuncDefinition, override?: boolean): FuncDefinition;
@@ -31,7 +32,7 @@ export class PostAnalysisData {
     public writeIfNew<T = any>(node: AnalyzedNode, key: string, value: NotFunc<T>): T {        
         return this.write(node, key, value, true);
     }
-    public read(node: NodeWithVariables, key: 'dependencies', _default?:string[]): string[];
+    // public read(node: NodeWithVariables, key: 'dependencies', _default?:string[]): string[];
     public read(node: AnalyzedNode, key: 'name', _default?: string): string | undefined;
     public read(node: AnalyzedNode, key: 'handlerOf', _default?: JsxExpression[]): JsxExpression[] | undefined;
     public read(node: AnalyzedNode, key: 'handler', _default: FuncDefinition): FuncDefinition;

@@ -1,10 +1,8 @@
-import { postAnalysisData } from './../../common/post.analysis.data';
 import { functions } from '../../test.helpers';
 import { expect, use } from 'chai';
 import { chaiPlugin } from '@tsx-air/testing';
 import { mockRuntime, evalStateSafeFunc } from './functions.test.helper';
 import { createSandbox, SinonSpy } from 'sinon';
-// import '../../../fixtures/functions';
 
 use(chaiPlugin);
 
@@ -60,13 +58,14 @@ describe('functions', () => {
 
         });
 
-        it(`adds dependencies to functions postAnalysisData`, () => {
-            const { WithNonStateChangingCode, WithStateChangeOnly, WithVolatileFunction, WithVolatileVars } = functions();
-            [WithNonStateChangingCode, WithStateChangeOnly, WithVolatileFunction].forEach(evalStateSafeFunc);
+        // TODO remove
+        // it(`adds dependencies to functions postAnalysisData`, () => {
+        //     const { WithNonStateChangingCode, WithStateChangeOnly, WithVolatileFunction, WithVolatileVars } = functions();
+        //     [WithNonStateChangingCode, WithStateChangeOnly, WithVolatileFunction].forEach(evalStateSafeFunc);
 
-            expect(postAnalysisData.read(WithNonStateChangingCode.functions[0], 'dependencies')).to.eql(['s.a']);
-            expect(postAnalysisData.read(WithStateChangeOnly.functions[0], 'dependencies')).to.eql(['s.a']);
-            expect(postAnalysisData.read(WithVolatileFunction.functions[0], 'dependencies')).to.eql(['props.p', 's.a']);
-        });
+        //     expect(postAnalysisData.read(WithNonStateChangingCode.functions[0], 'dependencies')).to.eql(['s.a']);
+        //     expect(postAnalysisData.read(WithStateChangeOnly.functions[0], 'dependencies')).to.eql(['s.a']);
+        //     expect(postAnalysisData.read(WithVolatileFunction.functions[0], 'dependencies')).to.eql(['props.p', 's.a']);
+        // });
     });
 });

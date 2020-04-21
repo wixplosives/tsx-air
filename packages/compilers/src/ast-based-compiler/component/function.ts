@@ -1,4 +1,4 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cArrow, cMethod, asCode, cProperty, asAst, NodeWithVariables, UsedVariables } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cArrow, cMethod, asCode, cProperty, asAst, UsedVariables } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import { getGenericMethodParams, destructureState, destructureVolatile } from './helpers';
@@ -12,7 +12,7 @@ export function nameFunctions(comp: CompDefinition) {
 }
 
 export function aggregateDependencies(comp: CompDefinition) {
-   
+    return comp.aggregatedVariables;
 }
 
 export function* generateMethods(comp: CompDefinition) {
@@ -27,22 +27,15 @@ export function generateMethodBind(func: FuncDefinition) {
     const name = postAnalysisData.read(func, 'name')!;
     return cProperty(name,
         asAst(`(...args)=>TSXAir.runtime.execute(this, this._${name}, args)`) as ts.Expression
-        // cArrow(func.arguments!,
-        // cCall(['TSXAir', 'runtime', 'execute'],
-        //     [
-        //         ts.createThis(),
-        //         cAccess('this', `_${name}`),
-        //         ...func.arguments!.map(a => ts.createIdentifier(a))
-        //     ]
-        // ))
     );
 }
 
 export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinition) {
     const method = asMethod(comp, func);
-    const { statements } = method.body!;
+    const body = method.body!;
+    const { statements } = body;
 
-    method.body!.statements = ts.createNodeArray([
+    body.statements = ts.createNodeArray([
         ...destructureStatements(comp, func.aggregatedVariables),
         ...statements.map(toStateSafe(comp))]);
     return method;
@@ -81,6 +74,22 @@ function asMethod(comp: CompDefinition, func: FuncDefinition): ts.MethodDeclarat
     const params = getGenericMethodParams(comp, func.aggregatedVariables, true, false);
     src.parameters.forEach(p => params.push(asCode(p.name)));
 
+    // const dep = [];
+    // const storesAndProps = new Set<string>(comp.stores.map(s => s.name));
+    // storesAndProps.add(comp.propsIdentifier || '--no-props');
+    // const { read } = func.aggregatedVariables;
+    // for (const [key, val] of Object.entries(read)) {
+    //     if (storesAndProps.has(key)) {
+    //         const innerKeys = Object.keys(val);
+    //         if (innerKeys.length) {
+    //             dep.push(...innerKeys.map(k => `${key}.${k}`));
+    //         } else {
+    //             dep.push(key);
+    //         }
+    //     }
+    // }
+    // postAnalysisData.write(func, 'dependencies', dep);
+
     return cMethod(name, params, clone.body);
 }
 
@@ -110,31 +119,6 @@ export const cStateCall = (comp: CompDefinition, exp: ts.Expression) => {
             ${asCode(exp)};
             return ${changeBits.join('|')};
         })`) as ts.ExpressionStatement;
-
-
-    // ts.create(cCall(['TSXAir', 'runtime', 'updateState'],
-    //     [
-    //         ts.createThis(),
-    //         ts.createIdentifier(STATE),
-    //         cArrow([ts.createObjectBindingPattern(
-    //             comp.stores.map(s =>
-    //                 ts.createBindingElement(
-    //                     undefined,
-    //                     undefined,
-    //                     ts.createIdentifier(s.name),
-    //                 )
-    //             ))], ts.createBlock(
-    //                 [
-    //                     ts.createExpressionStatement(cloneDeep(exp, undefined)),
-    //                     ts.createReturn(createBitWiseOr(comp.name!, changeBits, preRender
-    //                         ? ['preRender']
-    //                         : undefined))
-    //                 ],
-    //                 true
-    //             )
-    //         )
-    //     ]
-    // ));
 };
 
 export const asFunction = (method: ts.MethodDeclaration) =>

@@ -33,13 +33,14 @@ describe('findUsedVariables', () => {
 
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
-                field:{},
+                field: {},
                 internalObj: {
                     property: {},
                     anotherProperty: {}
                 }
             }
         });
+        expect(findUsedVariables(ast).read).to.eql(findUsedVariables(ast).accessed);
     });
 
     it('should find modified members', () => {
@@ -77,6 +78,13 @@ describe('findUsedVariables', () => {
                 ...expectedModified.aParam
             }
         });
+        expect(findUsedVariables(ast).read).to.eql({
+            aParam: {
+                internalObject: {
+                    accessedProperty: {},
+                }
+            }
+        });
     });
     it('should ignore keys of assigned literals', () => {
         const ast = asSourceFile(`
@@ -85,6 +93,7 @@ describe('findUsedVariables', () => {
             }
             `);
         const expected: UsedVariables = {
+            read: {},
             accessed: {},
             defined: {
                 anObject: {}
@@ -98,6 +107,9 @@ describe('findUsedVariables', () => {
             export const aJSXRoot () => <div onClick={onClickHandler}/>
             `);
         const expected: UsedVariables = {
+            read: {
+                onClickHandler: {}
+            },
             accessed: {
                 onClickHandler: {}
             },
@@ -113,6 +125,7 @@ describe('findUsedVariables', () => {
             export const aJSXRoot = <div><Comp>hello<Comp></div>
             `);
         const expected: UsedVariables = {
+            read: {},
             accessed: {},
             defined: {
                 aJSXRoot: {}
@@ -132,6 +145,7 @@ describe('findUsedVariables', () => {
             }
             `);
         const expected: UsedVariables = {
+            read: {},
             accessed: {},
             defined: {
                 b: {}
@@ -200,6 +214,7 @@ describe('findUsedVariables', () => {
             }`);
 
         expect(findUsedVariables(ast, ts.isArrowFunction)).to.eql({
+            read:{},
             accessed: {
             },
             defined: {
@@ -211,6 +226,11 @@ describe('findUsedVariables', () => {
         });
 
         expect(findUsedVariables(ast)).to.eql({
+            read: {
+                externalMethodsParam: {
+                    aProp: {}
+                }
+            },
             accessed: {
                 externalMethodsParam: {
                     aProp: {}

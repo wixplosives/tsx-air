@@ -1,21 +1,22 @@
 import ts from 'typescript';
-import { UsedVariables, RecursiveMap } from './types';
+import { UsedVariables } from './types';
 import { update, merge } from 'lodash';
 import { asCode } from '..';
 
 /**
  * 
  * @param node 
- * @param filter return true to ignore a node and its children
+ * @param ignore return true to ignore a node and its children
  */
-export function findUsedVariables(node: ts.Node, filter?: (node: ts.Node) => boolean): UsedVariables {
+export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boolean): UsedVariables {
     const res: UsedVariables = {
         accessed: {},
         modified: {},
-        defined: {}
+        defined: {},
+        read: {}
     };
     const visitor = (n: ts.Node) => {
-        if (filter && filter(n)) {
+        if (ignore && ignore(n)) {
             return;
         }
         if (isType(n)) {
@@ -144,14 +145,17 @@ function addToAccessMap(path: string[], isModification: boolean, map: UsedVariab
     update(map.accessed, path, i => i || {});
     if (isModification) {
         update(map.modified, path, i => i || {});
+    } else {
+        update(map.read, path, i => i || {});
     }
 }
 
 export const mergeUsedVariables = (variables: UsedVariables[]): UsedVariables =>
     variables.reduce(
-        (acc: RecursiveMap, map: RecursiveMap) => merge(acc, map),
+        (acc: UsedVariables, map: UsedVariables) => merge(acc, map),
         {
             accessed: {},
             modified: {},
-            defined: {}
-        }) as UsedVariables;
+            defined: {},
+            read: {}
+        } as UsedVariables);
