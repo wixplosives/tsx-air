@@ -7,7 +7,7 @@
   ],
   "rulesDirectory": [
     "tslint-no-focused-test"
-  ],
+  ],   
   "rules": {
     "no-empty-interface": false,
     "no-focused-test": true,
