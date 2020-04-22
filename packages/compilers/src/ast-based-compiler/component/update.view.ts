@@ -1,4 +1,4 @@
-import {  readVars, getGenericMethodParams } from './helpers';
+import { readVars, getGenericMethodParams, usedInScope } from './helpers';
 import ts from 'typescript';
 import {
     CompDefinition, JsxExpression, JsxRoot, cAccess,
@@ -18,7 +18,7 @@ export const generateUpdateView = (comp: CompDefinition, domBindings: DomBinding
     const vars = readVars(comp);
 
     const changeHandlers = vars.map(prop => cBitMaskIf(prop, comp.name!, [
-        ...updateNativeExpressions(comp.jsxRoots[0], prop, domBindings),
+        ...updateNativeExpressions(comp, comp.jsxRoots[0], prop, domBindings),
         ...updateComponentExpressions(comp, comp.jsxRoots[0], prop, domBindings)
     ]));
 
@@ -26,10 +26,16 @@ export const generateUpdateView = (comp: CompDefinition, domBindings: DomBinding
 };
 
 
-export const updateNativeExpressions = (root: JsxRoot, changed: string, domBindings: DomBindings) => {
+export const updateNativeExpressions = (comp: CompDefinition, root: JsxRoot, changed: string, domBindings: DomBindings) => {
     const dependentExpressions = root.expressions.filter(
-        ex => get(ex.variables.accessed, changed)
+        ex => {
+            const { props, stores, volatile } = usedInScope(comp, ex.aggregatedVariables);
+            return props.has(changed) || stores.has(changed) || volatile.has(changed);
+        }
     );
+    // const dependentExpressions = root.expressions.filter(
+    //     ex => get(ex.variables.accessed, changed)
+    // );
 
     return dependentExpressions.map(exp => {
         const dom = domBindings.get(exp.sourceAstNode)?.ctxName;

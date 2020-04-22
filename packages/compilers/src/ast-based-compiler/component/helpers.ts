@@ -1,4 +1,4 @@
-import { CompDefinition, NodeWithVariables, cConst, cLet, UsedVariables, StoreDefinition, FuncDefinition } from '@tsx-air/compiler-utils';
+import { CompDefinition, NodeWithVariables, cConst, cLet, UsedVariables, StoreDefinition, FuncDefinition, RecursiveMap } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
 import { VOLATILE, STATE } from '../consts';
@@ -20,21 +20,26 @@ export const getGenericMethodParams = (comp: CompDefinition,
         ? retValue(used.volatile, VOLATILE)
         : undefined;
     const state = retValue(used.stores, STATE);
-    const props = retValue(used.props, comp.propsIdentifier!);
+    const props = used.props.size ? comp.propsIdentifier : undefined;
     return [props, state, volatile];
 };
 
-function usedInScope(comp: CompDefinition, scope?: UsedVariables, _originalScope?: UsedVariables) {
-    scope = scope ? scope! : comp.aggregatedVariables;
+export function usedInScope(comp: CompDefinition, scope: UsedVariables) {
     const _usedInScope = (name: string) =>
-        name in (_originalScope || scope)!.accessed
-        || name in scope!.modified
-        || name in scope!.defined;
+        name in scope.accessed
+        || name in scope.modified
+        || name in scope.defined;
+    const addRead= (toSet:Set<string>, used:RecursiveMap) => {
+        Object.keys(scope.read[comp.propsIdentifier!]).forEach(p =>
+            props.add(`${comp.propsIdentifier}.${p}`));
+    };
 
-    const props = new Set<string>(
-        comp.propsIdentifier && scope.accessed[comp.propsIdentifier]
-            ? [comp.propsIdentifier]
-            : []);
+    const props = new Set<string>();
+    if (comp.propsIdentifier && scope.read[comp.propsIdentifier]) {
+        Object.keys(scope.read[comp.propsIdentifier]).forEach(p => 
+            props.add(`${comp.propsIdentifier}.${p}`));
+    }
+
     const stores = new Set<string>(comp.stores.filter(({ name }) => _usedInScope(name)).map(s => s.name));
     const volatile = new Set<string>(comp.volatileVariables.filter(_usedInScope));
 
@@ -43,7 +48,7 @@ function usedInScope(comp: CompDefinition, scope?: UsedVariables, _originalScope
         if (func) {
             const usedInFunc = func.aggregatedVariables.read;
             if (comp.propsIdentifier && usedInFunc[comp.propsIdentifier]) {
-                props.add(comp.propsIdentifier);
+                Object.keys(usedInFunc[comp.propsIdentifier]).forEach(p => props.add(`${comp.propsIdentifier}.${p}`));
             }
             comp.stores.filter(({ name }) => usedInFunc[name]).forEach(s => stores.add(s.name));
             comp.volatileVariables.filter(v => usedInFunc[v]).forEach(name => {
@@ -53,7 +58,7 @@ function usedInScope(comp: CompDefinition, scope?: UsedVariables, _originalScope
                 } else {
                     volatile.add(name);
                 }
-            });            
+            });
         }
     };
 

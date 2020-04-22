@@ -6,8 +6,8 @@ use(chaiPlugin);
 
 describe('c-AST based compiler', () => {
     [
-        'by.example/static',
-        'by.example/stateless',
+        // 'by.example/static',
+        // 'by.example/stateless',
         'by.example/stateful',
         'by.example/stateless.nested',
         'by.example/functions',
