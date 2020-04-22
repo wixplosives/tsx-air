@@ -5,7 +5,7 @@ import { createWebpackFs } from '@file-services/webpack';
 import webpack from 'webpack';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { compile } from './compile';
-import { packagePath, winSafePath } from '@tsx-air/utils/packages';
+import { packagePath } from '@tsx-air/utils/packages';
 import { Compiler } from '@tsx-air/types';
 import { asJs } from '@tsx-air/utils';
 
@@ -23,11 +23,11 @@ export const browserifyPath = packagePath('@tsx-air/browserify');
 export async function browserify(options: BrowserifyOptions): Promise<string> {
     const { base, entry, output,
         debug = false, configFilePath } = options;
-    const outDir = winSafePath(dirname(output));
+    const outDir = dirname(output);
     compile([join(base, entry)], options.compiler, join(outDir, 'src.js'));
     const files = (await nodeFs.promises.readdir(base)).filter(name => name.endsWith('.compiled.ts'));
     await Promise.all(
-        files.map(file => nodeFs.promises.copyFile(nodeFs.join(winSafePath(base), file), nodeFs.join(outDir, 'src.js', file)))
+        files.map(file => nodeFs.promises.copyFile(nodeFs.join(base, file), nodeFs.join(outDir, 'src.js', file)))
     );
 
     const wp = webpack({
@@ -35,7 +35,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         mode: !debug ? 'production' : 'development',
         output: {
             filename: basename(output),
-            path: outDir
+            path: dirname(output)
         },
         module: {
             rules: [
@@ -69,7 +69,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
     wp.outputFileSystem = createWebpackFs(nodeFs);
     // @ts-ignore
     const readFile = promisify(wp.outputFileSystem.readFile);
-    const run = promisify(wp.run).bind(wp);
+    const run = promisify(wp.run.bind(wp));
     // await baseRsConfig;
     // await tsConfig;
     const res = await run();
