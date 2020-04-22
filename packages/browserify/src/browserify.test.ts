@@ -6,7 +6,8 @@ import { execute, createMockpiler } from '@tsx-air/testing';
 import { exampleSrcPath } from '@tsx-air/examples';
 import rimraf from 'rimraf';
 import { nodeFs } from '@file-services/node';
-import { packagePath } from '@tsx-air/utils/packages';
+import { packagePath, winSafePath } from '@tsx-air/utils/packages';
+import { kebabCase } from 'lodash';
 
 describe('browserify', () => {
     let tmp: string;
@@ -46,14 +47,14 @@ describe('browserify', () => {
         });
     });
 
-    it('copies all .compiled.* files to the target folder', async () => {
+    it('copies all .compiled.ts files to the target folder', async () => {
         await browserify({
             base: fixtures,
             entry: 'with.imports.ts',
             output: nodeFs.join(tmp, 'bundle.js'),
             compiler: createMockpiler()
         });
-        expect(nodeFs.existsSync(nodeFs.join(tmp, 'src.js', 'something.compiled.ts'))).to.equal(true);
+        expect(nodeFs.existsSync(nodeFs.join(winSafePath(tmp), 'src.js', 'something.compiled.ts'))).to.equal(true);
     });
 
     it('should package import.examples.ts into a single js file', async () => {
