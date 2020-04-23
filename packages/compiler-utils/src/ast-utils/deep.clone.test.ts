@@ -20,7 +20,6 @@ describe('cloneDeep', () => {
     it(`returns a node that can be attached to another ast tree`, () => {
         const ast = asAst(`window.location`, true);
         const clone = cloneDeep(ast);
-        const code = ts.createSourceFile('temp.ts', '/* */ const a=1; const b=2;', ts.ScriptTarget.Latest);
 
         const asArrowFunc = (node: ts.Statement) =>
             ts.transpileModule('/* */ const a=1; const b=2;',
@@ -28,7 +27,7 @@ describe('cloneDeep', () => {
                     compilerOptions,
                     transformers: {
                         before: [
-                            ctx => n => {
+                            _ => n => {
                                 const s = getMutableClone(n);
                                 s.statements = ts.createNodeArray([
                                     ts.createBlock([]),
@@ -46,7 +45,7 @@ describe('cloneDeep', () => {
             `should be jumbled due to not being on the same ast tree (sourcefile)`
         ).not.to.equal(expected);
 
-        expect(asArrowFunc(clone),
+        expect(asArrowFunc(clone).replace(/\r/g,''),
         ).to.equal(expected);
     });
 

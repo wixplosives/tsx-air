@@ -29,6 +29,14 @@ describe('TSXAir component analyzer: functions', () => {
                     log: {}
                 }
             },
+            read: {
+                props: {
+                    message: {}
+                },
+                console: {
+                    log: {}
+                }
+            },
             defined: {},
             modified: {}
         });
@@ -36,11 +44,18 @@ describe('TSXAir component analyzer: functions', () => {
         expect(aRepeater.jsxRoots.length).to.eql(1);
         expect(aRepeater.variables).to.eql({
             accessed: {},
+            read: {},
             defined: { src: {} },
             modified: {}
         });
         expect(aRepeater.aggregatedVariables).to.eql({
             accessed: {
+                src: {},
+                props: {
+                    alt: {}
+                }
+            },
+            read: {
                 src: {},
                 props: {
                     alt: {}
