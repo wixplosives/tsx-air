@@ -1,10 +1,10 @@
 import { asAst, parseValue } from './parser';
 import { cloneDeep } from './clone.deep';
-import { expect, use } from 'chai';
 import ts, { getMutableClone } from 'typescript';
-import { chaiPlugin } from '@tsx-air/testing';
 import { printAst } from '..';
 import { compilerOptions } from '@tsx-air/compiler-utils';
+import { chaiPlugin } from '@tsx-air/testing';
+import { expect, use } from 'chai';
 use(chaiPlugin);
 
 describe('cloneDeep', () => {

@@ -3,23 +3,25 @@ import { analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeRepl
 import { expect } from 'chai';
 import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } from './to.string';
 import ts from 'typescript';
-import { mapValues } from 'lodash';
+import { chaiPlugin } from '@tsx-air/testing';
+import { expect, use } from 'chai';
+use(chaiPlugin);
 
 describe('generateToString', () => {
     it('should generate at toString method based on the used props and state', () => {
-        const comp = mapValues(basicPatterns(),
-            compDef => evalAst(generateToString(compDef.jsxRoots[0], compDef)));
+        const comps = basicPatterns();
+        const toStringOf = (compDef:CompDefinition) => evalAst(generateToString(compDef.jsxRoots[0], compDef));
 
-        expect(comp.Static(), 'Static').to.equal('<div></div>');
-        expect(comp.PropsOnly({ a: 'a', b: 'b', unused: '!' }), 'PropsOnly')
+        expect(toStringOf(comps.Static)(), 'Static').to.equal('<div></div>');
+        expect(toStringOf(comps.PropsOnly)({ a: 'a', b: 'b', unused: '!' }), 'PropsOnly')
             .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --></div>`);
-        expect(comp.StateOnly(undefined, { store1: { a: 1, b: 2 } }), 'StateOnly')
+        expect(toStringOf(comps.StateOnly)(undefined, { store1: { a: 1, b: 2 } }), 'StateOnly')
             .to.equal(`<div><!-- store1.a -->1<!-- --><!-- store1.b -->2<!-- --></div>`);
-        expect(comp.ProsAndState({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }), 'ProsAndState')
+        expect(toStringOf(comps.ProsAndState)({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }), 'ProsAndState')
             .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --><!-- store2.a -->1<!-- --><!-- store2.b -->2<!-- --></div>`);
-            expect(comp.DynamicAttributes({ a: 1 }), 'DynamicAttributes')
+        expect(toStringOf(comps.DynamicAttributes)({ a: 1 }), 'DynamicAttributes')
             .to.equal(`<div dir="ltr" lang="1"><span></span></div>`);
-        expect(comp.DynamicAttributesSelfClosing({ a: 2 }), 'DynamicAttributesSelfClosing')
+        expect(toStringOf(comps.DynamicAttributesSelfClosing)({ a: 2 }), 'DynamicAttributesSelfClosing')
             .to.equal(`<div dir="ltr" lang="2"></div>`);
     });
 

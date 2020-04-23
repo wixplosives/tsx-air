@@ -12,7 +12,9 @@
         "clean": "rimraf ./dist ./tmp",
         "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\"",
         "prebuild": "yarn clean",
-        "test": "mocha \"src/**/*.test.ts?(x)\""
+        "test": "yarn unit && yarn integration",
+        "unit": "mocha \"src/**/*.test.ts?(x)\" --exclude \"src/index.test.ts\"",
+        "integration":  "mocha \"src/index.test.ts\""
     },
     "files": [
         "dist",

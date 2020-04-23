@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import { findUsedVariables } from './find-used-variables';
 import '../dev-utils/global-dev-tools';
 import ts from 'typescript';
+import { scan } from '../ast-utils/scanner';
 
 describe('findUsedVariables', () => {
     it('should find defined variables', () => {
@@ -73,7 +74,7 @@ describe('findUsedVariables', () => {
         expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql({
             aParam: {
                 internalObject: {
-                    accessedProperty: {},
+                    accessedProperty: {}
                 },
                 ...expectedModified.aParam
             }
@@ -81,7 +82,7 @@ describe('findUsedVariables', () => {
         expect(findUsedVariables(ast).read).to.eql({
             aParam: {
                 internalObject: {
-                    accessedProperty: {},
+                    accessedProperty: {}
                 }
             }
         });
@@ -161,9 +162,18 @@ describe('findUsedVariables', () => {
             }
             `);
 
-        expect(findUsedVariables(ast).accessed.aParam.internalObject.methodProperty, 'methods calls are considered as access').not.to.be.undefined;
-        expect(findUsedVariables(ast).accessed.aParam.internalObject.accessedProperty, 'access in call arguments is found').not.to.be.undefined;
-        expect(findUsedVariables(ast).accessed.aParam.internalObject.methodProperty.name, 'methods can also have fields').not.to.be.undefined;
+        expect(
+            findUsedVariables(ast).accessed.aParam.internalObject.methodProperty,
+            'methods calls are considered as access'
+        ).not.to.be.undefined;
+        expect(
+            findUsedVariables(ast).accessed.aParam.internalObject.accessedProperty,
+            'access in call arguments is found'
+        ).not.to.be.undefined;
+        expect(
+            findUsedVariables(ast).accessed.aParam.internalObject.methodProperty.name,
+            'methods can also have fields'
+        ).not.to.be.undefined;
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
                 internalObject: {
@@ -199,10 +209,8 @@ describe('findUsedVariables', () => {
             }`);
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
-                internalObject: {
-                },
-                aKey: {
-                }
+                internalObject: {},
+                aKey: {}
             }
         });
     });
@@ -214,15 +222,13 @@ describe('findUsedVariables', () => {
             }`);
 
         expect(findUsedVariables(ast, ts.isArrowFunction)).to.eql({
-            read:{},
-            accessed: {
-            },
+            read: {},
+            accessed: {},
             defined: {
                 externalMethodsParam: {},
                 definedInOuterScope: {}
             },
-            modified: {
-            }
+            modified: {}
         });
 
         expect(findUsedVariables(ast)).to.eql({
@@ -242,6 +248,22 @@ describe('findUsedVariables', () => {
                 internalMethodParam: {},
                 definedInInnerScope: {}
             },
+            modified: {}
+        });
+    });
+    it(`finds string template variables`, () => {
+        const ast = parseValue('() => `<div dir="${"ltr"}" lang="${props.a}"><span></span></div>`');
+        const template = scan(ast, ts.isTemplateExpression)[0].node;
+        const used = findUsedVariables(template);
+
+        expect(used).to.eql({
+            read: {
+                props: { a: {} }
+            },
+            accessed: {
+                props: { a: {} }
+            },
+            defined: {},
             modified: {}
         });
     });

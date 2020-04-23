@@ -18,7 +18,7 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
         jsxSelfClosingElementReplacer,
     ]);
 
-    const usedVars = findUsedVariables(template);
+    const usedVars = findUsedVariables(cloneDeep(template));
     const [propsParam, stateParams, volatileParams] = getGenericMethodParams(comp, usedVars, true, true);
     if (volatileParams === undefined) {
         return cArrow([propsParam, stateParams], template);
