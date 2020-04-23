@@ -13,8 +13,8 @@
         "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\"",
         "prebuild": "yarn clean",
         "test": "yarn unit && yarn integration",
-        "unit": "mocha \"src/**/*.test.ts?(x)\" --exclude \"src/index.test.ts\"",
-        "integration":  "mocha \"src/index.test.ts\""
+        "unit": "mocha \"src/**/*.test.ts?(x)\"",
+        "it":  "mocha \"src/**/*.it.ts\""
     },
     "files": [
         "dist",
