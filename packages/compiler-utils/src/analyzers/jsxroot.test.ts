@@ -43,6 +43,11 @@ describe('TSXAir component analyzer: Jsx', () => {
                             expression: {}
                         }
                     },
+                    read:{
+                        props: {
+                            expression: {}
+                        }
+                    },
                     defined: {},
                     modified: {}
                 };
@@ -50,7 +55,7 @@ describe('TSXAir component analyzer: Jsx', () => {
                 expect(expression.variables, 'expression access not found').to.eql(expectedUsedVars);
                 expect(expression.aggregatedVariables, 'expression access not found').to.eql(expectedUsedVars);
                 expect(comp.aggregatedVariables, 'expression access is aggregated').to.eql({ ...expectedUsedVars, defined: { props: {} } });
-                expect(comp.variables, 'comp has only one variable (defines props)').to.eql({ accessed: {}, defined: { props: {} }, modified: {} });
+                expect(comp.variables, 'comp has only one variable (defines props)').to.eql({ accessed: {}, read:{}, defined: { props: {} }, modified: {} });
             });
 
             it('should aggregate defined and used variable', () => {
@@ -62,6 +67,7 @@ describe('TSXAir component analyzer: Jsx', () => {
                     accessed: {
                         props: { wasModified: {} }
                     },
+                    read:{},
                     defined: { props: {} },
                     modified: {
                         props: { wasModified: {} }
@@ -73,6 +79,12 @@ describe('TSXAir component analyzer: Jsx', () => {
                             expression0: {},
                             expression1: {},
                             wasModified: {}
+                        }
+                    },
+                    read: {
+                        props: {
+                            expression0: {},
+                            expression1: {},
                         }
                     },
                     defined: { props: {} },
@@ -95,11 +107,22 @@ describe('TSXAir component analyzer: Jsx', () => {
                             children: {}
                         }
                     },
+                    read: {
+                        props: {
+                            title: {},
+                            children: {}
+                        }
+                    },
                     defined: {},
                     modified: {}
                 };
                 const expectedChildrenVariables = {
                     accessed: {
+                        props: {
+                            children: {}
+                        }
+                    },
+                    read: {
                         props: {
                             children: {}
                         }

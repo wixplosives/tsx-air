@@ -23,6 +23,11 @@ describe('TSXAir component analyzer: functions', () => {
                     title: {}
                 }
             },
+            read: {
+                props: {
+                    title: {}
+                }
+            },
             modified: {}
         });
     });

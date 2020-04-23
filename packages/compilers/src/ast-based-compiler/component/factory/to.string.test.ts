@@ -17,7 +17,7 @@ describe('generateToString', () => {
             .to.equal(`<div><!-- store1.a -->1<!-- --><!-- store1.b -->2<!-- --></div>`);
         expect(comp.ProsAndState({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }), 'ProsAndState')
             .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --><!-- store2.a -->1<!-- --><!-- store2.b -->2<!-- --></div>`);
-        expect(comp.DynamicAttributes({ a: 1 }), 'DynamicAttributes')
+            expect(comp.DynamicAttributes({ a: 1 }), 'DynamicAttributes')
             .to.equal(`<div dir="ltr" lang="1"><span></span></div>`);
         expect(comp.DynamicAttributesSelfClosing({ a: 2 }), 'DynamicAttributesSelfClosing')
             .to.equal(`<div dir="ltr" lang="2"></div>`);
