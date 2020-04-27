@@ -64,13 +64,39 @@ describe('ast compiler helpers', () => {
                 props: { props: { p: {} } }
             });
         });
-        xit(`doesn't include dependencies of functions REFRENCED in the scope`, () => {
-            const withFunc = functions().WithNonStateChangingCode;
-            expect(usedInScope(withFunc, withFunc.functions[0].aggregatedVariables)).to.eql({
-                stores: { s: { a: {} } }
+        describe(`when ignoreFunctions=true`, () => {
+            it(`exclude function calls and refrences`, () => {
+                const { WithNonStateChangingCode, WithVolatileFunction } = functions();
+                expect(
+                    usedInScope(
+                        WithVolatileFunction,
+                        WithVolatileFunction.jsxRoots[0].aggregatedVariables,
+                        // optionally ignore functions
+                        true
+                    )
+                ).to.eql({});
+                expect(
+                    usedInScope(
+                        WithNonStateChangingCode,
+                        WithNonStateChangingCode.jsxRoots[0].aggregatedVariables,
+                        // optionally ignore functions
+                        true
+                    )
+                ).to.eql({});
             });
-            expect(usedInScope(withFunc, withFunc.jsxRoots[0].aggregatedVariables)).to.eql({
-                volatile: { onClick: {} }
+            it(`includes call arguments`, () => {
+                const { ValidFunctionUse } = functions();
+                expect(
+                    usedInScope(
+                        ValidFunctionUse,
+                        ValidFunctionUse.jsxRoots[0].aggregatedVariables,
+                        // optionally ignore functions
+                        true
+                    )
+                ).to.eql({
+                    volatile: { vol: {} },
+                    stores: { state: { a: {} } }
+                });
             });
         });
         it(`doesn't aggregate variables that are modified but not read`, () => {

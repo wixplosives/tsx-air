@@ -39,6 +39,13 @@ export const WithVolatileFunction = TSXAir((props: { p: number }) => {
     return <div>{someFunc('const')}</div>;
 });
 
+export const ValidFunctionUse = TSXAir(() => {
+    const state = store({ a: 1 });
+    const vol = 2;
+    const getDisplayedStr = (a:any, b:any) => `${a}${b}`;
+    return <div>{'result: '+getDisplayedStr(state.a, vol)}</div>;
+});
+
 export const InvalidFunctionUse = TSXAir(() => {
     const store1 = store({ a: 'initial' });
     const getDisplayedStr = () => {

@@ -49,6 +49,8 @@ export const functions = () => {
         WithNonStateChangingCode: fcache[1],
         WithVolatileVars: fcache[2],
         WithVolatileFunction: fcache[3],
-        InvalidFunctionUse: fcache[4],
+        ValidFunctionUse: fcache[4],
+        InvalidFunctionUse: fcache[5],
+
     };
 };

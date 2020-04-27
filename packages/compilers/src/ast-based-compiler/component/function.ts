@@ -1,7 +1,7 @@
 import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cArrow, cMethod, asCode, cProperty, asAst, UsedVariables } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
-import { getGenericMethodParams, destructureState, destructureVolatile } from './helpers';
+import { getGenericMethodParams, destructureState, destructureVolatile, usedInScope, UsedInScope } from './helpers';
 import { STATE } from '../consts';
 import { postAnalysisData } from '../../common/post.analysis.data';
 
@@ -36,7 +36,7 @@ export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinit
     const { statements } = body;
 
     body.statements = ts.createNodeArray([
-        ...destructureStatements(comp, func.aggregatedVariables),
+        ...destructureStatements(usedInScope(comp, func.aggregatedVariables)),
         ...statements.map(toStateSafe(comp))]);
     return method;
 }
@@ -54,9 +54,9 @@ const toStateSafe = (comp: CompDefinition) => (s: ts.Statement) => {
     return s;
 };
 
-const destructureStatements = (comp: CompDefinition, scope: UsedVariables) => [
-    destructureState(comp, scope),
-    destructureVolatile(comp, scope)
+const destructureStatements = (used: UsedInScope) => [
+    destructureState(used),
+    destructureVolatile(used)
 ].filter(i => i) as ts.VariableStatement[];
 
 export const nextLambdaName = (comp: CompDefinition) =>

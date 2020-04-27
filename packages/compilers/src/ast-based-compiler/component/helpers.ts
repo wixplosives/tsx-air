@@ -32,15 +32,19 @@ export const getGenericMethodParams = (
     return [props, state, volatile];
 };
 
-interface Used {
+export interface UsedInScope {
     props?: RecursiveMap;
     stores?: RecursiveMap;
     volatile?: RecursiveMap;
 }
 
-export function usedInScope(comp: CompDefinition, scope: UsedVariables): Used {
-    const _usedInScope = (name: string) => name in scope.accessed || name in scope.modified || name in scope.defined;
-    const used: Used = {};
+export  const compFuncByName = (comp:CompDefinition, name: string) => comp.functions.find(f => f.name === name);
+     
+export function usedInScope(comp: CompDefinition, scope: UsedVariables, separateFunctions = false): UsedInScope {
+    const compFunction = (name:string) => compFuncByName(comp, name);
+    const _usedInScope = (name: string) => (name in scope.accessed || name in scope.modified || name in scope.defined)
+    && !(separateFunctions && compFunction(name));
+    const used: UsedInScope = {};
     const add = (added: RecursiveMap, prefix: string) => {
         merge(used, { [prefix]: added });
     };
@@ -56,7 +60,6 @@ export function usedInScope(comp: CompDefinition, scope: UsedVariables): Used {
         }
     });
 
-    const compFunction = (name: string) => comp.functions.find(f => f.name === name);
     const addToResult = (func?: FuncDefinition) => {
         if (func) {
             const usedInFunc = func.aggregatedVariables.read;
@@ -73,7 +76,9 @@ export function usedInScope(comp: CompDefinition, scope: UsedVariables): Used {
                 .forEach(name => {
                     const f = compFunction(name);
                     if (f) {
-                        addToResult(f);
+                        if (!separateFunctions) {
+                            addToResult(f);
+                        }
                     } else {
                         add({ [name]: {} }, 'volatile');
                     }
@@ -104,13 +109,11 @@ export function getFlattened(rmap?: RecursiveMap): Set<string> {
     );
 }
 
-export function destructureState(comp: CompDefinition, scope: UsedVariables) {
-    const used = usedInScope(comp, scope);
+export function destructureState(used: UsedInScope) {
     return used.stores ? cConst(destructure(used.stores)!, ts.createIdentifier(STATE)) : undefined;
 }
 
-export function destructureVolatile(comp: CompDefinition, scope: UsedVariables) {
-    const used = usedInScope(comp, scope);
+export function destructureVolatile(used: UsedInScope) {
     return used.volatile ? cLet(destructure(used.volatile)!, ts.createIdentifier(VOLATILE)) : undefined;
 }
 

@@ -6,12 +6,12 @@ use(chaiPlugin);
 
 describe('c-AST based compiler', () => {
     [
-        // 'by.example/static',
-        // 'by.example/stateless',
-        // 'by.example/stateful',
-        // 'by.example/stateless.nested',
+        'by.example/static',
+        'by.example/stateless',
+        'by.example/stateful',
+        'by.example/stateless.nested',
         'by.example/functions',
-        // 'by.example/event.handler'
+        'by.example/event.handler'
     ].forEach(
         name => {
             it(`should compile ${name} with "${compiler.label}.tsx" => "${compiler.label}.js"`, () => {

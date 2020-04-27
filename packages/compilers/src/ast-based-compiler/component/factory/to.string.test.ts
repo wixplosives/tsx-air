@@ -14,7 +14,7 @@ describe('generateToString', () => {
         expect(toStringOf(comps.Static)(), 'Static').to.equal('<div></div>');
         expect(toStringOf(comps.PropsOnly)({ a: 'a', b: 'b', unused: '!' }), 'PropsOnly')
             .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --></div>`);
-        expect(toStringOf(comps.StateOnly)(undefined, { store1: { a: 1, b: 2 } }), 'StateOnly')
+            expect(toStringOf(comps.StateOnly)(undefined, { store1: { a: 1, b: 2 } }), 'StateOnly')
             .to.equal(`<div><!-- store1.a -->1<!-- --><!-- store1.b -->2<!-- --></div>`);
         expect(toStringOf(comps.ProsAndState)({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }), 'ProsAndState')
             .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --><!-- store2.a -->1<!-- --><!-- store2.b -->2<!-- --></div>`);
@@ -51,7 +51,10 @@ describe('generateToString', () => {
         const withFuncitonCalls = toStringOf(WithVolatileFunction);
 
         expect(withFuncitonCalls.toString()).
-            to.be.eqlCode('()=>`<div></div>`');
+            to.be.eqlCode(`(props, $s) => {
+                const $v =  WithVolatileFunction.prototype.$preRender(props, $s);
+                return \`<div><!-- someFunc('const') -->\${WithVolatileFunction.prototype._someFunc(props, $s, $v, 'const')}<!-- --></div>\`;
+            };`);
     });
 
     describe('helpers', () => {

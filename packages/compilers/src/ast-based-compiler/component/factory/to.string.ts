@@ -20,32 +20,31 @@ import {
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { VOLATILE, STATE, PROPS } from '../../consts';
+import { chain } from 'lodash';
+import isEqual from 'lodash/isEqual';
 
 export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
-    const usedFunctions: ts.Expression[] = [];
     const template = jsxToStringTemplate(node.sourceAstNode, [
         jsxComponentReplacer,
         jsxEventHandlerRemover,
-        jsxTextExpressionReplacer(comp, usedFunctions),
+        jsxTextExpressionReplacer(comp),
         jsxAttributeReplacer,
         jsxAttributeNameReplacer,
         jsxSelfClosingElementReplacer
     ]);
 
     // TODO fix jsxToStringTemplate
-    const usedVars = findUsedVariables(cloneDeep(template));
-    const funcs = usedFunctions
-        .map(exp => comp.jsxRoots[0].expressions.find(e => e.sourceAstNode === exp))
-        .filter(i => i)
-        .map(e => usedInScope(comp, e!.aggregatedVariables));
-    
-
-    const [propsParam, stateParams, volatileParams] = getGenericMethodParams(comp, usedVars, true, true);
-    if (volatileParams === undefined) {
+    const usedVars = usedInScope(comp, node.aggregatedVariables, true);
+    const hasCompMethodCalls = chain(node.aggregatedVariables.executed)
+        .values()
+        .some(v => isEqual(v, {}))
+        .value();
+    const [propsParam, stateParams] = getGenericMethodParams(comp, node.aggregatedVariables, true, !hasCompMethodCalls);
+    if (!usedVars.volatile && !hasCompMethodCalls) {
         return cArrow([propsParam, stateParams], template);
     }
 
-    const destructured = [destructureState(comp, usedVars), destructureVolatile(comp, usedVars)].filter(
+    const destructured = [destructureState(usedVars), destructureVolatile(usedVars)].filter(
         i => i
     ) as ts.VariableStatement[];
     const volatile = cConst(
@@ -58,19 +57,20 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
     return cArrow([propsParam, stateParams && STATE], [volatile, ...destructured, ts.createReturn(template)]);
 };
 
-export const jsxTextExpressionReplacer: (
-    comp: CompDefinition,
-    usedFunctions: ts.Expression[],
-) => AstNodeReplacer = (comp, usedFunctions) => node => {
-    const swapCalls = (exp:ts.JsxExpression): ts.Expression => {
+export const jsxTextExpressionReplacer: (comp: CompDefinition) => AstNodeReplacer = comp => node => {
+    const swapCalls = (exp: ts.JsxExpression): ts.Expression => {
         const toProto = (n: ts.Node) => {
             const clone = ts.getMutableClone(n);
 
             if (ts.isCallExpression(n)) {
-                const newArgs: ts.Expression[] = [PROPS, STATE, VOLATILE].map(a => ts.createIdentifier(a));
-                n.arguments.forEach(a => newArgs.push(cloneDeep(a)));
-                usedFunctions.push(n.expression);
-                return cCall([comp.name, 'prototype', `_${asCode(n.expression)}`], newArgs);
+                const args: Array<ts.Identifier | ts.Expression> = getGenericMethodParams(
+                    comp,
+                    findUsedVariables(n),
+                    true,
+                    false
+                ).map(u => (u ? ts.createIdentifier(u as string) : ts.createIdentifier('undefined')));
+                n.arguments.forEach(a => args.push(cloneDeep(a)));
+                return cCall([comp.name, 'prototype', `_${asCode(n.expression)}`], args);
             }
             clone.forEachChild(toProto);
             return clone;
@@ -79,7 +79,7 @@ export const jsxTextExpressionReplacer: (
     };
 
     if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
-        const expression= node.expression ? swapCalls(node.expression as ts.JsxExpression) : ts.createTrue();
+        const expression = node.expression ? swapCalls(node.expression as ts.JsxExpression) : ts.createTrue();
 
         return {
             prefix: `<!-- ${node.expression ? asCode(node.expression) : 'empty expression'} -->`,

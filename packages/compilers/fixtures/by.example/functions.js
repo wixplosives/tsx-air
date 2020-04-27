@@ -32,12 +32,10 @@ export class NamedFunction extends Component {
 }
 
 NamedFunction.factory = {
-    toString: (props, $s) => {
-        const $v = NamedFunction.prototype.$preRender(props, state);
-        let { store1 } = $s;
-        let { vol, getDisplayedStr } = $v;
+    toString: (__0, $s) => {
+        const $v = NamedFunction.prototype.$preRender(__0, $s);
         return `<div><!-- getDisplayedStr('param') -->${
-            NamedFunction.prototype._getDisplayedStr(props, $s, $v, 'param')
+            NamedFunction.prototype._getDisplayedStr(undefined, $s, $v, 'param')
             }<!-- --></div>`;
     },
     hydrate: (root, props, state) => new NamedFunction({
