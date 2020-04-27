@@ -6,12 +6,6 @@ export class PreDefinedHandler extends Component {
         this.handler = (...args) => TSXAir.runtime.execute(this, this._handler, args);
     }
 
-    $updateView(__0, { state }, __2, changeMap) {
-        if (changeMap & PreDefinedHandler.changeBitmask['state.count']) {
-            this.context.exp1.textContent = state.count;
-        }
-    };
-
     _handler(__0, $s, __2, event) {
         const { state } = $s;
         TSXAir.runtime.updateState(this, $s, ({ state }) => {
@@ -23,6 +17,12 @@ export class PreDefinedHandler extends Component {
     $afterMount() {
         this.context.elm0.addEventListener('click', this.handler);
     }
+
+    $updateView(__0, { state }, __2, changeMap) {
+        if (changeMap & PreDefinedHandler.changeBitmask['state.count']) {
+            this.context.exp1.textContent = state.count;
+        }
+    };
 }
 
 PreDefinedHandler.factory = {
@@ -46,12 +46,6 @@ export class LambdaHandler extends Component {
         this.lambda0 = (...args) => TSXAir.runtime.execute(this, this._lambda0, args);
     }
 
-    $updateView(__0, { state }, __2, changeMap) {
-        if (changeMap & LambdaHandler.changeBitmask['state.count']) {
-            this.context.exp1.textContent = state.count;
-        }
-    };
-
     _lambda0(__0, $s) {
         const { state } = $s;
         TSXAir.runtime.updateState(this, $s, ({ state }) => {
@@ -63,6 +57,12 @@ export class LambdaHandler extends Component {
     $afterMount() {
         this.context.elm0.addEventListener('click', this.lambda0);
     }
+
+    $updateView(__0, { state }, __2, changeMap) {
+        if (changeMap & LambdaHandler.changeBitmask['state.count']) {
+            this.context.exp1.textContent = state.count;
+        }
+    };
 }
 
 LambdaHandler.factory = {

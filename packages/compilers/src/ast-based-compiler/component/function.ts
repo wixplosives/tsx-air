@@ -74,22 +74,6 @@ function asMethod(comp: CompDefinition, func: FuncDefinition): ts.MethodDeclarat
     const params = getGenericMethodParams(comp, func.aggregatedVariables, true, false);
     src.parameters.forEach(p => params.push(asCode(p.name)));
 
-    // const dep = [];
-    // const storesAndProps = new Set<string>(comp.stores.map(s => s.name));
-    // storesAndProps.add(comp.propsIdentifier || '--no-props');
-    // const { read } = func.aggregatedVariables;
-    // for (const [key, val] of Object.entries(read)) {
-    //     if (storesAndProps.has(key)) {
-    //         const innerKeys = Object.keys(val);
-    //         if (innerKeys.length) {
-    //             dep.push(...innerKeys.map(k => `${key}.${k}`));
-    //         } else {
-    //             dep.push(key);
-    //         }
-    //     }
-    // }
-    // postAnalysisData.write(func, 'dependencies', dep);
-
     return cMethod(name, params, clone.body);
 }
 

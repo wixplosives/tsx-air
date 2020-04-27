@@ -144,6 +144,7 @@ export interface RecursiveMap {
     [key: string]: RecursiveMap;
 }
 
+export const func:RecursiveMap = {};
 export interface UsedVariables {
     read: RecursiveMap;
     accessed: RecursiveMap;

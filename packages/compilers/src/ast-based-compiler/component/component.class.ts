@@ -23,10 +23,10 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
             initialState: generateInitialState(comp),
         })),
         cStatic('changeBitmask', generateChangeBitMask(comp)),
-        generateUpdateView(comp, binding),
         ...generateMethods(comp),
         ...generateAfterMount(comp, binding),
         ...generatePreRender(comp),
+        generateUpdateView(comp, binding),
     ]);
     return res;
 };

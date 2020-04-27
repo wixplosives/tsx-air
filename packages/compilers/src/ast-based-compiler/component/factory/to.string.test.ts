@@ -1,6 +1,5 @@
 import { basicPatterns } from '../../../test.helpers';
 import { analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, asAst} from '@tsx-air/compiler-utils';
-import { expect } from 'chai';
 import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } from './to.string';
 import ts from 'typescript';
 import { chaiPlugin } from '@tsx-air/testing';
@@ -75,7 +74,7 @@ describe('generateToString', () => {
                 ).tsxAir as CompDefinition;
                 const jsxRootInfo = info.jsxRoots[0];
 
-                const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer(info)]);
+                const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer(info, [])]);
                 expect(templateAst).to.have.astLike('`<div id={props.shouldNotBeChanged}><!-- props.shouldChange -->${props.shouldChange}<!-- --></div>`');
             });
 
