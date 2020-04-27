@@ -1,4 +1,4 @@
-import { basicPatterns } from '../../../test.helpers';
+import { basicPatterns, functions } from '../../../test.helpers';
 import { analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, asAst} from '@tsx-air/compiler-utils';
 import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } from './to.string';
 import ts from 'typescript';
@@ -7,9 +7,9 @@ import { expect, use } from 'chai';
 use(chaiPlugin);
 
 describe('generateToString', () => {
+    const toStringOf = (compDef:CompDefinition) => evalAst(generateToString(compDef.jsxRoots[0], compDef));
     it('should generate at toString method based on the used props and state', () => {
         const comps = basicPatterns();
-        const toStringOf = (compDef:CompDefinition) => evalAst(generateToString(compDef.jsxRoots[0], compDef));
 
         expect(toStringOf(comps.Static)(), 'Static').to.equal('<div></div>');
         expect(toStringOf(comps.PropsOnly)({ a: 'a', b: 'b', unused: '!' }), 'PropsOnly')
@@ -26,7 +26,7 @@ describe('generateToString', () => {
 
     it(`uses nested components' toString`, () => {
         const { NestedStateless } = basicPatterns();
-        const nested = evalAst(generateToString(NestedStateless.jsxRoots[0], NestedStateless));
+        const nested = toStringOf(NestedStateless);
 
         expect(nested.toString()).
             // @ts-ignore
@@ -40,9 +40,17 @@ describe('generateToString', () => {
 
     it(`should removed event listeners`, () => {
         const { EventListener } = basicPatterns();
-        const withEvent = evalAst(generateToString(EventListener.jsxRoots[0], EventListener));
+        const withEvent = toStringOf(EventListener);
 
         expect(withEvent.toString()).
+            to.be.eqlCode('()=>`<div></div>`');
+    });
+
+    it(`handles function calls by using the prototyped version`, () => {
+        const {WithVolatileFunction} = functions();
+        const withFuncitonCalls = toStringOf(WithVolatileFunction);
+
+        expect(withFuncitonCalls.toString()).
             to.be.eqlCode('()=>`<div></div>`');
     });
 

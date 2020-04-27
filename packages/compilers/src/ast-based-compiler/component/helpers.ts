@@ -66,7 +66,7 @@ export function usedInScope(comp: CompDefinition, scope: UsedVariables): Used {
             comp.stores
                 .filter(({ name }) => usedInFunc[name])
                 .forEach(({ name }) => {
-                    add({ [name]: scope.accessed[name] }, 'stores');
+                    add({ [name]: usedInFunc[name] }, 'stores');
                 });
             comp.volatileVariables
                 .filter(v => usedInFunc[v])
