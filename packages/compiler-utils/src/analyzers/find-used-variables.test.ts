@@ -99,13 +99,14 @@ describe('findUsedVariables', () => {
             defined: {
                 anObject: {}
             },
+            executed: {},
             modified: {}
         };
         expect(findUsedVariables(ast), 'Should not include "title"').to.eql(expected);
     });
     it('should find vars in jsx', () => {
         const ast = asSourceFile(`
-            export const aJSXRoot () => <div onClick={onClickHandler}/>
+            export const aJSXRoot = () => <div onClick={onClickHandler}/>
             `);
         const expected: UsedVariables = {
             read: {
@@ -114,12 +115,14 @@ describe('findUsedVariables', () => {
             accessed: {
                 onClickHandler: {}
             },
+            executed: {},
             defined: {
                 aJSXRoot: {}
             },
             modified: {}
         };
-        expect(findUsedVariables(ast), 'Should find the click handler').to.eql(expected);
+        const result = findUsedVariables(ast);
+        expect(result, 'Should find the click handler').to.eql(expected);
     });
     it('should ignore reference to html elements and components', () => {
         const ast = asSourceFile(`
@@ -131,6 +134,7 @@ describe('findUsedVariables', () => {
             defined: {
                 aJSXRoot: {}
             },
+            executed: {},
             modified: {}
         };
         expect(findUsedVariables(ast), 'Should not include "Comp" and "div" in accessed').to.eql(expected);
@@ -151,16 +155,26 @@ describe('findUsedVariables', () => {
             defined: {
                 b: {}
             },
+            executed: {},
             modified: {}
         };
-        expect(findUsedVariables(ast), 'Should not include "AnInterface"').to.eql(expected);
+        const result = findUsedVariables(ast);
+        expect(result, 'Should not include "AnInterface"').to.eql(expected);
     });
-    it('should mark method calls as access', () => {
+    it('should mark method calls as access and executed', () => {
         const ast = parseValue(`(aParam)=>{
                 aParam.internalObject.methodProperty(aParam.internalObject.accessedProperty);
                 aParam.internalObject.methodProperty.name;
             }
             `);
+        expect(findUsedVariables(ast).executed, 'methods calls should be added to executed').to.eql({
+            aParam: {
+                internalObject: {
+                    methodProperty: {
+                    }
+                }
+            }
+        });
 
         expect(
             findUsedVariables(ast).accessed.aParam.internalObject.methodProperty,
@@ -224,6 +238,7 @@ describe('findUsedVariables', () => {
         expect(findUsedVariables(ast, ts.isArrowFunction)).to.eql({
             read: {},
             accessed: {},
+            executed: {},
             defined: {
                 externalMethodsParam: {},
                 definedInOuterScope: {}
@@ -248,6 +263,7 @@ describe('findUsedVariables', () => {
                 internalMethodParam: {},
                 definedInInnerScope: {}
             },
+            executed: {},
             modified: {}
         });
     });
@@ -263,6 +279,7 @@ describe('findUsedVariables', () => {
             accessed: {
                 props: { a: {} }
             },
+            executed: {},
             defined: {},
             modified: {}
         });

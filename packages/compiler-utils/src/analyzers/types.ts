@@ -150,4 +150,5 @@ export interface UsedVariables {
     accessed: RecursiveMap;
     modified: RecursiveMap;
     defined: RecursiveMap;
+    executed: RecursiveMap;
 }

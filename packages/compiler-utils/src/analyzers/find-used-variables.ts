@@ -1,11 +1,11 @@
 import ts from 'typescript';
 import { UsedVariables } from './types';
-import { update, merge } from 'lodash';
+import { update, merge, set } from 'lodash';
 import { asCode } from '..';
 
 /**
- * 
- * @param node 
+ *
+ * @param node
  * @param ignore return true to ignore a node and its children
  */
 export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boolean): UsedVariables {
@@ -13,7 +13,8 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
         accessed: {},
         modified: {},
         defined: {},
-        read: {}
+        read: {},
+        executed: {}
     };
     const visitor = (n: ts.Node) => {
         if (ignore && ignore(n)) {
@@ -28,11 +29,18 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
                 if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
                     res.defined[asCode(n)] = {};
                 }
-                return;
+                return ;
+            }
+            if (ts.isCallLikeExpression(n) && n.expression && asCode(n.expression)) {
+                set(res.executed, asCode(n.expression), {});
             }
 
             if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
-                if (ts.isJsxSelfClosingElement(accessParent) || ts.isJsxOpeningElement(accessParent) || ts.isJsxClosingElement(accessParent) && n === accessParent.tagName) {
+                if (
+                    ts.isJsxSelfClosingElement(accessParent) ||
+                    ts.isJsxOpeningElement(accessParent) ||
+                    (ts.isJsxClosingElement(accessParent) && n === accessParent.tagName)
+                ) {
                     return;
                 }
                 let isModification = false;
@@ -74,18 +82,20 @@ export const modifyingOperators = [
     ts.SyntaxKind.GreaterThanGreaterThanEqualsToken,
     ts.SyntaxKind.GreaterThanGreaterThanGreaterThanEqualsToken,
     ts.SyntaxKind.AmpersandEqualsToken,
-    ts.SyntaxKind.BarEqualsToken,
+    ts.SyntaxKind.BarEqualsToken
 ];
 
-export const selfModifyingOperators = [
-    ts.SyntaxKind.PlusPlusToken,
-    ts.SyntaxKind.MinusMinusToken
-];
+export const selfModifyingOperators = [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken];
 
-export const isType = (node: ts.Node) => ts.isInterfaceDeclaration(node) || ts.isTypeNode(node) || ts.isTypeReferenceNode(node) || ts.isTypeAliasDeclaration(node);
+export const isType = (node: ts.Node) =>
+    ts.isInterfaceDeclaration(node) ||
+    ts.isTypeNode(node) ||
+    ts.isTypeReferenceNode(node) ||
+    ts.isTypeAliasDeclaration(node);
 
 export function isVariableLikeDeclaration(node: ts.Node): node is ts.VariableLikeDeclaration {
-    return ts.isVariableDeclaration(node) ||
+    return (
+        ts.isVariableDeclaration(node) ||
         ts.isParameter(node) ||
         ts.isBindingElement(node) ||
         ts.isPropertyDeclaration(node) ||
@@ -96,19 +106,19 @@ export function isVariableLikeDeclaration(node: ts.Node): node is ts.VariableLik
         ts.isEnumMember(node) ||
         ts.isJSDocPropertyTag(node) ||
         ts.isJSDocParameterTag(node) ||
-        ts.isFunctionDeclaration(node);
+        ts.isFunctionDeclaration(node)
+    );
 }
 
 export function isVariableDeclaration(node: ts.Node): node is ts.VariableDeclaration | ts.ParameterDeclaration {
-    return ts.isVariableDeclaration(node) ||
-        ts.isParameter(node);
+    return ts.isVariableDeclaration(node) || ts.isParameter(node);
 }
 
 export type AccessNodes = ts.Identifier | ts.PropertyAccessExpression | ts.ElementAccessExpression;
 export function isAccessNode(node: ts.Node): node is AccessNodes {
     return ts.isIdentifier(node) || ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node);
 }
-export function accessToStringArr(node: AccessNodes): { path: string[], nestedAccess: string[][] } {
+export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAccess: string[][] } {
     let n: ts.LeftHandSideExpression = node;
     let path: string[] = [];
     const nestedAccess: string[][] = [];
@@ -125,7 +135,6 @@ export function accessToStringArr(node: AccessNodes): { path: string[], nestedAc
             }
             n = n.expression;
         } else {
-
             path.unshift(asCode(n.name));
             n = n.expression;
         }
@@ -151,11 +160,9 @@ function addToAccessMap(path: string[], isModification: boolean, map: UsedVariab
 }
 
 export const mergeUsedVariables = (variables: UsedVariables[]): UsedVariables =>
-    variables.reduce(
-        (acc: UsedVariables, map: UsedVariables) => merge(acc, map),
-        {
-            accessed: {},
-            modified: {},
-            defined: {},
-            read: {}
-        } as UsedVariables);
+    variables.reduce((acc: UsedVariables, map: UsedVariables) => merge(acc, map), {
+        accessed: {},
+        modified: {},
+        defined: {},
+        read: {}
+    } as UsedVariables);

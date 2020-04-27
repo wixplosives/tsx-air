@@ -18,6 +18,7 @@ describe('TSXAir component analyzer: functions', () => {
         expect(store.keys).to.eql(['key', 'anotherKey']);
         expect(store.variables).to.eql({
             defined: {},
+            executed:{},
             accessed: {
                 props: {
                     title: {}
