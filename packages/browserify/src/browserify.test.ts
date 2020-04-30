@@ -1,9 +1,8 @@
 import { expect } from 'chai';
 import fixtures from '../fixtures';
-import { browserify, browserifyPath } from './browserify';
+import { browserify } from './browserify';
 import ts, { visitEachChild } from 'typescript';
 import { execute, createMockpiler } from '@tsx-air/testing';
-import { exampleSrcPath } from '@tsx-air/examples';
 import rimraf from 'rimraf';
 import { nodeFs } from '@file-services/node';
 import { packagePath } from '@tsx-air/utils/packages';
