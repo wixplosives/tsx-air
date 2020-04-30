@@ -97,9 +97,7 @@ export class Runtime {
     public toStringPreRender<Props, State>(compType: any, props: Props, state: State) {
         // TODO: remove this hack after changing update state/props to be sync
         const mockComp = { props, state };
-        this.ignoreStateChanges.add((mockComp as any) as Component);
         const v = compType.prototype.$preRender.call(mockComp, props, state);
-        this.ignoreStateChanges.delete((mockComp as any) as Component);
         return v;
     }
 

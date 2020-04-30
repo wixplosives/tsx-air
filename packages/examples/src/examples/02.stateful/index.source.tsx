@@ -27,7 +27,7 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
             <div className="btn" onClick={onClickB}>
                 {state.b}
             </div>
-            <div className="changeCount">state changed {state.changeCount} times</div>
+            <div className="changeCount">View rendered {state.changeCount} times</div>
             {/*  The following will fail at compile time
                 <div>state changed {state.changeCount++} times</div> 
             Because the state should never be changed declaratively

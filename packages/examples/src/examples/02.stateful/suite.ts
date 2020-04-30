@@ -41,7 +41,7 @@ export function suite(api: ExampleSuiteApi) {
             });
             await htmlMatch(page, {
                 cssQuery: '.changeCount',
-                textContent: `state changed ${clickA + clickB + 1} times`
+                textContent: `View rendered ${clickA + clickB + 1} times`
             });
             await htmlMatch(page, {
                 cssQuery: '.volatile',
