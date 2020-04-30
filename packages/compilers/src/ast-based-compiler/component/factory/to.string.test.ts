@@ -85,7 +85,7 @@ describe('generateToString', () => {
                 ).tsxAir as CompDefinition;
                 const jsxRootInfo = info.jsxRoots[0];
 
-                const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer(info, [])]);
+                const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxTextExpressionReplacer(info)]);
                 expect(templateAst).to.have.astLike('`<div id={props.shouldNotBeChanged}><!-- props.shouldChange -->${props.shouldChange}<!-- --></div>`');
             });
 

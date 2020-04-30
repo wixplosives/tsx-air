@@ -31,7 +31,7 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
                 }
                 return ;
             }
-            if (ts.isCallLikeExpression(n) && n.expression && asCode(n.expression)) {
+            if (ts.isCallExpression(n) && n.expression && asCode(n.expression)) {
                 set(res.executed, asCode(n.expression), {});
             }
 

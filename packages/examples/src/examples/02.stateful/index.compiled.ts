@@ -1,12 +1,19 @@
 import { Component, Factory, runtime, runtimeUtils } from '@tsx-air/framework';
 
-// Inferred from the TSX all possible return values 
-interface StatefulCompCtx { root: HTMLElement; div1: HTMLDivElement; div2: HTMLDivElement; div3: HTMLDivElement; }
+// Inferred from the TSX all possible return values
+interface StatefulCompCtx {
+    root: HTMLElement;
+    div1: HTMLDivElement;
+    div2: HTMLDivElement;
+    div3: HTMLDivElement;
+}
 
-interface StatefulCompProps { initialState: string; }
+interface StatefulCompProps {
+    initialState: string;
+}
 // All the component scope vars [possibly only those who are bound to the view]
 interface StatefulCompState {
-    state: { a: string; b: string; changeCount: number; };
+    state: { a: string; b: string; changeCount: number };
 }
 
 export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
@@ -21,20 +28,22 @@ export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, 
     public $updateView(_: StatefulCompProps, { state }: StatefulCompState, changeMap: number): void {
         if (changeMap !== StatefulComp.changeBitmask['state.changeCount']) {
             // tslint:disable-next-line: no-shadowed-variable
-            runtime.updateState(this as StatefulComp, ({ state }: StatefulCompState) => {
+            runtime.updateState(this as StatefulComp, { state }, ({ state }: StatefulCompState) => {
                 state.changeCount++;
                 return StatefulComp.changeBitmask['state.changeCount'];
             });
         }
 
-        runtimeUtils.handleChanges(StatefulComp.changeBitmask, new Map<string, () => void>(
-            [
+        runtimeUtils.handleChanges(
+            StatefulComp.changeBitmask,
+            new Map<string, () => void>([
                 ['props.initialState', runtimeUtils.noop],
                 ['state.a', runtimeUtils.assignTextContent(this.context.div1, state.a)],
                 ['state.b', runtimeUtils.assignTextContent(this.context.div2, state.b)],
                 ['state.changeCount', runtimeUtils.assignTextContent(this.context.div3, '' + state.changeCount)]
-            ]
-        ), changeMap);
+            ]),
+            changeMap
+        );
     }
 
     public $afterMount(_: HTMLElement) {
@@ -42,31 +51,33 @@ export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, 
         this.context.div2.addEventListener('click', this.onClickB);
     }
 
-    private onClickA = () => runtime.updateState(this as StatefulComp, ({ state }: StatefulCompState) => {
-        state.a = state.a + '!';
-        return StatefulComp.changeBitmask['state.a'];
-    });
+    private onClickA = () =>
+        runtime.updateState(this as StatefulComp, {}, ({ state }: StatefulCompState) => {
+            state.a = state.a + '!';
+            return StatefulComp.changeBitmask['state.a'];
+        });
 
-    private onClickB = () => runtime.updateState(this as StatefulComp, ({ state }: StatefulCompState) => {
-        state.b = state.b + '*';
-        return StatefulComp.changeBitmask['state.b'];
-    });
+    private onClickB = () =>
+        runtime.updateState(this as StatefulComp, {},  ({ state }: StatefulCompState) => {
+            state.b = state.b + '*';
+            return StatefulComp.changeBitmask['state.b'];
+        });
 }
 
 const initialState = (props: StatefulCompProps) =>
     ({
         state: {
-            a: props.initialState+'A',
-            b: props.initialState+'B',
+            a: props.initialState + 'A',
+            b: props.initialState + 'B',
             changeCount: 0
         }
-    }) as StatefulCompState;
+    } as StatefulCompState);
 
 StatefulComp.factory = {
     unique: Symbol('StatefulCompFactory'),
     initialState,
     toString: (props, s?) => {
-        const {state} = s || initialState(props);
+        const { state } = s || initialState(props);
         return `<div>
         <div class="btn">
             ${state.a}
@@ -82,15 +93,18 @@ StatefulComp.factory = {
         </div>
     </div>`;
     },
-    hydrate: (root, props, state) => new StatefulComp(
-        {
-            root,
-            div1: root.children[0] as HTMLDivElement,
-            div2: root.children[1] as HTMLDivElement,
-            // @ts-ignore
-            div3: root.children[2].childNodes[2] as Text,
-            // @ts-ignore
-            div4: root.children[3].childNodes[2] as Text,
-        }, props, state || initialState(props)
-    )
+    hydrate: (root, props, state) =>
+        new StatefulComp(
+            {
+                root,
+                div1: root.children[0] as HTMLDivElement,
+                div2: root.children[1] as HTMLDivElement,
+                // @ts-ignore
+                div3: root.children[2].childNodes[2] as Text,
+                // @ts-ignore
+                div4: root.children[3].childNodes[2] as Text
+            },
+            props,
+            state || initialState(props)
+        )
 };

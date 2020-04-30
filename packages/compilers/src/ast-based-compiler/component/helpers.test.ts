@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { getFlattened, usedInScope } from './helpers';
 import { functions, basicPatterns } from '../../test.helpers';
-import { functions } from '../../../../compiler-utils/src/analyzers/func-definition';
 describe('ast compiler helpers', () => {
     describe('getFlattened', () => {
         it('returns a string array of the first level children', () => {

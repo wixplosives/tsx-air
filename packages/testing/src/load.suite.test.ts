@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { join } from 'path';
 import { loadSuite } from './load.suite';
-import { capitalize } from 'lodash';
 
 describe('loadSuite', () => {
     it('should fail if the example is not found', ()=>{

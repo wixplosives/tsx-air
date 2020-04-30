@@ -19,19 +19,22 @@ export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {
         if (changeMap & Zoom.changeBitmask['props.url']) {
             this.context.zoomedIn.src = this.context.zoomedOut.src = newProps.url;
         }
-        if (changeMap & (
-            Zoom.changeBitmask['state.x'] |
-            Zoom.changeBitmask['state.y'] |
-            Zoom.changeBitmask['state.zoomedOutSize'] |
-            Zoom.changeBitmask['state.original'])
+        if (
+            changeMap &
+            (Zoom.changeBitmask['state.x'] |
+                Zoom.changeBitmask['state.y'] |
+                Zoom.changeBitmask['state.zoomedOutSize'] |
+                Zoom.changeBitmask['state.original'])
         ) {
             const { x, y, zoomedOutSize, original } = state;
-            runtimeUtils.setStyle(this.context.zoomedIn, { left: -x / zoomedOutSize.width * original.width, top: -y / zoomedOutSize.height * original.height });
+            runtimeUtils.setStyle(this.context.zoomedIn, {
+                left: (-x / zoomedOutSize.width) * original.width,
+                top: (-y / zoomedOutSize.height) * original.height
+            });
         }
-        if (changeMap & (
-            Zoom.changeBitmask['state.x'] |
-            Zoom.changeBitmask['state.y'] |
-            Zoom.changeBitmask['state.zoomFrame'])
+        if (
+            changeMap &
+            (Zoom.changeBitmask['state.x'] | Zoom.changeBitmask['state.y'] | Zoom.changeBitmask['state.zoomFrame'])
         ) {
             const { x, y, zoomFrame } = state;
             runtimeUtils.setStyle(this.context.zoomFrame, { top: y, left: x, ...zoomFrame });
@@ -50,17 +53,19 @@ export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {
 
     private updateDimensions = () => {
         const { root, zoomedIn, zoomedOut } = this.context;
-        runtime.updateState(this as Zoom, ({state}) => {
+        runtime.updateState(this as Zoom, {}, ({ state }) => {
             // @ts-ignore
             [state.original, state.zoomFrame, state.zoomedOutSize] = calculateDimensions(root, zoomedIn, zoomedOut);
-            return Zoom.changeBitmask['state.original']
-                | Zoom.changeBitmask['state.zoomFrame']
-                | Zoom.changeBitmask['state.zoomedOutSize'];
+            return (
+                Zoom.changeBitmask['state.original'] |
+                Zoom.changeBitmask['state.zoomFrame'] |
+                Zoom.changeBitmask['state.zoomedOutSize']
+            );
         });
     };
 
     private updateZoomLocation = (e: MouseEvent) => {
-        runtime.updateState(this as Zoom, ({state}) => {
+        runtime.updateState(this as Zoom, {}, ({ state }) => {
             // @ts-ignore
             [state.x, state.y] = calcZoomFrameXY(e, state.zoomedOut.element!, state.zoomFrame, state.zoomedOutSize);
             return Zoom.changeBitmask['state.x'] | Zoom.changeBitmask['state.y'];

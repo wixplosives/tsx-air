@@ -47,4 +47,4 @@ export function asAst(statement: string, returnStatement = false) {
             : cloneDeep(validValue) as ts.Node;
     }
     throw new Error('Invalid value object');
-};
+}

@@ -1,6 +1,5 @@
 import { ExampleSuiteApi, feature, Features } from '@tsx-air/types';
 import { htmlMatch } from '@tsx-air/testing';
-import repeat from 'lodash/repeat';
 
 export const features: Features = [
     feature('stateful', 'component'),

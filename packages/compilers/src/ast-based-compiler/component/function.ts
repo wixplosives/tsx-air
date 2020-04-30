@@ -1,4 +1,4 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cArrow, cMethod, asCode, cProperty, asAst, UsedVariables } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cArrow, cMethod, asCode, cProperty, asAst } from '@tsx-air/compiler-utils';
 import flatMap from 'lodash/flatMap';
 import ts from 'typescript';
 import { getGenericMethodParams, destructureState, destructureVolatile, usedInScope, UsedInScope } from './helpers';

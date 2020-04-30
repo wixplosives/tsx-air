@@ -21,7 +21,6 @@ export const sourceFile: Analyzer<TsxFile> = node => {
             return;
         }).map(i => i.metadata);
 
-
         /// TODO discuss with Nadav
         const tsxAir: TsxFile = {
             kind: 'file',
@@ -32,16 +31,21 @@ export const sourceFile: Analyzer<TsxFile> = node => {
             variables: {
                 accessed: {},
                 modified: {},
-                defined: {}
+                defined: {},
+                executed: {},
+                read: {}
             },
             aggregatedVariables: {
                 accessed: {},
                 modified: {},
-                defined: {}
+                defined: {},
+                executed: {},
+                read: {}
             }
         };
         return {
-            tsxAir, astToTsxAir
+            tsxAir,
+            astToTsxAir
         };
     }
 

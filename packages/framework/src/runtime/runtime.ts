@@ -88,9 +88,13 @@ export class Runtime {
         state: State,
         changeState = false
     ) {
-        changeState || this.ignoreStateChanges.add(instance);
+        if (!changeState) {
+            this.ignoreStateChanges.add(instance);
+        }
         const v: object = instance.$preRender(props || instance.props, state || instance.state);
-        changeState || this.ignoreStateChanges.delete(instance);
+        if (!changeState) {
+            this.ignoreStateChanges.delete(instance);
+        }
         return v;
     }
 

@@ -29,12 +29,12 @@ ParentComp.factory = {
       Parent: <!-- start props.name -->${props.name}<!-- end props.name -->
       ${ChildComp.factory.toString(props)}
     </div>`,
-    hydrate: (root, props) => new ParentComp(
+    hydrate: (root, props, $s) => new ParentComp(
         {
             root,
             text1: root.childNodes[2],
             childComp1: ChildComp.factory.hydrate(root.children[0] as HTMLElement, props)
-        }, props, {}),
+        }, props, $s!),
     initialState: (_: any) => ({})
 };
 
@@ -58,9 +58,9 @@ export class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
 ChildComp.factory = {
     unique: Symbol('ChildComp'),
     toString: (props: { name: string }) => `<div class="child">Child: <!-- start props.name -->${props.name}<!-- end props.name --></div>`,
-    hydrate: (root, props) => new ChildComp({
+    hydrate: (root, props, $s) => new ChildComp({
         root,
         text1: root.childNodes[2] as Text,
-    }, props, {}),
+    }, props, $s!),
     initialState: (_: any) => ({})
 };

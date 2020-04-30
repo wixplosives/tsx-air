@@ -1,4 +1,4 @@
-import { AnalyzedNode, JsxExpression, FuncDefinition, CompDefinition, UsedVariables, NodeWithVariables } from '@tsx-air/compiler-utils';
+import { AnalyzedNode, JsxExpression, FuncDefinition, CompDefinition } from '@tsx-air/compiler-utils';
 import isFunction from 'lodash/isFunction';
 
 type Modifier<T> = (mod: T | undefined) => T;
@@ -35,7 +35,7 @@ export class PostAnalysisData {
     // public read(node: NodeWithVariables, key: 'dependencies', _default?:string[]): string[];
     public read(node: AnalyzedNode, key: 'name', _default?: string): string | undefined;
     public read(node: AnalyzedNode, key: 'handlerOf', _default?: JsxExpression[]): JsxExpression[] | undefined;
-    public read(node: AnalyzedNode, key: 'handler', _default: FuncDefinition): FuncDefinition;
+    public read(node: AnalyzedNode, key: 'handler', _default?: FuncDefinition): FuncDefinition;
     public read<T = any>(node: AnalyzedNode, key: string, _default?: T | undefined): T | undefined {
         const nodeData = this._data.get(node);
         return nodeData && key in nodeData
