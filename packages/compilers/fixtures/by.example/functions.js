@@ -33,7 +33,7 @@ export class NamedFunction extends Component {
 
 NamedFunction.factory = {
     toString: (__0, $s) => {
-        const $v = NamedFunction.prototype.$preRender(__0, $s);
+        const $v = TSXAir.runtime.toStringPreRender(NamedFunction, __0, $s);
         return `<div><!-- getDisplayedStr('param') -->${
             NamedFunction.prototype._getDisplayedStr(undefined, $s, $v, 'param')
             }<!-- --></div>`;

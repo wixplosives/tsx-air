@@ -45,7 +45,7 @@
             "name": "compilers",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
-                "packages/compilers/**/*.test.ts?(x)",
+                "packages/compilers/**/*.it.ts?(x)",
                 "--timeout",
                 "999999"
             ],

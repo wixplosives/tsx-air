@@ -41,7 +41,7 @@ export class WithVolatile extends Component {
 
 WithVolatile.factory = {
     toString: (__0, $s) => {
-        const $v = WithVolatile.prototype.$preRender(__0, $s);
+        const $v =  TSXAir.runtime.toStringPreRender(WithVolatile, __0, $s)
         const { store1 } = $s;
         let { vol } = $v;
         return `<div><!-- store1.a -->${store1.a}<!-- --> <!-- vol -->${vol}<!-- --></div>`;

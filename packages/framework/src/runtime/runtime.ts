@@ -4,11 +4,18 @@ import cloneDeep from 'lodash/cloneDeep';
 import { RuntimeCycle } from './stats';
 
 type Mutator = (obj: any) => number;
-type StateMutator<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State> ? (state: State) => number : never;
-type PropsMutator<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State> ? (props: Props) => number : never;
-type PropMutation<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State> ? [Comp, PropsMutator<Props>] : never;
-type StateMutation<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State> ? [Comp, StateMutator<State>] : never;
-
+type StateMutator<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State>
+    ? (state: State) => number
+    : never;
+type PropsMutator<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State>
+    ? (props: Props) => number
+    : never;
+type PropMutation<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State>
+    ? [Comp, PropsMutator<Props>]
+    : never;
+type StateMutation<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State>
+    ? [Comp, StateMutator<State>]
+    : never;
 
 const flags = {
     preRender: 1 << 63
@@ -20,31 +27,46 @@ export class Runtime {
     public $stats = [] as RuntimeCycle[];
 
     private pending: {
-        props: Array<PropMutation<Component>>,
-        states: Array<StateMutation<Component>>,
-        requested: Map<Component, IterableIterator<void>>
+        props: Array<PropMutation<Component>>;
+        states: Array<StateMutation<Component>>;
+        requested: Map<Component, IterableIterator<void>>;
     } = {
-            props: [], states: [],
-            requested: new Map()
-        };
+        props: [],
+        states: [],
+        requested: new Map()
+    };
 
+    private ignoreStateChanges = new Set<Component>();
     private viewUpdatePending: boolean = false;
 
     public $tick = (fn: FrameRequestCallback) => window.requestAnimationFrame(fn);
-
-    public updateProps<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(instance: Comp, mutator: PropsMutator<Comp>) {
+    public execute<Comp extends Component>(instance: Comp, method: (...args: any[]) => any, ...args: any[]) {
+        const volatile = this.preRender(instance, instance.props, instance.state);
+        return method.apply(instance, [instance.props, instance.state, volatile, ...args]);
+    }
+    public updateProps<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
+        instance: Comp,
+        mutator: PropsMutator<Comp>
+    ) {
         // @ts-ignore
         this.pending.props.push([instance, mutator]);
         this.triggerViewUpdate();
     }
 
-    public updateState<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>
-        (instance: Comp|typeof globalThis, localState: State, mutator: StateMutator<Comp>) {
-        mutator(localState);
-        if (instance !== globalThis) {
+    public updateState<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
+        instance: Comp,
+        localState: State,
+        mutator: StateMutator<Comp>
+    ) {
+        if (this.ignoreStateChanges.has(instance)) {
+            return;
+        }
+        if (!this.isMockComponent(instance)) {
             // @ts-ignore
             this.pending.states.push([instance, mutator]);
             this.triggerViewUpdate();
+        } else {
+            mutator(localState);
         }
     }
 
@@ -60,12 +82,37 @@ export class Runtime {
         return factory.hydrate(compHtml, props, safeState);
     }
 
+    public preRender<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
+        instance: Comp,
+        props: Props,
+        state: State,
+        changeState = false
+    ) {
+        changeState || this.ignoreStateChanges.add(instance);
+        const v: object = instance.$preRender(props || instance.props, state || instance.state);
+        changeState || this.ignoreStateChanges.delete(instance);
+        return v;
+    }
+
+    public toStringPreRender<Props, State>(compType: any, props: Props, state: State) {
+        // TODO: remove this hack after changing update state/props to be sync
+        const mockComp = { props, state };
+        this.ignoreStateChanges.add((mockComp as any) as Component);
+        const v = compType.prototype.$preRender.call(mockComp, props, state);
+        this.ignoreStateChanges.delete((mockComp as any) as Component);
+        return v;
+    }
+
+    private isMockComponent(instance: any) {
+        return !instance.$updateView;
+    }
+
     private mutate(
         mutator: Mutator,
         instance: Component,
         initialData: any,
         mutatedData: Map<Component, any>,
-        changeBitmasks: Map<Component, number>,
+        changeBitmasks: Map<Component, number>
     ) {
         if (!mutatedData.has(instance)) {
             mutatedData.set(instance, cloneDeep(initialData));
@@ -113,9 +160,9 @@ export class Runtime {
             ];
             let [newProps, newState] = getNew();
 
-            let volatile: any = {};
+            let volatile: any = null;
             for (let i = 0; i < (updatesCount.get(instance) || 0); i++) {
-                volatile = instance.$preRender ? instance.$preRender(newProps, newState) : {};
+                volatile = this.preRender(instance, newProps, newState, !volatile);
                 this.runAllMutations(changeBitmasks, updatesCount, latestProps, latestStates);
                 [newProps, newState] = getNew();
             }
@@ -141,7 +188,7 @@ export class Runtime {
         if (changed.size > 0) {
             this.$tick(() => {
                 changed.forEach(i => {
-                    const req = this.pending.requested.get(i) || i.$afterUpdate && i.$afterUpdate();
+                    const req = this.pending.requested.get(i) || (i.$afterUpdate && i.$afterUpdate());
                     if (req && !req.next().done) {
                         this.pending.requested.set(i, req);
                     } else {

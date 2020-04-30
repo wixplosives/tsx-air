@@ -52,7 +52,7 @@ describe('generateToString', () => {
 
         expect(withFuncitonCalls.toString()).
             to.be.eqlCode(`(props, $s) => {
-                const $v =  WithVolatileFunction.prototype.$preRender(props, $s);
+                const $v =  TSXAir.runtime.toStringPreRender(WithVolatileFunction, props, $s);
                 return \`<div><!-- someFunc('const') -->\${WithVolatileFunction.prototype._someFunc(props, $s, $v, 'const')}<!-- --></div>\`;
             };`);
     });

@@ -24,24 +24,24 @@ export function suite(api: ExampleSuiteApi) {
         it('should respond to buttons being clicked', async () => {
             const page = await api.afterLoading;
             const [buttonA, buttonB] = await page.$$('.btn');
-            const pressA = 4;
-            const pressB = 4;
-            for (let i = 0; i < pressA; i++) {
+            const clickA = 4;
+            const clickB = 4;
+            for (let i = 0; i < clickA; i++) {
                 await buttonA.click();
             }
-            for (let i = 0; i < pressB; i++) {
+            for (let i = 0; i < clickB; i++) {
                 await buttonB.click();
             }
             await page.waitFor(50);
             await htmlMatch(buttonA, {
-                textContent: 'ButtonA' + repeat('!', pressA)
+                textContent: `Button A (${clickA})`
             });
             await htmlMatch(buttonB, {
-                textContent: 'ButtonB' + repeat('*', pressB)
+                textContent: `Button B (${clickB})`
             });
             await htmlMatch(page, {
                 cssQuery: '.changeCount',
-                textContent: `state changed ${pressA + pressB + 1} times`
+                textContent: `state changed ${clickA + clickB + 1} times`
             });
             await htmlMatch(page, {
                 cssQuery: '.volatile',

@@ -50,8 +50,8 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
     const volatile = cConst(
         VOLATILE,
         cCall(
-            [comp.name!, 'prototype', '$preRender'],
-            [ts.createIdentifier(propsParam ? comp.propsIdentifier || PROPS : '__0'), ts.createIdentifier(STATE)]
+            ['TSXAir', 'runtime', 'toStringPreRender'],
+            [ts.createIdentifier(comp.name!), ts.createIdentifier(propsParam ? comp.propsIdentifier || PROPS : '__0'), ts.createIdentifier(STATE)]
         )
     );
     return cArrow([propsParam, stateParams && STATE], [volatile, ...destructured, ts.createReturn(template)]);
@@ -61,7 +61,6 @@ export const jsxTextExpressionReplacer: (comp: CompDefinition) => AstNodeReplace
     const swapCalls = (exp: ts.JsxExpression): ts.Expression => {
         const toProto = (n: ts.Node) => {
             const clone = ts.getMutableClone(n);
-
             if (ts.isCallExpression(n)) {
                 const args: Array<ts.Identifier | ts.Expression> = getGenericMethodParams(
                     comp,
