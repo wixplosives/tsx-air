@@ -1,15 +1,15 @@
-import { parseValue } from '../parser';
-import { jsxToStringTemplate, jsxAttributeReplacer,  jsxAttributeNameReplacer } from './to-string-generator';
+import { parseValue, asAst } from '../parser';
+import { jsxToStringTemplate, jsxAttributeReplacer, jsxAttributeNameReplacer } from './to-string-generator';
 import ts from 'typescript';
 import { expect } from 'chai';
 import { analyze } from '../../analyzers';
 import { CompDefinition } from '../../analyzers/types';
-import { printAstText } from '../../dev-utils/print-ast';
+import { asCode } from '../../dev-utils/print-ast';
 
 describe('jsxToStringTemplate', () => {
     it('should return a the string of a jsx node if no replacers exist', () => {
         const ast = parseValue(`<div>gaga</div>`);
-        const res = printAstText(jsxToStringTemplate(ast as ts.JsxElement, []));
+        const res = asCode(jsxToStringTemplate(ast as ts.JsxElement, []));
         expect(res).to.equal('`<div>gaga</div>`');
     });
     it('should replace to template string expressions according to visitors', () => {
@@ -29,43 +29,52 @@ describe('jsxToStringTemplate', () => {
 
 describe('replace attribute expression', () => {
     it('should replace jsx attributes and leave other jsx expressions alone', () => {
-        const ast = parseValue(`TSXAir((props)=>{
+        const ast = asAst(`const Comp=TSXAir((props)=>{
             return <div id={props.shouldBeReplaced}>{props.shouldNotBeReplaced}</div>
-        })`);
+        })`, true);
 
-        const info = analyze(ast).tsxAir as CompDefinition;
+        const info = analyze(
+            // @ts-ignore
+            ast.declarationList.declarations[0].initializer
+        ).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeReplacer]);
-        const res = printAstText(templateAst);
+        const res = asCode(templateAst);
         expect(res).to.equal('`<div id="${props.shouldBeReplaced}">{props.shouldNotBeReplaced}</div>`');
     });
 });
 
 describe('replace attribute name', () => {
     it('should replace jsx attribute names in native elements', () => {
-        const ast = parseValue(`TSXAir((props)=>{
+        const ast = asAst(`let A=TSXAir((props)=>{
             return <div className="gaga"></div>
-        })`);
+        })`, true);
 
-        const info = analyze(ast).tsxAir as CompDefinition;
+        const info = analyze(
+            // @ts-ignore
+            ast.declarationList.declarations[0].initializer
+        ).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeNameReplacer]);
-        const res = printAstText(templateAst);
+        const res = asCode(templateAst);
         expect(res).to.equal('`<div class="gaga"></div>`');
     });
 
     it('should not replace attribute names for components', () => {
-        const ast = parseValue(`TSXAir((props)=>{
+        const ast = asAst(`let Comp = TSXAir((props)=>{
             return <Comp className="gaga"></Comp>
-        })`);
+        })`, true);
 
-        const info = analyze(ast).tsxAir as CompDefinition;
+        const info = analyze(
+            // @ts-ignore
+            ast.declarationList.declarations[0].initializer
+        ).tsxAir as CompDefinition;
         const jsxRootInfo = info.jsxRoots[0];
 
         const templateAst = jsxToStringTemplate(jsxRootInfo.sourceAstNode as ts.JsxElement, [jsxAttributeNameReplacer]);
-        const res = printAstText(templateAst);
+        const res = asCode(templateAst);
         expect(res).to.equal('`<Comp className="gaga"></Comp>`');
     });
 });

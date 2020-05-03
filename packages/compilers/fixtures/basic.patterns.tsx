@@ -29,3 +29,9 @@ export const DynamicAttributes = TSXAir((props: { a: string }) =>
 
 export const DynamicAttributesSelfClosing = TSXAir((props: { a: string }) =>
     <div dir={'ltr'} lang={props.a} />);
+
+export const WithVolatile = TSXAir((props: { a: number }) => {
+    let b = props.a;
+    b++;
+    return <div>{b}</div>;
+});

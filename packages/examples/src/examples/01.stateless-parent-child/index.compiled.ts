@@ -12,7 +12,7 @@ export class ParentComp extends Component<ParentCompCtx, ParentCompProps> {
         'props.name': 1 << 0
     };
 
-    public $$processUpdate(newProps: ParentCompProps, _: {}, changeMap: number): void {
+    public $updateView(newProps: ParentCompProps, _stores:{}, _volatile:{}, changeMap: number): void {
         if (changeMap & ParentComp.changeBitmask['props.name']) {
             this.context.text1.textContent = newProps.name;
             runtime.updateProps(this.context.childComp1 as ChildComp, (p: ParentCompProps) => {
@@ -29,12 +29,12 @@ ParentComp.factory = {
       Parent: <!-- start props.name -->${props.name}<!-- end props.name -->
       ${ChildComp.factory.toString(props)}
     </div>`,
-    hydrate: (root, props) => new ParentComp(
+    hydrate: (root, props, state) => new ParentComp(
         {
             root,
             text1: root.childNodes[2],
             childComp1: ChildComp.factory.hydrate(root.children[0] as HTMLElement, props)
-        }, props, {}),
+        }, props, state!),
     initialState: (_: any) => ({})
 };
 
@@ -48,7 +48,7 @@ export class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
         'props.name': 1 << 0
     };
 
-    public $$processUpdate(newProps: ChildCompProps, _: {}, changeMap: number): void {
+    public $updateView(newProps: ChildCompProps, _stores:{}, _volatile:{}, changeMap: number): void {
         if (changeMap & ChildComp.changeBitmask['props.name']) {
             this.context.text1.textContent = newProps.name;
         }
@@ -58,9 +58,9 @@ export class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
 ChildComp.factory = {
     unique: Symbol('ChildComp'),
     toString: (props: { name: string }) => `<div class="child">Child: <!-- start props.name -->${props.name}<!-- end props.name --></div>`,
-    hydrate: (root, props) => new ChildComp({
+    hydrate: (root, props, $s) => new ChildComp({
         root,
         text1: root.childNodes[2] as Text,
-    }, props, {}),
+    }, props, $s!),
     initialState: (_: any) => ({})
 };

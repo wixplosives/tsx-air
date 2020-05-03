@@ -6,9 +6,6 @@ import { scan } from '../ast-utils/scanner';
 export const exportStatement: Analyzer<ReExport> = sourceAstNode => {
     if (ts.isExportDeclaration(sourceAstNode) && sourceAstNode.moduleSpecifier) {
         const module = sourceAstNode.moduleSpecifier.getText();
-        if (module === 'as') {
-            return errorNode(sourceAstNode, 'Export * as xxx statements are not supported by typescript', 'not supported yet');
-        }
         const specifiers = scan(sourceAstNode, namedExports);
         const specifiersInfo = filterResults(specifiers);
 

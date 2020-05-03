@@ -34,9 +34,11 @@ export const cProperty = (name: string, initializer: ts.Expression | undefined) 
 export function cMethod(name: string, params:
     Array<string | ts.ObjectBindingPattern | undefined>
     | ts.NodeArray<ts.ParameterDeclaration>,
-    body: ts.Block | ts.Statement[]): ts.MethodDeclaration {
+    body: ts.Block | ts.Statement[], asStatic = false): ts.MethodDeclaration {
     const { _params, _body } = _cFunc(params, body);
-    return ts.createMethod(undefined, undefined, undefined, name,
+    return ts.createMethod(undefined, asStatic
+        ? [ts.createModifier(ts.SyntaxKind.StaticKeyword)]
+        : undefined, undefined, name,
         undefined, undefined, _params, undefined, _body);
 }
 

@@ -10,8 +10,7 @@ describe('TSXAir component analyzer: functions', () => {
                 return <div>{
                     props.images.map(src=><img alt={props.alt} src={src}/>)
                     }</div>
-            });`
-        );
+            });`);
 
         expect(comp.jsxRoots).to.have.length(1);
         expect(comp.functions.length).to.eql(2);
@@ -29,6 +28,19 @@ describe('TSXAir component analyzer: functions', () => {
                     log: {}
                 }
             },
+            executed: {
+                console: {
+                    log: {}
+                }
+            },
+            read: {
+                props: {
+                    message: {}
+                },
+                console: {
+                    log: {}
+                }
+            },
             defined: {},
             modified: {}
         });
@@ -36,7 +48,9 @@ describe('TSXAir component analyzer: functions', () => {
         expect(aRepeater.jsxRoots.length).to.eql(1);
         expect(aRepeater.variables).to.eql({
             accessed: {},
+            read: {},
             defined: { src: {} },
+            executed: {},
             modified: {}
         });
         expect(aRepeater.aggregatedVariables).to.eql({
@@ -46,7 +60,14 @@ describe('TSXAir component analyzer: functions', () => {
                     alt: {}
                 }
             },
+            read: {
+                src: {},
+                props: {
+                    alt: {}
+                }
+            },
             defined: { src: {} },
+            executed: {},
             modified: {}
         });
     });

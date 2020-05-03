@@ -8,8 +8,8 @@ describe('loadSuite', () => {
     });
 
     it('should load a test suite of an example', ()=>{
-        const suite = loadSuite('01.stateless-parent-child');
-        expect(suite.path).to.equal(join(__dirname, '../../examples/src/examples', '01.stateless-parent-child'));
+        const suite = loadSuite('01.stateless-parent-child');        
+        expect(suite.path.toLowerCase()).to.equal(join(__dirname, '../../examples/src/examples', '01.stateless-parent-child').toLowerCase());
         expect(suite.suite).to.be.a('function');
     });
 });

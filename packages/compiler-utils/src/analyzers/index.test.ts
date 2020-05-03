@@ -1,3 +1,4 @@
+import { asAst } from './../ast-utils/parser';
 import { expect } from 'chai';
 import { analyze } from '.';
 import { parseValue, asSourceFile } from '../ast-utils/parser';
@@ -34,18 +35,27 @@ describe('analyze', () => {
 
     describe('valid input node identification', () => {
         it('should identify TsxAir component definition', () => {
-            const ast = parseValue('TSXAir(() => <div>TsxAir Component</div>))');
-            const result = analyze(ast).tsxAir;
+            const ast = asAst('const Comp=TSXAir(() => <div>TsxAir Component</div>)', true);
+            const result = analyze(
+                // @ts-ignore
+                ast.declarationList.declarations[0].initializer
+            ).tsxAir;
             expect(result.kind).to.equal('CompDefinition');
         });
     });
 
     describe('astToTsxAir', () => {
         it('should collect all referenced AST nodes', () => {
-            const ast = parseValue(`TSXAir(() => <div>TsxAir Component{'with expression'}</div>))`);
-            const { tsxAir, astToTsxAir } = analyze(ast);
+            const ast = asAst(`const Comp=TSXAir(() => <div>TsxAir Component{'with expression'}</div>)`, true);
+            const { tsxAir, astToTsxAir } = analyze(
+                // @ts-ignore
+                ast.declarationList.declarations[0].initializer
+            );
             expect(astToTsxAir.size).to.equal(3);
-            expect(astToTsxAir.get(ast)).to.deep.equal([tsxAir]);
+            expect(astToTsxAir.get(
+                // @ts-ignore
+                ast.declarationList.declarations[0].initializer
+            )).to.deep.equal([tsxAir]);
             const jsxRoot = (tsxAir as CompDefinition).jsxRoots[0];
             expect(astToTsxAir.get(jsxRoot.sourceAstNode)).to.deep.equal([jsxRoot]);
             const expression = jsxRoot.expressions[0];

@@ -1,30 +1,42 @@
 import { expect } from 'chai';
 import { getCompDef } from './test.helpers';
+// tslint:disable: no-unused-expression
 
 describe('TSXAir component definition', () => {
     describe('invalid calls', () => {
-        it('should return error for non-function args', () => {
-            const [noArgs, tooManyArgs, argNotAFunction] = [`TSXAir()`, `TSXAir(()=>(<div/>), 0)`, `TSXAir('not a function')`]
-                .map(getCompDef).map(i => i.comp);
-
-            [noArgs, tooManyArgs, argNotAFunction].forEach(invalidComp =>
-                expect(invalidComp).to.deep.include({
-                    kind: 'error',
-                    errors: [{
-                        message: 'TSXAir must be called with a single (function) argument',
-                        type: 'code'
-                    }]
-                }));
+        it('should return error for invalid TSXAir calls', () => {
+            const expected = {
+                kind: 'error',
+                errors: [{
+                    message: 'TSXAir must be called with a single (function) argument',
+                    type: 'code'
+                }]
+            };
+            expect(getCompDef(`const A=TSXAir()`).comp).to.deep.include(expected);
+            expect(getCompDef(`const A=TSXAir(()=>(<div/>), 'Extra argument')`).comp).to.deep.include(expected);
+            expect(getCompDef(`const A=TSXAir('not a function')`).comp).to.deep.include(expected);
+        });
+        it('should return error for invalid names', () => {
+            const expected = {
+                kind: 'error',
+                errors: [{
+                    message: `Components name must start with a capital letter`,
+                    type: 'code'
+                }]
+            };
+            expect(getCompDef(`const Valid=TSXAir(()=>(<div/>))`).comp.errors).to.be.undefined;
+            expect(getCompDef(`const a=TSXAir(()=>(<div/>))`).comp).to.deep.include(expected);
+            expect(getCompDef(`TSXAir(()=>(<div/>))`).comp).to.deep.include(expected);
         });
     });
 
     describe('trivial component', () => {
         it('should return a CompDefinition with no propsIdentifier', () => {
-            const { comp, tsxairNode } = getCompDef(`TSXAir(props => (<div />))`);
+            const { comp, tsxairNode } = getCompDef(`const A=TSXAir(props => (<div />))`);
             expect(comp).to.deep.include({
                 kind: 'CompDefinition',
                 propsIdentifier: undefined,
-                name: undefined,
+                name: 'A',
                 sourceAstNode: tsxairNode
             });
         });
@@ -52,6 +64,18 @@ describe('TSXAir component definition', () => {
                 propsIdentifier: 'props',
                 sourceAstNode: tsxairNode
             });
+        });
+
+        it('analyzes volatile variables', () => {
+            const { comp } = getCompDef(`const Comp = TSXAir(props => {
+                var a=3;
+                var b = props.c + a;
+                var c = {d:b};
+                const d = () => void 0;
+                function e(){}
+                return <div />;
+            })`);
+            expect(comp.volatileVariables).to.eql(['a', 'b', 'c', 'd', 'e']);
         });
     });
 });

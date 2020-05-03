@@ -9,7 +9,6 @@ export const cFunction = (params: string[], statements: ts.Statement[]) => {
 
 export const cParams = (params: string[]) => params.map(val => ts.createParameter(undefined, undefined, undefined, val));
 
-
 export const cCall = (callPath: string[], args: ts.Expression[]) => {
     let identifier: ts.Expression = ts.createIdentifier(callPath[0]);
     for (let i = 1; i < callPath.length; i++) {
@@ -19,7 +18,27 @@ export const cCall = (callPath: string[], args: ts.Expression[]) => {
     return ts.createCall(cAccess(...callPath), undefined, args);
 };
 
-export const cArrow = (params: Array<string | ts.ObjectBindingPattern | undefined>, body: ts.ConciseBody | ts.Statement[]) => {
+export const cArrow = (
+    params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>, body: ts.ConciseBody | ts.Statement[]) => {
     const { _params, _body } = _cFunc(params, body as ts.Expression);
     return ts.createArrowFunction(undefined, undefined, _params, undefined, undefined, _body);
 };
+
+export const cSpreadParams = (name: string) =>
+    ts.createParameter(
+        undefined,
+        undefined,
+        ts.createToken(ts.SyntaxKind.DotDotDotToken),
+        ts.createIdentifier(name));
+
+
+export function cReturnLiteral(keys: string[]): ts.ReturnStatement {
+    return ts.createReturn(ts.createObjectLiteral(
+        [...keys.values()].map(
+            v => ts.createShorthandPropertyAssignment(
+                ts.createIdentifier(v),
+                undefined
+            )
+        ),
+        false));
+}

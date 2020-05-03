@@ -37,6 +37,7 @@ export const basicPatterns = () => {
         EventListener: cache[5],
         DynamicAttributes: cache[6],
         DynamicAttributesSelfClosing: cache[7],
+        WithVolatile: cache[8],
     };
 };
 
@@ -45,6 +46,11 @@ export const functions = () => {
     fcache = fcache || analyzeFixtureComponents(`functions.tsx`);
     return {
         WithStateChangeOnly: fcache[0],
-        WithNonStateChangingCode: fcache[1]
+        WithNonStateChangingCode: fcache[1],
+        WithVolatileVars: fcache[2],
+        WithVolatileFunction: fcache[3],
+        ValidFunctionUse: fcache[4],
+        InvalidFunctionUse: fcache[5],
+
     };
 };

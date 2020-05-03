@@ -1,11 +1,11 @@
 import { cObject, cIf, CompDefinition } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import sortBy from 'lodash/sortBy';
-import { accessedVars } from './helpers';
+import { readVars } from './helpers';
 
 export const generateChangeBitMask = (comp: CompDefinition) => {
     const fields: Record<string, ts.BinaryExpression> = {};
-    const vars = accessedVars(comp);
+    const vars = readVars(comp);
     sortBy(vars).forEach((name, index) => {
         fields[name] = ts.createBinary(ts.createNumericLiteral('1'),
             ts.SyntaxKind.LessThanLessThanToken,

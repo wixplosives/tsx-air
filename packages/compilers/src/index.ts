@@ -1,8 +1,8 @@
 import astBasedCompiler from './ast-based-compiler';
-import stringBasedCompiler from './string-based-compiler';
+// import stringBasedCompiler from './string-based-compiler';
 
-export { astBasedCompiler, stringBasedCompiler};
+export { astBasedCompiler,};
 export const transformerCompilers = [
      astBasedCompiler,
-     stringBasedCompiler
+     // stringBasedCompiler
     ];

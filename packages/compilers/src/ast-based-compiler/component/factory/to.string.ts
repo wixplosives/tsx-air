@@ -1,44 +1,109 @@
-import { propsAndStateParams } from '../helpers';
-import { cArrow, jsxToStringTemplate, jsxAttributeNameReplacer, jsxAttributeReplacer, JsxRoot, CompDefinition, isComponentTag, cCall, cObject, AstNodeReplacer, cloneDeep, jsxSelfClosingElementReplacer, jsxEventHandlerRemover, printAst } from '@tsx-air/compiler-utils';
+import { getGenericMethodParams, destructureState, destructureVolatile, usedInScope } from '../helpers';
+import {
+    cArrow,
+    jsxToStringTemplate,
+    jsxAttributeNameReplacer,
+    jsxAttributeReplacer,
+    JsxRoot,
+    CompDefinition,
+    isComponentTag,
+    cCall,
+    cObject,
+    AstNodeReplacer,
+    cloneDeep,
+    jsxSelfClosingElementReplacer,
+    jsxEventHandlerRemover,
+    printAst,
+    asCode,
+    cConst,
+    findUsedVariables
+} from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { extractPreRender } from '../function';
+import { VOLATILE, STATE, PROPS } from '../../consts';
+import { chain } from 'lodash';
+import isEqual from 'lodash/isEqual';
 
 export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
-    const preRender = extractPreRender(comp, true);
     const template = jsxToStringTemplate(node.sourceAstNode, [
         jsxComponentReplacer,
         jsxEventHandlerRemover,
-        jsxTextExpressionReplacer,
+        jsxTextExpressionReplacer(comp),
         jsxAttributeReplacer,
         jsxAttributeNameReplacer,
-        jsxSelfClosingElementReplacer,
+        jsxSelfClosingElementReplacer
     ]);
-    return cArrow(propsAndStateParams(comp),
-        preRender?.length
-            ? [...preRender, ts.createReturn(template)]
-            : template);
+
+    // TODO fix jsxToStringTemplate
+    const usedVars = usedInScope(comp, node.aggregatedVariables, true);
+    const hasCompMethodCalls = chain(node.aggregatedVariables.executed)
+        .values()
+        .some(v => isEqual(v, {}))
+        .value();
+    const [propsParam, stateParams] = getGenericMethodParams(comp, node.aggregatedVariables, true, !hasCompMethodCalls);
+    if (!usedVars.volatile && !hasCompMethodCalls) {
+        return cArrow([propsParam, stateParams], template);
+    }
+
+    const destructured = [destructureState(usedVars), destructureVolatile(usedVars)].filter(
+        i => i
+    ) as ts.VariableStatement[];
+    const volatile = cConst(
+        VOLATILE,
+        cCall(
+            ['TSXAir', 'runtime', 'toStringPreRender'],
+            [ts.createIdentifier(comp.name!), ts.createIdentifier(propsParam ? comp.propsIdentifier || PROPS : '__0'), ts.createIdentifier(STATE)]
+        )
+    );
+    return cArrow([propsParam, stateParams && STATE], [volatile, ...destructured, ts.createReturn(template)]);
 };
 
-export const jsxTextExpressionReplacer: AstNodeReplacer =
-    node => ts.isJsxExpression(node) &&
-        !ts.isJsxAttribute(node.parent) &&
-    {
-        prefix: `<!-- ${node.expression ? printAst(node.expression) : 'empty expression'} -->`,
-        expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
-        suffix: `<!-- -->`
+export const jsxTextExpressionReplacer: (comp: CompDefinition) => AstNodeReplacer = comp => node => {
+    const swapCalls = (exp: ts.JsxExpression): ts.Expression => {
+        const toProto = (n: ts.Node) => {
+            const clone = ts.getMutableClone(n);
+            if (ts.isCallExpression(n)) {
+                const args: Array<ts.Identifier | ts.Expression> = getGenericMethodParams(
+                    comp,
+                    findUsedVariables(n),
+                    true,
+                    false
+                ).map(u => (u ? ts.createIdentifier(u as string) : ts.createIdentifier('undefined')));
+                n.arguments.forEach(a => args.push(cloneDeep(a)));
+                return cCall([comp.name, 'prototype', `_${asCode(n.expression)}`], args);
+            }
+            clone.forEachChild(toProto);
+            return clone;
+        };
+        return toProto(exp) as ts.Expression;
     };
 
-export const jsxComponentReplacer: AstNodeReplacer =
-    node => {
-        if ((ts.isJsxElement(node) && isComponentTag(node.openingElement.tagName)) ||
-            (ts.isJsxSelfClosingElement(node) && isComponentTag(node.tagName))) {
-            const openingNode = ts.isJsxElement(node) ? node.openingElement : node;
-            const tagName = printAst(openingNode.tagName);
+    if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
+        const expression = node.expression ? swapCalls(node.expression as ts.JsxExpression) : ts.createTrue();
 
-            return {
-                expression: cCall([tagName, 'factory', 'toString'],
-                    [
-                        cObject(openingNode.attributes.properties.reduce((accum, prop) => {
+        return {
+            prefix: `<!-- ${node.expression ? asCode(node.expression) : 'empty expression'} -->`,
+            expression,
+            suffix: `<!-- -->`
+        };
+    } else {
+        return false;
+    }
+};
+
+export const jsxComponentReplacer: AstNodeReplacer = node => {
+    if (
+        (ts.isJsxElement(node) && isComponentTag(node.openingElement.tagName)) ||
+        (ts.isJsxSelfClosingElement(node) && isComponentTag(node.tagName))
+    ) {
+        const openingNode = ts.isJsxElement(node) ? node.openingElement : node;
+        const tagName = printAst(openingNode.tagName);
+
+        return {
+            expression: cCall(
+                [tagName, 'factory', 'toString'],
+                [
+                    cObject(
+                        openingNode.attributes.properties.reduce((accum, prop) => {
                             if (ts.isJsxSpreadAttribute(prop)) {
                                 throw new Error('spread in attributes is not handled yet');
                             }
@@ -54,9 +119,11 @@ export const jsxComponentReplacer: AstNodeReplacer =
                                 accum[name] = cloneDeep(initializer);
                             }
                             return accum;
-                        }, {} as Record<string, any>))
-                    ]),
-            };
-        }
-        return false;
-    };
+                        }, {} as Record<string, any>)
+                    )
+                ]
+            )
+        };
+    }
+    return false;
+};

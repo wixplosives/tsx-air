@@ -1,7 +1,7 @@
 import { Visitor } from '../ast-utils/scanner';
 import ts from 'typescript';
 import { isTsJsxRoot } from '../analyzers/types.is.type';
-import { printAstText } from '..';
+import { asCode } from '..';
 
 export const findJsxRoot: Visitor = (node, { ignoreChildren }) => {
     if (
@@ -27,10 +27,10 @@ export const findJsxNode: Visitor = node => {
 export const getComponentTag = (node: ts.Node) => {
     let tag = '';
     if (ts.isJsxElement(node)) {
-        tag = printAstText(node.openingElement.tagName);
+        tag = asCode(node.openingElement.tagName);
     }
     if (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) {
-        tag = printAstText(node.tagName);
+        tag = asCode(node.tagName);
     }
 
     return (tag && tag.match(/[A-Z].*/)) ? tag : undefined;

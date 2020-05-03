@@ -12,10 +12,10 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
         'props.imageLoaded': 1 << 2,
     };
 
-    public $$processUpdate(newProps: ThumbProps, newState: ThumbState, changeMap: number): void {
+    public $updateView(newProps: ThumbProps, newState: ThumbState, _:any, changeMap: number): void {
         runtimeUtils.handleChanges(Thumb.changeBitmask, new Map([
             ['props.url', () => {
-                runtime.updateState(this as Thumb, (state: ThumbState) => {
+                runtime.updateState(this as Thumb, {}, (state: ThumbState) => {
                     state.imageLoaded = false;
                     return Thumb.changeBitmask['props.imageLoaded'];
                 });
@@ -48,7 +48,7 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
     }
 
     public $afterMount() {
-        this.context.img1.onload = () => runtime.updateState(this as Thumb, (s: ThumbState) => {
+        this.context.img1.onload = () => runtime.updateState(this as Thumb, {}, (s: ThumbState) => {
             s.imageLoaded = true;
             return Thumb.changeBitmask['props.imageLoaded'];
         });

@@ -298,7 +298,7 @@ interface DOMAttributes<T> {
     // MouseEvents
     onAuxClick?: NativeEventHandler<T, MouseEvent>;
     onAuxClickCapture?: NativeEventHandler<T, MouseEvent>;
-    onClick?: NativeEventHandler<T, MouseEvent> | true;
+    onClick?: NativeEventHandler<T, MouseEvent>;
     onClickCapture?: NativeEventHandler<T, MouseEvent>;
     onContextMenu?: NativeEventHandler<T, MouseEvent>;
     onContextMenuCapture?: NativeEventHandler<T, MouseEvent>;

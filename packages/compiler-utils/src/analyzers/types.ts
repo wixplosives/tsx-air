@@ -75,7 +75,7 @@ export interface ReExport extends AnalyzedNode<ts.ExportDeclaration> {
 export interface FuncDefinition extends NodeWithVariables<ts.FunctionExpression | ts.ArrowFunction> {
     kind: 'funcDefinition';
     name?: string;
-    arguments?: string[];
+    arguments: string[];
     jsxRoots: JsxRoot[];
     definedFunctions: FuncDefinition[];
 }
@@ -87,11 +87,12 @@ export interface StoreDefinition extends Namespace {
 
 export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     kind: 'CompDefinition';
-    name?: string;
+    name: string;
     propsIdentifier?: string;
     jsxRoots: JsxRoot[];
     functions: FuncDefinition[];
     stores: StoreDefinition[];
+    volatileVariables: string[];
 }
 
 export interface Namespace extends NodeWithVariables<ts.ParameterDeclaration | ts.VariableDeclaration> {
@@ -143,8 +144,11 @@ export interface RecursiveMap {
     [key: string]: RecursiveMap;
 }
 
-export interface UsedVariables extends RecursiveMap {
+export const func:RecursiveMap = {};
+export interface UsedVariables {
+    read: RecursiveMap;
     accessed: RecursiveMap;
     modified: RecursiveMap;
     defined: RecursiveMap;
+    executed: RecursiveMap;
 }

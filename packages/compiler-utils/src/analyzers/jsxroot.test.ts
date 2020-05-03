@@ -43,6 +43,12 @@ describe('TSXAir component analyzer: Jsx', () => {
                             expression: {}
                         }
                     },
+                    read:{
+                        props: {
+                            expression: {}
+                        }
+                    },
+                    executed:{},
                     defined: {},
                     modified: {}
                 };
@@ -50,7 +56,7 @@ describe('TSXAir component analyzer: Jsx', () => {
                 expect(expression.variables, 'expression access not found').to.eql(expectedUsedVars);
                 expect(expression.aggregatedVariables, 'expression access not found').to.eql(expectedUsedVars);
                 expect(comp.aggregatedVariables, 'expression access is aggregated').to.eql({ ...expectedUsedVars, defined: { props: {} } });
-                expect(comp.variables, 'comp has only one variable (defines props)').to.eql({ accessed: {}, defined: { props: {} }, modified: {} });
+                expect(comp.variables, 'comp has only one variable (defines props)').to.eql({ accessed: {}, read:{}, defined: { props: {} }, modified: {}, executed:{} });
             });
 
             it('should aggregate defined and used variable', () => {
@@ -59,20 +65,29 @@ describe('TSXAir component analyzer: Jsx', () => {
                 return <div>{props.expression0}{props.expression1}</div>;})`);
 
                 expect(comp.variables, 'comp has only one variable (defines props)').to.eql({
+                    executed:{},
                     accessed: {
                         props: { wasModified: {} }
                     },
+                    read:{},
                     defined: { props: {} },
                     modified: {
                         props: { wasModified: {} }
                     }
                 });
                 expect(comp.aggregatedVariables).to.eql({
+                    executed:{},
                     accessed: {
                         props: {
                             expression0: {},
                             expression1: {},
                             wasModified: {}
+                        }
+                    },
+                    read: {
+                        props: {
+                            expression0: {},
+                            expression1: {},
                         }
                     },
                     defined: { props: {} },
@@ -95,6 +110,13 @@ describe('TSXAir component analyzer: Jsx', () => {
                             children: {}
                         }
                     },
+                    read: {
+                        props: {
+                            title: {},
+                            children: {}
+                        }
+                    },
+                    executed:{},
                     defined: {},
                     modified: {}
                 };
@@ -104,6 +126,12 @@ describe('TSXAir component analyzer: Jsx', () => {
                             children: {}
                         }
                     },
+                    read: {
+                        props: {
+                            children: {}
+                        }
+                    },
+                    executed:{},
                     defined: {},
                     modified: {}
                 };
@@ -123,7 +151,7 @@ describe('TSXAir component analyzer: Jsx', () => {
         });
 
         it('should find attributes with expressions', () => {
-            const { comp } = getCompDef(`TSXAir(props => (<span att="3" exp={props.name}>!</span>)`);
+            const { comp } = getCompDef(`const Comp=TSXAir(props => (<span att="3" exp={props.name}>!</span>)`);
             const prop = comp.jsxRoots[0].expressions[0];
 
             expect(prop).to.deep.include({
@@ -134,7 +162,7 @@ describe('TSXAir component analyzer: Jsx', () => {
         });
 
         it('should handle jsx text expressions trivial value', () => {
-            const { comp } = getCompDef(`TSXAir(props => (<span>{/* trivial expression */}</span>)`);
+            const { comp } = getCompDef(`const Comp=TSXAir(props => (<span>{/* trivial expression */}</span>)`);
 
             expect(comp.jsxRoots[0].expressions).to.eql([]);
         });

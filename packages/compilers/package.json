@@ -12,9 +12,16 @@
         "clean": "rimraf ./dist ./tmp",
         "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\"",
         "prebuild": "yarn clean",
-        "test": "mocha \"src/**/*.test.ts?(x)\""
+        "test": "yarn unit && yarn it",
+        "unit": "mocha \"src/**/*.test.ts?(x)\"",
+        "it":  "mocha \"src/**/*.it.ts\""
     },
     "files": [
-        "dist", "src"
-    ]
+        "dist",
+        "src"
+    ],
+    "devDependencies": {
+        "@types/sinon": "^7.5.2",
+        "sinon": "^9.0.0"
+    }
 }

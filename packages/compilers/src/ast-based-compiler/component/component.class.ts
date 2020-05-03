@@ -1,11 +1,13 @@
-import {  cClass, cObject, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
-import { createProcessUpdateMethod } from './process.update';
+import { cClass, cObject, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
+import { generateUpdateView } from './update.view';
 import { generateToString } from './factory/to.string';
 import { generateHydrate } from './factory/hydrate';
 import { generateInitialState } from './factory/initial.state';
 import { generateChangeBitMask } from './bitmask';
-import { eventHandlers } from './event.handlers';
 import { generateDomBindings } from '../../common/dom.binding';
+import { generatePreRender } from './prerender';
+import { generateMethods } from './function';
+import { generateAfterMount } from './event.handlers';
 
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
     const importedComponent = api.ensureImport('Component', '@tsx-air/framework');
@@ -18,11 +20,13 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
         cStatic('factory', cObject({
             toString: generateToString(info, comp),
             hydrate: generateHydrate(comp, binding),
-            initialState: generateInitialState(comp)
+            initialState: generateInitialState(comp),
         })),
         cStatic('changeBitmask', generateChangeBitMask(comp)),
-        createProcessUpdateMethod(comp, binding),
-        ...eventHandlers(comp, binding)
+        ...generateMethods(comp),
+        ...generateAfterMount(comp, binding),
+        ...generatePreRender(comp),
+        generateUpdateView(comp, binding),
     ]);
     return res;
 };

@@ -21,9 +21,9 @@ export interface BrowserifyOptions {
 export const browserifyPath = packagePath('@tsx-air/browserify');
 
 export async function browserify(options: BrowserifyOptions): Promise<string> {
-    const { base, entry, output, debug = false, configFilePath } = options;
+    const { base, entry, output,
+        debug = false, configFilePath } = options;
     const outDir = dirname(output);
-
     compile([join(base, entry)], options.compiler, join(outDir, 'src.js'));
     const files = (await nodeFs.promises.readdir(base)).filter(name => name.endsWith('.compiled.ts'));
     await Promise.all(
@@ -56,11 +56,9 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         },
         resolve: {
             extensions: ['.tsx', '.ts', '.js', '.jsx', '.json'],
-            plugins: [
-                new TsconfigPathsPlugin({
-                    configFile: join(browserifyPath, '..', '..', 'tsconfig.json')
-                })
-            ]
+            plugins: [new TsconfigPathsPlugin({
+                configFile: join(browserifyPath, '..', '..', 'tsconfig.json')
+            })]
         },
         performance: {
             hints: false
@@ -71,13 +69,13 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
     wp.outputFileSystem = createWebpackFs(nodeFs);
     // @ts-ignore
     const readFile = promisify(wp.outputFileSystem.readFile);
-    const run = promisify(wp.run).bind(wp);
+    const run = promisify(wp.run.bind(wp));
     // await baseRsConfig;
     // await tsConfig;
     const res = await run();
     if (res.hasErrors()) {
         throw new Error(`Error browserifying ${join(base, entry)}
-        ${res.toString()} `);
+        ${ res.toString()} `);
     }
     return (await readFile(output)).toString();
 }

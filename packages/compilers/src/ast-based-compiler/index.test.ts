@@ -1,6 +1,8 @@
 import { compileFixture, fixture } from '../test.helpers';
 import compiler from '.';
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import { chaiPlugin } from '@tsx-air/testing';
+use(chaiPlugin);
 
 describe('c-AST based compiler', () => {
     [
@@ -8,6 +10,7 @@ describe('c-AST based compiler', () => {
         'by.example/stateless',
         'by.example/stateful',
         'by.example/stateless.nested',
+        'by.example/functions',
         'by.example/event.handler'
     ].forEach(
         name => {
