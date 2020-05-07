@@ -44,9 +44,23 @@
 	"settings": {
 		"typescript.tsdk": "tsx-air/node_modules/typescript/lib",
 		"cSpell.words": [
+			"Bitmask",
+			"ESNEXT",
 			"Namepath",
 			"Unparsed",
-			"extendz"
-		]
+			"consts",
+			"destructure",
+			"destructured",
+			"downlevel",
+			"extendz",
+			"quotemark",
+			"sourcemap",
+			"tslib",
+			"typechecking"
+		],
+		"mochaExplorer.files": ["**/*.test.ts", "**/*.it.ts"]
+	},
+	"extensions": {
+		"recommendations": ["streetsidesoftware.code-spell-checker", "hbenl.vscode-test-explorer", "hbenl.vscode-mocha-test-adapter"]
 	}
 }

@@ -1,4 +1,4 @@
-import { getGenericMethodParams, destructureState, destructureVolatile, usedInScope } from '../helpers';
+import { getGenericMethodParams, destructureState, destructureVolatile, usedInScope, getGenericMethodParamsByUsedInScope } from '../helpers';
 import {
     cArrow,
     jsxToStringTemplate,
@@ -33,13 +33,12 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
         jsxSelfClosingElementReplacer
     ]);
 
-    // TODO fix jsxToStringTemplate
-    const usedVars = usedInScope(comp, node.aggregatedVariables, true);
+    const usedVars = usedInScope(comp, node.aggregatedVariables);
     const hasCompMethodCalls = chain(node.aggregatedVariables.executed)
         .values()
         .some(v => isEqual(v, {}))
         .value();
-    const [propsParam, stateParams] = getGenericMethodParams(comp, node.aggregatedVariables, true, !hasCompMethodCalls);
+    const [propsParam, stateParams] = getGenericMethodParamsByUsedInScope(usedVars, true, !hasCompMethodCalls);
     if (!usedVars.volatile && !hasCompMethodCalls) {
         return cArrow([propsParam, stateParams], template);
     }
@@ -103,22 +102,22 @@ export const jsxComponentReplacer: AstNodeReplacer = node => {
                 [tagName, 'factory', 'toString'],
                 [
                     cObject(
-                        openingNode.attributes.properties.reduce((accum, prop) => {
+                        openingNode.attributes.properties.reduce((acc, prop) => {
                             if (ts.isJsxSpreadAttribute(prop)) {
                                 throw new Error('spread in attributes is not handled yet');
                             }
                             const initializer = prop.initializer;
                             const name = printAst(prop.name);
                             if (!initializer) {
-                                accum[name] = ts.createTrue();
+                                acc[name] = ts.createTrue();
                             } else if (ts.isJsxExpression(initializer)) {
                                 if (initializer.expression) {
-                                    accum[name] = cloneDeep(initializer.expression);
+                                    acc[name] = cloneDeep(initializer.expression);
                                 }
                             } else {
-                                accum[name] = cloneDeep(initializer);
+                                acc[name] = cloneDeep(initializer);
                             }
-                            return accum;
+                            return acc;
                         }, {} as Record<string, any>)
                     )
                 ]

@@ -1,4 +1,6 @@
 import ts from 'typescript';
+import { UsedVariables, RecursiveMap } from '../analyzers/types';
+import { cloneDeepWith, omit } from 'lodash';
 
 export function printAst(n: ts.Node): string {
     const printer = ts.createPrinter({
@@ -31,3 +33,18 @@ export function printAstFullText(n: ts.Node): string {
     return printAst(n);
 }
 
+export const usedVarsWithTextRefs = (used: UsedVariables) => cloneDeepWith(used, (node: RecursiveMap) => {
+    if (node instanceof Array) {
+        return node.map(ast => asCode(ast));
+    } else {
+        return;
+    }
+}) as UsedVariables<string>;
+
+export const usedVarsWithoutRefs = (used: UsedVariables) => cloneDeepWith(used, (node: RecursiveMap) => {
+    if (node.refs instanceof Array) {
+        return omit(node, 'refs');
+    } else {
+        return;
+    }
+});

@@ -12,13 +12,8 @@ import flatMap from 'lodash/flatMap';
 import { VOLATILE, STATE } from '../consts';
 import { merge, chain } from 'lodash';
 
-export const getGenericMethodParams = (
-    comp: CompDefinition,
-    scope: UsedVariables,
-    includeVolatile = false,
-    deStructure = true
-) => {
-    const used = usedInScope(comp, scope);
+export const getGenericMethodParamsByUsedInScope = (used: UsedInScope, includeVolatile = false,
+    deStructure = true) => {
     const retValue = (usedKeys: RecursiveMap | undefined, name: string) => {
         if (usedKeys && Object.keys(usedKeys).length) {
             return deStructure ? destructure(usedKeys) : name;
@@ -28,8 +23,18 @@ export const getGenericMethodParams = (
 
     const volatile = includeVolatile ? retValue(used.volatile, VOLATILE) : undefined;
     const state = retValue(used.stores, STATE);
-    const props = used.props ? comp.propsIdentifier : undefined;
+    const props = chain(used.props).keys().first().value();
     return [props, state, volatile];
+}
+
+export const getGenericMethodParams = (
+    comp: CompDefinition,
+    scope: UsedVariables,
+    includeVolatile = false,
+    deStructure = true
+) => {
+    const used = usedInScope(comp, scope);
+    return getGenericMethodParamsByUsedInScope(used, includeVolatile, deStructure);
 };
 
 export interface UsedInScope {
@@ -38,12 +43,12 @@ export interface UsedInScope {
     volatile?: RecursiveMap;
 }
 
-export  const compFuncByName = (comp:CompDefinition, name: string) => comp.functions.find(f => f.name === name);
-     
+export const compFuncByName = (comp: CompDefinition, name: string) => comp.functions.find(f => f.name === name);
+
 export function usedInScope(comp: CompDefinition, scope: UsedVariables, separateFunctions = false): UsedInScope {
-    const compFunction = (name:string) => compFuncByName(comp, name);
+    const compFunction = (name: string) => compFuncByName(comp, name);
     const _usedInScope = (name: string) => (name in scope.accessed || name in scope.modified || name in scope.defined)
-    && !(separateFunctions && compFunction(name));
+        && !(separateFunctions && compFunction(name));
     const used: UsedInScope = {};
     const add = (added: RecursiveMap, prefix: string) => {
         merge(used, { [prefix]: added });
@@ -90,15 +95,15 @@ export function usedInScope(comp: CompDefinition, scope: UsedVariables, separate
     return used;
 }
 
-export function getFlattened(rmap?: RecursiveMap): Set<string> {
-    if (!rmap) {
+export function getFlattened(recursiveMap?: RecursiveMap): Set<string> {
+    if (!recursiveMap) {
         return new Set<string>();
     }
     return new Set(
-        chain(rmap)
+        chain(recursiveMap)
             .keys()
             .flatMap(k => {
-                const keys = Object.keys(rmap[k]);
+                const keys = Object.keys(recursiveMap[k]);
                 if (keys.length) {
                     return keys.map(ik => `${k}.${ik}`);
                 } else {
@@ -120,10 +125,10 @@ export function destructureVolatile(used: UsedInScope) {
 const destructure = (map: RecursiveMap) =>
     map && Object.keys(map).length
         ? ts.createObjectBindingPattern(
-              Object.keys(map).map(key =>
-                  ts.createBindingElement(undefined, undefined, ts.createIdentifier(key), undefined)
-              )
-          )
+            Object.keys(map).map(key =>
+                ts.createBindingElement(undefined, undefined, ts.createIdentifier(key), undefined)
+            )
+        )
         : undefined;
 
 const readNsVars = (comp: NodeWithVariables, namespace: string | undefined) => {

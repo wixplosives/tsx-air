@@ -16,7 +16,7 @@ export type AnalyzedNodeType = 'CompDefinition' | 'JsxFragment' |
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
 
-interface TsxAirError {
+export interface TsxAirError {
     message: string;
     type: TsxErrorType;
 }
@@ -72,6 +72,7 @@ export interface ReExport extends AnalyzedNode<ts.ExportDeclaration> {
     module: string;
     exports?: ExportSpecifierInfo[];
 }
+
 export interface FuncDefinition extends NodeWithVariables<ts.FunctionExpression | ts.ArrowFunction> {
     kind: 'funcDefinition';
     name?: string;
@@ -96,7 +97,7 @@ export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
 }
 
 export interface Namespace extends NodeWithVariables<ts.ParameterDeclaration | ts.VariableDeclaration> {
-    name:string;
+    name: string;
 }
 
 export interface JsxRoot extends NodeWithVariables<JsxElm> {
@@ -140,15 +141,16 @@ export type TsNodeToAirNode<T extends ts.Node> = T extends ts.JsxAttributeLike ?
     T extends ts.SourceFile ? TsxFile : AnalyzedNode<T>;
 
 
-export interface RecursiveMap {
-    [key: string]: RecursiveMap;
+export type RecursiveMap<RefType = ts.Node> = _RM<RefType> & { $refs?: RefType[] };
+export interface _RM<RefType> {
+    [key: string]: RecursiveMap<RefType>;
 }
 
-export const func:RecursiveMap = {};
-export interface UsedVariables {
-    read: RecursiveMap;
-    accessed: RecursiveMap;
-    modified: RecursiveMap;
-    defined: RecursiveMap;
-    executed: RecursiveMap;
+export const func: RecursiveMap = {};
+export interface UsedVariables<RefType = ts.Node> {
+    read: RecursiveMap<RefType>;
+    accessed: RecursiveMap<RefType>;
+    modified: RecursiveMap<RefType>;
+    defined: RecursiveMap<RefType>;
+    executed: RecursiveMap<RefType>;
 }

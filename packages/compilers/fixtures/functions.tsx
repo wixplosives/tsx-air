@@ -1,7 +1,7 @@
 import { TSXAir, store } from '@tsx-air/framework';
 
 export const WithStateChangeOnly = TSXAir(() => {
-    const s = store({ a: 1, b: null });
+    const s = store({ a: 1, b: null! as number });
     const onClick = () => {
         s.a = 1;
         s.b = s.a + 1;

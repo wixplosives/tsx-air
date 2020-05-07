@@ -49,12 +49,19 @@ describe('ast compiler helpers', () => {
                 volatile: { b: {} }
             });
         });
-        it(`finds dependencies of direcly used vars`, () => {
+        it(`finds dependencies of directly used vars`, () => {
             const { WithVolatile } = basicPatterns();
             expect(usedInScope(WithVolatile, WithVolatile.aggregatedVariables)).to.deep.contain({
                 props: { props: { a: {} } }
             });
         });
+        it(`finds variable dependencies via assignment`, () => {
+            const { WithVolatile } = basicPatterns();
+            expect(usedInScope(WithVolatile, WithVolatile.jsxRoots[0].aggregatedVariables), `props.a should be included, it's assigned to be the value of b`).to.deep.contain({
+                props: { props: { a: {} } },
+                volatile: { b: {} }
+            });
+        })
         it(`finds dependencies of EXECUTED functions`, () => {
             const withFunc = functions().WithVolatileFunction;
             expect(usedInScope(withFunc, withFunc.jsxRoots[0].aggregatedVariables)).to.eql({
@@ -64,7 +71,7 @@ describe('ast compiler helpers', () => {
             });
         });
         describe(`when ignoreFunctions=true`, () => {
-            it(`exclude function calls and refrences`, () => {
+            it(`exclude function calls and references`, () => {
                 const { WithNonStateChangingCode, WithVolatileFunction } = functions();
                 expect(
                     usedInScope(
