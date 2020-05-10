@@ -141,8 +141,8 @@ export type TsNodeToAirNode<T extends ts.Node> = T extends ts.JsxAttributeLike ?
     T extends ts.SourceFile ? TsxFile : AnalyzedNode<T>;
 
 
-export type RecursiveMap<RefType = ts.Node> = _RM<RefType> & { $refs?: RefType[] };
-export interface _RM<RefType> {
+export type RecursiveMap<RefType = ts.Node> = RM<RefType> & { $refs?: RefType[] };
+interface RM<RefType> {
     [key: string]: RecursiveMap<RefType>;
 }
 

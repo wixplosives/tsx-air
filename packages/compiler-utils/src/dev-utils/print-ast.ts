@@ -57,4 +57,4 @@ export function withNoRefs(used: RecursiveMap | UsedVariables | UsedInScope) {
             return;
         }
     });
-};
+}
