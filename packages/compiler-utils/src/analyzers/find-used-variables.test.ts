@@ -1,16 +1,17 @@
 // tslint:disable: no-unused-expression
-import { UsedVariables } from './types';
+import { UsedVariables, RecursiveMap } from './types';
 import { parseValue, asSourceFile } from '../ast-utils/parser';
 import { expect } from 'chai';
 import { findUsedVariables as fu } from './find-used-variables';
 import '../dev-utils/global-dev-tools';
 import ts from 'typescript';
 import { scan } from '../ast-utils/scanner';
-import { usedVarsWithTextRefs } from '../dev-utils';
+import { withCodeRefs } from '../dev-utils';
+import { omit } from 'lodash';
 
 describe('findUsedVariables', () => {
     // @ts-ignore
-    const findUsedVariables = (...args: any[]) => usedVarsWithTextRefs(fu(...args));
+    const findUsedVariables = (...args: any[]) => withCodeRefs(fu(...args));
 
     it('should find defined variables', () => {
         const ast = parseValue(`(aParam)=>{
@@ -66,8 +67,13 @@ describe('findUsedVariables', () => {
                 aParam.decreasedProperty--;
                 --aParam.decreasedPropertyPre;
             }`);
-        const expectedModified = {
+        const expectedAccessed = {
             aParam: {
+                internalObject: {
+                    accessedProperty: {
+                        $refs: [`aParam.replacedProperty = aParam.internalObject.accessedProperty`]
+                    }
+                },
                 replacedProperty: { $refs: [`aParam.replacedProperty = aParam.internalObject.accessedProperty`] },
                 addedToProperty: { $refs: [`aParam.addedToProperty += 'a'`] },
                 removedFromProperty: { $refs: [`aParam.removedFromProperty -= 3`] },
@@ -79,26 +85,12 @@ describe('findUsedVariables', () => {
                 decreasedPropertyPre: { $refs: [`--aParam.decreasedPropertyPre`] }
             }
         };
+        const expectedModified = omit(expectedAccessed, `aParam.internalObject`);
+        const expectedRead = omit(expectedAccessed, `aParam.replacedProperty`);
+
         expect(findUsedVariables(ast).modified).to.eql(expectedModified);
-        expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql({
-            aParam: {
-                internalObject: {
-                    accessedProperty: {
-                        $refs: [`aParam.replacedProperty = aParam.internalObject.accessedProperty`]
-                    }
-                },
-                ...expectedModified.aParam
-            }
-        });
-        expect(findUsedVariables(ast).read).to.eql({
-            aParam: {
-                internalObject: {
-                    accessedProperty: {
-                        $refs: [`aParam.replacedProperty = aParam.internalObject.accessedProperty`]
-                    }
-                }
-            }
-        });
+        expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql(expectedAccessed);        
+        expect(findUsedVariables(ast).read).to.eql(expectedRead);
     });
 
     it('should ignore keys of assigned literals', () => {
@@ -109,12 +101,11 @@ describe('findUsedVariables', () => {
             `);
         const expected: UsedVariables<string> = {
             read: {},
-            accessed: {
-            },
+            accessed: {},
             defined: {
                 anObject: {
                     $refs: [`anObject = {\n                title: 'a'\n            }`]
-                }
+                } as RecursiveMap<string>
             },
             executed: {},
             modified: {}
@@ -126,22 +117,22 @@ describe('findUsedVariables', () => {
         const ast = asSourceFile(`
             export const aJSXRoot = () => <div onClick={onClickHandler}/>
             `);
-        const expected: UsedVariables = {
+        const expected: UsedVariables<string> = {
             read: {
                 onClickHandler: {
                     $refs: [`{onClickHandler}`]
-                }
+                } as RecursiveMap<string>
             },
             accessed: {
                 onClickHandler: {
                     $refs: [`{onClickHandler}`]
-                }
+                } as RecursiveMap<string>
             },
             executed: {},
             defined: {
                 aJSXRoot: {
                     $refs: [`aJSXRoot = () => <div onClick={onClickHandler}/>`]
-                }
+                } as RecursiveMap<string>
             },
             modified: {}
         };
@@ -158,7 +149,7 @@ describe('findUsedVariables', () => {
             defined: {
                 aJSXRoot: {
                     $refs: [`aJSXRoot = <div><Comp>hello<Comp></div>\n            `]
-                }
+                } as RecursiveMap<string>
             },
             executed: {},
             modified: {}
@@ -181,7 +172,7 @@ describe('findUsedVariables', () => {
             defined: {
                 b: {
                     $refs: [`b: AnInterface = {\n                title: 'a'\n            }`]
-                }
+                } as RecursiveMap<string>
             },
             executed: {},
             modified: {}

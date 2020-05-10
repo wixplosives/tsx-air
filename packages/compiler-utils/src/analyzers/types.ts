@@ -154,3 +154,9 @@ export interface UsedVariables<RefType = ts.Node> {
     defined: RecursiveMap<RefType>;
     executed: RecursiveMap<RefType>;
 }
+
+export interface UsedInScope<RefType = ts.Node> {
+    props?: RecursiveMap<RefType>;
+    stores?: RecursiveMap<RefType>;
+    volatile?: RecursiveMap<RefType>;
+}

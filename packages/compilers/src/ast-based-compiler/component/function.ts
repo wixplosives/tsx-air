@@ -1,7 +1,6 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cArrow, cMethod, asCode, cProperty, asAst } from '@tsx-air/compiler-utils';
-import flatMap from 'lodash/flatMap';
+import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cArrow, cMethod, asCode, cProperty, asAst, UsedInScope } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { getGenericMethodParams, destructureState, destructureVolatile, usedInScope, UsedInScope } from './helpers';
+import { getGenericMethodParams, destructureState, destructureVolatile, dependantOnVars } from './helpers';
 import { STATE } from '../consts';
 import { postAnalysisData } from '../../common/post.analysis.data';
 
@@ -36,7 +35,7 @@ export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinit
     const { statements } = body;
 
     body.statements = ts.createNodeArray([
-        ...destructureStatements(usedInScope(comp, func.aggregatedVariables)),
+        ...destructureStatements(dependantOnVars(comp, func.aggregatedVariables)),
         ...statements.map(toStateSafe(comp))]);
     return method;
 }
@@ -91,11 +90,16 @@ export function isStoreDefinition(comp: CompDefinition, node: ts.Statement | ts.
 
 export const cStateCall = (comp: CompDefinition, exp: ts.Expression) => {
     const used = findUsedVariables(exp);
-    const changeBits = flatMap(used.modified,
-        (v, m) => Object.keys(v).map(k =>
-            `${comp.name}.changeBitmask['${m}.${k}']`));
+    const changeBits: string[] = [];
+    const usedStores: string[] = [];
+    for (const [store, v] of Object.entries(used.modified || {})) {
+        if (comp.stores.some(({ name }) => name === store)) {
+            usedStores.push(store);
+            Object.keys(v).forEach(field => changeBits.push(`${comp.name}.changeBitmask['${store}.${field}']`));
+        }
+    }
 
-    const stores = comp.stores.map(s => s.name).join(',');
+    const stores = usedStores.join(',');
 
     return changeBits.length === 0
         ? undefined

@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { expect } from 'chai';
 import { getCompDef } from './test.helpers';
+import { withNoRefs } from '../dev-utils';
 // tslint:disable: no-unused-expression
 // tslint:disable: no-shadowed-variable
 
@@ -43,20 +44,20 @@ describe('TSXAir component analyzer: Jsx', () => {
                             expression: {}
                         }
                     },
-                    read:{
+                    read: {
                         props: {
                             expression: {}
                         }
                     },
-                    executed:{},
+                    executed: {},
                     defined: {},
                     modified: {}
                 };
 
-                expect(expression.variables, 'expression access not found').to.eql(expectedUsedVars);
-                expect(expression.aggregatedVariables, 'expression access not found').to.eql(expectedUsedVars);
-                expect(comp.aggregatedVariables, 'expression access is aggregated').to.eql({ ...expectedUsedVars, defined: { props: {} } });
-                expect(comp.variables, 'comp has only one variable (defines props)').to.eql({ accessed: {}, read:{}, defined: { props: {} }, modified: {}, executed:{} });
+                expect(withNoRefs(expression.variables), 'expression access not found').to.eql(expectedUsedVars);
+                expect(withNoRefs(expression.aggregatedVariables), 'expression access not found').to.eql(expectedUsedVars);
+                expect(withNoRefs(comp.aggregatedVariables), 'expression access is aggregated').to.eql({ ...expectedUsedVars, defined: { props: {} } });
+                expect(withNoRefs(comp.variables), 'comp has only one variable (defines props)').to.eql({ accessed: {}, read: {}, defined: { props: {} }, modified: {}, executed: {} });
             });
 
             it('should aggregate defined and used variable', () => {
@@ -64,19 +65,19 @@ describe('TSXAir component analyzer: Jsx', () => {
                     props.wasModified = true;
                 return <div>{props.expression0}{props.expression1}</div>;})`);
 
-                expect(comp.variables, 'comp has only one variable (defines props)').to.eql({
-                    executed:{},
+                expect(withNoRefs(comp.variables), 'comp has only one variable (defines props)').to.eql({
+                    executed: {},
                     accessed: {
                         props: { wasModified: {} }
                     },
-                    read:{},
+                    read: {},
                     defined: { props: {} },
                     modified: {
                         props: { wasModified: {} }
                     }
                 });
-                expect(comp.aggregatedVariables).to.eql({
-                    executed:{},
+                expect(withNoRefs(comp.aggregatedVariables)).to.eql({
+                    executed: {},
                     accessed: {
                         props: {
                             expression0: {},
@@ -116,7 +117,7 @@ describe('TSXAir component analyzer: Jsx', () => {
                             children: {}
                         }
                     },
-                    executed:{},
+                    executed: {},
                     defined: {},
                     modified: {}
                 };
@@ -131,14 +132,15 @@ describe('TSXAir component analyzer: Jsx', () => {
                             children: {}
                         }
                     },
-                    executed:{},
+                    executed: {},
                     defined: {},
                     modified: {}
                 };
-                expect(comp.jsxRoots[0].components[0].aggregatedVariables, 'Component jsx node aggregated variables').to.eql(expectedCompVariables);
-                expect(comp.jsxRoots[0].components[0].variables, 'Component jsx node variables').to.eql(expectedCompVariables);
-                expect(comp.jsxRoots[0].components[0].children!.variables, 'Component children variables').to.eql(expectedChildrenVariables);
-                expect(comp.jsxRoots[0].components[0].children!.aggregatedVariables, 'Component children aggregated variables').to.eql(expectedChildrenVariables);
+                const comps = comp.jsxRoots[0].components[0];
+                expect(withNoRefs(comps.aggregatedVariables), 'Component jsx node aggregated variables').to.eql(expectedCompVariables);
+                expect(withNoRefs(comps.variables), 'Component jsx node variables').to.eql(expectedCompVariables);
+                expect(withNoRefs(comps.children!.variables), 'Component children variables').to.eql(expectedChildrenVariables);
+                expect(withNoRefs(comps.children!.aggregatedVariables), 'Component children aggregated variables').to.eql(expectedChildrenVariables);
             });
         });
 

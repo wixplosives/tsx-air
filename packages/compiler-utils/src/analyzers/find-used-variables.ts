@@ -44,13 +44,16 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
                 ) {
                     return;
                 }
-                let isModification = false;
+                let isModification: 'self' | boolean = false;
                 if (ts.isBinaryExpression(accessParent) && asCode(accessParent.left) === asCode(n)) {
                     if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
                         isModification = true;
                     }
+                    if (selfModifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
+                        isModification = 'self';
+                    }
                 } else if (ts.isPostfixUnaryExpression(accessParent) || ts.isPrefixUnaryExpression(accessParent)) {
-                    isModification = true;
+                    isModification = 'self';
                 }
                 const paths = accessToStringArr(n);
 
@@ -87,7 +90,18 @@ export const modifyingOperators = [
     ts.SyntaxKind.BarEqualsToken
 ];
 
-export const selfModifyingOperators = [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken];
+
+export const selfModifyingOperators = [
+    ts.SyntaxKind.PlusPlusToken, 
+    ts.SyntaxKind.PlusEqualsToken,
+    ts.SyntaxKind.MinusEqualsToken,
+    ts.SyntaxKind.AsteriskEqualsToken,
+    ts.SyntaxKind.AsteriskAsteriskEqualsToken,
+    ts.SyntaxKind.SlashEqualsToken,
+    ts.SyntaxKind.PercentEqualsToken,
+    ts.SyntaxKind.AmpersandEqualsToken,
+    ts.SyntaxKind.BarEqualsToken
+];
 
 export const isType = (node: ts.Node) =>
     ts.isInterfaceDeclaration(node) ||
@@ -160,7 +174,7 @@ function withRef(ref: ts.Node, target?: RecursiveMap) {
     return target;
 }
 
-function addToAccessMap(path: string[], isModification: boolean, map: UsedVariables, ref: ts.Node) {
+function addToAccessMap(path: string[], isModification: 'self' | boolean, map: UsedVariables, ref: ts.Node) {
     // @ts-ignore    
     ref = (!isModification && ref.initializer) ? ref.initializer : ref;
     if (ts.isTemplateSpan(ref)) {
@@ -170,6 +184,9 @@ function addToAccessMap(path: string[], isModification: boolean, map: UsedVariab
     update(map.accessed, path, i => withRef(ref, i));
     if (isModification) {
         update(map.modified, path, i => withRef(ref, i));
+        if (isModification === 'self') {
+            update(map.read, path, i => withRef(ref, i));
+        }
     } else {
         update(map.read, path, i => withRef(ref, i));
     }

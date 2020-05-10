@@ -26,5 +26,6 @@ export const evalAst = (obj: ts.Expression, context?: object) => {
         }
     }).outputText;
     const script = new Script(code);
+    
     return script.runInNewContext(context || {})();
 };

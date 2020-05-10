@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import { getCompDef } from './test.helpers';
+import { withNoRefs } from '../dev-utils';
 // tslint:disable: no-unused-expression
 // tslint:disable: no-shadowed-variable
 
@@ -19,7 +20,7 @@ describe('TSXAir component analyzer: functions', () => {
         const aRepeater = comp.functions[1];
         expect(aHandler.arguments).to.eql([]);
         expect(aHandler.jsxRoots).to.eql([]);
-        expect(aHandler.variables).to.eql({
+        expect(withNoRefs(aHandler.variables)).to.eql({
             accessed: {
                 props: {
                     message: {}
@@ -46,14 +47,14 @@ describe('TSXAir component analyzer: functions', () => {
         });
         expect(aRepeater.arguments).to.eql(['src']);
         expect(aRepeater.jsxRoots.length).to.eql(1);
-        expect(aRepeater.variables).to.eql({
+        expect(withNoRefs(aRepeater.variables)).to.eql({
             accessed: {},
             read: {},
             defined: { src: {} },
             executed: {},
             modified: {}
         });
-        expect(aRepeater.aggregatedVariables).to.eql({
+        expect(withNoRefs(aRepeater.aggregatedVariables)).to.eql({
             accessed: {
                 src: {},
                 props: {

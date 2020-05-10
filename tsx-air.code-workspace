@@ -53,6 +53,8 @@
 			"destructured",
 			"downlevel",
 			"extendz",
+			"jsxroot",
+			"prerender",
 			"quotemark",
 			"sourcemap",
 			"tslib",

@@ -1,4 +1,4 @@
-import { getGenericMethodParams, destructureState, destructureVolatile, usedInScope, getGenericMethodParamsByUsedInScope } from '../helpers';
+import { getGenericMethodParams, destructureState, destructureVolatile, dependantOnVars, getGenericMethodParamsByUsedInScope, compFuncByName } from '../helpers';
 import {
     cArrow,
     jsxToStringTemplate,
@@ -16,29 +16,36 @@ import {
     printAst,
     asCode,
     cConst,
-    findUsedVariables
+    findUsedVariables,
+    UsedInScope
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { VOLATILE, STATE, PROPS } from '../../consts';
-import { chain } from 'lodash';
-import isEqual from 'lodash/isEqual';
+import { defaultsDeep } from 'lodash';
 
 export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
+    const executedFuncs = [] as string[];
     const template = jsxToStringTemplate(node.sourceAstNode, [
         jsxComponentReplacer,
         jsxEventHandlerRemover,
-        jsxTextExpressionReplacer(comp),
+        jsxTextExpressionReplacer(comp, executedFuncs),
         jsxAttributeReplacer,
         jsxAttributeNameReplacer,
         jsxSelfClosingElementReplacer
     ]);
 
-    const usedVars = usedInScope(comp, node.aggregatedVariables);
-    const hasCompMethodCalls = chain(node.aggregatedVariables.executed)
-        .values()
-        .some(v => isEqual(v, {}))
-        .value();
-    const [propsParam, stateParams] = getGenericMethodParamsByUsedInScope(usedVars, true, !hasCompMethodCalls);
+    const usedVars = dependantOnVars(comp, findUsedVariables(template), true);
+    const usedByFuncs:UsedInScope = {};
+    executedFuncs.forEach(f => {
+        const func = compFuncByName(comp, f);
+        if (func) {
+            defaultsDeep(usedByFuncs, dependantOnVars(comp, func.aggregatedVariables));
+        }
+    }); 
+
+    const hasCompMethodCalls = executedFuncs.length > 0;
+
+    let [propsParam, stateParams] = getGenericMethodParamsByUsedInScope(usedVars, true, !hasCompMethodCalls);
     if (!usedVars.volatile && !hasCompMethodCalls) {
         return cArrow([propsParam, stateParams], template);
     }
@@ -46,17 +53,31 @@ export const generateToString = (node: JsxRoot, comp: CompDefinition) => {
     const destructured = [destructureState(usedVars), destructureVolatile(usedVars)].filter(
         i => i
     ) as ts.VariableStatement[];
+
+    if (usedByFuncs.stores || usedVars.stores) {
+        stateParams = STATE;
+    }
+    if (usedByFuncs.props || usedVars.props) {
+        propsParam = comp.propsIdentifier || PROPS;
+    } else {
+        propsParam = stateParams ? '__0' : undefined;
+    }
+   
     const volatile = cConst(
         VOLATILE,
         cCall(
             ['TSXAir', 'runtime', 'toStringPreRender'],
-            [ts.createIdentifier(comp.name!), ts.createIdentifier(propsParam ? comp.propsIdentifier || PROPS : '__0'), ts.createIdentifier(STATE)]
+            [comp.name,  propsParam , stateParams].filter(i => i).map(i => ts.createIdentifier(i as string))
         )
     );
-    return cArrow([propsParam, stateParams && STATE], [volatile, ...destructured, ts.createReturn(template)]);
+    if (stateParams) {
+        return cArrow([propsParam, stateParams], [volatile, ...destructured, ts.createReturn(template)]);
+    } else {
+        return cArrow(propsParam ? [propsParam]:[], [volatile, ...destructured, ts.createReturn(template)]);
+    }
 };
 
-export const jsxTextExpressionReplacer: (comp: CompDefinition) => AstNodeReplacer = comp => node => {
+export const jsxTextExpressionReplacer: (comp: CompDefinition, executedFuncs: string[]) => AstNodeReplacer = (comp, executedFuncs) => node => {
     const swapCalls = (exp: ts.JsxExpression): ts.Expression => {
         const toProto = (n: ts.Node) => {
             const clone = ts.getMutableClone(n);
@@ -68,7 +89,9 @@ export const jsxTextExpressionReplacer: (comp: CompDefinition) => AstNodeReplace
                     false
                 ).map(u => (u ? ts.createIdentifier(u as string) : ts.createIdentifier('undefined')));
                 n.arguments.forEach(a => args.push(cloneDeep(a)));
-                return cCall([comp.name, 'prototype', `_${asCode(n.expression)}`], args);
+                const name = asCode(n.expression);
+                executedFuncs.push(name);
+                return cCall([comp.name, 'prototype', `_${name}`], args);
             }
             clone.forEachChild(toProto);
             return clone;

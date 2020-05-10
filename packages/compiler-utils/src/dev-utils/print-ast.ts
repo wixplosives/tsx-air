@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { UsedVariables, RecursiveMap } from '../analyzers/types';
+import { UsedVariables, RecursiveMap, UsedInScope } from '../analyzers/types';
 import { cloneDeepWith, omit } from 'lodash';
 
 export function printAst(n: ts.Node): string {
@@ -33,18 +33,28 @@ export function printAstFullText(n: ts.Node): string {
     return printAst(n);
 }
 
-export const usedVarsWithTextRefs = (used: UsedVariables) => cloneDeepWith(used, (node: RecursiveMap) => {
-    if (node instanceof Array) {
-        return node.map(ast => asCode(ast));
-    } else {
-        return;
-    }
-}) as UsedVariables<string>;
+export function withCodeRefs(used: RecursiveMap): RecursiveMap<string>;
+export function withCodeRefs(used: UsedVariables): UsedVariables<string>;
+export function withCodeRefs(used: UsedInScope): UsedInScope<string>;
+export function withCodeRefs(used: RecursiveMap | UsedVariables | UsedInScope) {
+    return cloneDeepWith(used, (node: RecursiveMap) => {
+        if (node instanceof Array) {
+            return node.map(ast => asCode(ast));
+        } else {
+            return;
+        }
+    });
+}
 
-export const usedVarsWithoutRefs = (used: UsedVariables) => cloneDeepWith(used, (node: RecursiveMap) => {
-    if (node.refs instanceof Array) {
-        return omit(node, 'refs');
-    } else {
-        return;
-    }
-});
+export function withNoRefs(used: RecursiveMap): RecursiveMap<string>;
+export function withNoRefs(used: UsedVariables): UsedVariables<string>;
+export function withNoRefs(used: UsedInScope): UsedInScope<string>;
+export function withNoRefs(used: RecursiveMap | UsedVariables | UsedInScope) {
+    return cloneDeepWith(used, (node: RecursiveMap) => {
+        if (node?.$refs instanceof Array) {
+            return omit(node, '$refs');
+        } else {
+            return;
+        }
+    });
+};

@@ -1,6 +1,6 @@
 import { VOLATILE } from './../consts';
 import { CompDefinition, cMethod, cloneDeep, asCode, cLet, cAssignLiteral, asAst } from '@tsx-air/compiler-utils';
-import { getGenericMethodParams, destructureState, usedInScope } from './helpers';
+import { getGenericMethodParams, destructureState, dependantOnVars } from './helpers';
 import ts from 'typescript';
 import { cStateCall, isStoreDefinition } from './function';
 import get from 'lodash/get';
@@ -40,7 +40,7 @@ export function* generatePreRender(comp: CompDefinition) {
     }
 
     const state = destructureState(
-        usedInScope(comp, comp.aggregatedVariables)
+        dependantOnVars(comp, comp.aggregatedVariables)
     );
     if (state) {
         modified.unshift(state);
