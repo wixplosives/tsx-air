@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { UsedVariables } from './types';
+import { UsedVariables, RecursiveMap } from './types';
 import { update, merge, set } from 'lodash';
 import { asCode } from '..';
 
@@ -14,7 +14,7 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
         modified: {},
         defined: {},
         read: {},
-        executed: {}
+        executed: {},
     };
     const visitor = (n: ts.Node) => {
         if (ignore && ignore(n)) {
@@ -27,12 +27,13 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
         if (accessParent) {
             if (isVariableLikeDeclaration(accessParent) && asCode(accessParent.name) === asCode(n)) {
                 if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
-                    res.defined[asCode(n)] = {};
+                    const definedAs = asCode(n);
+                    res.defined[definedAs] = withRef(accessParent);
                 }
-                return ;
+                return;
             }
             if (ts.isCallExpression(n) && n.expression && asCode(n.expression)) {
-                set(res.executed, asCode(n.expression), {});
+                set(res.executed, asCode(n.expression), withRef(n));
             }
 
             if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
@@ -43,19 +44,23 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
                 ) {
                     return;
                 }
-                let isModification = false;
+                let isModification: 'self' | boolean = false;
                 if (ts.isBinaryExpression(accessParent) && asCode(accessParent.left) === asCode(n)) {
                     if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
                         isModification = true;
                     }
+                    if (selfModifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
+                        isModification = 'self';
+                    }
                 } else if (ts.isPostfixUnaryExpression(accessParent) || ts.isPrefixUnaryExpression(accessParent)) {
-                    isModification = true;
+                    isModification = 'self';
                 }
                 const paths = accessToStringArr(n);
 
-                addToAccessMap(paths.path, isModification, res);
+                addToAccessMap(paths.path, isModification, res, accessParent);
+
                 for (const path of paths.nestedAccess) {
-                    addToAccessMap(path, isModification, res);
+                    addToAccessMap(path, isModification, res, node);
                 }
             } else {
                 ts.forEachChild(n, visitor);
@@ -85,7 +90,18 @@ export const modifyingOperators = [
     ts.SyntaxKind.BarEqualsToken
 ];
 
-export const selfModifyingOperators = [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken];
+
+export const selfModifyingOperators = [
+    ts.SyntaxKind.PlusPlusToken, 
+    ts.SyntaxKind.PlusEqualsToken,
+    ts.SyntaxKind.MinusEqualsToken,
+    ts.SyntaxKind.AsteriskEqualsToken,
+    ts.SyntaxKind.AsteriskAsteriskEqualsToken,
+    ts.SyntaxKind.SlashEqualsToken,
+    ts.SyntaxKind.PercentEqualsToken,
+    ts.SyntaxKind.AmpersandEqualsToken,
+    ts.SyntaxKind.BarEqualsToken
+];
 
 export const isType = (node: ts.Node) =>
     ts.isInterfaceDeclaration(node) ||
@@ -118,6 +134,7 @@ export type AccessNodes = ts.Identifier | ts.PropertyAccessExpression | ts.Eleme
 export function isAccessNode(node: ts.Node): node is AccessNodes {
     return ts.isIdentifier(node) || ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node);
 }
+
 export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAccess: string[][] } {
     let n: ts.LeftHandSideExpression = node;
     let path: string[] = [];
@@ -150,12 +167,28 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
     };
 }
 
-function addToAccessMap(path: string[], isModification: boolean, map: UsedVariables) {
-    update(map.accessed, path, i => i || {});
+function withRef(ref: ts.Node, target?: RecursiveMap) {
+    target = target || {};
+    target.$refs = target.$refs || [];
+    target.$refs.push(ref);
+    return target;
+}
+
+function addToAccessMap(path: string[], isModification: 'self' | boolean, map: UsedVariables, ref: ts.Node) {
+    // @ts-ignore    
+    ref = (!isModification && ref.initializer) ? ref.initializer : ref;
+    if (ts.isTemplateSpan(ref)) {
+        ref = ref.parent;
+    }
+
+    update(map.accessed, path, i => withRef(ref, i));
     if (isModification) {
-        update(map.modified, path, i => i || {});
+        update(map.modified, path, i => withRef(ref, i));
+        if (isModification === 'self') {
+            update(map.read, path, i => withRef(ref, i));
+        }
     } else {
-        update(map.read, path, i => i || {});
+        update(map.read, path, i => withRef(ref, i));
     }
 }
 

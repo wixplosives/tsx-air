@@ -12,6 +12,7 @@
         "src/test.helpers.ts"
     ],
     "include": [
-        "src/**/*.ts"
+        "src/**/*.ts",
+        "fixtures/**/*.tsx"
     ]
 }

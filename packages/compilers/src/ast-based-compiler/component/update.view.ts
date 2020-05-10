@@ -1,4 +1,4 @@
-import { readVars, getGenericMethodParams, usedInScope, getFlattened } from './helpers';
+import { readVars, getGenericMethodParams, dependantOnVars, getFlattened } from './helpers';
 import ts from 'typescript';
 import {
     CompDefinition,
@@ -46,7 +46,7 @@ export const updateNativeExpressions = (
     domBindings: DomBindings
 ) => {
     const dependentExpressions = root.expressions.filter(ex => {
-        const { props, stores, volatile } = usedInScope(comp, ex.aggregatedVariables);
+        const { props, stores, volatile } = dependantOnVars(comp, ex.aggregatedVariables);
         const handler = postAnalysisData.read(ex, 'handler');
         return !handler && (getFlattened(props).has(changed) || getFlattened(stores).has(changed) || getFlattened( volatile).has(changed));
     });

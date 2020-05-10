@@ -1,7 +1,7 @@
 import { TSXAir, store } from '@tsx-air/framework';
 
 export const WithStateChangeOnly = TSXAir(() => {
-    const s = store({ a: 1, b: null });
+    const s = store({ a: 1, b: null! as number });
     const onClick = () => {
         s.a = 1;
         s.b = s.a + 1;
@@ -35,6 +35,7 @@ export const WithVolatileFunction = TSXAir((props: { p: number }) => {
     b++;
     s.a = s.a + b;
     const someFunc = (c: string) => props.p + s.a + b + c;
+    // @ts-ignore
     const unusedVar = null;
     return <div>{someFunc('const')}</div>;
 });

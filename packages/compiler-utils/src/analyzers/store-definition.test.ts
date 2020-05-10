@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import { getCompDef } from './test.helpers';
+import { withNoRefs } from '..';
 // tslint:disable: no-unused-expression
 // tslint:disable: no-shadowed-variable
 
-describe('TSXAir component analyzer: functions', () => {
+describe('TSXAir component analyzer: stores', () => {
     it('should find calls to store', () => {
         const { comp } = getCompDef(`const Comp = TSXAir(props=>{ 
                 const state = store({key: props.title, anotherKey: 'gaga'});
@@ -16,7 +17,7 @@ describe('TSXAir component analyzer: functions', () => {
         const store = comp.stores[0];
         expect(store.name).to.equal('state');
         expect(store.keys).to.eql(['key', 'anotherKey']);
-        expect(store.variables).to.eql({
+        expect(withNoRefs(store.variables)).to.eql({
             defined: {},
             executed:{},
             accessed: {

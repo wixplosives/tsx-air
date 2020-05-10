@@ -6,7 +6,7 @@ export class PreDefinedHandler extends Component {
         this.handler = (...args) => TSXAir.runtime.execute(this, this._handler, args);
     }
 
-    _handler(__0, $s, __2, event) {
+    _handler(__0, $s, __2, _event) {
         const { state } = $s;
         TSXAir.runtime.updateState(this, $s, ({ state }) => {
             state.count++;

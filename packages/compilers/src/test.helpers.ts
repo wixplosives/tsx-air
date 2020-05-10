@@ -22,35 +22,43 @@ export const readFixture = (name: string) => readFileSync(fixture(name), 'utf8')
 export const parseFixture = (name: string) =>
     asSourceFile(readFixture(name), fixture(name));
 
-export const analyzeFixtureComponents = (name: string) =>
-    (analyze(parseFixture(name)).tsxAir as TsxFile).compDefinitions;
+const cache: Record<string, CompDefinition[]> = {};
+export const analyzeFixtureComponents = (name: string) => {
+    cache[name] = cache[name] || (analyze(parseFixture(name)).tsxAir as TsxFile).compDefinitions;
+    return cache[name];
+};
 
-let cache: CompDefinition[];
 export const basicPatterns = () => {
-    cache = cache || analyzeFixtureComponents(`basic.patterns.tsx`);
+    const comps = analyzeFixtureComponents(`basic.patterns.tsx`);
     return {
-        Static: cache[0],
-        PropsOnly: cache[1],
-        StateOnly: cache[2],
-        ProsAndState: cache[3],
-        NestedStateless: cache[4],
-        EventListener: cache[5],
-        DynamicAttributes: cache[6],
-        DynamicAttributesSelfClosing: cache[7],
-        WithVolatile: cache[8],
+        Static: comps[0],
+        PropsOnly: comps[1],
+        StateOnly: comps[2],
+        ProsAndState: comps[3],
+        NestedStateless: comps[4],
+        EventListener: comps[5],
+        DynamicAttributes: comps[6],
+        DynamicAttributesSelfClosing: comps[7],
+        WithVolatile: comps[8],
     };
 };
 
-let fcache: CompDefinition[];
 export const functions = () => {
-    fcache = fcache || analyzeFixtureComponents(`functions.tsx`);
+    const comps = analyzeFixtureComponents(`functions.tsx`);
     return {
-        WithStateChangeOnly: fcache[0],
-        WithNonStateChangingCode: fcache[1],
-        WithVolatileVars: fcache[2],
-        WithVolatileFunction: fcache[3],
-        ValidFunctionUse: fcache[4],
-        InvalidFunctionUse: fcache[5],
+        WithStateChangeOnly: comps[0],
+        WithNonStateChangingCode: comps[1],
+        WithVolatileVars: comps[2],
+        WithVolatileFunction: comps[3],
+        ValidFunctionUse: comps[4],
+        InvalidFunctionUse: comps[5],
+    };
+};
 
+export const conditional = () => {
+    const comps = analyzeFixtureComponents(`conditional.tsx`);
+    return {
+        Const: comps[0],
+        ShallowConditional: comps[1],
     };
 };

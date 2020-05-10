@@ -1,7 +1,8 @@
 import { TSXAir, store } from '@tsx-air/framework';
+
 export const PreDefinedHandler = TSXAir(() => {
     const state = store({ count: 0 });
-    const handler = (event:any) => state.count++;
+    const handler = (_event:any) => state.count++;
     return <div onClick={handler}>{state.count}</div>;
 });
 
