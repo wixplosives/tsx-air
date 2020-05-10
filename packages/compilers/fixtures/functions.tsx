@@ -35,6 +35,7 @@ export const WithVolatileFunction = TSXAir((props: { p: number }) => {
     b++;
     s.a = s.a + b;
     const someFunc = (c: string) => props.p + s.a + b + c;
+    // @ts-ignore
     const unusedVar = null;
     return <div>{someFunc('const')}</div>;
 });

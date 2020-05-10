@@ -4,7 +4,7 @@ import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } fro
 import ts from 'typescript';
 import { chaiPlugin } from '@tsx-air/testing';
 import { expect, use } from 'chai';
-import { TSXAir, store } from '@tsx-air/framework'
+import { TSXAir, store } from '@tsx-air/framework';
 use(chaiPlugin);
 
 describe('generateToString', () => {

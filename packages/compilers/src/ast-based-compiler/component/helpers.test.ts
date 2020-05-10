@@ -65,7 +65,7 @@ describe(`usedInScope`, () => {
             props: { props: { a: {} } },
             volatile: { b: {} }
         });
-    })
+    });
     it(`finds dependencies of EXECUTED functions`, () => {
         const withFunc = functions().WithVolatileFunction;
         expect(dependantOnVars(withFunc, withFunc.jsxRoots[0].aggregatedVariables)).to.eql({

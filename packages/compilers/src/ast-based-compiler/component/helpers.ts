@@ -63,10 +63,10 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
                     return false;
                 })) {
                     add({ [k]: {} }, 'volatile');
-                };
+                }
             }
         }
-    }
+    };
 
     comp.volatileVariables.filter(_usedInScope).forEach(v => add({ [v]: scope.accessed[v] }, 'volatile'));
 
@@ -125,7 +125,7 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
                 addToResult(Object.keys(found.executed));
             });
         }
-        addAll(refs)
+        addAll(refs);
     }).value();
     return used;
 }

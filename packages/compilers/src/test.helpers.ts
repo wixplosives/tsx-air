@@ -26,7 +26,7 @@ const cache: Record<string, CompDefinition[]> = {};
 export const analyzeFixtureComponents = (name: string) => {
     cache[name] = cache[name] || (analyze(parseFixture(name)).tsxAir as TsxFile).compDefinitions;
     return cache[name];
-}
+};
 
 export const basicPatterns = () => {
     const comps = analyzeFixtureComponents(`basic.patterns.tsx`);
