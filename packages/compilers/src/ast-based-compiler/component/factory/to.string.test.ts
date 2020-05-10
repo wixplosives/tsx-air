@@ -1,4 +1,4 @@
-import { basicPatterns, functions, conditional } from '../../../test.helpers';
+import { basicPatterns, functions } from '../../../test.helpers';
 import { analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, asAst } from '@tsx-air/compiler-utils';
 import { jsxComponentReplacer, jsxTextExpressionReplacer, generateToString } from './to.string';
 import ts from 'typescript';
