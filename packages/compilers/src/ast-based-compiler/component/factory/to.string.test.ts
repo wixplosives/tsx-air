@@ -24,9 +24,9 @@ describe('generateToString', () => {
         expect(toStringOf(comps.DynamicAttributesSelfClosing)({ a: 2 }), 'DynamicAttributesSelfClosing')
             .to.equal(`<div dir="ltr" lang="2"></div>`);
         expect(toStringOf(comps.WithVolatile, 0, { WithVolatile: {
-            prototype: {$preRender: () => ({b:'mock'})}
+            prototype: {$preRender: () => ({d:'mock'})}
         } })({ p: 2 }), 'WithVolatile')
-            .to.equal(`<div><!-- b -->mock<!-- --></div>`);
+            .to.equal(`<div><!-- d -->mock<!-- --></div>`);
     });
 
     it(`uses nested components' toString`, () => {
@@ -62,12 +62,12 @@ describe('generateToString', () => {
             };`);
     });
 
-    // describe(`JSX expressions which contain JSX`, () => {
-    //     it('handles expressions which evaluate as JSX', () => {
-    //         const { Const } = conditional();
-    //         expect(toStringOf(Const)(), 'Const').to.equal(`<div><div></div></div>`);
-    //     })
-    // })
+    describe(`JSX expressions which contain JSX`, () => {
+        it('handles expressions which evaluate as JSX', () => {
+            const { Const } = conditional();
+            expect(toStringOf(Const)(), 'Const').to.equal(`<div><div></div></div>`);
+        })
+    })
 
     describe('helpers', () => {
         describe('component node replacer', () => {

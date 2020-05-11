@@ -11,7 +11,7 @@ import {
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
 import { VOLATILE, STATE } from '../consts';
-import { merge, chain, defaultsDeep } from 'lodash';
+import { merge, chain, defaultsDeep, mergeWith } from 'lodash';
 
 export const getGenericMethodParamsByUsedInScope = (used: UsedInScope, includeVolatile = false,
     deStructure = true) => {
@@ -40,15 +40,18 @@ export const getGenericMethodParams = (
 
 export const compFuncByName = (comp: CompDefinition, name: string) => comp.functions.find(f => f.name === name);
 
+
+
 export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, ignoreFuncReferences = false): UsedInScope {
     const compFunction = (name: string) => compFuncByName(comp, name);
-    const _usedInScope = (name: string) => (name in scope.accessed || name in scope.modified || name in scope.defined)
+    const _usedInScope = (name: string) => (name in scope.accessed || name in scope.defined)
         && !(ignoreFuncReferences && compFunction(name));
     const used: UsedInScope = {};
 
     const add = (added: RecursiveMap, prefix: string) => {
         merge(used, { [prefix]: added });
     };
+
     const addAll = (usedVars: UsedVariables) => {
         const merged = defaultsDeep({}, ...Object.values(usedVars));
         for (const [k, v] of Object.entries(merged)) {
@@ -62,7 +65,7 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
                     }
                     return false;
                 })) {
-                    add({ [k]: {} }, 'volatile');
+                    add({ [k]: v as RecursiveMap }, 'volatile');
                 }
             }
         }
@@ -88,9 +91,7 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
                 }
                 comp.stores
                     .filter(({ name }) => usedInFunc[name])
-                    .forEach(({ name }) => {
-                        add({ [name]: usedInFunc[name] }, 'stores');
-                    });
+                    .forEach(({ name }) => add({ [name]: usedInFunc[name] }, 'stores'));
                 comp.volatileVariables
                     .filter(v => usedInFunc[v])
                     .forEach(name => {
@@ -108,25 +109,40 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
 
     addToResult(comp.volatileVariables.filter(_usedInScope));
 
-    chain(used.volatile).keys().forEach(k => {
-        const refs: UsedVariables = { accessed: {}, read: {}, modified: {}, executed: {}, defined: {} };
-        if (comp.variables.modified[k]) {
-            comp.variables.modified[k].$refs?.forEach(r => {
-                const found = findUsedVariables(r);
-                merge(refs.read, found.read);
-                addToResult(Object.keys(found.executed));
-            });
 
-        }
-        if (comp.variables.defined[k]) {
-            comp.variables.defined[k].$refs?.forEach(r => {
-                const found = findUsedVariables(r);
-                merge(refs.read, found.read);
-                addToResult(Object.keys(found.executed));
-            });
-        }
-        addAll(refs);
-    }).value();
+    const getRefsCount = () => {
+        let count = 0;
+        mergeWith({}, used, (_, __, field) => {
+            if (field === '$refs'   ) {
+                count++;
+            }
+        });
+        return count;
+    }
+    let refsCount = 0;
+    while (getRefsCount() !== refsCount) {
+        refsCount = getRefsCount();
+        
+        chain(used.volatile).keys().forEach(k => {
+            const refs: UsedVariables = { accessed: {}, read: {}, modified: {}, executed: {}, defined: {} };
+            if (comp.variables.modified[k]) {
+                comp.variables.modified[k].$refs?.forEach(r => {
+                    const found = findUsedVariables(r);
+                    merge(refs.read, found.read);
+                    addToResult(Object.keys(found.executed));
+                });
+            }
+            if (comp.variables.defined[k]) {
+                comp.variables.defined[k].$refs?.forEach(r => {
+                    const found = findUsedVariables(r);
+                    merge(refs.read, found.read);
+                    addToResult(Object.keys(found.executed));
+                });
+            }
+            addAll(refs);
+        }).value();
+    }
+   
     return used;
 }
 
