@@ -6,12 +6,13 @@ import {
     UsedVariables,
     RecursiveMap,
     findUsedVariables,
-    UsedInScope
+    UsedInScope,
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
 import { VOLATILE, STATE } from '../consts';
-import { merge, chain, defaultsDeep, mergeWith } from 'lodash';
+import { merge, chain, defaultsDeep, mergeWith, omit } from 'lodash';
+import isArray from 'lodash/isArray';
 
 export const getGenericMethodParamsByUsedInScope = (used: UsedInScope, includeVolatile = false,
     deStructure = true) => {
@@ -40,110 +41,91 @@ export const getGenericMethodParams = (
 
 export const compFuncByName = (comp: CompDefinition, name: string) => comp.functions.find(f => f.name === name);
 
-
-
-export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, ignoreFuncReferences = false): UsedInScope {
-    const compFunction = (name: string) => compFuncByName(comp, name);
-    const _usedInScope = (name: string) => (name in scope.accessed || name in scope.defined)
-        && !(ignoreFuncReferences && compFunction(name));
+function getDirectDependencies(comp: CompDefinition, scope: UsedVariables, ignoreFuncReferences:boolean): UsedInScope {
     const used: UsedInScope = {};
+    const _usedInScope = (name?: string) => 
+        name && name in scope.read 
+        && !(ignoreFuncReferences && comp.functions.some(f => f.name === name));
 
-    const add = (added: RecursiveMap, prefix: string) => {
-        merge(used, { [prefix]: added });
-    };
+    comp.volatileVariables.filter(_usedInScope).forEach(v => 
+        add(used, { [v]: scope.accessed[v] }, 'volatile'));
 
-    const addAll = (usedVars: UsedVariables) => {
-        const merged = defaultsDeep({}, ...Object.values(usedVars));
-        for (const [k, v] of Object.entries(merged)) {
-            if (k === comp.propsIdentifier) {
-                add({ [k]: v as RecursiveMap }, 'props');
-            } else {
-                if (!comp.stores.some(({ name }) => {
-                    if (merged[name]) {
-                        add({ [name]: merged[name] }, 'stores');
-                        return true;
-                    }
-                    return false;
-                })) {
-                    add({ [k]: v as RecursiveMap }, 'volatile');
-                }
-            }
-        }
-    };
-
-    comp.volatileVariables.filter(_usedInScope).forEach(v => add({ [v]: scope.accessed[v] }, 'volatile'));
-
-    if (comp.propsIdentifier && scope.read[comp.propsIdentifier]) {
-        add({ [comp.propsIdentifier]: scope.read[comp.propsIdentifier] }, 'props');
+    if (_usedInScope(comp.propsIdentifier)) {
+        add(used, { [comp.propsIdentifier!]: scope.read[comp.propsIdentifier!] }, 'props');
     }
-    comp.stores.forEach(({ name }) => {
-        if (scope.read[name]) {
-            add({ [name]: scope.accessed[name] }, 'stores');
-        }
-    });
 
-    const addToResult = (funcNames: string[]) => {
-        funcNames.map(compFunction).forEach(func => {
-            if (func) {
-                const usedInFunc = func.aggregatedVariables.read;
-                if (comp.propsIdentifier && usedInFunc[comp.propsIdentifier]) {
-                    add({ [comp.propsIdentifier]: usedInFunc[comp.propsIdentifier] }, 'props');
-                }
-                comp.stores
-                    .filter(({ name }) => usedInFunc[name])
-                    .forEach(({ name }) => add({ [name]: usedInFunc[name] }, 'stores'));
-                comp.volatileVariables
-                    .filter(v => usedInFunc[v])
-                    .forEach(name => {
-                        if (compFunction(name)) {
-                            if (!ignoreFuncReferences) {
-                                addToResult([name]);
-                            }
-                        } else {
-                            add({ [name]: usedInFunc[name] }, 'volatile');
-                        }
-                    });
-            }
-        });
-    };
-
-    addToResult(comp.volatileVariables.filter(_usedInScope));
-
-
-    const getRefsCount = () => {
-        let count = 0;
-        mergeWith({}, used, (_, __, field) => {
-            if (field === '$refs'   ) {
-                count++;
-            }
-        });
-        return count;
-    }
-    let refsCount = 0;
-    while (getRefsCount() !== refsCount) {
-        refsCount = getRefsCount();
-        
-        chain(used.volatile).keys().forEach(k => {
-            const refs: UsedVariables = { accessed: {}, read: {}, modified: {}, executed: {}, defined: {} };
-            if (comp.variables.modified[k]) {
-                comp.variables.modified[k].$refs?.forEach(r => {
-                    const found = findUsedVariables(r);
-                    merge(refs.read, found.read);
-                    addToResult(Object.keys(found.executed));
-                });
-            }
-            if (comp.variables.defined[k]) {
-                comp.variables.defined[k].$refs?.forEach(r => {
-                    const found = findUsedVariables(r);
-                    merge(refs.read, found.read);
-                    addToResult(Object.keys(found.executed));
-                });
-            }
-            addAll(refs);
-        }).value();
-    }
-   
+    comp.stores.map(c => c.name).filter(_usedInScope).forEach(
+        name => add(used, { [name]: scope.accessed[name] }, 'stores')
+    );
+    
     return used;
+}
+
+const add = (target:UsedInScope, added: RecursiveMap, prefix: string) => {
+    mergeWith(target, { [prefix]: added }, (a, b) => {
+        if (isArray(a)) {
+            return chain(a).concat(b).uniq().value();
+        } else return;
+    });
+};
+
+const addAll = (comp:CompDefinition, target:UsedInScope, usedVars: UsedVariables) => {
+    const merged = defaultsDeep({}, ...Object.values(usedVars));
+    for (const [k, v] of Object.entries(merged)) {
+        if (k === comp.propsIdentifier) {
+            add(target, { [k]: v as RecursiveMap }, 'props');
+        } else {
+            if (!comp.stores.some(({ name }) => {
+                if (name === k) {
+                    add(target, { [name]: merged[name] }, 'stores');
+                    return true;
+                }
+                return false;
+            })) {
+                add(target, { [k]: v as RecursiveMap }, 'volatile');
+            }
+        }
+    }
+};
+
+function expandDependencies(comp:CompDefinition, scope: UsedVariables, name: string):UsedVariables {
+    const func = comp.functions.find(f => f.name === name);
+    if (func) {
+        return {
+            read: omit(func.aggregatedVariables.read, Object.keys(func.aggregatedVariables.defined)),
+            accessed: omit(func.aggregatedVariables.read, Object.keys(func.aggregatedVariables.defined)),
+            defined: {},
+            modified: {},
+            executed: func.aggregatedVariables.executed
+        } as UsedVariables;
+    }
+
+    const changed = merge({}, scope.modified[name], scope.defined[name]).$refs || [];
+    const refs: UsedVariables = { accessed: {}, read: {}, modified: {}, executed: {}, defined: {} };
+    changed.forEach(ref => {
+        const found = findUsedVariables(ref);                
+        mergeWith(refs.read, found.read, (a, b) => {
+            if (isArray(a)) {
+                return chain(a).concat(b).uniq().value();
+            } else return;
+        });
+    });
+    return refs;
+}
+
+export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, ignoreFuncReferences = false) {
+    const flat = getDirectDependencies(comp, scope, ignoreFuncReferences);
+    const toBeExpanded = Object.keys(flat.volatile || {});
+    while (toBeExpanded.length) {
+        const newRefs = expandDependencies(comp, comp.variables, toBeExpanded.pop()!);
+        Object.keys(newRefs.read).forEach(k => {
+            if (!flat.volatile![k] && comp.propsIdentifier !== k && !comp.stores.some(({name}) => name === k)) {
+                toBeExpanded.push(k)
+            }
+        });
+        addAll(comp, flat, newRefs);
+    }
+    return flat;
 }
 
 export function getFlattened(recursiveMap?: RecursiveMap): Set<string> {
