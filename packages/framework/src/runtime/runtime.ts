@@ -211,7 +211,7 @@ export class Runtime {
             this.viewUpdatePending = true;
             this.updateView();
         } else {
-            this.$tick(this.updateView)
+            this.$tick(this.updateView);
         }
     }
 }
