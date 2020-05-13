@@ -183,20 +183,20 @@ export class Runtime {
 
         
         const changed = new Set<Component>();
-        for (const i of this.updateViewOnce()) {
-            changed.add(i);
+        let oneUpdate = [...this.updateViewOnce()];
+        while(oneUpdate.length > 0) {
+            oneUpdate.forEach(item => changed.add(item));
+            oneUpdate = [...this.updateViewOnce()];
         }
         this.viewUpdatePending = false;
         if (changed.size > 0) {
-            this.$tick(() => {
-                changed.forEach(i => {
-                    const req = this.pending.requested.get(i) || (i.$afterUpdate && i.$afterUpdate());
-                    if (req && !req.next().done) {
-                        this.pending.requested.set(i, req);
-                    } else {
-                        this.pending.requested.delete(i);
-                    }
-                });
+            changed.forEach(i => {
+                const req = this.pending.requested.get(i) || (i.$afterUpdate && i.$afterUpdate());
+                if (req && !req.next().done) {
+                    this.pending.requested.set(i, req);
+                } else {
+                    this.pending.requested.delete(i);
+                }
             });
         }
         this.$stats.push({
@@ -210,8 +210,6 @@ export class Runtime {
         if (!this.viewUpdatePending) {
             this.viewUpdatePending = true;
             this.updateView();
-        } else {
-            this.$tick(this.updateView);
         }
     }
 }
