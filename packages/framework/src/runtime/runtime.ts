@@ -181,12 +181,12 @@ export class Runtime {
     private updateView = () => {
         const stateTime = performance.now();
 
-        this.viewUpdatePending = false;
+        
         const changed = new Set<Component>();
         for (const i of this.updateViewOnce()) {
             changed.add(i);
         }
-
+        this.viewUpdatePending = false;
         if (changed.size > 0) {
             this.$tick(() => {
                 changed.forEach(i => {
@@ -209,7 +209,7 @@ export class Runtime {
     private triggerViewUpdate() {
         if (!this.viewUpdatePending) {
             this.viewUpdatePending = true;
-            this.$tick(this.updateView);
+            this.updateView();
         }
     }
 }
