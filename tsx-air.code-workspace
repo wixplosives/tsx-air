@@ -45,6 +45,7 @@
 		"typescript.tsdk": "tsx-air/node_modules/typescript/lib",
 		"cSpell.words": [
 			"Bitmask",
+			"Bitmasks",
 			"ESNEXT",
 			"Namepath",
 			"Unparsed",
@@ -54,6 +55,7 @@
 			"downlevel",
 			"extendz",
 			"jsxroot",
+			"prebuild",
 			"prerender",
 			"quotemark",
 			"sourcemap",
