@@ -210,6 +210,8 @@ export class Runtime {
         if (!this.viewUpdatePending) {
             this.viewUpdatePending = true;
             this.updateView();
+        } else {
+            this.$tick(this.updateView);
         }
     }
 }
