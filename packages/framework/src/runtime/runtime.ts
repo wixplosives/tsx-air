@@ -185,7 +185,7 @@ export class Runtime {
         const changed = new Set<Component>();
         let oneUpdate = [...this.updateViewOnce()];
         while(oneUpdate.length > 0) {
-            oneUpdate.forEach((item) => changed.add(item))
+            oneUpdate.forEach(item => changed.add(item));
             oneUpdate = [...this.updateViewOnce()];
         }
         this.viewUpdatePending = false;
