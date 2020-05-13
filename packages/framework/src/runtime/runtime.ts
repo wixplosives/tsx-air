@@ -37,7 +37,7 @@ export class Runtime {
     };
 
     private ignoreStateChanges = new Set<Component>();
-    private viewUpdatePending: boolean = false;
+    private updateTriggered: boolean = false;
 
     public $tick = (fn: FrameRequestCallback) => window.requestAnimationFrame(fn);
     public execute<Comp extends Component>(instance: Comp, method: (...args: any[]) => any, ...args: any[]) {
@@ -180,15 +180,15 @@ export class Runtime {
 
     private updateView = () => {
         const stateTime = performance.now();
-
-        
         const changed = new Set<Component>();
+
         let oneUpdate = [...this.updateViewOnce()];
         while(oneUpdate.length > 0) {
             oneUpdate.forEach(item => changed.add(item));
             oneUpdate = [...this.updateViewOnce()];
         }
-        this.viewUpdatePending = false;
+        this.updateTriggered = false;
+        
         if (changed.size > 0) {
             changed.forEach(i => {
                 const req = this.pending.requested.get(i) || (i.$afterUpdate && i.$afterUpdate());
@@ -207,8 +207,8 @@ export class Runtime {
     };
 
     private triggerViewUpdate() {
-        if (!this.viewUpdatePending) {
-            this.viewUpdatePending = true;
+        if (!this.updateTriggered) {
+            this.updateTriggered = true;
             this.updateView();
         }
     }
