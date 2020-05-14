@@ -60,6 +60,16 @@ function getDirectDependencies(comp: CompDefinition, scope: UsedVariables, ignor
     
     return used;
 }
+type U<T> = UsedInScope<T> | UsedVariables<T> | RecursiveMap<T>;
+export function mergeRefMap<T, R extends U<T>>(obj:R, ...add:R[]):R {
+    add.forEach(added =>  mergeWith(obj, added, (a, b) => {
+        if (isArray(a)) {
+            return chain(a).concat(b).uniq().value();
+        } else return;
+    }));
+    return obj as R;
+}
+
 
 const add = (target:UsedInScope, added: RecursiveMap, prefix: string) => {
     mergeWith(target, { [prefix]: added }, (a, b) => {

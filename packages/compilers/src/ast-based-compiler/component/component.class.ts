@@ -12,13 +12,12 @@ import { generateAfterMount } from './event.handlers';
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
     const importedComponent = api.ensureImport('Component', '@tsx-air/framework');
     const binding = generateDomBindings(comp);
-    const info = comp.jsxRoots[0];
     const res = cClass(
         comp.name!,
         importedComponent,
         undefined, [
         cStatic('factory', cObject({
-            toString: generateToString(info, comp),
+            toString: generateToString(comp),
             hydrate: generateHydrate(comp, binding),
             initialState: generateInitialState(comp),
         })),
