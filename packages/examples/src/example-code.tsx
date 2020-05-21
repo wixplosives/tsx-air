@@ -109,8 +109,8 @@ export const target2 = {
             }
         },
         div1: {
-            toString(props: { children: VirtualElement }) {
-                return `<div>${props.children.type.toString(props.children.props)}</div>`;
+            toString(props: { children: Children }) {
+                return `<div>${childrenToString(props.children)}</div>`;
             },
             bits: {
                 props_children: 0x1

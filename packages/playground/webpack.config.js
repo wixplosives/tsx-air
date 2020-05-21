@@ -5,11 +5,11 @@ const { serveExamples } = require('./src/utils/examples.indexer');
 const { packagePath } = require('@tsx-air/utils/packages');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-
 module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
     return {
         entry: {
-            main: './src/view'
+            main: './src/view',
+            nadav: './src/nadavs-example'
         },
         mode,
         devtool,
@@ -48,8 +48,8 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
         plugins: [
             new HtmlWebpackPlugin({
                 title: 'TsxAir example playground',
-                template: join(__dirname, 'src/view/index.html')
-            }),
+                template: join(__dirname, 'src/view/index.html'),
+            })
             // new BundleAnalyzerPlugin()
         ],
         performance: {
@@ -66,7 +66,7 @@ module.exports = (_env, { mode = 'development', devtool = 'source-map' }) => {
                 packagePath('@tsx-air/playground', 'public'),
                 packagePath('@tsx-air/examples', 'public'),
                 packagePath('@tsx-air/examples', 'src/examples'),
-                packagePath('typescript','lib'),
+                packagePath('typescript', 'lib'),
                 packagePath('monaco-editor', 'min')
             ],
             hot: true,
