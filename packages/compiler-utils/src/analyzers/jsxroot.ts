@@ -27,10 +27,7 @@ function jsxRoot(sourceAstNode: JsxElm) {
     };
     return root;
 
-<<<<<<< Updated upstream
-=======
     return root;
->>>>>>> Stashed changes
 
 
     function findJsxComponent(jsxCompNode: ts.Node, { ignoreChildren }: ScannerApi): JsxComponent | undefined {
