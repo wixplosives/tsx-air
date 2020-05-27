@@ -2,6 +2,7 @@ import { JsxExpression } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { isTsJsxRoot, isTsFunction } from './types.is.type';
 import { findUsedVariables } from './find-used-variables';
+import { jsxRoots } from './jsxroot';
 
 export function parseExpression(n: ts.Node) {
     if (ts.isJsxExpression(n) && n.expression) {
@@ -12,7 +13,8 @@ export function parseExpression(n: ts.Node) {
             sourceAstNode: n as ts.JsxExpression,
             expression: n.expression.getText(),
             variables: expVariables,
-            aggregatedVariables: expAggregatedVariables
+            aggregatedVariables: expAggregatedVariables,
+            jsxRoots: jsxRoots(n)
         };
         return result;
     } else {

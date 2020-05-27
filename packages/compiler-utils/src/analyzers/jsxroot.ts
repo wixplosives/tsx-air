@@ -7,12 +7,12 @@ import { findUsedVariables, mergeUsedVariables } from './find-used-variables';
 import { parseExpression } from './jsx.expression';
 import { isTsJsxRoot, isTsFunction } from './types.is.type';
 
-export function jsxRoots(astNode: ts.Node, propsIdentifier: string | undefined) {
+export function jsxRoots(astNode: ts.Node): JsxRoot[] {
     return scan(astNode, findJsxRoot)
-        .map(({ node }) => jsxRoot(node as JsxElm, propsIdentifier!));
+        .map(({ node }) => jsxRoot(node as JsxElm));
 }
 
-const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string) => {
+function jsxRoot(sourceAstNode: JsxElm) {
     const expressions = scan(sourceAstNode, findJsxExpression).map(({ node }) => parseExpression(node));
     const components = scan(sourceAstNode, findJsxComponent).map<JsxComponent>(i => i.metadata);
     const variables = findUsedVariables(sourceAstNode, node => isTsJsxRoot(node) || isTsFunction(node));
@@ -27,6 +27,10 @@ const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string) => {
     };
     return root;
 
+<<<<<<< Updated upstream
+=======
+    return root;
+>>>>>>> Stashed changes
 
 
     function findJsxComponent(jsxCompNode: ts.Node, { ignoreChildren }: ScannerApi): JsxComponent | undefined {
@@ -91,18 +95,15 @@ const jsxRoot = (sourceAstNode: JsxElm, propsIdentifier: string) => {
     }
 
     function findChildren(jsxCompNode: ts.Node) {
-        if (ts.isJsxSelfClosingElement(jsxCompNode)) {
-            return [];
-        }
         const children: JsxRoot[] = [];
-        jsxCompNode.forEachChild(jsxNode => {
-            if (ts.isJsxOpeningElement(jsxNode)
-                || ts.isJsxClosingElement(jsxNode)
-            ) {
-                return;
-            }
-            children.push(jsxRoot(jsxNode as JsxElm, propsIdentifier));
-        });
+        if (!ts.isJsxSelfClosingElement(jsxCompNode)) {
+            jsxCompNode.forEachChild(jsxNode => {
+                if (!(ts.isJsxOpeningElement(jsxNode)
+                    || ts.isJsxClosingElement(jsxNode))) {
+                    children.push(jsxRoot(jsxNode as JsxElm));
+                }
+            });
+        }
         return children;
     }
 };

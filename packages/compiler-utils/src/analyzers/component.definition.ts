@@ -51,7 +51,7 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
         variables,
         volatileVariables,
         sourceAstNode: astNode,
-        jsxRoots: jsxRoots(astNode, propsIdentifier),
+        jsxRoots: jsxRoots(astNode),
         functions: functions(compFunc.body),
         stores
     };

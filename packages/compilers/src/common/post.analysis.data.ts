@@ -1,21 +1,18 @@
-import { AnalyzedNode, JsxExpression, FuncDefinition, CompDefinition } from '@tsx-air/compiler-utils';
+import { AnalyzedNode } from '@tsx-air/compiler-utils';
 import isFunction from 'lodash/isFunction';
+import ts from 'typescript';
 
 type Modifier<T> = (mod: T | undefined) => T;
 type NotFunc<T> = T extends () => any ? never : T;
 
 export class PostAnalysisData {
-    private _data = new Map<AnalyzedNode, any>();
-    // public write(node: NodeWithVariables, key: 'dependencies', value: string[], override?: boolean): string;
-    public write(node: AnalyzedNode, key: 'name', value: string, override?: boolean): string;
-    public write(node: AnalyzedNode, key: 'handlerOf', value: JsxExpression[], override?: boolean): JsxExpression[];
-    public write(node: AnalyzedNode, key: 'handler', value: FuncDefinition, override?: boolean): FuncDefinition;
-    public write(node: CompDefinition, key: 'lambdaCount', modifier: Modifier<number>):number;
-    public write<T>(node: AnalyzedNode, key: string, modifier: Modifier<T>, override: true): T;
-    public write<T>(node: AnalyzedNode, key: string, modifier: NotFunc<T>, override: boolean): T;
-    public write<T=any>(node: AnalyzedNode, key: string, value: NotFunc<T> | Modifier<T>, override = true): T {
-        const nodeData = this._data.get(node) || {};
-        this._data.set(node, nodeData);
+    private byAnalyzed = new Map<AnalyzedNode, any>();
+    private byAst = new Map<ts.Node, any>();
+
+    public write<T = any>(node: AnalyzedNode, key: string, value: NotFunc<T> | Modifier<T>, override = true): T {
+        const nodeData = this.byAnalyzed.get(node) || {};
+        this.byAnalyzed.set(node, nodeData);
+        this.byAst.set(node.sourceAstNode, nodeData);
         if (isFunction(value)) {
             nodeData[key] = value(nodeData[key]);
         } else {
@@ -29,15 +26,22 @@ export class PostAnalysisData {
         }
         return nodeData[key] as T;
     }
-    public writeIfNew<T = any>(node: AnalyzedNode, key: string, value: NotFunc<T>): T {        
-        return this.write(node, key, value, true);
+    public writeIfNew<T = any>(node: AnalyzedNode, key: string, value: NotFunc<T>): T {
+        return this.write(node, key, value, false);
     }
-    // public read(node: NodeWithVariables, key: 'dependencies', _default?:string[]): string[];
-    public read(node: AnalyzedNode, key: 'name', _default?: string): string | undefined;
-    public read(node: AnalyzedNode, key: 'handlerOf', _default?: JsxExpression[]): JsxExpression[] | undefined;
-    public read(node: AnalyzedNode, key: 'handler', _default?: FuncDefinition): FuncDefinition;
+
+    public read<T = any>(node: AnalyzedNode, key: string, _default: T): T;
+    public read<T = any>(node: AnalyzedNode, key: string): T | undefined;
     public read<T = any>(node: AnalyzedNode, key: string, _default?: T | undefined): T | undefined {
-        const nodeData = this._data.get(node);
+        return this._read(this.byAnalyzed, node, key, _default);
+    }
+
+    public readByAst<T = any>(node: ts.Node, key: string, _default?: T): T | undefined {
+        return this._read(this.byAst, node, key, _default);
+    }
+
+    private _read<N, T = any>(map: Map<N, any>, node: N, key: string, _default?: T): T | undefined {
+        const nodeData = map.get(node);
         return nodeData && key in nodeData
             ? nodeData[key] as T
             : _default;

@@ -73,6 +73,7 @@ export function nodeToStringParts(
     if (replaced !== false) {
         if (ts.isJsxElement(replaced)) {
             replaced = asSourceFile(repeat(' ', leadingTriviaWidth) + asCode(replaced));
+            (replaced as any).src = (node as any).src || node;
             const ret = nodeToStringParts(replaced, replacers, 0);
             return ret;
         }

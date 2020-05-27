@@ -55,7 +55,6 @@ describe('functions', () => {
         it(`uses the state and volatile params`, () => {
             const func = evalStateSafeFunc(functions().WithVolatileFunction);
             expect(func({ p: 1 }, { s: { a: 10 } }, { b: 100 }, 1000)).to.equal(1111);
-
         });
 
         // TODO remove

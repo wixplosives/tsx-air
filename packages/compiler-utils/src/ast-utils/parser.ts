@@ -32,8 +32,9 @@ export const parseValue = (obj: string | object) => {
 
 
 export function asAst(statement: string, returnStatement:true): ts.Statement;
-export function asAst(statement: string, returnStatement?:boolean): ts.Node;
-export function asAst(statement: string, returnStatement = false) {
+export function asAst(statement: string, returnStatement:false, modifier?:(n:ts.Node)=>ts.Node|undefined): ts.Statement;
+export function asAst(statement: string, returnStatement?:boolean, modifier?:(n:ts.Node)=>ts.Node|undefined): ts.Node;
+export function asAst(statement: string, returnStatement = false, modifier?:(n:ts.Node)=>ts.Node|undefined) {
     const mockFile = asSourceFile(statement);
 
     const validValue = returnStatement
@@ -44,7 +45,7 @@ export function asAst(statement: string, returnStatement = false) {
         !(validValue.flags & ts.NodeFlags.ThisNodeHasError)) {
         return returnStatement
             ? validValue
-            : cloneDeep(validValue) as ts.Node;
+            : cloneDeep(validValue, undefined, modifier) as ts.Node;
     }
     throw new Error('Invalid value object');
 }

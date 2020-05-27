@@ -58,13 +58,6 @@ const volatileVars = (comp: CompDefinition, vars: ts.VariableStatement) => {
             && asCode(v.name) in comp.aggregatedVariables.accessed
     );
     return withoutStores;
-
-    // if (withoutStores.length) {
-    //     return ts.createVariableStatement(vars.modifiers,
-    //         ts.createNodeArray(withoutStores.map(v => cloneDeep(v)!)));
-    // } else {
-    //     return undefined;
-    // }
 };
 
 const isFunc = (v: ts.VariableDeclaration) => (v.initializer && (
@@ -83,16 +76,6 @@ function replaceFunc(v: ts.VariableDeclaration, comp: CompDefinition, params: an
         defined.add(name);
         const clone = ts.getMutableClone(v);
         clone.initializer = asAst(`this.${name} || ((...args)=>${comp.name}.prototype._${name}(${_params}, ...args))`) as ts.Expression;
-
-        // cArrow([cSpreadParams('args')],
-        //     cCall([comp.name, 'prototype', asCode(v.name), 'call'],
-        //         [
-        //             ts.createThis(),
-        //             params[0] ? ts.createIdentifier(params[0] as string) : ts.createNull(),
-        //             params[1] ? ts.createIdentifier(params[1] as string) : ts.createNull(),
-        //             ts.createIdentifier(VOLATILE),
-        //             ts.createSpread(ts.createIdentifier('args'))
-        //         ]));
         return clone;
     } else {
         defined.add(asCode(v.name));

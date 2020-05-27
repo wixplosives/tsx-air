@@ -116,6 +116,7 @@ export interface JsxFragment extends NodeWithVariables<ts.JsxFragment> {
 export interface JsxExpression extends NodeWithVariables<ts.JsxExpression> {
     kind: 'JsxExpression';
     expression: string;
+    jsxRoots: JsxRoot[];
 }
 
 export interface JsxComponent extends NodeWithVariables<JsxElm> {
