@@ -4,12 +4,24 @@ import { postAnalysisData } from "../../common/post.analysis.data";
 import { generateFragmentToString } from "./jsx.string.template";
 import { get, chain } from "lodash";
 import { cStateCall } from "./function";
+import { Component, Fragment } from "@tsx-air/framework";
 
 
 export const fragId = (prefix: string, index: number) =>
-    `${prefix}$${index}`;
+    `${prefix}$${index}`; ``
 
-export const parseFragments = (comp: CompDefinition) => [..._parseFragments(comp)];
+export const parseFragments = (comp: CompDefinition) => {
+    const fragments:Record<string, Fragment> = {};
+    for (const frag of _parseFragments(comp)) {
+        const elm = frag.root.sourceAstNode;
+        const elmType = asCode(
+            ts.isJsxSelfClosingElement(elm)
+                ? elm.tagName
+                : elm.openingElement.tagName
+        );
+        fragments[`${elmType}${frag.index}`] = 
+    }
+};
 
 function* _parseFragments(comp: CompDefinition) {
     const statements = get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
@@ -18,11 +30,12 @@ function* _parseFragments(comp: CompDefinition) {
     }
 }
 
-function* processStatementFragments(comp: CompDefinition, node: ts.Node, prefix: string): Generator<Fragment> {
-    const roots = [..._getJsxRoots(comp, node)];
+function* processStatementFragments(comp: CompDefinition, node: ts.Node, prefix: string): Generator<FragmentData> {
+    const roots = _getJsxRoots(comp, node);
     for (const root of roots) {
         const hasInnerFragments = root.expressions.some(exp => exp.jsxRoots.length > 0);
-        const counter = postAnalysisData.read(comp, 'fragmentCount', 0);
+        const counter = getCounter(comp);
+
         const frag = assignFragmentData(root, {
             id: fragId(`${comp.name}${prefix}`, counter),
             index: counter,
@@ -32,22 +45,26 @@ function* processStatementFragments(comp: CompDefinition, node: ts.Node, prefix:
         });
         frag.src.push(node)
         if (frag.index === counter) {
-            postAnalysisData.write(comp, 'fragmentCount', counter + 1);
+            setCounter(comp, counter + 1);
         }
         yield frag;
     }
 }
 
-const assignFragmentData = (root: JsxRoot, dataIfNew: Fragment) =>
+const assignFragmentData = (root: JsxRoot, dataIfNew: FragmentData) =>
     postAnalysisData.writeIfNew(root, 'fragmentId', dataIfNew);
+const getCounter = (comp: CompDefinition) =>
+    postAnalysisData.read(comp, 'fragmentCount', 0);
+const setCounter = (comp: CompDefinition, counter: number) =>
+    postAnalysisData.write(comp, 'fragmentCount', counter);
 
-export function getFragmentData(root: JsxRoot | ts.Node): Fragment | undefined {
+export function getFragmentData(root: JsxRoot | ts.Node): FragmentData | undefined {
     return isJsxRoot(root)
         ? postAnalysisData.read(root, 'fragmentId')
         : postAnalysisData.readByAst(root, 'fragmentId');
 }
 
-export const generateFragment = (comp: CompDefinition, frag: Fragment) =>
+export const generateFragment = (comp: CompDefinition, frag: FragmentData) =>
     asAst(`({$key}) => TEMPLATE;`, false, n =>
         (ts.isIdentifier(n) && n.getText() === `TEMPLATE`)
             ? generateFragmentToString(frag.root, comp)
@@ -89,10 +106,11 @@ export function* _getJsxRoots(comp: CompDefinition, s: ts.Node) {
     }
 }
 
-export interface Fragment {
+export interface FragmentData {
     index: number;
     id: string;
     root: JsxRoot;
     hasInnerFragments: boolean;
     src: ts.Node[]
 }
+

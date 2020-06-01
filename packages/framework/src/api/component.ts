@@ -5,7 +5,7 @@ import { ValueOf } from '../types/type-utils';
 import { CompCreator } from './types';
 
 export class ComponentApi<Props> {
-    constructor(readonly $instance: Component<Dom, Props, any>, readonly rootElement: HTMLElement) { }
+    constructor(readonly $instance: Component<Dom>) { }
     public updateProps = (props: Props) => runtime.updateProps(
         this.$instance as unknown as Component, p => {
             let changed = 0;
@@ -34,7 +34,23 @@ export class ComponentApi<Props> {
         this.$instance.props[key];
 }
 
-export function render<Props>(target: HTMLElement, component: CompCreator<Props>, props: Props) {
-    const comp = runtime.render(target, component.factory, props) as Component<Dom, Props, {}>;
-    return comp && new ComponentApi(comp, target);
+export function render<Props>(component: CompCreator<Props>, props: Props, state = {}, target?: HTMLElement, add: 'append' | 'before' | 'replace' = 'append') {
+    let { factory, key } = component;
+    key = '' + (key || runtime.getUniqueKey('root'));
+    const comp = runtime.renderComponent(key, factory, props, state) as Component<Dom>;
+    if (target) {
+        const dom = comp.getDomRoot();
+        switch (add) {
+            case 'append':
+                target.append(dom);
+                break;
+            case 'before':
+                target.parentNode?.insertBefore(dom, target);
+                break;
+            case 'replace':
+                target.parentNode?.insertBefore(dom, target);
+                target.remove();
+        }
+    }
+    return new ComponentApi(comp);
 }

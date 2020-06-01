@@ -3,4 +3,5 @@ export interface RuntimeCycle {
     readonly endTime: number;
     // readonly actions: number;
     readonly changed: number;
+    readonly depth:number;
 }

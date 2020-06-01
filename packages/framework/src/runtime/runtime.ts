@@ -1,208 +1,151 @@
-import { Component, Dom } from '../types/component';
-import { PropsOf, StateOf, Factory } from '../types/factory';
-import cloneDeep from 'lodash/cloneDeep';
+import { Component, Dom, Displayable, isComponent, Fragment, isVirtualElement, VirtualElement, DomMarker } from '../types/component';
+import { CompFactory } from '../types/factory';
 import { RuntimeCycle } from './stats';
+import { updateExpression, asDomNodes } from './runtime.helpers';
+import isArray from 'lodash/isArray';
 
 type Mutator = (obj: any) => number;
-type StateMutator<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State>
-    ? (state: State) => number
-    : never;
-type PropsMutator<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State>
-    ? (props: Props) => number
-    : never;
-type PropMutation<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State>
-    ? [Comp, PropsMutator<Props>]
-    : never;
-type StateMutation<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State>
-    ? [Comp, StateMutator<State>]
-    : never;
-
-const flags = {
-    preRender: 1 << 63
-};
 
 export class Runtime {
-    public readonly flags = flags;
+    $stats = [] as RuntimeCycle[];
 
-    public $stats = [] as RuntimeCycle[];
+    private pending = new Map<Displayable, number>();
 
-    private pending: {
-        props: Array<PropMutation<Component>>;
-        states: Array<StateMutation<Component>>;
-        requested: Map<Component, IterableIterator<void>>;
-    } = {
-        props: [],
-        states: [],
-        requested: new Map()
-    };
-
-    private ignoreStateChanges = new Set<Component>();
     private viewUpdatePending: boolean = false;
+    private readonly maxDepthPerUpdate = 100;
 
-    public $tick = (fn: FrameRequestCallback) => window.requestAnimationFrame(fn);
-    public execute<Comp extends Component>(instance: Comp, method: (...args: any[]) => any, ...args: any[]) {
-        const volatile = this.preRender(instance, instance.props, instance.state);
-        return method.apply(instance, [instance.props, instance.state, volatile, ...args]);
+    $tick = globalThis.requestAnimationFrame
+        ? (fn: FrameRequestCallback) => globalThis.requestAnimationFrame(fn)
+        : (fn: FrameRequestCallback) => globalThis.process.nextTick(fn);
+    
+    private mockDom = globalThis.document?.createElement('div');
+    private keyCounter = 0|0;
+
+    execute<Comp extends Component>(instance: Comp, method: (...args: any[]) => any, ...args: any[]) {
+        return method.apply(instance, [instance.props, instance.state, instance.volatile, ...args]);
     }
-    public updateProps<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
-        instance: Comp,
-        mutator: PropsMutator<Comp>
-    ) {
-        // @ts-ignore
-        this.pending.props.push([instance, mutator]);
+
+    updateProps(instance: Displayable, mutator: Mutator) {
+        this.addChange(instance, mutator(instance.props));
         this.triggerViewUpdate();
     }
 
-    public updateState<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
-        instance: Comp,
-        localState: State,
-        mutator: StateMutator<Comp>
-    ) {
-        if (this.ignoreStateChanges.has(instance)) {
-            return;
-        }
-        if (!this.isMockComponent(instance)) {
-            // @ts-ignore
-            this.pending.states.push([instance, mutator]);
-            this.triggerViewUpdate();
-        } else {
-            mutator(localState);
-        }
+    updateState(instance: Displayable, mutator: Mutator) {
+        this.addChange(instance, mutator(instance.state));
+        this.triggerViewUpdate();
     }
 
-    public render<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
-        target: HTMLElement,
-        factory: Factory<Comp>,
-        props: PropsOf<Comp>,
-        state?: StateOf<Comp>
+    renderComponent<Ctx extends Dom, Comp extends Component<Ctx>>(
+        key:string,
+        factory: CompFactory<Comp>,
+        props: any,
+        state?: any
     ): Comp {
-        const safeState = state || factory.initialState(props);
-        target.innerHTML = factory.toString(props, safeState);
-        const compHtml = target.children[0] as HTMLElement;
-        return factory.hydrate(compHtml, props, safeState);
+        state = state || factory?.initialState(props) || {};
+        const instance = factory.newInstance(key, props, state);
+        const vElm = instance.$preRender();
+        instance.ctx.root = this.getUpdatedInstance(vElm);
+        return instance;
     }
 
-    public preRender<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
-        instance: Comp,
-        props: Props,
-        state: State,
-        changeState = false
-    ) {
-        if (!changeState) {
-            this.ignoreStateChanges.add(instance);
+    setExpValue(exp: DomMarker, value: any) {
+        updateExpression([exp.start as Comment, exp.end as Comment], asDomNodes(value));
+    }
+
+    toString(x: any): string {
+        if (isArray(x)) {
+            return x.map(i => this.toString(i)).join('');
         }
-        const v: object = instance.$preRender(props || instance.props, state || instance.state);
-        if (!changeState) {
-            this.ignoreStateChanges.delete(instance);
+        if (isVirtualElement(x)) {
+            return this.getUpdatedInstance(x).toString();
         }
-        return v;
-    }
-
-    public toStringPreRender<Props, State>(compType: any, props: Props, state: State) {
-        // TODO: remove this hack after changing update state/props to be sync
-        const mockComp = { props, state };
-        const v = compType.prototype.$preRender.call(mockComp, props, state);
-        return v;
-    }
-
-    private isMockComponent(instance: any) {
-        return !instance.$updateView;
-    }
-
-    private mutate(
-        mutator: Mutator,
-        instance: Component,
-        initialData: any,
-        mutatedData: Map<Component, any>,
-        changeBitmasks: Map<Component, number>
-    ) {
-        if (!mutatedData.has(instance)) {
-            mutatedData.set(instance, cloneDeep(initialData));
+        if (isComponent(x)) {
+            this.toString(x.$preRender());
         }
-        const modMapping = mutator(mutatedData.get(instance));
-        const oldChangeMap = changeBitmasks.get(instance) || 0;
-        const newChangeMap = oldChangeMap | modMapping;
-        changeBitmasks.set(instance, newChangeMap);
-        return !(modMapping & flags.preRender);
+        return x.toString();
     }
 
-    private runAllMutations(
-        changeBitmasks: Map<Component, number>,
-        updatesCount: Map<Component, number>,
-        latestProps: Map<Component, {}>,
-        latestStates: Map<Component, {}>
-    ) {
-        const { props, states, requested } = this.pending;
-        this.pending = { props: [], states: [], requested };
-
-        props.forEach(([instance, mutator]) => {
-            if (this.mutate(mutator, instance, instance.props, latestProps, changeBitmasks)) {
-                updatesCount.set(instance, (updatesCount.get(instance) || 0) + 1);
-            }
-        });
-        states.forEach(([instance, mutator]) => {
-            if (this.mutate(mutator, instance, instance.state, latestStates, changeBitmasks)) {
-                updatesCount.set(instance, (updatesCount.get(instance) || 0) + 1);
-            }
-        });
+    getUpdatedInstance(vElm: VirtualElement): Displayable {
+        const { key, owner } = vElm;
+        if (!key) {
+            throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
+        }
+        if (key in owner.ctx) {
+            const instance = (owner.ctx as any)[key];
+            this.updateProps(instance, () => vElm.modified);
+            return instance;
+        } else {
+            return this.renderNew(vElm);
+        }
     }
 
-    private updateViewOnce() {
-        const changeBitmasks = new Map<Component, number>([...this.pending.requested.keys()].map(k => [k, 0]));
-        const updatesCount = new Map<Component, number>();
-        const latestProps = new Map<Component, {}>();
-        const latestStates = new Map<Component, {}>();
+    getUniqueKey(prefix=''){
+        return `${prefix}${(this.keyCounter++).toString(36)}`;
+    }
 
-        this.runAllMutations(changeBitmasks, updatesCount, latestProps, latestStates);
+    private renderNew(vElm: VirtualElement): Displayable {
+        const factory = vElm.type.factory as CompFactory<any>;
+        const { props,key } = vElm;
+        const state = vElm.state || factory?.initialState(props) || {};
+        const instance = factory.newInstance(key!, props, state);
+        (vElm.owner.ctx as any)[key!] = instance;
+        if (isComponent(instance)) {
+            const innerVElm = instance.$preRender();
+            const asString = this.toString(innerVElm);
+            this.mockDom.innerHTML = asString;
+            instance.hydrate(this.mockDom.children[0]);
+            this.mockDom.children[0].remove();
+        }
+        instance.ctx.root = this.getUpdatedInstance(vElm);
+        return instance;
+    }
 
-        changeBitmasks.forEach((changeMap, instance) => {
-            const getNew = () => [
-                latestProps.get(instance) || instance.props,
-                latestStates.get(instance) || instance.state
-            ];
-            let [newProps, newState] = getNew();
-
-            let volatile: any = null;
-            for (let i = 0; i < (updatesCount.get(instance) || 0); i++) {
-                volatile = this.preRender(instance, newProps, newState, !volatile);
-                this.runAllMutations(changeBitmasks, updatesCount, latestProps, latestStates);
-                [newProps, newState] = getNew();
-            }
-            changeMap = changeBitmasks.get(instance)!;
-            instance.$updateView(newProps, newState, volatile, changeMap);
-            // @ts-ignore
-            instance.props = newProps;
-            // @ts-ignore
-            instance.state = newState;
-        });
-        return changeBitmasks.keys();
+    private addChange(instance: Displayable, change: number) {
+        const currentChange = (this.pending.get(instance) as number) | change;
+        this.pending.set(instance, currentChange);
     }
 
     private updateView = () => {
         const stateTime = performance.now();
+        let depth = 0;
+        const changed = new Map<Displayable, number>();
+        do {
+            depth++;
+            const { pending } = this;
+            this.pending = new Map<Displayable, number>();
+            for (let [instance, changes] of pending) {
+                if (isComponent(instance)) {
+                    const res = instance.$preRender();
+                    if (this.pending.has(instance)) {
+                        changes |= (this.pending.get(instance)! | 0);
+                        this.pending.delete(instance);
+                    }
+
+                    const nextRoot = this.getUpdatedInstance(res);
+                    const root = instance.ctx.root as Displayable;
+                    if (root === nextRoot) {
+                        nextRoot.$updateView(changes);
+                    } else {
+                        root.getDomRoot().parentNode?.append(nextRoot.getDomRoot());
+                        root.getDomRoot().remove();
+                        instance.ctx.root = nextRoot as Fragment;
+                    }
+                } else {
+                    instance.$updateView(changes)
+                }
+            }
+        } while (depth < this.maxDepthPerUpdate && this.pending.size);
 
         this.viewUpdatePending = false;
-        const changed = new Set<Component>();
-        for (const i of this.updateViewOnce()) {
-            changed.add(i);
+        if (this.pending.size) {
+            this.triggerViewUpdate();
         }
 
-        if (changed.size > 0) {
-            this.$tick(() => {
-                changed.forEach(i => {
-                    const req = this.pending.requested.get(i) || (i.$afterUpdate && i.$afterUpdate());
-                    if (req && !req.next().done) {
-                        this.pending.requested.set(i, req);
-                    } else {
-                        this.pending.requested.delete(i);
-                    }
-                });
-            });
-        }
         this.$stats.push({
             stateTime,
             endTime: performance.now(),
-            changed: changed.size
+            changed: changed.size,
+            depth
         });
     };
 

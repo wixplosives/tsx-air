@@ -19,11 +19,11 @@ import {
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { defaultsDeep } from 'lodash';
-import { getFragmentData, Fragment } from './jsx.fragment';
+import { getFragmentData, FragmentData } from './jsx.fragment';
 
 export const generateFragmentToString = (node: JsxRoot, comp: CompDefinition) => {
     const executedFuncs = [] as string[];
-    const fragments = [] as Fragment[];
+    const fragments = [] as FragmentData[];
 
     const element = (node.sourceAstNode);
     // const element = cloneDeep(node.sourceAstNode);
@@ -101,7 +101,7 @@ export const jsxTextExpressionReplacer: (comp: CompDefinition, executedFuncs: st
     }
 };
 
-export const jsxFragmentReplacer: (frags: Fragment[], root: JsxRoot) => AstNodeReplacer = (fragments, root) => node => {
+export const jsxFragmentReplacer: (frags: FragmentData[], root: JsxRoot) => AstNodeReplacer = (fragments, root) => node => {
     const fragData = getFragmentData(node);
     if (fragData) {
         if (node !== root.sourceAstNode) {
@@ -161,7 +161,7 @@ export const jsxComponentReplacer: AstNodeReplacer = node => {
 };
 
 
-export const jsxFragmentAddKey: (frags: Fragment[], root: JsxRoot) => AstNodeReplacer = (fragments, root) => node => {
+export const jsxFragmentAddKey: (frags: FragmentData[], root: JsxRoot) => AstNodeReplacer = (fragments, root) => node => {
     if (node === root.sourceAstNode) {
         return asAst(asCode(node), true);
     } else {

@@ -1,4 +1,4 @@
-import { Factory } from '../types/factory';
+import { Factory, CompFactory } from '../types/factory';
 import { IntrinsicElements as IntrinsicElementsImported } from './dom';
 import runtime from '../runtime';
 
@@ -12,8 +12,8 @@ export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props, Fact
 
 // This interface serves as a component definition in pre-compiled code
 export interface CompCreator<Props> {
-    (props: Props): TsxAirNode<Props, Factory<any>>;
-    factory: Factory<any>;
+    (props: Props): TsxAirNode<Props, CompFactory<any>>;
+    factory: CompFactory<any>;
     key?: string | number | null;
 }
 

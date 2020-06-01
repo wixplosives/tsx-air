@@ -1,6 +1,6 @@
 import { functions, basicPatterns, conditional } from "../../test.helpers";
 import { asCode, asAst, evalAst } from "@tsx-air/compiler-utils/src";
-import { _getJsxRoots, parseFragments, fragId, generateFragment, Fragment } from "./jsx.fragment";
+import { _getJsxRoots, parseFragments, fragId, generateFragment, FragmentData } from "./jsx.fragment";
 import get from "lodash/get";
 import ts from "typescript";
 import { getCompDef } from "@tsx-air/compiler-utils/src/analyzers/test.helpers";
@@ -63,7 +63,7 @@ describe('fragments', () => {
                 const simpleFragment = <div />;
                 return <div>{<p />}</div>;
             })`);
-            const toStringOf = (f: Fragment) =>
+            const toStringOf = (f: FragmentData) =>
                 // @ts-ignore
                 evalAst(generateFragment(comp, f))({ $key: 'KEY' });
 
