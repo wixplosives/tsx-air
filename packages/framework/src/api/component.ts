@@ -1,11 +1,11 @@
 import runtime from '../runtime';
-import { Component, Dom } from '../types';
+import { Component, VirtualElement } from '../types';
 import { setProp } from '../runtime/utils';
 import { ValueOf } from '../types/type-utils';
 import { CompCreator } from './types';
 
 export class ComponentApi<Props> {
-    constructor(readonly $instance: Component<Dom>) { }
+    constructor(readonly $instance: Component) { }
     public updateProps = (props: Props) => runtime.updateProps(
         this.$instance as unknown as Component, p => {
             let changed = 0;
@@ -34,10 +34,10 @@ export class ComponentApi<Props> {
         this.$instance.props[key];
 }
 
-export function render<Props>(component: CompCreator<Props>, props: Props, state = {}, target?: HTMLElement, add: 'append' | 'before' | 'replace' = 'append') {
+export function render(component: CompCreator<Props>, props: Props, state = {}, target?: HTMLElement, add: 'append' | 'before' | 'replace' = 'append') {
     let { factory, key } = component;
     key = '' + (key || runtime.getUniqueKey('root'));
-    const comp = runtime.renderComponent(key, factory, props, state) as Component<Dom>;
+    const comp = runtime.render(key, new VirtualElement( factory, props, state)) as Component<Dom>;
     if (target) {
         const dom = comp.getDomRoot();
         switch (add) {

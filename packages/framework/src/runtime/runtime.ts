@@ -1,25 +1,32 @@
-import { Component, Dom, Displayable, isComponent, Fragment, isVirtualElement, VirtualElement, DomMarker } from '../types/component';
-import { CompFactory } from '../types/factory';
+import { Component, Displayable, isComponent, Fragment, isVirtualElement, VirtualElement, isComponentType, ExpressionDom } from '../types/component';
+import { CompFactory, Factory } from '../types/factory';
 import { RuntimeCycle } from './stats';
-import { updateExpression, asDomNodes } from './runtime.helpers';
+import { updateExpression as _updateExpression, asDomNodes, remapChangedBit } from './runtime.helpers';
 import isArray from 'lodash/isArray';
 
 type Mutator = (obj: any) => number;
 
 export class Runtime {
+    readonly HTMLElement: typeof HTMLElement;
+    readonly Text: typeof Text;
+    constructor(
+        readonly window: Window = globalThis.window,
+        readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = globalThis.requestAnimationFrame
+    ) {
+        this.mockDom = window?.document?.createElement('div');
+        this.document = window?.document;
+        this.HTMLElement = window?.HTMLElement;
+        this.Text = window?.Text;
+    }
     $stats = [] as RuntimeCycle[];
 
+    readonly document: Document;
     private pending = new Map<Displayable, number>();
-
     private viewUpdatePending: boolean = false;
     private readonly maxDepthPerUpdate = 100;
-
-    $tick = globalThis.requestAnimationFrame
-        ? (fn: FrameRequestCallback) => globalThis.requestAnimationFrame(fn)
-        : (fn: FrameRequestCallback) => globalThis.process.nextTick(fn);
-    
-    private mockDom = globalThis.document?.createElement('div');
-    private keyCounter = 0|0;
+    private hydrating = 0;
+    private mockDom!: HTMLElement;
+    private keyCounter = 0 | 0;
 
     execute<Comp extends Component>(instance: Comp, method: (...args: any[]) => any, ...args: any[]) {
         return method.apply(instance, [instance.props, instance.state, instance.volatile, ...args]);
@@ -35,21 +42,8 @@ export class Runtime {
         this.triggerViewUpdate();
     }
 
-    renderComponent<Ctx extends Dom, Comp extends Component<Ctx>>(
-        key:string,
-        factory: CompFactory<Comp>,
-        props: any,
-        state?: any
-    ): Comp {
-        state = state || factory?.initialState(props) || {};
-        const instance = factory.newInstance(key, props, state);
-        const vElm = instance.$preRender();
-        instance.ctx.root = this.getUpdatedInstance(vElm);
-        return instance;
-    }
-
-    setExpValue(exp: DomMarker, value: any) {
-        updateExpression([exp.start as Comment, exp.end as Comment], asDomNodes(value));
+    updateExpression(exp: ExpressionDom, value: any) {
+        _updateExpression([exp.start as Comment, exp.end as Comment], asDomNodes(value));
     }
 
     toString(x: any): string {
@@ -62,41 +56,82 @@ export class Runtime {
         if (isComponent(x)) {
             this.toString(x.$preRender());
         }
-        return x.toString();
+        return x?.toString() || '';
     }
 
     getUpdatedInstance(vElm: VirtualElement): Displayable {
         const { key, owner } = vElm;
-        if (!key) {
+        if (!key || !owner) {
             throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
         }
-        if (key in owner.ctx) {
-            const instance = (owner.ctx as any)[key];
-            this.updateProps(instance, () => vElm.modified);
+        if (key in owner.ctx.components) {
+            const instance = owner.ctx.components[key];
+            instance.props = vElm.props;
+            this.addChange(instance, vElm.changes);
             return instance;
         } else {
-            return this.renderNew(vElm);
+            return this.render(vElm);
         }
     }
-
-    getUniqueKey(prefix=''){
+    getUniqueKey(prefix = '') {
         return `${prefix}${(this.keyCounter++).toString(36)}`;
     }
 
-    private renderNew(vElm: VirtualElement): Displayable {
-        const factory = vElm.type.factory as CompFactory<any>;
-        const { props,key } = vElm;
-        const state = vElm.state || factory?.initialState(props) || {};
-        const instance = factory.newInstance(key!, props, state);
-        (vElm.owner.ctx as any)[key!] = instance;
-        if (isComponent(instance)) {
-            const innerVElm = instance.$preRender();
-            const asString = this.toString(innerVElm);
-            this.mockDom.innerHTML = asString;
-            instance.hydrate(this.mockDom.children[0]);
-            this.mockDom.children[0].remove();
+    hydrate = this.renderOrHydrate as (vElm: VirtualElement, dom: HTMLElement) => Displayable;
+    render = this.renderOrHydrate as (vElm: VirtualElement) => Displayable;
+
+    private renderOrHydrate(vElm: VirtualElement, dom?: HTMLElement): Displayable {
+        const factory = vElm.type.factory as Factory<Fragment>;
+        const { key, props, state, type } = vElm;
+        if (isComponentType(type)) {
+            const comp = this.hydrateComponent(key!, dom, factory as CompFactory<any>, props, state);
+            if (vElm.owner && key) {
+                vElm.owner.ctx.components[key] = comp;
+            }
+            return comp;
         }
-        instance.ctx.root = this.getUpdatedInstance(vElm);
+        const instance = factory.newInstance(vElm.key!, vElm);
+        if (!dom) {
+            this.mockDom.innerHTML = instance.toString();
+            dom = this.mockDom.children[0] as HTMLElement;
+        }
+        instance.hydrate(vElm, dom);
+        if (vElm.owner && key) {
+            vElm.owner.ctx.components[key] = instance;
+        }
+        return instance;
+    }
+
+    hydrateExpression(value: any, start: Comment): ExpressionDom {
+        value = isArray(value) ? value : [value];
+        let hydratedDomNode: Node = start;
+        const hydrated = value
+            .filter((i: any) => i !== undefined && i !== null && i !== '')
+            .map((i: any) => {
+                hydratedDomNode = hydratedDomNode.nextSibling!;
+                if (isVirtualElement(i)) {
+                    return this.hydrate(i, hydratedDomNode as HTMLElement);
+                }
+                return i.toString();
+            });
+        return {
+            start, end: hydratedDomNode.nextSibling as Comment,
+            value: hydrated
+        }
+    }
+
+    private hydrateComponent<Comp extends Component>(
+        key: string,
+        domNode: HTMLElement | undefined,
+        factory: CompFactory<Comp>,
+        props: any,
+        state?: any
+    ): Comp {
+        this.hydrating++;
+        const instance = factory.newInstance(key, { props, state });
+        const preRender = instance.$preRender();
+        instance.ctx.root = this.renderOrHydrate(preRender, domNode);
+        this.hydrating--;
         return instance;
     }
 
@@ -105,54 +140,50 @@ export class Runtime {
         this.pending.set(instance, currentChange);
     }
 
+    private removeChanges(instance: Displayable) {
+        const r = (this.pending.get(instance)! | 0);
+        this.pending.delete(instance);
+        return r;
+    }
+
     private updateView = () => {
-        const stateTime = performance.now();
         let depth = 0;
-        const changed = new Map<Displayable, number>();
         do {
             depth++;
             const { pending } = this;
             this.pending = new Map<Displayable, number>();
             for (let [instance, changes] of pending) {
                 if (isComponent(instance)) {
-                    const res = instance.$preRender();
-                    if (this.pending.has(instance)) {
-                        changes |= (this.pending.get(instance)! | 0);
-                        this.pending.delete(instance);
-                    }
+                    const preRender = instance.$preRender();
+                    // handle prerender state changes 
+                    changes |= this.removeChanges(instance);
+                    preRender.changes = remapChangedBit(changes, preRender.changeBitRemapping);
 
-                    const nextRoot = this.getUpdatedInstance(res);
+                    const nextRoot = this.getUpdatedInstance(preRender);
                     const root = instance.ctx.root as Displayable;
-                    if (root === nextRoot) {
-                        nextRoot.$updateView(changes);
-                    } else {
+                    if (root !== nextRoot) {
                         root.getDomRoot().parentNode?.append(nextRoot.getDomRoot());
                         root.getDomRoot().remove();
                         instance.ctx.root = nextRoot as Fragment;
+                        // TODO: discuss pruning strategy 
+                        instance.ctx.components[nextRoot.key] = nextRoot;
                     }
                 } else {
-                    instance.$updateView(changes)
+                    instance.$updateView(changes);
                 }
             }
-        } while (depth < this.maxDepthPerUpdate && this.pending.size);
+        } while (this.pending.size && depth < this.maxDepthPerUpdate);
 
         this.viewUpdatePending = false;
         if (this.pending.size) {
             this.triggerViewUpdate();
         }
-
-        this.$stats.push({
-            stateTime,
-            endTime: performance.now(),
-            changed: changed.size,
-            depth
-        });
     };
 
     private triggerViewUpdate() {
-        if (!this.viewUpdatePending) {
+        if (!this.viewUpdatePending && !this.hydrating) {
             this.viewUpdatePending = true;
-            this.$tick(this.updateView);
+            this.requestAnimationFrame(this.updateView);
         }
     }
 }
