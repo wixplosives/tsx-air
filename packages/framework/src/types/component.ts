@@ -1,6 +1,7 @@
 import { Factory, CompFactory } from './factory';
 import isFunction from 'lodash/isFunction';
 import { TSXAir } from '../api/types';
+import { VirtualElement } from './virtual.element';
 
 export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
 
@@ -39,7 +40,6 @@ export abstract class Displayable {
         components: {}
     };
 
-    abstract $updateView(changes: number): void;
     abstract dispose(): void;
     getDomRoot(): HTMLElement | Text {
         const { root } = this.ctx;
@@ -56,7 +56,7 @@ export abstract class Displayable {
 }
 
 export function isDisplayable(x: any): x is Displayable {
-    return x && isFunction(x.$updateView);
+    return x && x instanceof Displayable;
 }
 
 export abstract class Fragment extends Displayable {
@@ -69,6 +69,7 @@ export abstract class Fragment extends Displayable {
         this.changesBitMap = parentComp.changesBitMap;
     }
     abstract toString(): string;
+    abstract $updateView(changes: number): void;
 }
 
 export function isFragment(x: any): x is Component {
@@ -101,36 +102,6 @@ export function isComponent(x: any): x is Component {
 
 export function isComponentType(x: any): x is typeof Component {
     return x.prototype instanceof Component;
-}
-
-export class VirtualElement<T extends Component=Component> {
-    constructor(
-        readonly type: any,
-        readonly owner?: T,
-        readonly key?: string,
-        readonly changeBitRemapping?: Map<number, number>,
-        props?: any,
-        volatile?: any,
-        state?: any,
-        public changes: number=0
-    ) {
-        this.props = props || owner?.props;
-        this.state = state || owner?.state;
-        this.volatile = volatile || owner?.volatile;
-    }
-
-    readonly props: any;
-    readonly state: any;
-    readonly volatile: any;
-
-    withKey(key: string) {
-        const { type, owner, props, volatile, state, changes, changeBitRemapping } = this;
-        return new VirtualElement(type, owner, key, changeBitRemapping, props, volatile, state, changes);
-    };
-}
-
-export function isVirtualElement(x: any): x is VirtualElement {
-    return x instanceof VirtualElement;
 }
 
 export interface ExpressionDom {

@@ -26,7 +26,7 @@ export class Factory<Comp extends Displayable> {
 }
 
 export class CompFactory<Comp extends Component> extends Factory<Comp> {
-    constructor(readonly type: any, readonly changesBitMap: Record<string, number>, readonly initialState = (props)=>{}) {
+    constructor(readonly type: any, readonly changesBitMap: Record<string, number>, readonly initialState = (_:any)=>{}) {
         super(type, changesBitMap);
     }
     newInstance(key: string, data: DisplayableData): Comp {

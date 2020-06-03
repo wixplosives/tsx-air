@@ -1,6 +1,7 @@
 import isArray from "lodash/isArray";
 import { TSXAir } from "..";
-import { isVirtualElement, isDisplayable } from "../types/component";
+import {  isDisplayable } from "../types/component";
+import { isVirtualElement } from "../types/virtual.element";
 
 export function updateExpression(expMarkers: Comment[], values: IterableIterator<Text | HTMLElement>) {
     let first!: Node;

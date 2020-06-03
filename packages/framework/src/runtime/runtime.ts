@@ -1,8 +1,9 @@
-import { Component, Displayable, isComponent, Fragment, isVirtualElement, VirtualElement, isComponentType, ExpressionDom } from '../types/component';
+import { Component, Displayable, isComponent, Fragment, isComponentType, ExpressionDom } from '../types/component';
 import { CompFactory, Factory } from '../types/factory';
 import { RuntimeCycle } from './stats';
 import { updateExpression as _updateExpression, asDomNodes, remapChangedBit } from './runtime.helpers';
 import isArray from 'lodash/isArray';
+import { isVirtualElement, VirtualElement } from '../types/virtual.element';
 
 type Mutator = (obj: any) => number;
 
@@ -59,7 +60,7 @@ export class Runtime {
         return x?.toString() || '';
     }
 
-    getUpdatedInstance(vElm: VirtualElement): Displayable {
+    getUpdatedInstance(vElm: VirtualElement<any>): Displayable {
         const { key, owner } = vElm;
         if (!key || !owner) {
             throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
@@ -77,10 +78,10 @@ export class Runtime {
         return `${prefix}${(this.keyCounter++).toString(36)}`;
     }
 
-    hydrate = this.renderOrHydrate as (vElm: VirtualElement, dom: HTMLElement) => Displayable;
-    render = this.renderOrHydrate as (vElm: VirtualElement) => Displayable;
+    hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
+    render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
 
-    private renderOrHydrate(vElm: VirtualElement, dom?: HTMLElement): Displayable {
+    private renderOrHydrate(vElm: VirtualElement<any>, dom?: HTMLElement): Displayable {
         const factory = vElm.type.factory as Factory<Fragment>;
         const { key, props, state, type } = vElm;
         if (isComponentType(type)) {
@@ -130,6 +131,8 @@ export class Runtime {
         this.hydrating++;
         const instance = factory.newInstance(key, { props, state });
         const preRender = instance.$preRender();
+        // prerender already expressed in view ny toString
+        this.pending.delete(instance);
         instance.ctx.root = this.renderOrHydrate(preRender, domNode);
         this.hydrating--;
         return instance;
@@ -157,7 +160,7 @@ export class Runtime {
                     const preRender = instance.$preRender();
                     // handle prerender state changes 
                     changes |= this.removeChanges(instance);
-                    preRender.changes = remapChangedBit(changes, preRender.changeBitRemapping);
+                    preRender.changes = remapChangedBit(changes, preRender.changeBitMapping);
 
                     const nextRoot = this.getUpdatedInstance(preRender);
                     const root = instance.ctx.root as Displayable;
