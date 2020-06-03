@@ -172,7 +172,7 @@ export class Runtime {
                         instance.ctx.components[nextRoot.key] = nextRoot;
                     }
                 } else {
-                    instance.$updateView(changes);
+                    (instance as Fragment).$updateView(changes);
                 }
             }
         } while (this.pending.size && depth < this.maxDepthPerUpdate);
