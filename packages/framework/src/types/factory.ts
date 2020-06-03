@@ -1,5 +1,5 @@
 import { isComponentType } from ".";
-import { isFragmentType, DisplayableData, Displayable, isComponent, Component, isVirtualElement } from "./component";
+import { isFragmentType, DisplayableData, Displayable, isComponent, Component } from "./component";
 
 export class Factory<Comp extends Displayable> {
     constructor(readonly type: any, readonly changesBitMap: Record<string, number>) {
@@ -8,7 +8,7 @@ export class Factory<Comp extends Displayable> {
     // to be used after SSR
     hydrate(key: string, target: HTMLElement, data: DisplayableData): Comp {
         const instance = this.newInstance(key, data);
-        instance.hydrate(target, data);
+        instance.hydrate(data, target);
         return instance;
     }
 

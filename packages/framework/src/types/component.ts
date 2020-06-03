@@ -52,7 +52,7 @@ export abstract class Displayable {
         }
         throw new Error(`Invalid Displayable: root is not a Displayable/HTMLElement`);
     }
-    abstract hydrate(preRender: VirtualElement, target: HTMLElement): void;
+    abstract hydrate(preRender: DisplayableData, target: HTMLElement): void;
 }
 
 export function isDisplayable(x: any): x is Displayable {
@@ -93,7 +93,7 @@ export abstract class Component extends Displayable {
     }
 
     *$afterUpdate(): IterableIterator<void> {/** Noop */ }
-    abstract $preRender(): VirtualElement;
+    abstract $preRender(): VirtualElement<any>;
 }
 
 export function isComponent(x: any): x is Component {

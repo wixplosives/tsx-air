@@ -1,4 +1,4 @@
-import { Component, CompFactory, Fragment, Displayable, Factory } from "../types";
+import { Component, CompFactory, Fragment, Factory } from "../types";
 import { store } from "../api/store";
 import { TSXAir } from "..";
 import { VirtualElement } from "../types/virtual.element";
