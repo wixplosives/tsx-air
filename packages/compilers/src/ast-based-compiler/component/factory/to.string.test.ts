@@ -25,7 +25,7 @@ describe('generateToString', () => {
             .to.equal(`<div dir="ltr" lang="2"></div>`);
         expect(toStringOf(comps.WithVolatile, {
             WithVolatile: {
-                prototype: { $preRender: () => ({ d: 'mock' }) }
+                prototype: { preRender: () => ({ d: 'mock' }) }
             }
         })({ p: 2 }), 'WithVolatile')
             .to.equal(`<div><!-- d -->mock<!-- --></div>`);

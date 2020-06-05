@@ -37,7 +37,7 @@ export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, 
         this.onClickB = () => runtime.execute(this, this._onClickB);
     }
 
-    public $preRender(_props: StatefulCompProps, _state: StatefulCompState) {
+    public preRender(_props: StatefulCompProps, _state: StatefulCompState) {
         let volatile = 0;
         volatile++;
         runtime.updateState(

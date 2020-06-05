@@ -8,6 +8,7 @@ import { generateDomBindings } from '../../common/dom.binding';
 import { generatePreRender } from './prerender';
 import { generateMethods } from './function';
 import { generateAfterMount } from './event.handlers';
+import { factory } from './factory';
 
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
     const importedComponent = api.ensureImport('Component', '@tsx-air/framework');
@@ -15,17 +16,14 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
     const res = cClass(
         comp.name!,
         importedComponent,
-        undefined, [
-        cStatic('factory', cObject({
-            toString: generateToString(comp),
-            hydrate: generateHydrate(comp, binding),
-            initialState: generateInitialState(comp),
-        })),
-        cStatic('changeBitmask', generateChangeBitMask(comp)),
-        ...generateMethods(comp),
-        ...generateAfterMount(comp, binding),
-        ...generatePreRender(comp),
-        generateUpdateView(comp, binding),
-    ]);
+        undefined, 
+        [
+            factory(comp),
+            ...generateMethods(comp),
+            ...generateAfterMount(comp, binding),
+            generatePreRender(comp),
+            ...generateFragments(comp),
+        ]
+    );
     return res;
 };

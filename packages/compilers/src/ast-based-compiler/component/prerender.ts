@@ -49,7 +49,7 @@ export function* generatePreRender(comp: CompDefinition) {
     modified.push(cAssignLiteral(VOLATILE, [...defined.values()]));
     modified.push(ts.createReturn(ts.createIdentifier(VOLATILE)));
 
-    yield cMethod('$preRender', params, modified);
+    yield cMethod('preRender', params, modified);
 }
 
 const volatileVars = (comp: CompDefinition, vars: ts.VariableStatement) => {

@@ -1,9 +1,7 @@
-import { Component, Displayable, isComponent, Fragment, isComponentType, ExpressionDom } from '../types/component';
-import { CompFactory, Factory } from '../types/factory';
 import { RuntimeCycle } from './stats';
 import { updateExpression as _updateExpression, asDomNodes, remapChangedBit } from './runtime.helpers';
 import isArray from 'lodash/isArray';
-import { isVirtualElement, VirtualElement } from '../types/virtual.element';
+import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from '..';
 
 type Mutator = (obj: any) => number;
 
@@ -24,7 +22,8 @@ export class Runtime {
     readonly document: Document;
     private pending = new Map<Displayable, number>();
     private viewUpdatePending: boolean = false;
-    private readonly maxDepthPerUpdate = 100;
+    public maxDepthPerUpdate = 50;
+    public maxDepth = 100;
     private hydrating = 0;
     private mockDom!: HTMLElement;
     private keyCounter = 0 | 0;
@@ -51,11 +50,8 @@ export class Runtime {
         if (isArray(x)) {
             return x.map(i => this.toString(i)).join('');
         }
-        if (isVirtualElement(x)) {
+        if (VirtualElement.is(x)) {
             return this.getUpdatedInstance(x).toString();
-        }
-        if (isComponent(x)) {
-            this.toString(x.$preRender());
         }
         return x?.toString() || '';
     }
@@ -82,23 +78,22 @@ export class Runtime {
     render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
 
     private renderOrHydrate(vElm: VirtualElement<any>, dom?: HTMLElement): Displayable {
-        const factory = vElm.type.factory as Factory<Fragment>;
-        const { key, props, state, type } = vElm;
-        if (isComponentType(type)) {
-            const comp = this.hydrateComponent(key!, dom, factory as CompFactory<any>, props, state);
-            if (vElm.owner && key) {
-                vElm.owner.ctx.components[key] = comp;
+        const { key, props, state, type, parent } = vElm;
+        if (Component.isType(type)) {
+            const comp = this.hydrateComponent(key!, parent, dom, type, props, state);
+            if (vElm.parent && key) {
+                vElm.parent.ctx.components[key] = comp;
             }
             return comp;
         }
-        const instance = factory.newInstance(vElm.key!, vElm);
+        const instance = type.factory.newInstance(vElm.key!, vElm);
         if (!dom) {
             this.mockDom.innerHTML = instance.toString();
             dom = this.mockDom.children[0] as HTMLElement;
         }
         instance.hydrate(vElm, dom);
-        if (vElm.owner && key) {
-            vElm.owner.ctx.components[key] = instance;
+        if (vElm.parent && key) {
+            vElm.parent.ctx.components[key] = instance;
         }
         return instance;
     }
@@ -110,11 +105,16 @@ export class Runtime {
             .filter((i: any) => i !== undefined && i !== null && i !== '')
             .map((i: any) => {
                 hydratedDomNode = hydratedDomNode.nextSibling!;
-                if (isVirtualElement(i)) {
+                if (VirtualElement.is(i)) {
                     return this.hydrate(i, hydratedDomNode as HTMLElement);
                 }
                 return i.toString();
             });
+        if (!(hydratedDomNode.nextSibling instanceof
+            //@ts-ignore
+            this.window.Comment)) {
+            throw new Error(`Hydration error: Expression does not match data. (no ending comment)`);
+        }
         return {
             start, end: hydratedDomNode.nextSibling as Comment,
             value: hydrated
@@ -123,14 +123,15 @@ export class Runtime {
 
     private hydrateComponent<Comp extends Component>(
         key: string,
+        parent: Displayable | undefined,
         domNode: HTMLElement | undefined,
-        factory: CompFactory<Comp>,
+        type: typeof Component,
         props: any,
         state?: any
     ): Comp {
         this.hydrating++;
-        const instance = factory.newInstance(key, { props, state });
-        const preRender = instance.$preRender();
+        const instance = type.factory.newInstance(key, { props, state, parent });
+        const preRender = instance.preRender();
         // prerender already expressed in view ny toString
         this.pending.delete(instance);
         instance.ctx.root = this.renderOrHydrate(preRender, domNode);
@@ -156,8 +157,8 @@ export class Runtime {
             const { pending } = this;
             this.pending = new Map<Displayable, number>();
             for (let [instance, changes] of pending) {
-                if (isComponent(instance)) {
-                    const preRender = instance.$preRender();
+                if (Component.is(instance)) {
+                    const preRender = instance.preRender();
                     // handle prerender state changes 
                     changes |= this.removeChanges(instance);
                     preRender.changes = remapChangedBit(changes, preRender.changeBitMapping);
@@ -165,7 +166,7 @@ export class Runtime {
                     const nextRoot = this.getUpdatedInstance(preRender);
                     const root = instance.ctx.root as Displayable;
                     if (root !== nextRoot) {
-                        root.getDomRoot().parentNode?.append(nextRoot.getDomRoot());
+                        root.getDomRoot().parentNode?.insertBefore(nextRoot.getDomRoot(), root.getDomRoot());
                         root.getDomRoot().remove();
                         instance.ctx.root = nextRoot as Fragment;
                         // TODO: discuss pruning strategy 

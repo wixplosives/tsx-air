@@ -1,58 +1,54 @@
-import { Component, CompFactory, Fragment, Factory } from "../types";
-import { store } from "../api/store";
-import { TSXAir } from "..";
+import { Component, CompFactory, TSXAir, Factory } from "..";
 import { VirtualElement } from "../types/virtual.element";
+import { Fragment } from "../types/fragment";
 
 // const MockParent = TSXAir((props: { a: number }) => {
 //     const state = store({ counter: 0 });
 //     if (props.a < 0) {
-//         return <span>{props.a}</span>
+//         return <span>
+//             <MockChild ca={props.a} cb={-props.a} />
+//             {props.a}
+//         </span>
 //     }
-//     if (props.a<5) {
-//         return <MockParent a={props.a +1} />
+//     if (props.a < 5) {
+//         return <MockParent a={props.a + 1} />
 //     }
 //     return <MockChild ca={props.a} cb={state.counter} />
 // });
 
-// const MockChild_ = TSXAir((props: { ca: number, cb: number }) => {
+
+// const MockChild = TSXAir((props: { ca: number, cb: number }) => {
 //     return <div>{props.ca} {props.cb}</div>;
 // });
 
 export class Parent extends Component {
-    hydrate(preRendered: VirtualElement<typeof Parent>, target: HTMLElement): void {
-        this.ctx.root = TSXAir.runtime.hydrate(preRendered, target);
-    }
-
-    static factory = new CompFactory<Parent>(Parent, {
+    static factory: CompFactory<typeof Parent> = new CompFactory<typeof Parent>(Parent, {
         'props.a': 1,
         'state.counter': 2
     }, () => ({ state: { counter: 0 } }));
 
-    $preRender(): VirtualElement<any> {
+    preRender(): VirtualElement<any> {
         TSXAir.runtime.updateState(this, ({ state }) => {
             state.counter++;
             return this.changesBitMap['state.counter'];
         });
         if (this.props.a < 0) {
-            return VirtualElement.fragment('ret0', ParentFrag0, this);
+            return VirtualElement.fragment('0', ParentFrag0, this);
         }
         if (this.props.a < 5) {
-            return VirtualElement.component('ret1', Parent, this, undefined, { a: this.props.a + 1 });
+            return VirtualElement.component('1', Parent, this, undefined, { a: this.props.a + 1 });
         }
         return VirtualElement.component(
-            'ret2', MockChild, this,
+            '2', Child, this,
             new Map<number, number>([
-                [this.changesBitMap['state.counter'], MockChild.factory.changesBitMap['props.ca']],
-                [this.changesBitMap['props.a'], MockChild.factory.changesBitMap['props.cb']],
+                [this.changesBitMap['state.counter'], Child.factory.changesBitMap['props.ca']],
+                [this.changesBitMap['props.a'], Child.factory.changesBitMap['props.cb']],
             ]), { ca: this.props.a, cb: this.state.state.counter });
-    }
-
-    dispose(): void {
     }
 }
 
 export class ParentFrag0 extends Fragment {
-    static factory = new Factory<ParentFrag0>(
+    static factory: Factory<typeof ParentFrag0> = new Factory<typeof ParentFrag0>(
         ParentFrag0, Parent.factory.changesBitMap);
     $updateView(changes: number): void {
         if (changes & this.changesBitMap['props.a']) {
@@ -60,39 +56,45 @@ export class ParentFrag0 extends Fragment {
         }
     }
 
-    dispose(): void {
-    }
-
-    hydrate(_preRender: VirtualElement<any>, target: HTMLElement): void {
-        const exp0 = TSXAir.runtime.hydrateExpression(this.props.a, target.childNodes[0] as Comment);
-        this.ctx.expressions = [exp0];
+    hydrate(_: any, target: HTMLElement) {
+        const { props } = this;
+        this.hydrateExpressions([props.a], target);
+        this.hydrateComponents([VirtualElement.component('0', Child, this,
+            new Map<number, number>([[this.changesBitMap['props.a'],
+            Child.factory.changesBitMap['prop.ca']
+            | Child.factory.changesBitMap['prop.cb']
+            ]]), { ca: this.props.a, cb: -this.props.a })], target);
         this.ctx.root = target;
     }
 
     toString(): string {
-        return `<span><!--exp0-->${TSXAir.runtime.toString(this.props.a)}<!--/exp0--></span>`
+        const r = this.unique(`<span><!--C-->${
+            TSXAir.runtime.toString(
+                VirtualElement.component('0', Child, this,
+                    new Map<number, number>([[this.changesBitMap['props.a'],
+                    Child.factory.changesBitMap['prop.ca']
+                    | Child.factory.changesBitMap['prop.cb']
+                    ]]), { ca: this.props.a, cb: -this.props.a })
+            )}<!--C--><!--X-->${
+                TSXAir.runtime.toString(this.props.a)
+            }<!--X--></span>`);
+        return r;
     }
 }
 
-
-export class MockChild extends Component {
-    static factory = new CompFactory<MockChild>(MockChild, {
+export class Child extends Component {
+    static factory: CompFactory<typeof Child> = new CompFactory<typeof Child>(Child, {
         'props.ca': 4, 'props.cb': 8
     });
 
-    hydrate(preRendered: VirtualElement<typeof MockChild>, target: HTMLElement): void {
-        this.ctx.root = TSXAir.runtime.hydrate(preRendered, target);
-    }
-    $preRender(): VirtualElement<typeof MockChildFrag0> {
-        return VirtualElement.fragment('ret0', MockChildFrag0, this);
-    }
-    dispose(): void {
+    preRender(): VirtualElement<typeof ChildFrag0> {
+        return VirtualElement.fragment('0', ChildFrag0, this);
     }
 }
 
-export class MockChildFrag0 extends Fragment {
-    static factory = new Factory<MockChildFrag0>(
-        MockChildFrag0, MockChild.factory.changesBitMap);
+export class ChildFrag0 extends Fragment {
+    static factory: Factory<typeof ChildFrag0> = new Factory<typeof ChildFrag0>(
+        ChildFrag0, Child.factory.changesBitMap);
     $updateView(changes: number): void {
         if (changes & this.changesBitMap['props.ca']) {
             TSXAir.runtime.updateExpression(this.ctx.expressions[0], this.props.ca);
@@ -102,18 +104,14 @@ export class MockChildFrag0 extends Fragment {
         }
     }
 
-    dispose(): void {
-    }
-
-    hydrate(_preRender: VirtualElement<any>, target: HTMLElement): void {
-        const exp0 = TSXAir.runtime.hydrateExpression(this.props.ca, target.childNodes[0] as Comment);
-        const exp1 = TSXAir.runtime.hydrateExpression(this.props.cb, exp0.end.nextSibling?.nextSibling as Comment);
-        this.ctx.expressions = [exp0, exp1];
+    hydrate(_: any, target: HTMLElement) {
+        const { props } = this;
+        this.hydrateExpressions([props.ca, props.cb], target);
         this.ctx.root = target;
     }
 
     toString(): string {
-        return `<div><!--exp0-->${TSXAir.runtime.toString(this.props.ca)}<!--/exp0--> <!--exp1-->${TSXAir.runtime.toString(this.props.cb)}<!--/exp1--></div>`
+        const r = this.unique(`<div><!--X-->${TSXAir.runtime.toString(this.props.ca)}<!--X--> <!--X-->${TSXAir.runtime.toString(this.props.cb)}<!--X--></div>`);
+        return r;
     }
 }
-

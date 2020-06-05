@@ -19,9 +19,28 @@ export const cCall = (callPath: string[], args: ts.Expression[]) => {
 };
 
 export const cArrow = (
-    params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>, body: ts.ConciseBody | ts.Statement[]) => {
+    params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>,
+    body: ts.ConciseBody | ts.Statement[]) => {
     const { _params, _body } = _cFunc(params, body as ts.Expression);
     return ts.createArrowFunction(undefined, undefined, _params, undefined, undefined, _body);
+};
+
+export const cCompactArrow = (
+    params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>,
+    body: ts.Statement[],
+    returnValue: ts.Expression
+) => {
+    if (returnValue) {
+        return body?.length
+            ? cArrow(params, [...body, ts.createReturn(returnValue)])
+            : cArrow(params, returnValue)
+    } else {
+        return body?.length
+            ? cArrow(params, body)
+            : cArrow([], ts.createIdentifier('undefined'));
+
+    }
+
 };
 
 export const cSpreadParams = (name: string) =>

@@ -1,17 +1,13 @@
-import { cObject, cIf, CompDefinition } from '@tsx-air/compiler-utils';
+import { cIf, CompDefinition } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import sortBy from 'lodash/sortBy';
 import { readVars } from './helpers';
 
 export const generateChangeBitMask = (comp: CompDefinition) => {
-    const fields: Record<string, ts.BinaryExpression> = {};
+    const fields: Record<string, number> = {};
     const vars = readVars(comp);
-    sortBy(vars).forEach((name, index) => {
-        fields[name] = ts.createBinary(ts.createNumericLiteral('1'),
-            ts.SyntaxKind.LessThanLessThanToken,
-            ts.createNumericLiteral(index.toString()));
-    });
-    return cObject(fields);
+    sortBy(vars).forEach((name, index) => fields[name] = 1 << index);
+    return JSON.stringify(fields);
 };
 
 export const cBitMaskIf =

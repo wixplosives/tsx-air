@@ -45,7 +45,7 @@ export function asAst(statement: string, returnStatement = false, modifier?:(n:t
         !(validValue.flags & ts.NodeFlags.ThisNodeHasError)) {
         return returnStatement
             ? validValue
-            : cloneDeep(validValue, undefined, modifier) as ts.Node;
+            : cloneDeep(validValue, undefined, modifier!) as ts.Node;
     }
     throw new Error('Invalid value object');
 }

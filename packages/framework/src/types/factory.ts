@@ -1,41 +1,38 @@
-import { isComponentType } from ".";
-import { isFragmentType, DisplayableData, Displayable, isComponent, Component } from "./component";
+import { Displayable, DisplayableData } from "./displayable";
+import { Component } from "./component";
+import { Fragment } from "./fragment";
 
-export class Factory<Comp extends Displayable> {
-    constructor(readonly type: any, readonly changesBitMap: Record<string, number>) {
-        type.changesBitMap = changesBitMap;
-    }
-    // to be used after SSR
-    hydrate(key: string, target: HTMLElement, data: DisplayableData): Comp {
-        const instance = this.newInstance(key, data);
-        instance.hydrate(data, target);
-        return instance;
+export class Factory<D extends typeof Displayable> {
+    constructor(readonly type: D, readonly changesBitMap: Record<string, number>) {
+        (type as any).changesBitMap = changesBitMap;
     }
 
-    // creates an instance (with no context)
-    newInstance(key: string, data: DisplayableData): Comp {
-        if (isFragmentType(this.type)
-            && (isComponent(data) || isComponent(data.owner))
-        ) {
+    // creates an instance (with empty context)
+    newInstance(key: string, parent: DisplayableData): InstanceType<D> {
+        if (Fragment.isType(this.type)) {
             // @ts-ignore
-            const instance = new this.type(key, data.owner || data) as Comp;
-            return instance;
+            return new this.type(key, parent) as InstanceType<D>;
         }
-        throw new Error(`Invalid fragment data: must be an instance of a Component`);
+        throw new Error(`Invalid fragment`);
     }
 }
 
-export class CompFactory<Comp extends Component> extends Factory<Comp> {
-    constructor(readonly type: any, readonly changesBitMap: Record<string, number>, readonly initialState = (_:any)=>{}) {
+export class CompFactory<C extends typeof Component> extends Factory<C> {
+    constructor(readonly type: C, readonly changesBitMap: Record<string, number>, readonly initialState = (_: any) => { }) {
         super(type, changesBitMap);
     }
-    newInstance(key: string, data: DisplayableData): Comp {
-        if (isComponentType(this.type)) {
+    newInstance(key: string, data: DisplayableData): InstanceType<C> {
+        if (Component.isType(this.type)) {
             // @ts-ignore
-            const instance = new this.type(key, data.props || {}, data.state || this.initialState(data.props) || {}, {}) as Comp;
+            const instance = new this.type(key,
+                data.parent!,
+                data.props || {},
+                data.state ||
+                this.initialState(data.props),
+                {});
             // @ts-ignore
             instance.changesBitMap = this.changesBitMap;
-            return instance;
+            return instance as InstanceType<C>;
         }
         throw new Error(`Invalid component`);
     }

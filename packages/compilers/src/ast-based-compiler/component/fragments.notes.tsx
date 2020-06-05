@@ -21,10 +21,10 @@ const App = TSXAir((p: { a: number, b:any }) =>
 );
 /* 
 App.context ={
-    root: 'instance of Menu', // return statement of $prerender (as instance of frag or component)    
+    root: 'instance of Menu', // return statement of preRender (as instance of frag or component)    
 }
 
-App => $prerender -> VElm{menu, props:{
+App => preRender -> VElm{menu, props:{
     title: p.b,
     children:[VElm(Frag1, App.props, key1 ), VElm(Frag2, App.props, key2 ), VElm(Frag3, App.props, key3 )]
 }, key:'root'} => return to framework => framework creates menu instanceof
@@ -37,7 +37,7 @@ Menu.context = {
     root: FragMenu1 instance
 }
 new Menu
-Menu => $prerender => VElm(FragMenu1, {title, children, key:'root'})
+Menu => preRender => VElm(FragMenu1, {title, children, key:'root'})
 => creare new FragMenu1 => Menu.context.root = result
 
 FragMenu1.context = {

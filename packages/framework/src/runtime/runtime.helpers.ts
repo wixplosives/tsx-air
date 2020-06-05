@@ -1,7 +1,5 @@
 import isArray from "lodash/isArray";
-import { TSXAir } from "..";
-import {  isDisplayable } from "../types/component";
-import { isVirtualElement } from "../types/virtual.element";
+import { TSXAir, Displayable, VirtualElement } from "..";
 
 export function updateExpression(expMarkers: Comment[], values: IterableIterator<Text | HTMLElement>) {
     let first!: Node;
@@ -30,10 +28,10 @@ export function* asDomNodes(values: any) {
 }
 
 export function asSingleDomNode(value: any) {
-    if (isVirtualElement(value)) {
+    if (VirtualElement.is(value)) {
         value = TSXAir.runtime.getUpdatedInstance(value);
     }
-    if (isDisplayable(value)) {
+    if (Displayable.is(value)) {
         return value.getDomRoot();
     }
     

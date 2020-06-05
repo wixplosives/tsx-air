@@ -1,49 +1,41 @@
 import ts from "typescript";
-import { CompDefinition, JsxRoot, cloneDeep, isJsxRoot, asCode, asAst, cMethod } from "@tsx-air/compiler-utils";
+import { CompDefinition, JsxRoot, cloneDeep, isJsxRoot, asCode, asAst, cMethod, isComponentTag } from "@tsx-air/compiler-utils";
 import { postAnalysisData } from "../../common/post.analysis.data";
-import { generateFragmentToString } from "./jsx.string.template";
-import { get, chain } from "lodash";
-import { cStateCall } from "./function";
-import { Component, Fragment } from "@tsx-air/framework";
-
-
-export const fragId = (prefix: string, index: number) =>
-    `${prefix}$${index}`; ``
+import get from "lodash/get";
 
 export const parseFragments = (comp: CompDefinition) => {
-    const fragments:Record<string, Fragment> = {};
-    for (const frag of _parseFragments(comp)) {
-        const elm = frag.root.sourceAstNode;
-        const elmType = asCode(
-            ts.isJsxSelfClosingElement(elm)
-                ? elm.tagName
-                : elm.openingElement.tagName
-        );
-        fragments[`${elmType}${frag.index}`] = 
-    }
+    // const fragments: FragmentData[] = [];
+    return [..._parseFragments(comp)];
 };
 
 function* _parseFragments(comp: CompDefinition) {
     const statements = get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
     for (const s of statements) {
-        yield* processStatementFragments(comp, s, '');
+        yield* processStatementJsxRoots(comp, s);
     }
 }
 
-function* processStatementFragments(comp: CompDefinition, node: ts.Node, prefix: string): Generator<FragmentData> {
+function* processStatementJsxRoots(comp: CompDefinition, node: ts.Node): Generator<FragmentData> {
     const roots = _getJsxRoots(comp, node);
     for (const root of roots) {
         const hasInnerFragments = root.expressions.some(exp => exp.jsxRoots.length > 0);
         const counter = getCounter(comp);
-
+        const elm = root.sourceAstNode;
+        const tagName = ts.isJsxSelfClosingElement(elm)
+            ? elm.tagName
+            : (elm as ts.JsxElement).openingElement.tagName;
+        
+        const elmType = asCode(tagName);
+        const isComponent = isComponentTag(tagName);
         const frag = assignFragmentData(root, {
-            id: fragId(`${comp.name}${prefix}`, counter),
+            id: `${elmType}${counter}`,
             index: counter,
             hasInnerFragments,
             root,
-            src: []
+            isComponent,
+            src: root.sourceAstNode
         });
-        frag.src.push(node)
+        frag.src = node;
         if (frag.index === counter) {
             setCounter(comp, counter + 1);
         }
@@ -64,12 +56,6 @@ export function getFragmentData(root: JsxRoot | ts.Node): FragmentData | undefin
         : postAnalysisData.readByAst(root, 'fragmentId');
 }
 
-export const generateFragment = (comp: CompDefinition, frag: FragmentData) =>
-    asAst(`({$key}) => TEMPLATE;`, false, n =>
-        (ts.isIdentifier(n) && n.getText() === `TEMPLATE`)
-            ? generateFragmentToString(frag.root, comp)
-            : undefined);
-}
 
 function getModifiedNode(node: ts.Node) {
     return cloneDeep(node, undefined, n => {
@@ -107,10 +93,10 @@ export function* _getJsxRoots(comp: CompDefinition, s: ts.Node) {
 }
 
 export interface FragmentData {
+    isComponent: boolean;
     index: number;
     id: string;
     root: JsxRoot;
     hasInnerFragments: boolean;
-    src: ts.Node[]
+    src: ts.Node;
 }
-

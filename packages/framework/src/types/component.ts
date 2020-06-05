@@ -1,111 +1,44 @@
-import { Factory, CompFactory } from './factory';
-import isFunction from 'lodash/isFunction';
+import { CompFactory } from './factory';
 import { TSXAir } from '../api/types';
 import { VirtualElement } from './virtual.element';
+import { Displayable } from './displayable';
 
-export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
-
-interface Ctx {
-    root: Elm | null;
-    expressions: ExpressionDom[];
-    elements: HTMLElement[];
-    components: Record<string, Displayable>;
-}
-
-export interface DisplayableData {
-    props: any;
-    state?: any;
-    owner?: Component;
-}
-export abstract class Displayable {
-    public static factory: Factory<any>;
+export class Component extends Displayable {
+    static factory: CompFactory<any>;
+    static is(x: any): x is Component {
+        return x && x instanceof Component;
+    }
+    static isType(x: any): x is typeof Component {
+        return x.prototype instanceof Component;
+    }
 
     constructor(
         readonly key: string,
-        public props: any,
-        public state: any,
-        public volatile: any,
-    ) {
-        // requestAnimationFrame(() => this.$afterMount());
-        this.innerKey = TSXAir.runtime.getUniqueKey();
-    }
-    $afterMount(_ref: Elm) {/** add event listeners */ }
-    $afterUnmount() {/** dispose of stuff */ }
-    readonly changesBitMap!: Record<string, number>;
-    readonly innerKey!: string;
-    readonly ctx: Ctx = {
-        root: null,
-        expressions: [],
-        elements: [],
-        components: {}
-    };
-
-    abstract dispose(): void;
-    getDomRoot(): HTMLElement | Text {
-        const { root } = this.ctx;
-        if (isDisplayable(root)) {
-            return root.getDomRoot();
-        }
-        const { HTMLElement, Text } = TSXAir.runtime;
-        if (root instanceof HTMLElement || root instanceof Text) {
-            return root;
-        }
-        throw new Error(`Invalid Displayable: root is not a Displayable/HTMLElement`);
-    }
-    abstract hydrate(preRender: DisplayableData, target: HTMLElement): void;
-}
-
-export function isDisplayable(x: any): x is Displayable {
-    return x && x instanceof Displayable;
-}
-
-export abstract class Fragment extends Displayable {
-    constructor(
-        readonly key: string,
-        readonly parentComp: Component
-    ) {
-        super(key, parentComp.props, parentComp.state, parentComp.volatile);
-        // @ts-ignore
-        this.changesBitMap = parentComp.changesBitMap;
-    }
-    abstract toString(): string;
-    abstract $updateView(changes: number): void;
-}
-
-export function isFragment(x: any): x is Component {
-    return x && isComponent(x.parentComp) && isDisplayable(x);
-}
-
-export function isFragmentType(x: any): x is typeof Fragment {
-    return x.prototype instanceof Fragment;
-}
-
-export abstract class Component extends Displayable {
-    public static factory: CompFactory<any>;
-
-    constructor(
-        readonly key: string,
+        parent: Displayable | undefined,
         readonly props: any,
         readonly state: any,
         volatile = {}
     ) {
-        super(key, props, state, volatile);
+        super(key, parent, props, state, volatile,);
+        let depth = 0;
+        while (parent) {
+            depth++;
+            parent = parent?.owner;
+        }
+        if (depth > TSXAir.runtime.maxDepth) {
+            throw new Error(`Component tree too deep (over ${TSXAir.runtime.maxDepth})
+    This is a component recursion protection - change TSXAir.runtime.maxDepth (or fix your code)`);
+        }
+    }
+
+    toString(): string {
+        return TSXAir.runtime.toString(this.preRender());
     }
 
     *$afterUpdate(): IterableIterator<void> {/** Noop */ }
-    abstract $preRender(): VirtualElement<any>;
-}
+    preRender(): VirtualElement<any> { throw new Error(`not implemented`); }
 
-export function isComponent(x: any): x is Component {
-    return x && isFunction(x.$preRender) && isDisplayable(x);
-}
-
-export function isComponentType(x: any): x is typeof Component {
-    return x.prototype instanceof Component;
-}
-
-export interface ExpressionDom {
-    start: Comment | HTMLElement;
-    end: Comment;
-    value: Elm[];
+    hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {
+        this.ctx.root = TSXAir.runtime.hydrate(preRendered, target);
+    }
 }

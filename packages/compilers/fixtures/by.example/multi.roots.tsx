@@ -21,7 +21,7 @@ export const Vars = TSXAir((p: { count: number }) => <div>{p.count > 0 ? <div>+<
 //         return `<div>${message}</div>`
 //     }
 
-//     $preRender(p, $s) {
+//     preRender(p, $s) {
 //         let message: number | string | JSX.Element = p.count;
 //         if (p.count > 10) {
 //             message = 'A lot';

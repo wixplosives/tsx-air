@@ -1,6 +1,5 @@
-import { destructureState, destructureVolatile, dependantOnVars, getGenericMethodParamsByUsedInScope, compFuncByName, mergeRefMap } from '../helpers';
+import { dependantOnVars, getGenericMethodParams, addToClosure } from '../helpers';
 import {
-    cArrow,
     jsxToStringTemplate,
     jsxAttributeNameReplacer,
     jsxAttributeReplacer,
@@ -8,105 +7,81 @@ import {
     cCall,
     jsxSelfClosingElementReplacer,
     jsxEventHandlerRemover,
-    cConst,
     findUsedVariables,
-    UsedInScope
+    AstNodeReplacer,
+    isComponentTag,
+    asCode,
+    cloneDeep,
+    cObject,
+    cCompactArrow,
+    asAst
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { VOLATILE, STATE, PROPS } from '../../consts';
-import { defaultsDeep } from 'lodash';
-import { jsxTextExpressionReplacer, jsxComponentReplacer } from './template.replacers';
 
 export const generateToString = (comp: CompDefinition) => {
     const executedFuncs = [] as string[];
-    const templates = comp.jsxRoots.map(jsx => jsxToStringTemplate(jsx.sourceAstNode, [
-        jsxComponentReplacer,
-        jsxEventHandlerRemover,
-        jsxTextExpressionReplacer(comp, executedFuncs),
-        jsxAttributeReplacer,
-        jsxAttributeNameReplacer,
-        jsxSelfClosingElementReplacer
-    ]));
+    const template =
+        jsxToStringTemplate(comp.jsxRoots[0].sourceAstNode, [
+            jsxComponentReplacer,
+            jsxEventHandlerRemover,
+            jsxTextExpressionReplacer(comp, executedFuncs),
+            jsxAttributeReplacer,
+            jsxAttributeNameReplacer,
+            jsxSelfClosingElementReplacer
+        ]);
 
-    const usedVars = mergeRefMap({}, 
-        ...templates.map(t => dependantOnVars(comp, findUsedVariables(t), true)));
-    
-    const usedByFuncs:UsedInScope = {};
-    executedFuncs.forEach(f => {
-        const func = compFuncByName(comp, f);
-        if (func) {
-            defaultsDeep(usedByFuncs, dependantOnVars(comp, func.aggregatedVariables));
-        }
-    }); 
+    const usedVars = dependantOnVars(comp, findUsedVariables(template), true);
 
-    const hasCompMethodCalls = executedFuncs.length > 0;
-
-    let [propsParam, stateParams] = getGenericMethodParamsByUsedInScope(usedVars, true, !hasCompMethodCalls);
-    if (!usedVars.volatile && !hasCompMethodCalls) {
-        return cArrow([propsParam, stateParams], templates[0]);
-    }
-
-    const destructured = [destructureState(usedVars), destructureVolatile(usedVars)].filter(
-        i => i
-    ) as ts.VariableStatement[];
-
-    if (usedByFuncs.stores || usedVars.stores) {
-        stateParams = STATE;
-    }
-    if (usedByFuncs.props || usedVars.props) {
-        propsParam = comp.propsIdentifier || PROPS;
-    } else {
-        propsParam = stateParams ? '__0' : undefined;
-    }
-   
-    const volatile = cConst(
-        VOLATILE,
-        cCall(
-            ['TSXAir', 'runtime', 'toStringPreRender'],
-            [comp.name,  propsParam , stateParams].filter(i => i).map(i => ts.createIdentifier(i as string))
-        )
-    );
-    if (stateParams) {
-        return cArrow([propsParam, stateParams], [volatile, ...destructured, ts.createReturn(templates[0])]);
-    } else {
-        return cArrow(propsParam ? [propsParam]:[], [volatile, ...destructured, ts.createReturn(templates[0])]);
-    }
+    return cCompactArrow([], [...addToClosure(usedVars), ...addToClosure(executedFuncs)], template);
 };
 
-export const jsxTextExpressionReplacer: (comp: CompDefinition, executedFuncs: string[]) => AstNodeReplacer = (comp, executedFuncs) => node => {
-    const swapCalls = (exp: ts.JsxExpression): ts.Expression => {
-        const toProto = (n: ts.Node) => {
-            const clone = ts.getMutableClone(n);
-            if (ts.isCallExpression(n)) {
-                const args: Array<ts.Identifier | ts.Expression> = getGenericMethodParams(
-                    comp,
-                    findUsedVariables(n),
-                    true,
-                    false
-                ).map(u => (u ? ts.createIdentifier(u as string) : ts.createIdentifier('undefined')));
-                n.arguments.forEach(a => args.push(cloneDeep(a) as ts.Identifier | ts.Expression));
-                const name = asCode(n.expression);
-                executedFuncs.push(name);
-                return cCall([comp.name, 'prototype', `_${name}`], args);
+export const jsxTextExpressionReplacer: (comp: CompDefinition, executedFuncs: string[]) => AstNodeReplacer =
+    (comp, executedFuncs) => {
+        let expressionCount = 0;
+
+        return node => {
+            const swapCalls = (exp: ts.JsxExpression): ts.Expression => {
+                const toProto = (n: ts.Node) => {
+                    const clone = ts.getMutableClone(n);
+                    if (ts.isCallExpression(n)) {
+                        const args: Array<ts.Identifier | ts.Expression> = getGenericMethodParams(
+                            comp,
+                            findUsedVariables(n),
+                            true,
+                            false
+                        ).map(u => (u ? ts.createIdentifier(u as string) : ts.createIdentifier('undefined')));
+                        n.arguments.forEach(a => args.push(cloneDeep(a) as ts.Identifier | ts.Expression));
+                        const name = asCode(n.expression);
+                        executedFuncs.push(name);
+                        return cCall(['this.owner', name], args);
+                    }
+                    clone.forEachChild(toProto);
+                    return clone;
+                };
+                return toProto(exp) as ts.Expression;
+            };
+            if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
+                const expression = node.expression ? swapCalls(node.expression as ts.JsxExpression) : ts.createTrue();
+
+                expressionCount++;
+                return [
+                    {
+                        prefix: `<!--exp[`,
+                        expression: asAst(`this.getFullKey()+']${expressionCount}'`) as ts.Expression,
+                        suffix: `-->`
+                    },
+                    {expression},
+                    {
+                        prefix: `<!--/exp[`,
+                        expression: asAst(`this.getFullKey()+']${expressionCount}'`) as ts.Expression,
+                        suffix: `-->`
+                    }
+                ];
+            } else {
+                return false;
             }
-            clone.forEachChild(toProto);
-            return clone;
         };
-        return toProto(exp) as ts.Expression;
     };
-
-    if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
-        const expression = node.expression ? swapCalls(node.expression as ts.JsxExpression) : ts.createTrue();
-
-        return {
-            prefix: `<!-- ${node.expression ? asCode(node.expression) : 'empty expression'} -->`,
-            expression,
-            suffix: `<!-- -->`
-        };
-    } else {
-        return false;
-    }
-};
 
 export const jsxComponentReplacer: AstNodeReplacer = node => {
     if (
@@ -114,7 +89,7 @@ export const jsxComponentReplacer: AstNodeReplacer = node => {
         (ts.isJsxSelfClosingElement(node) && isComponentTag(node.tagName))
     ) {
         const openingNode = ts.isJsxElement(node) ? node.openingElement : node;
-        const tagName = printAst(openingNode.tagName);
+        const tagName = asCode(openingNode.tagName);
 
         return {
             expression: cCall(
@@ -126,7 +101,7 @@ export const jsxComponentReplacer: AstNodeReplacer = node => {
                                 throw new Error('spread in attributes is not handled yet');
                             }
                             const initializer = prop.initializer;
-                            const name = printAst(prop.name);
+                            const name = asCode(prop.name);
                             if (!initializer) {
                                 acc[name] = ts.createTrue();
                             } else if (ts.isJsxExpression(initializer)) {

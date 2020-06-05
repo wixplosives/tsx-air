@@ -14,7 +14,7 @@ export interface ExpressionData {
 }
 
 type PossibleReplacement = ts.Node | Replacement | false;
-type Replacement = ExpressionData | string;
+type Replacement = [ExpressionData] | string;
 export type AstNodeReplacer = (node: ts.Node) => PossibleReplacement;
 
 export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: AstNodeReplacer[]) => {
@@ -42,7 +42,7 @@ const toExpTextTuples = (
 ) => {
     const parts = nodeToStringParts(jsx, replacers, leadingTriviaWidth);
     const flattened = flatMap(parts, item =>
-        typeof item === 'string' ? [item] : [item.prefix || '', item.expression, item.suffix || '']
+        typeof item === 'string' ? [item] : flatMap(item, i => [i.prefix || '', i.expression, i.suffix || ''])
     );
     const res: Array<{ expression: ts.Expression; textFragments: string[] }> = [
         {
@@ -89,11 +89,11 @@ export function nodeToStringParts(
 
 export const jsxAttributeReplacer: AstNodeReplacer = node =>
     ts.isJsxExpression(node) &&
-    ts.isJsxAttribute(node.parent) && {
+    ts.isJsxAttribute(node.parent) && [{
         prefix: '"',
         expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
         suffix: '"'
-    };
+    }];
 
 export const jsxEventHandlerRemover: AstNodeReplacer = node => {
     if (ts.isJsxAttribute(node)) {

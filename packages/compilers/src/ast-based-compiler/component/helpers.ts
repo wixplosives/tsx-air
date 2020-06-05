@@ -7,10 +7,11 @@ import {
     RecursiveMap,
     findUsedVariables,
     UsedInScope,
+    asAst,
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
-import { VOLATILE, STATE } from '../consts';
+import { VOLATILE, STATE, PROPS } from '../consts';
 import { merge, chain, defaultsDeep, mergeWith, omit } from 'lodash';
 import isArray from 'lodash/isArray';
 
@@ -41,13 +42,13 @@ export const getGenericMethodParams = (
 
 export const compFuncByName = (comp: CompDefinition, name: string) => comp.functions.find(f => f.name === name);
 
-function getDirectDependencies(comp: CompDefinition, scope: UsedVariables, ignoreFuncReferences:boolean): UsedInScope {
+function getDirectDependencies(comp: CompDefinition, scope: UsedVariables, ignoreFuncReferences: boolean): UsedInScope {
     const used: UsedInScope = {};
-    const _usedInScope = (name?: string) => 
-        name && name in scope.read 
+    const _usedInScope = (name?: string) =>
+        name && name in scope.read
         && !(ignoreFuncReferences && comp.functions.some(f => f.name === name));
 
-    comp.volatileVariables.filter(_usedInScope).forEach(v => 
+    comp.volatileVariables.filter(_usedInScope).forEach(v =>
         add(used, { [v]: scope.accessed[v] }, 'volatile'));
 
     if (_usedInScope(comp.propsIdentifier)) {
@@ -57,12 +58,12 @@ function getDirectDependencies(comp: CompDefinition, scope: UsedVariables, ignor
     comp.stores.map(c => c.name).filter(_usedInScope).forEach(
         name => add(used, { [name]: scope.accessed[name] }, 'stores')
     );
-    
+
     return used;
 }
 type U<T> = UsedInScope<T> | UsedVariables<T> | RecursiveMap<T>;
-export function mergeRefMap<T, R extends U<T>>(obj:R, ...add:R[]):R {
-    add.forEach(added =>  mergeWith(obj, added, (a, b) => {
+export function mergeRefMap<T, R extends U<T>>(obj: R, ...add: R[]): R {
+    add.forEach(added => mergeWith(obj, added, (a, b) => {
         if (isArray(a)) {
             return chain(a).concat(b).uniq().value();
         } else return;
@@ -71,7 +72,7 @@ export function mergeRefMap<T, R extends U<T>>(obj:R, ...add:R[]):R {
 }
 
 
-const add = (target:UsedInScope, added: RecursiveMap, prefix: string) => {
+const add = (target: UsedInScope, added: RecursiveMap, prefix: string) => {
     mergeWith(target, { [prefix]: added }, (a, b) => {
         if (isArray(a)) {
             return chain(a).concat(b).uniq().value();
@@ -79,7 +80,7 @@ const add = (target:UsedInScope, added: RecursiveMap, prefix: string) => {
     });
 };
 
-const addAll = (comp:CompDefinition, target:UsedInScope, usedVars: UsedVariables) => {
+const addAll = (comp: CompDefinition, target: UsedInScope, usedVars: UsedVariables) => {
     const merged = defaultsDeep({}, ...Object.values(usedVars));
     for (const [k, v] of Object.entries(merged)) {
         if (k === comp.propsIdentifier) {
@@ -98,7 +99,7 @@ const addAll = (comp:CompDefinition, target:UsedInScope, usedVars: UsedVariables
     }
 };
 
-function expandDependencies(comp:CompDefinition, scope: UsedVariables, name: string):UsedVariables {
+function expandDependencies(comp: CompDefinition, scope: UsedVariables, name: string): UsedVariables {
     const func = comp.functions.find(f => f.name === name);
     if (func) {
         return {
@@ -113,7 +114,7 @@ function expandDependencies(comp:CompDefinition, scope: UsedVariables, name: str
     const changed = merge({}, scope.modified[name], scope.defined[name]).$refs || [];
     const refs: UsedVariables = { accessed: {}, read: {}, modified: {}, executed: {}, defined: {} };
     changed.forEach(ref => {
-        const found = findUsedVariables(ref);                
+        const found = findUsedVariables(ref);
         mergeWith(refs.read, found.read, (a, b) => {
             if (isArray(a)) {
                 return chain(a).concat(b).uniq().value();
@@ -129,7 +130,7 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
     while (toBeExpanded.length) {
         const newRefs = expandDependencies(comp, comp.variables, toBeExpanded.pop()!);
         Object.keys(newRefs.read).forEach(k => {
-            if (!flat.volatile![k] && comp.propsIdentifier !== k && !comp.stores.some(({name}) => name === k)) {
+            if (!flat.volatile![k] && comp.propsIdentifier !== k && !comp.stores.some(({ name }) => name === k)) {
                 toBeExpanded.push(k)
             }
         });
@@ -157,21 +158,43 @@ export function getFlattened(recursiveMap?: RecursiveMap): Set<string> {
     );
 }
 
-export function destructureState(used: UsedInScope) {
-    return used.stores ? cConst(destructure(used.stores)!, ts.createIdentifier(STATE)) : undefined;
+function* getClosureState(used: UsedInScope) {
+    if (used.stores) {
+        yield cConst(destructure(used.stores)!, asAst(`this.${STATE}`) as ts.PropertyAccessExpression);
+    }
 }
 
-export function destructureVolatile(used: UsedInScope) {
-    return used.volatile ? cLet(destructure(used.volatile)!, ts.createIdentifier(VOLATILE)) : undefined;
+function* getClosureVolatile(used: UsedInScope) {
+    if (used.volatile) {
+        yield cLet(destructure(used.volatile)!, asAst(`this.${VOLATILE}`) as ts.PropertyAccessExpression);
+    }
 }
+
+function* getClosureProps(used: UsedInScope) {
+    if (used.props) {
+        yield cConst(Object.keys(used.props)[0], asAst(`this.${PROPS}`) as ts.PropertyAccessExpression);
+    }
+}
+
+export function *addToClosure(used: UsedInScope | string[]) {
+    if (isArray(used)) {
+        yield cConst(destructureNamed(used), ts.createIdentifier('this'));
+    } else {
+        yield* getClosureProps(used);
+        yield* getClosureState(used);
+        yield* getClosureVolatile(used);
+    }
+}
+
+const destructureNamed = (keys: string[]) => ts.createObjectBindingPattern(
+    keys.map(key =>
+        ts.createBindingElement(undefined, undefined, ts.createIdentifier(key), undefined)
+    )
+)
 
 const destructure = (map: RecursiveMap) =>
     map && Object.keys(map).length
-        ? ts.createObjectBindingPattern(
-            Object.keys(map).map(key =>
-                ts.createBindingElement(undefined, undefined, ts.createIdentifier(key), undefined)
-            )
-        )
+        ? destructureNamed(Object.keys(map))
         : undefined;
 
 const readNsVars = (comp: NodeWithVariables, namespace: string | undefined) => {

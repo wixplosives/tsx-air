@@ -1,13 +1,13 @@
-import { cClass, cObject, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
+import { cClass, cObject, FileTransformerAPI, CompDefinition, cStatic, asAst } from '@tsx-air/compiler-utils';
 import { generateUpdateView } from './update.view';
 import { generateToString } from './factory/to.string';
 import { generateHydrate } from './factory/hydrate';
 import { generateChangeBitMask } from './bitmask';
 import { generateDomBindings } from '../../common/dom.binding';
 import { generatePreRender } from './prerender';
-import { generateMethods } from './function';
 import { generateAfterMount } from './event.handlers';
 import { FragmentData } from './jsx.fragment';
+import ts from 'typescript';
 
 export const generateFragmentClass = (comp: CompDefinition, fragment:FragmentData, api: FileTransformerAPI) => {
     const importedFragment = api.ensureImport('Fragment', '@tsx-air/framework');
@@ -16,16 +16,10 @@ export const generateFragmentClass = (comp: CompDefinition, fragment:FragmentDat
         '',
         importedFragment,
         undefined, [
-        cStatic('factory', cObject({
-            toString: generateToString(comp),
-            hydrate: generateHydrate(comp, binding),
-            render: generateRender(comp, binding)
-        })),
-        cStatic('changeBitmask', generateChangeBitMask(comp)),
-        ...generateMethods(comp),
-        ...generateAfterMount(comp, binding),
-        ...generatePreRender(comp),
+        cStatic('factory', asAst(`new Factory(${comp.name}.${fragment.id}, ${comp.name}.changesBitMap)`) as ts.Expression),
+        // ...generateAfterMount(comp, binding),
         generateUpdateView(comp, binding),
+        generateToString()
     ]);
     return res;
 };
