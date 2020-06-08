@@ -6,6 +6,7 @@ import ts from 'typescript';
 import { nativeAttributeMapping } from './native-attribute-mapping';
 import last from 'lodash/last';
 import repeat from 'lodash/repeat';
+import isString from 'lodash/isString';
 
 export interface ExpressionData {
     expression: ts.Expression;
@@ -14,7 +15,7 @@ export interface ExpressionData {
 }
 
 type PossibleReplacement = ts.Node | Replacement | false;
-type Replacement = [ExpressionData] | string;
+type Replacement = ExpressionData | string;
 export type AstNodeReplacer = (node: ts.Node) => PossibleReplacement;
 
 export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: AstNodeReplacer[]) => {
@@ -32,7 +33,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
     );
     spans.push(ts.createTemplateSpan(tail?.expression, ts.createTemplateTail(tail.text)));
 
-    return ts.createTemplateExpression(ts.createTemplateHead(head.text), spans);
+    return cloneDeep(ts.createTemplateExpression(ts.createTemplateHead(head.text), spans));
 };
 
 const toExpTextTuples = (
@@ -42,7 +43,7 @@ const toExpTextTuples = (
 ) => {
     const parts = nodeToStringParts(jsx, replacers, leadingTriviaWidth);
     const flattened = flatMap(parts, item =>
-        typeof item === 'string' ? [item] : flatMap(item, i => [i.prefix || '', i.expression, i.suffix || ''])
+        typeof item === 'string' ? [item] : [item.prefix || '', item.expression, item.suffix || '']
     );
     const res: Array<{ expression: ts.Expression; textFragments: string[] }> = [
         {
@@ -89,11 +90,11 @@ export function nodeToStringParts(
 
 export const jsxAttributeReplacer: AstNodeReplacer = node =>
     ts.isJsxExpression(node) &&
-    ts.isJsxAttribute(node.parent) && [{
+    ts.isJsxAttribute(node.parent) && {
         prefix: '"',
         expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
         suffix: '"'
-    }];
+    };
 
 export const jsxEventHandlerRemover: AstNodeReplacer = node => {
     if (ts.isJsxAttribute(node)) {
@@ -131,7 +132,7 @@ export const jsxSelfClosingElementReplacer: AstNodeReplacer = node => {
     }
 };
 
-export const isComponentTag = (node: ts.JsxTagNameExpression) => {
-    const text = asCode(node);
-    return text[0].toLowerCase() !== text[0] || text.indexOf('.') !== -1;
+export const isComponentTag = (tag: ts.JsxTagNameExpression | string) => {
+    const text = isString(tag) ? tag : asCode(tag);
+    return /^([a-zA-z0-9$_]+\.)*([A-Z][a-zA-z0-9$_]*)$/.test(text);
 };

@@ -89,7 +89,7 @@ describe('findUsedVariables', () => {
         const expectedRead = omit(expectedAccessed, `aParam.replacedProperty`);
 
         expect(findUsedVariables(ast).modified).to.eql(expectedModified);
-        expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql(expectedAccessed);        
+        expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql(expectedAccessed);
         expect(findUsedVariables(ast).read).to.eql(expectedRead);
     });
 
@@ -143,7 +143,7 @@ describe('findUsedVariables', () => {
         const ast = asSourceFile(`
             export const aJSXRoot = <div><Comp>hello<Comp></div>
             `);
-        const expected: UsedVariables = {
+        const expected: UsedVariables<string> = {
             read: {},
             accessed: {},
             defined: {
@@ -166,7 +166,7 @@ describe('findUsedVariables', () => {
                 title: 'a'
             }
             `);
-        const expected: UsedVariables = {
+        const expected: UsedVariables<string> = {
             read: {},
             accessed: {},
             defined: {

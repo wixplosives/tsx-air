@@ -12,7 +12,7 @@ export class Thumb extends Component<ThumbCtx, ThumbProps, ThumbState> {
         'props.imageLoaded': 1 << 2,
     };
 
-    public $updateView(newProps: ThumbProps, newState: ThumbState, _:any, changeMap: number): void {
+    public updateView(newProps: ThumbProps, newState: ThumbState, _:any, changeMap: number): void {
         runtimeUtils.handleChanges(Thumb.changeBitmask, new Map([
             ['props.url', () => {
                 runtime.updateState(this as Thumb, {}, (state: ThumbState) => {

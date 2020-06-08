@@ -66,7 +66,7 @@ abstract class Base {
     }
     volatile: any;
     updateContent(elm: any, bits: number, value: any) {
-        if (elm.$updateView) {
+        if (elm.updateView) {
             TSXAir.runtime.updateProps(elm, (p) => {
                 merge(p, value);
                 return bits;
@@ -155,7 +155,7 @@ class Comp extends Base {
         return instance
     }
 
-    $updateView(p, s, changeBits, frag: VElm) {
+    updateView(p, s, changeBits, frag: VElm) {
         const fKey = frag.getKey(this.key, 0);
         // const newDom = frag.toString(10, this.key, 0);
         frag.shallowExpressions() =>
@@ -201,7 +201,7 @@ class Frag0 extends Frag {
     }
     static toString(key, p) { return `<div key="${key}" lang="${p.lang}" />` }
     static hydrate(key, root, p) { return new Frag0(key, root, p); }
-    $updateView(p: any, changeBits: number) {
+    updateView(p: any, changeBits: number) {
         if (changeBits & this.changeBits['lang']) {
             this.context.elm0.setAttribute('lang', p.lang);
         }
@@ -215,7 +215,7 @@ class Frag1 extends Frag {
     }
     static toString(key, p) { return `<div key=${key}>sub zero ${p.s_b}</div>` }
     static hydrate(root, p) { return new Frag1(root.getAttribute('key'), root, p); }
-    $updateView(p, changeBits) {
+    updateView(p, changeBits) {
         if (changeBits & this.changeBits['s.b']) {
             this.updateContent(this.context.elm0, this.changeBits['s.b'], p['s.b']);
         }
@@ -246,7 +246,7 @@ class Frag2 extends Frag {
             }</div>`
     }
     static hydrate(key, root, p) { return new Frag2(key, root, p); }
-    $updateView(p, changeBits) {
+    updateView(p, changeBits) {
         if (changeBits & this.changeBits['innerJsx']) {
             this.updateContent(this.context.elm0, this.changeBits['innerJsx'], p.innerJsx);
         }

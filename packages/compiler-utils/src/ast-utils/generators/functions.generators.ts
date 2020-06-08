@@ -2,9 +2,11 @@ import ts from 'typescript';
 import { _cFunc } from './helpers';
 import { cAccess } from '.';
 
-export const cFunction = (params: string[], statements: ts.Statement[]) => {
-    return ts.createFunctionExpression(undefined, undefined, undefined, undefined,
-        cParams(params), undefined, ts.createBlock(statements));
+export const cFunction = (
+    params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>,
+    body: ts.Block | ts.Statement[]) => {
+    const { _params, _body } = _cFunc(params, body);
+    return ts.createFunctionExpression(undefined, undefined, undefined, undefined, _params, undefined, _body);
 };
 
 export const cParams = (params: string[]) => params.map(val => ts.createParameter(undefined, undefined, undefined, val));

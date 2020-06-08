@@ -1,73 +1,81 @@
-import { basicPatterns, functions, conditional } from '../../../test.helpers';
-import { analyze, jsxToStringTemplate, CompDefinition, evalAst, jsxAttributeReplacer, asAst } from '@tsx-air/compiler-utils';
+import { basicPatterns, functions } from '../../../test.helpers';
+import { CompDefinition, evalAst } from '@tsx-air/compiler-utils';
 import { generateToString } from './to.string';
-import ts from 'typescript';
 import { chaiPlugin } from '@tsx-air/testing';
 import { expect, use } from 'chai';
-import { TSXAir, store } from '@tsx-air/framework';
+import { TSXAir, store, Component } from '@tsx-air/framework';
+import { asFunction } from '../function';
+import sinon, { SinonStub } from 'sinon';
 use(chaiPlugin);
 
 describe('generateToString', () => {
-    const toStringOf = (compDef: CompDefinition, context = {}) => evalAst(generateToString(compDef), { TSXAir, store, ...context });
+    let evalContext = {};
+    const toStringOf = (compDef: CompDefinition, props: any, state: any = {}, volatile: any = {}, scope = {}) => {
+        const asFunc = evalAst(asFunction(generateToString(compDef, compDef.jsxRoots[0])), { TSXAir, store, ...evalContext }) as Function;
+        return () => asFunc.apply({ props, state, volatile, ...scope });
+    }
     it('generates a toString method based on the used props and state', () => {
         const comps = basicPatterns();
 
-        expect(toStringOf(comps.Static)(), 'Static').to.equal('<div></div>');
-        expect(toStringOf(comps.PropsOnly)({ a: 'a', b: 'b', unused: '!' }), 'PropsOnly')
-            .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --></div>`);
-        expect(toStringOf(comps.StateOnly)(undefined, { store1: { a: 1, b: 2 } }), 'StateOnly')
-            .to.equal(`<div><!-- store1.a -->1<!-- --><!-- store1.b -->2<!-- --></div>`);
-        expect(toStringOf(comps.ProsAndState)({ a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } }), 'ProsAndState')
-            .to.equal(`<div><!-- props.a -->a<!-- --><!-- props.b -->b<!-- --><!-- store2.a -->1<!-- --><!-- store2.b -->2<!-- --></div>`);
-        expect(toStringOf(comps.DynamicAttributes)({ a: 1 }), 'DynamicAttributes')
+        expect(toStringOf(comps.Static, {})(), 'Static').to.equal('<div></div>');
+        expect(toStringOf(comps.PropsOnly, { a: 'a', b: 'b', unused: '!' })(), 'PropsOnly')
+            .to.equal(`<div><!--X-->a<!--X--><!--X-->b<!--X--></div>`);
+        expect(toStringOf(comps.StateOnly, {}, { store1: { a: 1, b: 2 } })(), 'StateOnly')
+            .to.equal(`<div><!--X-->1<!--X--><!--X-->2<!--X--></div>`);
+        expect(toStringOf(comps.ProsAndState, { a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } })(), 'ProsAndState')
+            .to.equal(`<div><!--X-->a<!--X--><!--X-->b<!--X--><!--X-->1<!--X--><!--X-->2<!--X--></div>`);
+        expect(toStringOf(comps.DynamicAttributes, { a: 1 })(), 'DynamicAttributes')
             .to.equal(`<div dir="ltr" lang="1"><span></span></div>`);
-        expect(toStringOf(comps.DynamicAttributesSelfClosing)({ a: 2 }), 'DynamicAttributesSelfClosing')
+        expect(toStringOf(comps.DynamicAttributesSelfClosing, { a: 2 })(), 'DynamicAttributesSelfClosing')
             .to.equal(`<div dir="ltr" lang="2"></div>`);
-        expect(toStringOf(comps.WithVolatile, {
-            WithVolatile: {
-                prototype: { preRender: () => ({ d: 'mock' }) }
-            }
-        })({ p: 2 }), 'WithVolatile')
-            .to.equal(`<div><!-- d -->mock<!-- --></div>`);
+        expect(toStringOf(comps.WithVolatile, { p: 2 }, {}, { d: 'volatile' })(), 'WithVolatile')
+            .to.equal(`<div><!--X-->volatile<!--X--></div>`);
     });
 
-    it(`uses nested components' toString`, () => {
-        const { NestedStateless } = basicPatterns();
-        const nested = toStringOf(NestedStateless);
+    describe(`nested components`, () => {
+        let stub: SinonStub;
+        beforeEach(() => {
+            stub = sinon.stub(TSXAir.runtime, 'toString');
+        });
+        it(`uses nested components`, () => {
+            const { NestedStateless } = basicPatterns();
+            evalContext = { PropsOnly: class PropsOnly extends Component { } };
+            const mockVElm = {};
+            const nested = toStringOf(NestedStateless, {
+                a: 'outer'
+            }, {}, {}, {
+                $comp0: () => mockVElm
+            });
 
-        expect(nested.toString()).
-            // @ts-ignore
-            // tslint:disable: quotemark
-            to.be.eqlCode((pr => `<div>${PropsOnly.factory.toString({
-                "a": pr.a,
-                "b": pr.a,
-                "unused": 3
-            })}</div>`).toString());
+            stub.callsFake((x: any) => {
+                expect(x).to.eql(mockVElm);
+                return `MockVirtualComponent`;
+            });
+            expect(nested()).to.be.eql(`<div><!--C-->MockVirtualComponent<!--C--></div>`);;
+        });
+        afterEach(() => {
+            stub.restore();
+        });
     });
 
     it(`removes event listeners`, () => {
         const { EventListener } = basicPatterns();
-        const withEvent = toStringOf(EventListener);
+        const withEvent = toStringOf(EventListener, {});
 
-        expect(withEvent.toString()).
-            to.be.eqlCode('()=>`<div></div>`');
+        expect(withEvent()).to.eql(`<div></div>`);
     });
 
-    it(`handles function calls by using the prototyped version`, () => {
+    it(`handles function calls by referring to owner`, () => {
         const { WithVolatileFunction } = functions();
-        const withFunctionCalls = toStringOf(WithVolatileFunction);
+        const withFunctionCalls = toStringOf(WithVolatileFunction, {}, {}, {}, {
+            owner: {
+                someFunc: (x: string) => {
+                    expect(x).to.eql('const');
+                    return 'func'
+                }
+            }
+        });
 
-        expect(withFunctionCalls.toString()).
-            to.be.eqlCode(`(props, $s) => {
-                const $v =  TSXAir.runtime.toStringPreRender(WithVolatileFunction, props, $s);
-                return \`<div><!-- someFunc('const') -->\${WithVolatileFunction.prototype._someFunc(props, $s, $v, 'const')}<!-- --></div>\`;
-            };`);
-    });
-
-    describe(`JSX expressions which contain JSX`, () => {
-        it('handles expressions which evaluate as JSX', () => {
-            const { Const } = conditional();
-            expect(toStringOf(Const)(), 'Const').to.equal(`<div><div></div></div>`);
-        })
+        expect(withFunctionCalls()).to.eql(`<div><!--X-->func<!--X--></div>`);
     });
 });

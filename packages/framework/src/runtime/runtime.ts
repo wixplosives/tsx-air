@@ -28,10 +28,6 @@ export class Runtime {
     private mockDom!: HTMLElement;
     private keyCounter = 0 | 0;
 
-    execute<Comp extends Component>(instance: Comp, method: (...args: any[]) => any, ...args: any[]) {
-        return method.apply(instance, [instance.props, instance.state, instance.volatile, ...args]);
-    }
-
     updateProps(instance: Displayable, mutator: Mutator) {
         this.addChange(instance, mutator(instance.props));
         this.triggerViewUpdate();
@@ -173,7 +169,7 @@ export class Runtime {
                         instance.ctx.components[nextRoot.key] = nextRoot;
                     }
                 } else {
-                    (instance as Fragment).$updateView(changes);
+                    (instance as Fragment).updateView(changes);
                 }
             }
         } while (this.pending.size && depth < this.maxDepthPerUpdate);

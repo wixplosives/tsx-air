@@ -36,7 +36,7 @@ export const generateUpdateView = (comp: CompDefinition, domBindings: DomBinding
         ])
     );
 
-    return cMethod('$updateView', params, changeHandlers);
+    return cMethod('updateView', params, changeHandlers);
 };
 
 export const updateNativeExpressions = (

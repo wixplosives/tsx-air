@@ -50,33 +50,33 @@ export class Parent extends Component {
 export class ParentFrag0 extends Fragment {
     static factory: Factory<typeof ParentFrag0> = new Factory<typeof ParentFrag0>(
         ParentFrag0, Parent.factory.changesBitMap);
-    $updateView(changes: number): void {
+    updateView(changes: number): void {
         if (changes & this.changesBitMap['props.a']) {
             TSXAir.runtime.updateExpression(this.ctx.expressions[0], this.props.a);
         }
     }
 
-    hydrate(_: any, target: HTMLElement) {
+    $comp0() {
         const { props } = this;
-        this.hydrateExpressions([props.a], target);
-        this.hydrateComponents([VirtualElement.component('0', Child, this,
+        return VirtualElement.component('0', Child, this,
             new Map<number, number>([[this.changesBitMap['props.a'],
             Child.factory.changesBitMap['prop.ca']
             | Child.factory.changesBitMap['prop.cb']
-            ]]), { ca: this.props.a, cb: -this.props.a })], target);
+            ]]), { ca: props.a, cb: -props.a })
+    }
+
+    hydrate(_: any, target: HTMLElement) {
+        const { props } = this;
+        this.hydrateExpressions([props.a], target);
+        this.hydrateComponents([this.$comp0()], target);
         this.ctx.root = target;
     }
 
     toString(): string {
         const r = this.unique(`<span><!--C-->${
-            TSXAir.runtime.toString(
-                VirtualElement.component('0', Child, this,
-                    new Map<number, number>([[this.changesBitMap['props.a'],
-                    Child.factory.changesBitMap['prop.ca']
-                    | Child.factory.changesBitMap['prop.cb']
-                    ]]), { ca: this.props.a, cb: -this.props.a })
-            )}<!--C--><!--X-->${
-                TSXAir.runtime.toString(this.props.a)
+            TSXAir.runtime.toString(this.$comp0())
+        }<!--C--><!--X-->${
+            TSXAir.runtime.toString(this.props.a)
             }<!--X--></span>`);
         return r;
     }
@@ -95,7 +95,7 @@ export class Child extends Component {
 export class ChildFrag0 extends Fragment {
     static factory: Factory<typeof ChildFrag0> = new Factory<typeof ChildFrag0>(
         ChildFrag0, Child.factory.changesBitMap);
-    $updateView(changes: number): void {
+    updateView(changes: number): void {
         if (changes & this.changesBitMap['props.ca']) {
             TSXAir.runtime.updateExpression(this.ctx.expressions[0], this.props.ca);
         }

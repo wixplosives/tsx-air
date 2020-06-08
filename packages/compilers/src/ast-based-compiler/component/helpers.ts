@@ -42,7 +42,7 @@ export const getGenericMethodParams = (
 
 export const compFuncByName = (comp: CompDefinition, name: string) => comp.functions.find(f => f.name === name);
 
-function getDirectDependencies(comp: CompDefinition, scope: UsedVariables, ignoreFuncReferences: boolean): UsedInScope {
+export function getDirectDependencies(comp: CompDefinition, scope: UsedVariables, ignoreFuncReferences: boolean): UsedInScope {
     const used: UsedInScope = {};
     const _usedInScope = (name?: string) =>
         name && name in scope.read
@@ -160,25 +160,37 @@ export function getFlattened(recursiveMap?: RecursiveMap): Set<string> {
 
 function* getClosureState(used: UsedInScope) {
     if (used.stores) {
-        yield cConst(destructure(used.stores)!, asAst(`this.${STATE}`) as ts.PropertyAccessExpression);
+        yield cConst(destructure(used.stores)!, asAst(`this.state`) as ts.PropertyAccessExpression);
     }
 }
 
 function* getClosureVolatile(used: UsedInScope) {
     if (used.volatile) {
-        yield cLet(destructure(used.volatile)!, asAst(`this.${VOLATILE}`) as ts.PropertyAccessExpression);
+        yield cLet(destructure(used.volatile)!, asAst(`this.volatile`) as ts.PropertyAccessExpression);
     }
 }
 
 function* getClosureProps(used: UsedInScope) {
     if (used.props) {
-        yield cConst(Object.keys(used.props)[0], asAst(`this.${PROPS}`) as ts.PropertyAccessExpression);
+        const propsIdentifier = Object.keys(used.props)[0];
+        if (propsIdentifier !== 'props') {
+            yield cConst(
+                ts.createObjectBindingPattern([ts.createBindingElement(
+                    undefined,
+                    ts.createIdentifier('props'),
+                    ts.createIdentifier(propsIdentifier),
+                )]), ts.createThis());
+        } else {
+            yield cConst(destructureNamed(Object.keys(used.props)), ts.createThis());
+        }
     }
 }
 
-export function *addToClosure(used: UsedInScope | string[]) {
+export function* addToClosure(used: UsedInScope | string[]) {
     if (isArray(used)) {
-        yield cConst(destructureNamed(used), ts.createIdentifier('this'));
+        if (used.length) {
+            yield cConst(destructureNamed(used), asAst('this.owner') as ts.Expression);
+        }
     } else {
         yield* getClosureProps(used);
         yield* getClosureState(used);

@@ -40,5 +40,9 @@ export class VirtualElement<T extends typeof Displayable = any, P extends Displa
     get owner(): Component | undefined {
         return Component.is(this.parent) ? this.parent : this.parent?.owner;
     }
+
+    toString(){
+        return `[VirtualElement<${this.type.name}> (key:"${this.key}", parent:${this.parent?.fullKey})]`;
+    }
 }
 

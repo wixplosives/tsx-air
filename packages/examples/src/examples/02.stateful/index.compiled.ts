@@ -48,7 +48,7 @@ export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, 
         return { volatile };
     }
 
-    public $updateView(_: StatefulCompProps, { state }: StatefulCompState, _volatile: any, changeMap: number): void {
+    public updateView(_: StatefulCompProps, { state }: StatefulCompState, _volatile: any, changeMap: number): void {
         if (changeMap & StatefulComp.changeBitmask['state.a']) {
             this.context.exp1.textContent = state.a;
         }

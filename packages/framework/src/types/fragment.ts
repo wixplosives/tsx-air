@@ -26,7 +26,7 @@ export class Fragment extends Displayable {
         this.changesBitMap = _owner.changesBitMap;
     }
     
-    $updateView(_changes: number): void { throw new Error(`not implemented`); }
+    updateView(_changes: number): void { throw new Error(`not implemented`); }
 
     hydrateExpressions(values: any[], target: HTMLElement) {
         return this.hydrateInternals(values, target, 'X',

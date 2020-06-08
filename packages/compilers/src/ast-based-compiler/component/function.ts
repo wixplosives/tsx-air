@@ -1,12 +1,11 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cArrow, cMethod, asCode, cProperty, asAst, UsedInScope } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { getGenericMethodParams, destructureState, destructureVolatile, dependantOnVars } from './helpers';
-import { STATE } from '../consts';
+import { getGenericMethodParams, dependantOnVars, addToClosure } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
 
 export function nameFunctions(comp: CompDefinition) {
     for (const func of comp.functions) {
-        postAnalysisData.write(func, 'name', func.name || nextLambdaName(comp));
+        writeFuncName(func, func.name || nextLambdaName(comp));
     }
 }
 
@@ -22,10 +21,14 @@ export function* generateMethods(comp: CompDefinition) {
     }
 }
 
+export const readFuncName = (func: FuncDefinition) => postAnalysisData.read(func, 'name')!;
+export const writeFuncName = (func: FuncDefinition, name: string) =>
+    postAnalysisData.write(func, 'name', name);
+
 export function generateMethodBind(func: FuncDefinition) {
-    const name = postAnalysisData.read(func, 'name')!;
+    const name = readFuncName(func);
     return cProperty(name,
-        asAst(`(...args)=>TSXAir.runtime.execute(this, this._${name}, args)`) as ts.Expression
+        asAst(`(...args)=>this._${name}(...args)`) as ts.Expression
     );
 }
 
@@ -34,8 +37,13 @@ export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinit
     const body = method.body!;
     const { statements } = body;
 
+    const vars = dependantOnVars(comp, func.aggregatedVariables);
+    const methods = Object.keys(func.aggregatedVariables.executed).filter(
+        name => comp.functions.some(fn => fn.name === name)
+    );
     body.statements = ts.createNodeArray([
-        ...destructureStatements(dependantOnVars(comp, func.aggregatedVariables)),
+        ...addToClosure(vars),
+        ...addToClosure(methods),
         ...statements.map(toStateSafe(comp))]);
     return method;
 }
@@ -53,18 +61,13 @@ const toStateSafe = (comp: CompDefinition) => (s: ts.Statement) => {
     return s;
 };
 
-const destructureStatements = (used: UsedInScope) => [
-    destructureState(used),
-    destructureVolatile(used)
-].filter(i => i) as ts.VariableStatement[];
-
 export const nextLambdaName = (comp: CompDefinition) =>
     'lambda' + postAnalysisData.write(comp, 'lambdaCount', i => i ? i++ : 0);
 
 function asMethod(comp: CompDefinition, func: FuncDefinition): ts.MethodDeclaration {
     const { sourceAstNode: src } = func;
 
-    const name = `_${postAnalysisData.read(func, 'name')}`;
+    const name = `_${readFuncName(func)}`;
     const clone = cloneDeep(src);
     if (!ts.isBlock(clone.body!)) {
         clone.body = ts.createBlock([ts.createReturn(clone.body)]);
@@ -103,11 +106,11 @@ export const cStateCall = (comp: CompDefinition, exp: ts.Expression) => {
 
     return changeBits.length === 0
         ? undefined
-        : asAst(`TSXAir.runtime.updateState(this, ${STATE}, ({${stores}})=>{
+        : asAst(`TSXAir.runtime.updateState(this, ({${stores}})=>{
             ${asCode(exp)};
             return ${changeBits.join('|')};
         })`) as ts.ExpressionStatement;
 };
 
 export const asFunction = (method: ts.MethodDeclaration) =>
-    cArrow(method.parameters.map(i => i), method.body!);  
+    cFunction(method.parameters.map(i => i), method.body!);  
