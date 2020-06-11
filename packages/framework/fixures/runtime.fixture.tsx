@@ -1,4 +1,4 @@
-import { TSXAir, store } from "../src";
+// import { TSXAir, store } from "../src";
 
 export const Parent = TSXAir((props: { a: number }) => {
     const state = store({ counter: 0 });

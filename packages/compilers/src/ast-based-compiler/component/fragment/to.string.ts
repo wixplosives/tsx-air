@@ -15,6 +15,7 @@ import {
     JsxRoot,
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
+import { findJsxComp } from '../function';
 
 interface ToStringContext {
     expressions: number;
@@ -26,8 +27,14 @@ type ReplacerCreator = (x: ToStringContext, comp?: CompDefinition) => AstNodeRep
 export const generateToString = (comp: CompDefinition, root: JsxRoot) => {
     const ctx: ToStringContext = {
         expressions: 0,
-        components: 0,
+        components: 0
     };
+    for (const r of comp.jsxRoots) {
+        if (r === root) {
+            break;
+        }
+        ctx.components += r.components.length;
+    }
     const participatingNodes: ts.Node[] = [];
     const template =
         jsxToStringTemplate(root.sourceAstNode, [
@@ -79,10 +86,11 @@ export const jsxComponentReplacer: ReplacerCreator = ctx => node => {
         (ts.isJsxElement(node) && isComponentTag(node.openingElement.tagName)) ||
         (ts.isJsxSelfClosingElement(node) && isComponentTag(node.tagName))
     ) {
+        const comp = asCode(ts.isJsxElement(node) ? node.openingElement.tagName : node.tagName);
         return {
             prefix: '<!--C-->',
             suffix: '<!--C-->',
-            expression: asAst(`TSXAir.runtime.toString(this.$comp${ctx.components++}())`) as ts.Expression
+            expression: asAst(`TSXAir.runtime.toString(this.$${comp}${ctx.components++})`) as ts.Expression
         };
     }
     return false;

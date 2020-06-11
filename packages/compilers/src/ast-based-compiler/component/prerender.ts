@@ -1,7 +1,7 @@
-import { CompDefinition, cMethod, asCode, cloneDeep } from '@tsx-air/compiler-utils';
+import { CompDefinition, cMethod, asCode, cloneDeep, asAst } from '@tsx-air/compiler-utils';
 import { setupClosure } from './helpers';
 import ts from 'typescript';
-import { isStoreDefinition, toStateSafe } from './function';
+import { isStoreDefinition, toTsxCompatible } from './function';
 import get from 'lodash/get';
 import { FragmentData } from './fragment/jsx.fragment';
 
@@ -18,6 +18,9 @@ function* parseStatements(comp: CompDefinition, statements: ts.Statement[], frag
     const declaredVars = new Set<string>();
     for (const s of statements) {
         yield* parseStatement(comp, s, declaredVars, fragments);
+    }
+    if (declaredVars.size) {
+        yield asAst(`this.volatile={${[...declaredVars].join(',')}}`);
     }
 }
 
@@ -48,7 +51,7 @@ function* parseStatement(comp: CompDefinition, statement: ts.Statement, declared
         }
     } else {
         if (!ts.isFunctionDeclaration(statement)) {
-            yield toStateSafe(comp, fragments)(statement);
+            yield toTsxCompatible(comp, fragments)(statement);
         }
     }
 }

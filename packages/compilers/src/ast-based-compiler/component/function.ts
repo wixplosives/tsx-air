@@ -1,4 +1,4 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { setupClosure } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
@@ -43,11 +43,11 @@ export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinit
 
     return cMethod(name, func.arguments, [
         ...setupClosure(comp, func.aggregatedVariables),
-        ...statements.map(toStateSafe(comp, fragments))
+        ...statements.map(toTsxCompatible(comp, fragments))
     ]);
 }
 
-export const toStateSafe = (comp: CompDefinition, fragments:FragmentData[]) => (s: ts.Node) => {
+export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[]) => (s: ts.Node) => {
     if (isStoreDefinition(comp, s as ts.Statement)) {
         throw new Error('stores may only be declared in the main component body');
     }
@@ -61,16 +61,30 @@ export const toStateSafe = (comp: CompDefinition, fragments:FragmentData[]) => (
         if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) {
             const frag = safely(
                 () => fragments.find(f => f.root.sourceAstNode === ((n as any)?.src || n)),
-                `Unidentified Fragment Instance`, f=>!!f)!;
+                `Unidentified Fragment Instance`, f => !!f)!;
             if (frag.isComponent) {
-                return asAst(`this.${frag.id}`);
+                const [i, c] = findJsxComp(comp, n);
+                return asAst(`this.$${c.name}${i}`);
             } else {
-                return asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this)`); 
+                return asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this)`);
             }
         };
         return undefined;
     }) as ts.Statement;
 };
+
+export const findJsxComp = (comp: CompDefinition, node: ts.Node): [number, JsxComponent] => {
+    let compIndex = 0;
+    for (const root of comp.jsxRoots) {
+        for (const c of root.components) {
+            if (c.sourceAstNode === ((node as any)?.src || node)) {
+                return [compIndex, c];
+            }
+            compIndex++;
+        }
+    }
+    throw new Error(`Unable to find analyzed component`);
+}
 
 export const nextLambdaName = (comp: CompDefinition) =>
     'lambda' + postAnalysisData.write(comp, 'lambdaCount', i => i ? i++ : 0);

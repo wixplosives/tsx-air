@@ -9,7 +9,7 @@ export class Component extends Displayable {
         return x && x instanceof Component;
     }
     static isType(x: any): x is typeof Component {
-        return x.prototype instanceof Component;
+        return x && x.prototype instanceof Component;
     }
 
     constructor(

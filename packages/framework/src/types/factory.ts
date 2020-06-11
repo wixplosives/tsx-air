@@ -4,6 +4,7 @@ import { Fragment } from "./fragment";
 
 export class Factory<D extends typeof Displayable> {
     constructor(readonly type: D, readonly changesBitMap: Record<string, number>) {
+        console.log(type);
         (type as any).changesBitMap = changesBitMap;
     }
 

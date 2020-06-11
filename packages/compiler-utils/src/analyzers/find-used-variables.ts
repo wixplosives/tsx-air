@@ -71,9 +71,6 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
             return;
         }
     };
-    if (!ts.isAsExpression(node) && node?.src?.parent &&  ts.isJsxExpression(node.src.parent)) {
-        node = node.src.parent;
-    }
     ts.forEachChild(node, visitor);
     return res;
 }

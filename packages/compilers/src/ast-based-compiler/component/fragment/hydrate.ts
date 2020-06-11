@@ -9,7 +9,7 @@ export function generateHydrate(comp: CompDefinition, fragment: FragmentData) {
     const jsxExp = fragment.root.expressions.filter(e => !isAttribute(e));
     const dynamicAttributes =  fragment.root.expressions.filter(isAttribute)
     const expValues = jsxExp.map(exp => exp.expression);
-    const comps = fragment.root.components.map((_, i) => `this.$comp${i}()`);
+    const comps = fragment.root.components.map((c, i) => `this.$${c.name}${i}`);
     const dependencies = [
         ...fragment.root.expressions.map(exp => exp.sourceAstNode),
         ...fragment.root.components.map(c => c.sourceAstNode)];
