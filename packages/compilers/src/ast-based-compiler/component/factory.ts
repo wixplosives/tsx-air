@@ -1,10 +1,11 @@
 import { CompDefinition, asAst, asCode } from "@tsx-air/compiler-utils/src";
-import { generateChangeBitMask } from "./bitmask";
+import { createChangeBitMask } from "./bitmask";
 import { generateInitialState } from "./factory/initial.state";
+import ts from "typescript";
 
-export function factory(comp:CompDefinition) {
-    const {name} = comp;
-    return asAst(`static factory=new CompFactory<${name}>(${name}, 
-        ${generateChangeBitMask}, 
-        ${asCode(generateInitialState(comp))});`);
+export function factory(comp: CompDefinition) {
+    const { name } = comp;
+    return asAst(`new CompFactory<${name}>(${name}, 
+        ${createChangeBitMask(comp)}, 
+        ${asCode(generateInitialState(comp))});`) as ts.Expression;
 }

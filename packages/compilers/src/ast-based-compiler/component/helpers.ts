@@ -139,23 +139,17 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
     return flat;
 }
 
-export function getFlattened(recursiveMap?: RecursiveMap): Set<string> {
-    if (!recursiveMap) {
-        return new Set<string>();
+export function getChangeBitsNames(used: UsedInScope): string[] {
+    const ret: string[] = []
+    if (used.props) {
+        Object.keys(used.props).forEach(k => ret.push(`props.${k}`));
     }
-    return new Set(
-        chain(recursiveMap)
-            .keys()
-            .flatMap(k => {
-                const keys = Object.keys(recursiveMap[k]);
-                if (keys.length) {
-                    return keys.map(ik => `${k}.${ik}`);
-                } else {
-                    return k;
-                }
-            })
-            .value()
-    );
+    if (used.stores) {
+        for (const [store, name] of Object.entries(used.stores)) {
+            Object.keys(store).forEach(k => ret.push(`${name}.${k}`));
+        }
+    }
+    return ret;
 }
 
 function* getClosureState(used: UsedInScope) {
@@ -184,6 +178,17 @@ function* getClosureProps(used: UsedInScope) {
             yield cConst(destructureNamed(Object.keys(used.props)), ts.createThis());
         }
     }
+}
+
+export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables) {
+    let used = (isArray(scope)
+        ? merge({read:{}, accessed:{}, modified:{}, executed:{}}, ...(scope as ts.Node[]).map(n => findUsedVariables(n)))
+        : scope) as UsedVariables
+    yield* addToClosure(getDirectDependencies(comp, used, true));
+    yield* addToClosure(Object.keys(used.executed).filter(
+        name => comp.functions.some(fn => fn.name === name)
+    ));
+
 }
 
 export function* addToClosure(used: UsedInScope | string[]) {

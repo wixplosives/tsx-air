@@ -25,8 +25,8 @@ export class Fragment extends Displayable {
         // @ts-ignore
         this.changesBitMap = _owner.changesBitMap;
     }
-    
-    updateView(_changes: number): void { throw new Error(`not implemented`); }
+
+    updateView(_changes: number): void {  }
 
     hydrateExpressions(values: any[], target: HTMLElement) {
         return this.hydrateInternals(values, target, 'X',
@@ -34,8 +34,12 @@ export class Fragment extends Displayable {
     }
 
     hydrateComponents(virtualComps: VirtualElement[], target: HTMLElement) {
-        return this.hydrateInternals(virtualComps, target, 'C',
+        this.hydrateInternals(virtualComps, target, 'C',
             (c: VirtualElement, t: Comment) => TSXAir.runtime.hydrate(c, t.nextElementSibling as HTMLElement))
+    }
+
+    hydrateElements(target: HTMLElement) {
+        target.querySelectorAll(`[x-da="${this.fullKey}"]`).forEach(e => this.ctx.elements.push(e as HTMLElement));
     }
 
     private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: Function): void {
@@ -75,23 +79,30 @@ export class Fragment extends Displayable {
         return `<!--${this.fullKey}${type}${index}-->`
     }
 
+    attribute(index: number) {
+        return `x-da="${this.fullKey}"`;
+    }
+
     unique(str: string) {
         return this.withUniq(
             this.withUniq(
-                this.withUniq(str, 'X'), 'C'), 'E');
+                this.withUniq(str,
+                    '<!--X-->', (i: number) => this.comment(i, 'X')),
+                '<!--C-->', (i: number) => this.comment(i, 'C')),
+            'x-da="!"', (i: number) => this.attribute(i), false);
     }
 
-    private withUniq(str: string, placeholder: CommentPlaceholder): string {
-        const src = str.split(`<!--${placeholder}-->`);
+    private withUniq(str: string, placeholder: string, replace: (i: number) => string, withTrailing = true): string {
+        const src = str.split(placeholder);
         const res = [];
         let expCount = 0;
         let skipNext = true;
         for (const chunk of src) {
             if (!skipNext) {
-                const comment = this.comment(expCount++, placeholder);
+                const comment = replace(expCount++);
                 res.push(comment)
                 res.push(chunk);
-                res.push(comment);
+                withTrailing && res.push(comment);
             } else {
                 res.push(chunk);
             }

@@ -1,29 +1,49 @@
-import { cClass, cObject, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
-import { generateUpdateView } from './update.view';
-import { generateToString } from './factory/to.string';
-import { generateHydrate } from './factory/hydrate';
-import { generateInitialState } from './factory/initial.state';
-import { generateChangeBitMask } from './bitmask';
-import { generateDomBindings } from '../../common/dom.binding';
+import { cClass, FileTransformerAPI, CompDefinition, cStatic, astTemplate, cArrow, asAst, asCode } from '@tsx-air/compiler-utils';
 import { generatePreRender } from './prerender';
 import { generateMethods } from './function';
-import { generateAfterMount } from './event.handlers';
 import { factory } from './factory';
+import { generateFragments } from './fragment';
+import ts from 'typescript';
+import { parseFragments } from './fragment/jsx.fragment';
 
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
     const importedComponent = api.ensureImport('Component', '@tsx-air/framework');
-    const binding = generateDomBindings(comp);
-    const res = cClass(
+    const fragments = [...parseFragments(comp)];
+    const compClass = cClass(
         comp.name!,
         importedComponent,
-        undefined, 
+        undefined,
         [
-            factory(comp),
-            ...generateMethods(comp),
-            ...generateAfterMount(comp, binding),
-            generatePreRender(comp),
-            ...generateFragments(comp),
+            cStatic('factory', factory(comp)),
+            ...generateMethods(comp, fragments),
+            generatePreRender(comp, fragments),
         ]
     );
-    return res;
+    const createClass = cArrow([], [
+        compClass,
+        ...generateFragments(comp, api, fragments),
+        ts.createReturn(ts.createIdentifier(comp.name))
+    ]);
+
+    // console.log(asCode(createClass));
+    const f =  exportClass(createClass)
+    
+    console.log(asCode(f));
+    return f;
 };
+
+const exportClass = (createClass:ts.Node) => 
+ts.createVariableStatement(
+    [ts.createModifier(ts.SyntaxKind.ExportKeyword)],
+    ts.createVariableDeclarationList(
+      [ts.createVariableDeclaration(
+        ts.createIdentifier("Child"),
+        undefined,
+        ts.createCall(
+            createClass as ts.Expression, undefined, undefined
+        )
+      )],
+      ts.NodeFlags.Const
+    )
+  )
+  

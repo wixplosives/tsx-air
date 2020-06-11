@@ -1,84 +1,58 @@
-import { VOLATILE } from './../consts';
-import { CompDefinition, cMethod, cloneDeep, asCode, cLet, cAssignLiteral, asAst } from '@tsx-air/compiler-utils';
-import { getGenericMethodParams, destructureState, dependantOnVars } from './helpers';
+import { CompDefinition, cMethod, asCode, cloneDeep } from '@tsx-air/compiler-utils';
+import { setupClosure } from './helpers';
 import ts from 'typescript';
-import { cStateCall, isStoreDefinition } from './function';
+import { isStoreDefinition, toStateSafe } from './function';
 import get from 'lodash/get';
-import { postAnalysisData } from '../../common/post.analysis.data';
-import { cleanParams } from 'packages/compiler-utils/src/ast-utils/generators/helpers';
+import { FragmentData } from './fragment/jsx.fragment';
 
-export function* generatePreRender(comp: CompDefinition) {
-    const statements =
-        get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
-    const params = getGenericMethodParams(comp, comp.aggregatedVariables, false, false);
-    if (!statements?.length) {
-        return;
-    }
+export function generatePreRender(comp: CompDefinition, fragments:FragmentData[]) {
+    const statements = get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
+    const modified = [...parseStatements(comp, statements, fragments)];
 
-    const defined = new Set<string>();
-    const modified = statements.map(s => {
-        if (ts.isExpressionStatement(s)) {
-            const stateChange = cStateCall(comp, s.expression);
-            return stateChange || cloneDeep(s);
-        }
-        if (ts.isReturnStatement(s)) {
-            return;
-        }
-        if (ts.isVariableStatement(s)) {
-            const vars = volatileVars(comp, s).map(v =>
-                replaceFunc(v, comp, params as string[], defined)
-            ).filter(i => i) as ts.VariableDeclaration[];
-            return vars?.length
-                ? ts.createVariableStatement(s.modifiers, ts.createNodeArray(vars))
-                : undefined;
-        }
-        return cloneDeep(s);
-    }).filter(i => i) as ts.Statement[];
-
-    if (modified.length === 0 && defined.size === 0) {
-        return;
-    }
-
-    const state = destructureState(
-        dependantOnVars(comp, comp.aggregatedVariables)
-    );
-    if (state) {
-        modified.unshift(state);
-    }
-    modified.unshift(cLet(VOLATILE, ts.createNull()));
-    modified.push(cAssignLiteral(VOLATILE, [...defined.values()]));
-    modified.push(ts.createReturn(ts.createIdentifier(VOLATILE)));
-
-    yield cMethod('preRender', params, modified);
+    return cMethod('preRender', [], [
+        ...setupClosure(comp, modified),
+        ...modified]);
 }
 
-const volatileVars = (comp: CompDefinition, vars: ts.VariableStatement) => {
-    const withoutStores = vars.declarationList.declarations.filter(
-        v => (!v.initializer || !isStoreDefinition(comp, v))
-            && asCode(v.name) in comp.aggregatedVariables.accessed
-    );
-    return withoutStores;
-};
+function* parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments:FragmentData[]) {
+    const declaredVars = new Set<string>();
+    for (const s of statements) {
+        yield* parseStatement(comp, s, declaredVars, fragments);
+    }
+}
+
+function* parseStatement(comp: CompDefinition, statement: ts.Statement, declaredVars: Set<string>, fragments:FragmentData[]) {
+    if (ts.isVariableStatement(statement)) {
+        const vars = [];
+        for (const declaration of statement.declarationList.declarations) {
+            if (!declaration.initializer
+                || !(isStoreDefinition(comp, declaration) || isFunc(declaration))
+            ) {
+                if (ts.isObjectBindingPattern(declaration.name)) {
+                    const bound = declaration.name.elements.filter(e => asCode(e.name) in comp.aggregatedVariables.accessed);
+                    if (bound.length) {
+                        vars.push(
+                            ts.createVariableDeclaration(
+                                ts.createObjectBindingPattern(
+                                    bound)));
+                    }
+                } else if (asCode(declaration.name) in comp.aggregatedVariables.accessed) {
+                    // TODO: make this state safe for var d=state.a++
+                    vars.push(declaration);
+                    declaredVars.add(asCode(declaration.name));
+                }
+            }
+        }
+        if (vars.length) {
+            yield ts.createVariableStatement(statement.modifiers, vars);
+        }
+    } else {
+        if (!ts.isFunctionDeclaration(statement)) {
+            yield toStateSafe(comp, fragments)(statement);
+        }
+    }
+}
 
 const isFunc = (v: ts.VariableDeclaration) => (v.initializer && (
     ts.isArrowFunction(v.initializer) ||
     ts.isFunctionExpression(v.initializer)));
-
-function replaceFunc(v: ts.VariableDeclaration, comp: CompDefinition, params: any[], defined: Set<string>) {
-    if (isFunc(v)) {
-        const def = comp.functions.find(f => f.sourceAstNode === v.initializer);
-        if (postAnalysisData.read(def!, 'handlerOf')) {
-            return;
-        }
-        const name = postAnalysisData.read(def!, 'name')!;
-        const _params = cleanParams([params[0], params[1], VOLATILE])
-            .map(p => asCode(p.name)).join(',');
-        defined.add(name);
-        const clone = ts.getMutableClone(v);
-        clone.initializer = asAst(`this.${name} || ((...args)=>${comp.name}.prototype._${name}(${_params}, ...args))`) as ts.Expression;
-        return clone;
-    } else {
-        defined.add(asCode(v.name));
-        return cloneDeep(v);
-    }
-}

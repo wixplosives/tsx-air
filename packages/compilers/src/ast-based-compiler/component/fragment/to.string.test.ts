@@ -25,9 +25,9 @@ describe('generateToString', () => {
         expect(toStringOf(comps.ProsAndState, { a: 'a', b: 'b' }, { store2: { a: 1, b: 2 } })(), 'ProsAndState')
             .to.equal(`<div><!--X-->a<!--X--><!--X-->b<!--X--><!--X-->1<!--X--><!--X-->2<!--X--></div>`);
         expect(toStringOf(comps.DynamicAttributes, { a: 1 })(), 'DynamicAttributes')
-            .to.equal(`<div dir="ltr" lang="1"><span></span></div>`);
+            .to.equal(`<div dir="ltr" lang="1" x-da="!"><span></span></div>`);
         expect(toStringOf(comps.DynamicAttributesSelfClosing, { a: 2 })(), 'DynamicAttributesSelfClosing')
-            .to.equal(`<div dir="ltr" lang="2"></div>`);
+            .to.equal(`<div dir="ltr" lang="2" x-da="!"></div>`);
         expect(toStringOf(comps.WithVolatile, { p: 2 }, {}, { d: 'volatile' })(), 'WithVolatile')
             .to.equal(`<div><!--X-->volatile<!--X--></div>`);
     });
@@ -62,7 +62,7 @@ describe('generateToString', () => {
         const { EventListener } = basicPatterns();
         const withEvent = toStringOf(EventListener, {});
 
-        expect(withEvent()).to.eql(`<div></div>`);
+        expect(withEvent()).to.eql(`<div x-da="!"></div>`);
     });
 
     it(`handles function calls by referring to owner`, () => {

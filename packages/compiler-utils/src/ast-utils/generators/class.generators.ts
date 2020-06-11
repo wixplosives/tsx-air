@@ -41,6 +41,11 @@ export function cMethod(name: string, params:
         : undefined, undefined, name,
         undefined, undefined, _params, undefined, _body);
 }
+export function cGet(name: string, body: ts.Block | ts.Statement[]): ts.GetAccessorDeclaration {
+    const {  _body } = _cFunc([], body);
+    return ts.createGetAccessor(undefined, undefined, name,
+        [], undefined, _body);
+}
 
 export const cStatic = (name: string, initializer: ts.Expression | undefined) => ts.createProperty(
     undefined,
@@ -53,13 +58,13 @@ export const cStatic = (name: string, initializer: ts.Expression | undefined) =>
 
 export const cClass = (name: string, extendz?: string | ts.Expression,
     constructorInfo?: ClassConstructor,
-    properties: Array<ts.PropertyDeclaration | ts.MethodDeclaration> = []) => {
+    properties: Array<ts.PropertyDeclaration | ts.MethodDeclaration | ts.GetAccessorDeclaration | ts.SetAccessorDeclaration> = []) => {
     const allMembers = constructorInfo ? [
         ts.createConstructor(undefined, undefined, cParams(constructorInfo.params), ts.createBlock(constructorInfo.statements)) as ts.ClassElement
     ].concat(properties) : properties;
     return ts.createClassDeclaration(
         undefined,
-        [ts.createModifier(ts.SyntaxKind.ExportKeyword)],
+        [],
         ts.createIdentifier(name),
         undefined,
         extendz ? [ts.createHeritageClause(

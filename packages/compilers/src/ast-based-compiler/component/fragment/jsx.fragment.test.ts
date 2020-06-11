@@ -16,7 +16,7 @@ describe('fragments', () => {
                 })`);
             const statements = get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
 
-            const fragments = parseFragments(comp);
+            const fragments = [...parseFragments(comp)];
             expect(fragments).to.have.length(3);
             expect(fragments[0]).to.eql({
                 root: comp.jsxRoots[0],
@@ -45,24 +45,7 @@ describe('fragments', () => {
         })
     });
 
-    describe(`generateFragment`, () => {
-        it(`generates fragment with toString`, () => {
-            const { comp } = getCompDef(`const Comp=TSXAir(() => {
-                const notJsx = {};
-                const simpleFragment = <div />;
-                return <div>{<p />}</div>;
-            })`);
-            const toStringOf = (f: FragmentData) =>
-                // @ts-ignore
-                evalAst(generateFragment(comp, f))({ $key: 'KEY' });
-
-            const fragments = parseFragments(comp);
-            // expect(toStringOf(fragments[0])).to.eql(`<div xTxKey="KEY"></div>`);
-            // expect(toStringOf(fragments[1])).to.eql(`<p xTxKey="KEY"></p>`);
-            expect(toStringOf(fragments[2])).to.eql(`<div>{${fragments[1].id}.toString({$key:'0'})}</div>`);
-        })
-    });
-
+   
     describe('internals', () => {
         describe(`getAstStatementJsxRoots`, () => {
             it(`finds analyzed roots of an ast node`, () => {

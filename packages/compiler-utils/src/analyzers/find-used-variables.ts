@@ -71,6 +71,9 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
             return;
         }
     };
+    if (!ts.isAsExpression(node) && node?.src?.parent &&  ts.isJsxExpression(node.src.parent)) {
+        node = node.src.parent;
+    }
     ts.forEachChild(node, visitor);
     return res;
 }
@@ -92,7 +95,7 @@ export const modifyingOperators = [
 
 
 export const selfModifyingOperators = [
-    ts.SyntaxKind.PlusPlusToken, 
+    ts.SyntaxKind.PlusPlusToken,
     ts.SyntaxKind.PlusEqualsToken,
     ts.SyntaxKind.MinusEqualsToken,
     ts.SyntaxKind.AsteriskEqualsToken,
@@ -157,6 +160,12 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
         }
     }
 
+    if (asCode(n).startsWith('this.') || asCode(n.parent).startsWith('this.')) {
+        return {
+            path: [],
+            nestedAccess: []
+        }
+    }
     if (!ts.isIdentifier(n)) {
         throw new Error('unhandled input in accessToStringArr');
     }
@@ -175,6 +184,9 @@ function withRef(ref: ts.Node, target?: RecursiveMap) {
 }
 
 function addToAccessMap(path: string[], isModification: 'self' | boolean, map: UsedVariables, ref: ts.Node) {
+    if (path.length === 0) {
+        return;
+    }
     // @ts-ignore    
     ref = (!isModification && ref.initializer) ? ref.initializer : ref;
     if (ts.isTemplateSpan(ref)) {

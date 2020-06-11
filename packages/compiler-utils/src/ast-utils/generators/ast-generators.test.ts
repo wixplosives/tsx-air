@@ -55,10 +55,10 @@ describe('cImport', () => {
 
 describe('cClass', () => {
     it('should create the ast of a class', () => {
-        expect(cClass('MyComp')).to.have.astLike(`export class MyComp { }`);
+        expect(cClass('MyComp')).to.have.astLike(`class MyComp { }`);
     });
     it('should support defining inheritance', () => {
-        expect(cClass('MyComp', 'ParentComp')).to.have.astLike(`export class MyComp extends ParentComp { }`);
+        expect(cClass('MyComp', 'ParentComp')).to.have.astLike(`class MyComp extends ParentComp { }`);
     });
     describe('class constructor', () => {
         it('should support class constructor', () => {
@@ -67,7 +67,7 @@ describe('cClass', () => {
                 statements: [
                     cAssign(['this', 'props'], ['props'])
                 ]
-            })).to.have.astLike(`export class MyComp {
+            })).to.have.astLike(`class MyComp {
                 constructor(props) {
                     this.props = props;
                 }
@@ -78,14 +78,14 @@ describe('cClass', () => {
         it('should support properties', () => {
             expect(cClass('MyComp', undefined, undefined, [
                 cProperty('propA', ts.createTrue())
-            ])).to.have.astLike(`export class MyComp {
+            ])).to.have.astLike(`class MyComp {
                 propA = true;
              }`);
         });
         it('should support static properties', () => {
             expect(cClass('MyComp', undefined, undefined, [
                 cStatic('propA', ts.createTrue())
-            ])).to.have.astLike(`export class MyComp {
+            ])).to.have.astLike(`class MyComp {
                 static propA = true;
              }`);
         });
@@ -95,7 +95,7 @@ describe('cClass', () => {
                     a: 3,
                     b: 79
                 }))
-            ])).to.have.astLike(`export class MyComp {
+            ])).to.have.astLike(`class MyComp {
                 static propA = {
                     a: 3,
                     b: 79

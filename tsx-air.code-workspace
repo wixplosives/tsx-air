@@ -48,6 +48,7 @@
 			"ESNEXT",
 			"Namepath",
 			"Unparsed",
+			"browserifying",
 			"consts",
 			"destructure",
 			"destructured",

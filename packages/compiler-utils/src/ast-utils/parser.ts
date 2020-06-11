@@ -2,6 +2,7 @@ import ts from 'typescript';
 import { find } from './scanner';
 import isString from 'lodash/isString';
 import { cloneDeep } from '.';
+import { asCode } from '..';
 
 export const asSourceFile = (statement: string, filename = 'mock.ts') =>
     ts.createSourceFile(filename, statement, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -31,10 +32,10 @@ export const parseValue = (obj: string | object) => {
 };
 
 
-export function asAst(statement: string, returnStatement:true): ts.Statement;
-export function asAst(statement: string, returnStatement:false, modifier?:(n:ts.Node)=>ts.Node|undefined): ts.Statement;
-export function asAst(statement: string, returnStatement?:boolean, modifier?:(n:ts.Node)=>ts.Node|undefined): ts.Node;
-export function asAst(statement: string, returnStatement = false, modifier?:(n:ts.Node)=>ts.Node|undefined) {
+export function asAst(statement: string, returnStatement: true): ts.Statement;
+export function asAst(statement: string, returnStatement: false, modifier?: (n: ts.Node) => ts.Node | undefined): ts.Statement;
+export function asAst(statement: string, returnStatement?: boolean, modifier?: (n: ts.Node) => ts.Node | undefined): ts.Node;
+export function asAst(statement: string, returnStatement = false, modifier?: (n: ts.Node) => ts.Node | undefined) {
     const mockFile = asSourceFile(statement);
 
     const validValue = returnStatement
@@ -49,3 +50,13 @@ export function asAst(statement: string, returnStatement = false, modifier?:(n:t
     }
     throw new Error('Invalid value object');
 }
+
+export const astTemplate = (template: string, replacements: Record<string, ts.Node>) =>
+    asAst(template, false, (n: ts.Node) => ts.isIdentifier(n)
+        ? replacements[asCode(n)]
+        : undefined);
+
+export const replaceWith = (id: string, replacement: ts.Node) =>
+    (n: ts.Node) => ts.isIdentifier(n) && asCode(n) === id
+        ? replacement
+        : undefined

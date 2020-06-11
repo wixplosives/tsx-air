@@ -2,7 +2,7 @@ import { getComponentTag } from '../../visitors/jsx';
 import { asSourceFile } from '../parser';
 import { asCode, cloneDeep } from '../..';
 import flatMap from 'lodash/flatMap';
-import ts from 'typescript';
+import ts, { JsxAttribute, JsxElement } from 'typescript';
 import { nativeAttributeMapping } from './native-attribute-mapping';
 import last from 'lodash/last';
 import repeat from 'lodash/repeat';
@@ -19,9 +19,8 @@ type Replacement = ExpressionData | string;
 export type AstNodeReplacer = (node: ts.Node) => PossibleReplacement;
 
 export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: AstNodeReplacer[]) => {
-    const leadingTriviaWidth = jsx.getLeadingTriviaWidth();
-    const joinedRes = toExpTextTuples(jsx, replacers, leadingTriviaWidth);
-    joinedRes[0].text = joinedRes[0].text.slice(leadingTriviaWidth);
+    jsx = asSourceFile(asCode(jsx), 'placeholder.ts').statements[0].expression as JsxElement;
+    const joinedRes = toExpTextTuples(jsx, replacers, 0);
 
     if (joinedRes.length === 1) {
         return ts.createNoSubstitutionTemplateLiteral(joinedRes[0].text);
@@ -42,7 +41,7 @@ const toExpTextTuples = (
     leadingTriviaWidth: number
 ) => {
     const parts = nodeToStringParts(jsx, replacers, leadingTriviaWidth);
-    const flattened = flatMap(parts, item =>
+    const flattened = flatMap(parts, item => 
         typeof item === 'string' ? [item] : [item.prefix || '', item.expression, item.suffix || '']
     );
     const res: Array<{ expression: ts.Expression; textFragments: string[] }> = [
@@ -55,6 +54,7 @@ const toExpTextTuples = (
         if (typeof item === 'string') {
             last(res)!.textFragments.push(item);
         } else {
+            if (item)
             res.push({
                 expression: item,
                 textFragments: []
@@ -73,7 +73,7 @@ export function nodeToStringParts(
     replacers.find(r => (replaced = r(node)) !== false);
     if (replaced !== false) {
         if (ts.isJsxElement(replaced)) {
-            replaced = asSourceFile(repeat(' ', leadingTriviaWidth) + asCode(replaced));
+            replaced = asSourceFile(asCode(replaced));
             (replaced as any).src = (node as any).src || node;
             const ret = nodeToStringParts(replaced, replacers, 0);
             return ret;
@@ -95,6 +95,7 @@ export const jsxAttributeReplacer: AstNodeReplacer = node =>
         expression: node.expression ? cloneDeep(node.expression) : ts.createTrue(),
         suffix: '"'
     };
+
 
 export const jsxEventHandlerRemover: AstNodeReplacer = node => {
     if (ts.isJsxAttribute(node)) {

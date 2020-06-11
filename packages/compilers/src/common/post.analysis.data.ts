@@ -37,7 +37,7 @@ export class PostAnalysisData {
     }
 
     public readByAst<T = any>(node: ts.Node, key: string, _default?: T): T | undefined {
-        return this._read(this.byAst, node, key, _default);
+        return this._read(this.byAst, (node as any)?.src || node, key, _default);
     }
 
     private _read<N, T = any>(map: Map<N, any>, node: N, key: string, _default?: T): T | undefined {

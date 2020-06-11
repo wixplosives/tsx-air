@@ -93,6 +93,14 @@ describe('findUsedVariables', () => {
         expect(findUsedVariables(ast).read).to.eql(expectedRead);
     });
 
+    it('finds property access out of context', () => {
+        const ast = asSourceFile(`
+                const a = props.a;
+            `);
+        let p =  (ast.statements[0] as ts.VariableStatement).declarationList.declarations[0].initializer!;
+        expect(findUsedVariables(p).read.props.a).not.to.be.undefined;
+        
+    });
     it('should ignore keys of assigned literals', () => {
         const ast = asSourceFile(`
             export const anObject = {

@@ -1,22 +1,11 @@
 import { expect } from 'chai';
-import { getFlattened, dependantOnVars as dv } from './helpers';
+import { dependantOnVars as dv } from './helpers';
 import { functions, basicPatterns } from '../../test.helpers';
 import { withNoRefs, CompDefinition, UsedVariables, UsedInScope } from '@tsx-air/compiler-utils';
 
 describe('ast compiler helpers', () => {
-    const dependantOnVars: (comp: CompDefinition, scope: UsedVariables, separateFunctions?: boolean) => UsedInScope = (a, b, c) => withNoRefs(dv(a, b, c));
+    const dependantOnVars: (comp: CompDefinition, scope: UsedVariables, separateFunctions?: boolean) => UsedInScope = (a, b, c) => withNoRefs(dv(a, b, c)) as any as UsedInScope;
 
-    describe('getFlattened', () => {
-        it('returns a string array of the first level children', () => {
-            expect(getFlattened(), `undefined map`).to.eql(new Set([]));
-            expect(getFlattened({}), `empty map`).to.eql(new Set([]));
-            expect(getFlattened({ a: {}, b: {} }), `flat map`).to.eql(new Set(['a', 'b']));
-            expect(getFlattened({ a: { b: {} }, c: {} }), `1 level deep map`).to.eql(new Set(['a.b', 'c']));
-            expect(getFlattened({ a: { b: { c: {} } }, d: { e: {} }, f: {} }), `1 level deep map`).to.eql(
-                new Set(['a.b', 'd.e', 'f'])
-            );
-        });
-    });
     describe(`usedInScope`, () => {
         it(`finds all used props, stores and volatile directly in given scope`, () => {
             const {
@@ -50,7 +39,7 @@ describe('ast compiler helpers', () => {
                 props: { props: { a: {} } }
             });
             expect(dependantOnVars(WithVolatile, WithVolatile.aggregatedVariables)).to.deep.contain({
-                volatile: { b: {}, c:{}, d:{} }
+                volatile: { b: {}, c: {}, d: {} }
             });
         });
         it(`finds dependencies of directly used vars`, () => {

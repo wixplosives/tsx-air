@@ -1,28 +1,9 @@
-import { Component, CompFactory, TSXAir, Factory } from "..";
-import { VirtualElement } from "../types/virtual.element";
-import { Fragment } from "../types/fragment";
+import { Component, CompFactory, TSXAir, Factory } from "../src";
+import { VirtualElement } from "../src/types/virtual.element";
+import { Fragment } from "../src/types/fragment";
 
-// const MockParent = TSXAir((props: { a: number }) => {
-//     const state = store({ counter: 0 });
-//     if (props.a < 0) {
-//         return <span>
-//             <MockChild ca={props.a} cb={-props.a} />
-//             {props.a}
-//         </span>
-//     }
-//     if (props.a < 5) {
-//         return <MockParent a={props.a + 1} />
-//     }
-//     return <MockChild ca={props.a} cb={state.counter} />
-// });
-
-
-// const MockChild = TSXAir((props: { ca: number, cb: number }) => {
-//     return <div>{props.ca} {props.cb}</div>;
-// });
-
-export class Parent extends Component {
-    static factory: CompFactory<typeof Parent> = new CompFactory<typeof Parent>(Parent, {
+export class CompiledParent extends Component {
+    static factory: CompFactory<typeof CompiledParent> = new CompFactory<typeof CompiledParent>(CompiledParent, {
         'props.a': 1,
         'state.counter': 2
     }, () => ({ state: { counter: 0 } }));
@@ -36,20 +17,20 @@ export class Parent extends Component {
             return VirtualElement.fragment('0', ParentFrag0, this);
         }
         if (this.props.a < 5) {
-            return VirtualElement.component('1', Parent, this, undefined, { a: this.props.a + 1 });
+            return VirtualElement.component('1', CompiledParent, this, undefined, { a: this.props.a + 1 });
         }
         return VirtualElement.component(
-            '2', Child, this,
+            '2', CompiledChild, this,
             new Map<number, number>([
-                [this.changesBitMap['state.counter'], Child.factory.changesBitMap['props.ca']],
-                [this.changesBitMap['props.a'], Child.factory.changesBitMap['props.cb']],
+                [this.changesBitMap['state.counter'], CompiledChild.factory.changesBitMap['props.ca']],
+                [this.changesBitMap['props.a'], CompiledChild.factory.changesBitMap['props.cb']],
             ]), { ca: this.props.a, cb: this.state.state.counter });
     }
 }
 
 export class ParentFrag0 extends Fragment {
     static factory: Factory<typeof ParentFrag0> = new Factory<typeof ParentFrag0>(
-        ParentFrag0, Parent.factory.changesBitMap);
+        ParentFrag0, CompiledParent.factory.changesBitMap);
     updateView(changes: number): void {
         if (changes & this.changesBitMap['props.a']) {
             TSXAir.runtime.updateExpression(this.ctx.expressions[0], this.props.a);
@@ -58,10 +39,10 @@ export class ParentFrag0 extends Fragment {
 
     $comp0() {
         const { props } = this;
-        return VirtualElement.component('0', Child, this,
+        return VirtualElement.component('0', CompiledChild, this,
             new Map<number, number>([[this.changesBitMap['props.a'],
-            Child.factory.changesBitMap['prop.ca']
-            | Child.factory.changesBitMap['prop.cb']
+            CompiledChild.factory.changesBitMap['prop.ca']
+            | CompiledChild.factory.changesBitMap['prop.cb']
             ]]), { ca: props.a, cb: -props.a })
     }
 
@@ -82,8 +63,8 @@ export class ParentFrag0 extends Fragment {
     }
 }
 
-export class Child extends Component {
-    static factory: CompFactory<typeof Child> = new CompFactory<typeof Child>(Child, {
+export class CompiledChild extends Component {
+    static factory: CompFactory<typeof CompiledChild> = new CompFactory<typeof CompiledChild>(CompiledChild, {
         'props.ca': 4, 'props.cb': 8
     });
 
@@ -94,7 +75,7 @@ export class Child extends Component {
 
 export class ChildFrag0 extends Fragment {
     static factory: Factory<typeof ChildFrag0> = new Factory<typeof ChildFrag0>(
-        ChildFrag0, Child.factory.changesBitMap);
+        ChildFrag0, CompiledChild.factory.changesBitMap);
     updateView(changes: number): void {
         if (changes & this.changesBitMap['props.ca']) {
             TSXAir.runtime.updateExpression(this.ctx.expressions[0], this.props.ca);

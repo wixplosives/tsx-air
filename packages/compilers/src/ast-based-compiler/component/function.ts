@@ -1,7 +1,9 @@
 import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { getGenericMethodParams, dependantOnVars, addToClosure } from './helpers';
+import { setupClosure } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
+import { FragmentData } from './fragment/jsx.fragment';
+import { safely } from '@tsx-air/utils';
 
 export function nameFunctions(comp: CompDefinition) {
     for (const func of comp.functions) {
@@ -13,10 +15,10 @@ export function aggregateDependencies(comp: CompDefinition) {
     return comp.aggregatedVariables;
 }
 
-export function* generateMethods(comp: CompDefinition) {
+export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]) {
     nameFunctions(comp);
     for (const func of comp.functions) {
-        yield generateStateAwareMethod(comp, func);
+        yield generateStateAwareMethod(comp, func, fragments);
         yield generateMethodBind(func);
     }
 }
@@ -32,52 +34,46 @@ export function generateMethodBind(func: FuncDefinition) {
     );
 }
 
-export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinition) {
-    const method = asMethod(comp, func);
-    const body = method.body!;
-    const { statements } = body;
+export function generateStateAwareMethod(comp: CompDefinition, func: FuncDefinition, fragments: FragmentData[]) {
+    const { sourceAstNode: src } = func;
+    const name = `_${readFuncName(func)}`;
+    const statements = (ts.isBlock(src.body)
+        ? src.body.statements
+        : [src.body]) as ts.Expression[];
 
-    const vars = dependantOnVars(comp, func.aggregatedVariables);
-    const methods = Object.keys(func.aggregatedVariables.executed).filter(
-        name => comp.functions.some(fn => fn.name === name)
-    );
-    body.statements = ts.createNodeArray([
-        ...addToClosure(vars),
-        ...addToClosure(methods),
-        ...statements.map(toStateSafe(comp))]);
-    return method;
+    return cMethod(name, func.arguments, [
+        ...setupClosure(comp, func.aggregatedVariables),
+        ...statements.map(toStateSafe(comp, fragments))
+    ]);
 }
 
-const toStateSafe = (comp: CompDefinition) => (s: ts.Statement) => {
-    if (isStoreDefinition(comp, s)) {
+export const toStateSafe = (comp: CompDefinition, fragments:FragmentData[]) => (s: ts.Node) => {
+    if (isStoreDefinition(comp, s as ts.Statement)) {
         throw new Error('stores may only be declared in the main component body');
     }
-    if (ts.isExpressionStatement(s)) {
-        return cStateCall(comp, s.expression) || s;
-    }
-    if (ts.isReturnStatement(s) && s.expression) {
-        return cStateCall(comp, s.expression) || s;
-    }
-    return s;
+    return cloneDeep<ts.Node, ts.Node>(s, undefined, n => {
+        if (ts.isExpressionStatement(n)) {
+            return cStateCall(comp, n.expression);
+        }
+        if (n.parent && ts.isArrowFunction(n.parent)) {
+            return ts.createReturn(n as ts.Expression);
+        }
+        if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) {
+            const frag = safely(
+                () => fragments.find(f => f.root.sourceAstNode === ((n as any)?.src || n)),
+                `Unidentified Fragment Instance`, f=>!!f)!;
+            if (frag.isComponent) {
+                return asAst(`this.${frag.id}`);
+            } else {
+                return asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this)`); 
+            }
+        };
+        return undefined;
+    }) as ts.Statement;
 };
 
 export const nextLambdaName = (comp: CompDefinition) =>
     'lambda' + postAnalysisData.write(comp, 'lambdaCount', i => i ? i++ : 0);
-
-function asMethod(comp: CompDefinition, func: FuncDefinition): ts.MethodDeclaration {
-    const { sourceAstNode: src } = func;
-
-    const name = `_${readFuncName(func)}`;
-    const clone = cloneDeep(src);
-    if (!ts.isBlock(clone.body!)) {
-        clone.body = ts.createBlock([ts.createReturn(clone.body)]);
-    }
-
-    const params = getGenericMethodParams(comp, func.aggregatedVariables, true, false);
-    src.parameters.forEach(p => params.push(asCode(p.name)));
-
-    return cMethod(name, params, clone.body);
-}
 
 export function isStoreDefinition(comp: CompDefinition, node: ts.Statement | ts.VariableDeclaration) {
     if (ts.isVariableStatement(node)) {
