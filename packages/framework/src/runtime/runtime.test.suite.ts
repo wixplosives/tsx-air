@@ -86,11 +86,11 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
                 // setup
                 runtime.updateProps(instance, (p) => (p.a = -5, instance.changesBitMap['props.a']));
                 onNextFrame[0](0);
-                expect(instance.getDomRoot().outerHTML).to.equal(`<span><!--$0C0--><div><!--$000X0-->-5<!--$000X0--> <!--$000X1-->5<!--$000X1--></div><!--$0C0--><!--$0X0-->-5<!--$0X0--></span>`);
+                expect(domOf(instance)).to.equal(`<span><!--$0C0--><div><!--$000X0-->-5<!--$000X0--> <!--$000X1-->5<!--$000X1--></div><!--$0C0--><!--$0X0-->-5<!--$0X0--></span>`);
                 // test
                 runtime.updateProps(instance, (p) => (p.a = -1, instance.changesBitMap['props.a']));
                 onNextFrame[1](0);
-                expect(instance.getDomRoot().outerHTML).to.equal(`<span><!--$0C0--><div><!--$000X0-->-1<!--$000X0--> <!--$000X1-->1<!--$000X1--></div><!--$0C0--><!--$0X0-->-1<!--$0X0--></span>`);
+                expect(domOf(instance)).to.equal(`<span><!--$0C0--><div><!--$000X0-->-1<!--$000X0--> <!--$000X1-->1<!--$000X1--></div><!--$0C0--><!--$0X0-->-1<!--$0X0--></span>`);
             });
 
             it(`doesn't replace outer elements instances when inner html changes`, () => {

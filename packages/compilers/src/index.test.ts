@@ -8,9 +8,11 @@ import { compilerOptions } from "@tsx-air/compiler-utils";
 import { Script } from "vm";
 import * as fr from '@tsx-air/framework'
 import { browserifyFiles } from "@tsx-air/testing";
-import { fileDetails } from "packages/browserify/src/reporter.helpers";
+import { Runtime } from "@tsx-air/framework/src/runtime/runtime";
+import { Displayable, TSXAir, render, Component } from "@tsx-air/framework";
+import { JSDOM } from "jsdom";
 
-describe.only('compilers', () => {
+xdescribe('compilers', () => {
     it('each compiler should have a unique name', () => {
         const usedNames: Set<string> = new Set();
         for (const { label } of transformerCompilers) {
@@ -61,3 +63,55 @@ describe.only('compilers', () => {
         });
     }
 });
+
+describe.only(`state`, ()=>{
+    let StatefulComp: typeof Component;
+    let runtime: Runtime;
+    let onNextFrame: FrameRequestCallback[] = [];
+    const domOf = <T extends Displayable>(c: T) => (c.getDomRoot() as HTMLElement).outerHTML.replace(/>\s{2,}</g, '><');
+
+    beforeEach(() => {
+        onNextFrame = [];
+        const { window } = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
+        runtime = new Runtime(window, (fn: FrameRequestCallback) => (onNextFrame.push(fn), onNextFrame.length));
+        TSXAir.runtime = runtime;
+    });
+    
+    before(async () => {
+        await browserifyFiles(
+            packagePath('@tsx-air/examples', 'src', 'examples', '02.stateful'),
+            packagePath('@tsx-air/compilers', 'tmp'), 
+            transformerCompilers[0],
+            'suite.boilerplate.ts',
+            'out.js',
+        )
+        const src = readFileSync(packagePath('@tsx-air/compilers', 'tmp', 'src.js', 'index.source.jsx'), { encoding: 'utf8' });
+        // const src = readFileSync(packagePath('@tsx-air/compilers', 'tmp', 'out.js'), { encoding: 'utf8' });
+        // const out = src;
+        // const src = readFileSync(packagePath('@tsx-air/framework', 'fixtures', 'runtime.fixture.tsx'), { encoding: 'utf8' });
+        // console.log(src);
+        const out = ts.transpileModule(src, {
+            compilerOptions: {
+                ...compilerOptions,
+                module: ts.ModuleKind.CommonJS
+            },
+            transformers: transformerCompilers[0].transformers,
+            fileName: 'compiled.mjs'
+        }).outputText;
+        console.log(out);
+        const script = new Script(out);
+        try {
+            const exports = {};
+            const require = () => fr;
+            const t = script.runInNewContext({ exports, require }, { filename: 'compiled.mjs', });
+            StatefulComp = exports.StatefulComp;
+            console.log(StatefulComp)
+        } catch (e) {
+            console.log(e);
+        }
+    });
+    it(`should `, () => {
+        const instance = render(StatefulComp, {initialState:'Yo'})
+        console.log(instance.$instance.getDomRoot().outerHTML);
+    });
+})

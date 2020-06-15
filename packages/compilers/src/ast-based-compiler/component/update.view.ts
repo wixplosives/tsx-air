@@ -6,8 +6,10 @@ import {
     asCode,
     cMethod,
     asAst,
+    JsxComponent,
 } from '@tsx-air/compiler-utils';
 import { FragmentData } from './fragment/jsx.fragment';
+import { getVComp } from './fragment/virtual.comp';
 
 export function* generateUpdateView(comp: CompDefinition, fragment: FragmentData) {
     const statements: ts.Statement[] = [];
@@ -20,8 +22,9 @@ export function* generateUpdateView(comp: CompDefinition, fragment: FragmentData
     }
 };
 
+
 function generateExpUpdates(comp: CompDefinition, fragment: FragmentData, statements: ts.Statement[]) {
-    const addUpdate = (exp: JsxExpression, setStatement: string) => {
+    const addUpdate = (exp: JsxExpression | JsxComponent, setStatement: string) => {
         const dependencies = dependantOnVars(comp, exp.aggregatedVariables);
         const depBits = getChangeBitsNames(dependencies);
         if (depBits.length) {
@@ -35,10 +38,16 @@ function generateExpUpdates(comp: CompDefinition, fragment: FragmentData, statem
     jsxExp(fragment).forEach((exp, i) =>
         addUpdate(exp, `TSXAir.runtime.updateExpression(this.ctx.expressions[${i}], ${exp.expression})`)
     );
+    fragment.root.components.forEach((childComp) =>
+        addUpdate(childComp, `TSXAir.runtime.getUpdatedInstance(this.${
+            getVComp(comp, childComp).name}.withChanges($ch))`)
+    );
     for (const [exp, elmIndex] of dynamicAttrs(fragment)) {
         const attr = exp.sourceAstNode.parent as ts.JsxAttribute;
         const name = asCode(attr.name);
-        addUpdate(exp, `this.ctx.elements[${elmIndex}].setAttribute(${name}, ${exp.expression});`)
+        if (!name.startsWith('on')) {
+            addUpdate(exp, `this.ctx.elements[${elmIndex}].setAttribute('${name}', ${exp.expression});`)
+        }
     }
 }
 

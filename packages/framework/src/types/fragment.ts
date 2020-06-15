@@ -86,11 +86,11 @@ export class Fragment extends Displayable {
 
     unique(str: string) {
         return this.withUniq(
-            this.withUniq(
-                this.withUniq(str,
-                    '<!--X-->', (i: number) => this.comment(i, 'X')),
-                '<!--C-->', (i: number) => this.comment(i, 'C')),
-            'x-da="!"', (i: number) => this.attribute(i), false);
+            this.withUniq(str,
+                '<!--X-->', (i: number) => this.comment(i, 'X')),
+            '<!--C-->', (i: number) => this.comment(i, 'C'))
+            .replace(/x-da="!"/g, `x-da="${this.fullKey}"`);
+
     }
 
     private withUniq(str: string, placeholder: string, replace: (i: number) => string, withTrailing = true): string {

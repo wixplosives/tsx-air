@@ -7,6 +7,13 @@ import { findJsxComp } from "../function";
 export const generateVirtualComponents = (comp: CompDefinition, fragment: FragmentData) =>
     fragment.root.components.map(generateVCMethod(comp));
 
+export const getVComp = (comp: CompDefinition, jsxComp: JsxComponent) => {
+    const [index] = findJsxComp(comp, jsxComp.sourceAstNode);
+    return {
+        name: `$${jsxComp.name}${index}`,
+        index
+    };
+}
 
 const generateVCMethod = (comp: CompDefinition) =>
     (jsxComp: JsxComponent) => {
@@ -14,9 +21,8 @@ const generateVCMethod = (comp: CompDefinition) =>
         const preMapping = mapping === 'undefined' ? [] : [
             asAst(`const $pr=this.changesBitMap, $ch=${jsxComp.name}.changesBitMap;`) as ts.Statement
         ]
-        const [index] = findJsxComp(comp, jsxComp.sourceAstNode);
-
-        return cGet(`$${jsxComp.name}${index}`, [
+        const { name, index } = getVComp(comp, jsxComp);
+        return cGet(name, [
             ...setupClosure(comp, jsxComp.aggregatedVariables),
             ...preMapping,
             ts.createReturn(

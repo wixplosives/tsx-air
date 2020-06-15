@@ -1,6 +1,7 @@
 import { Component } from "./component";
 import { Fragment } from "./fragment";
 import { Displayable, DisplayableData } from "./displayable";
+import { remapChangedBit } from "../runtime/runtime.helpers";
 
 export class VirtualElement<T extends typeof Displayable = any, P extends Displayable = Displayable> implements DisplayableData {
     private constructor(
@@ -35,6 +36,11 @@ export class VirtualElement<T extends typeof Displayable = any, P extends Displa
     withKey(key: string) {
         const { type, parent, props, volatile, state, changes, changeBitMapping: changeBitRemapping } = this;
         return new VirtualElement(type, props, state, volatile, parent, key, changeBitRemapping, changes);
+    };
+    
+    withChanges(changes:number) {
+        const { type, parent, props, volatile, state, key, changeBitMapping: changeBitRemapping } = this;
+        return new VirtualElement(type, props, state, volatile, parent, key, changeBitRemapping, remapChangedBit(changes, changeBitRemapping));
     };
 
     get fullKey(): string {

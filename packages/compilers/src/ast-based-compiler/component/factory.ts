@@ -11,6 +11,7 @@ export function factory(comp: CompDefinition) {
 }
 
 function getBits(comp: CompDefinition) {
-    return `{${getChangeBitsNames(dependantOnVars(comp, comp.aggregatedVariables))
-        .map((v, i) => `'${v}':1<<${i}`).join(',')}}`
+    const vars = dependantOnVars(comp, comp.aggregatedVariables);
+    const bits = getChangeBitsNames(vars);
+    return `{${bits.map((v, i) => `'${v}':1<<${i}`).join(',')}}`
 }

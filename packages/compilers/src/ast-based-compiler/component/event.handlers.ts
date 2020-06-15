@@ -5,6 +5,7 @@ import { nonEmptyStr } from '@tsx-air/utils';
 import camelCase from 'lodash/camelCase';
 import { DomBindings, DomBinding } from '../../common/dom.binding';
 import { postAnalysisData } from '../../common/post.analysis.data';
+import { FragmentData } from './fragment/jsx.fragment';
 
 export function* generateAfterMount(comp: CompDefinition, domBinding: DomBindings) {
     const handlers = tagHandlersUsed(comp);
@@ -39,9 +40,9 @@ const generateAddListener = (dom: DomBinding, event: string, handler: FuncDefini
 
 type Handlers = Map<FuncDefinition, JsxExpression[]>;
 
-export const tagHandlersUsed = (comp: CompDefinition) => {
+export const tagHandlersUsed = (comp: CompDefinition, fragment:FragmentData) => {
     const expressionsWithHandlers =
-        comp.jsxRoots[0].expressions.filter(isEventHandler);
+        fragment.root.expressions.filter(isEventHandler);
 
     const handlersToUses = new Map<FuncDefinition, JsxExpression[]>();
     const missingHandlers = new Set(expressionsWithHandlers);

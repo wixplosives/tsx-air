@@ -4,6 +4,13 @@ import { setupClosure } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
 import { FragmentData } from './fragment/jsx.fragment';
 import { safely } from '@tsx-air/utils';
+import get from 'lodash/get';
+
+function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
+    return generateMethod(comp, 'preRender',
+        get(comp.sourceAstNode.arguments[0], 'body'),
+        fragments)
+}
 
 export function nameFunctions(comp: CompDefinition) {
     for (const func of comp.functions) {
@@ -17,6 +24,7 @@ export function aggregateDependencies(comp: CompDefinition) {
 
 export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]) {
     nameFunctions(comp);
+    yield generatePreRender(comp, fragments);
     for (const func of comp.functions) {
         yield generateStateAwareMethod(comp, func, fragments);
         yield generateMethodBind(func);
@@ -52,8 +60,11 @@ export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[])
         throw new Error('stores may only be declared in the main component body');
     }
     return cloneDeep<ts.Node, ts.Node>(s, undefined, n => {
-        if (ts.isExpressionStatement(n)) {
+        if (ts.isAsExpression(n) || ts.isExpressionStatement(n)) {
             return cStateCall(comp, n.expression);
+        }
+        if (ts.isBinaryExpression(n) || ts.isPrefixUnaryExpression(n) || ts.isPostfixUnaryExpression(n)) {
+            return cStateCall(comp, n);
         }
         if (n.parent && ts.isArrowFunction(n.parent)) {
             return ts.createReturn(
@@ -110,7 +121,7 @@ export function isStoreDefinition(comp: CompDefinition, node: ts.Statement | ts.
     return false;
 }
 
-export const cStateCall = (comp: CompDefinition, exp: ts.Expression) => {
+const cStateCall = (comp: CompDefinition, exp: ts.Expression) => {
     const used = findUsedVariables(exp);
     const changeBits: string[] = [];
     const usedStores: string[] = [];
@@ -120,15 +131,69 @@ export const cStateCall = (comp: CompDefinition, exp: ts.Expression) => {
             Object.keys(v).forEach(field => changeBits.push(`${comp.name}.changesBitMap['${store}.${field}']`));
         }
     }
-    const stores = usedStores.join(',');
-
     return changeBits.length === 0
         ? undefined
-        : asAst(`TSXAir.runtime.updateState(this, ({${stores}})=>{
-            ${asCode(exp)};
-            return ${changeBits.join('|')};
-        })`) as ts.ExpressionStatement;
+        : asAst(`TSXAir.runtime.update(this, ${changeBits.join('|')}, ()=>${asCode(exp)})`) as ts.ExpressionStatement;
 };
 
+
+function* parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments: FragmentData[]) {
+    const declaredVars = new Set<string>();
+    for (const s of statements) {
+        yield* parseStatement(comp, s, declaredVars, fragments);
+    }
+}
+
+function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragments: FragmentData[]) {
+    const statements = (get(body, 'statements')
+        ? get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[]
+        : [body]) as ts.Statement[];
+    const modified = [...parseStatements(comp, statements, fragments)];
+
+    return cMethod(name, [], [
+        ...setupClosure(comp, modified, false),
+        ...modified]);
+}
+
+function* parseStatement(comp: CompDefinition, statement: ts.Statement, declaredVars: Set<string>, fragments: FragmentData[]) {
+    if (ts.isVariableStatement(statement)) {
+        const vars = [];
+        for (const declaration of statement.declarationList.declarations) {
+            if (!declaration.initializer
+                || !(isStoreDefinition(comp, declaration) || isFunc(declaration))
+            ) {
+                if (ts.isObjectBindingPattern(declaration.name)) {
+                    const bound = declaration.name.elements.filter(e => asCode(e.name) in comp.aggregatedVariables.accessed);
+                    if (bound.length) {
+                        vars.push(
+                            ts.createVariableDeclaration(
+                                ts.createObjectBindingPattern(
+                                    bound)));
+                    }
+                } else if (asCode(declaration.name) in comp.aggregatedVariables.accessed) {
+                    // TODO: make this state safe for var d=state.a++
+                    vars.push(declaration);
+                    declaredVars.add(asCode(declaration.name));
+                }
+            }
+        }
+        if (vars.length) {
+            yield ts.createVariableStatement(statement.modifiers, vars);
+        }
+    } else {
+        if (!ts.isFunctionDeclaration(statement)) {
+            const ret = toTsxCompatible(comp, fragments)(statement);
+            if (ts.isReturnStatement(ret) && declaredVars.size) {
+                yield asAst(`this.volatile={${[...declaredVars].join(',')}}`) as ts.Statement;
+            }
+            yield ret;
+        }
+    }
+}
+
+const isFunc = (v: ts.VariableDeclaration) => (v.initializer && (
+    ts.isArrowFunction(v.initializer) ||
+    ts.isFunctionExpression(v.initializer)));
+
 export const asFunction = (method: ts.MethodDeclaration) =>
-    cFunction(method.parameters.map(i => i), method.body!);  
+    cFunction(method.parameters.map(i => i), method.body!);

@@ -145,7 +145,7 @@ export function getChangeBitsNames(used: UsedInScope): string[] {
         Object.keys(used.props[Object.keys(used.props)[0]]).forEach(k => ret.push(`props.${k}`));
     }
     if (used.stores) {
-        for (const [store, name] of Object.entries(used.stores)) {
+        for (const [name, store] of Object.entries(used.stores)) {
             Object.keys(store).forEach(k => ret.push(`${name}.${k}`));
         }
     }

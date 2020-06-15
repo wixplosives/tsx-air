@@ -35,27 +35,30 @@ export class ParentFrag0 extends Fragment {
         if (changes & this.changesBitMap['props.a']) {
             TSXAir.runtime.updateExpression(this.ctx.expressions[0], this.props.a);
         }
+        if (changes & this.changesBitMap['props.a']) {
+            TSXAir.runtime.getUpdatedInstance(this.$comp0.withChanges(changes));
+        }
     }
 
-    $comp0() {
+    get $comp0() {
         const { props } = this;
         return VirtualElement.component('0', CompiledChild, this,
             new Map<number, number>([[this.changesBitMap['props.a'],
-            CompiledChild.factory.changesBitMap['prop.ca']
-            | CompiledChild.factory.changesBitMap['prop.cb']
+            CompiledChild.factory.changesBitMap['props.ca']
+            | CompiledChild.factory.changesBitMap['props.cb']
             ]]), { ca: props.a, cb: -props.a })
     }
 
     hydrate(_: any, target: HTMLElement) {
         const { props } = this;
         this.hydrateExpressions([props.a], target);
-        this.hydrateComponents([this.$comp0()], target);
+        this.hydrateComponents([this.$comp0], target);
         this.ctx.root = target;
     }
 
     toString(): string {
         const r = this.unique(`<span><!--C-->${
-            TSXAir.runtime.toString(this.$comp0())
+            TSXAir.runtime.toString(this.$comp0)
         }<!--C--><!--X-->${
             TSXAir.runtime.toString(this.props.a)
             }<!--X--></span>`);

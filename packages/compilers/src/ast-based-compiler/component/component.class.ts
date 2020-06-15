@@ -19,7 +19,6 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
         [
             cStatic('factory', factory(comp)),
             ...generateMethods(comp, fragments),
-            generatePreRender(comp, fragments),
             ...fragments.filter(f => f.isComponent)
                 .map(c => generateVirtualComponents(comp, c)[0]),
         ]

@@ -52,7 +52,7 @@ export function asAst(statement: string, returnStatement = false, modifier?: (n:
 }
 
 export const astTemplate = (template: string, replacements: Record<string, ts.Node>) =>
-    asAst(template, false, (n: ts.Node) => ts.isIdentifier(n)
+    cloneDeep(asAst(template), undefined, (n: ts.Node) => ts.isIdentifier(n)
         ? replacements[asCode(n)]
         : undefined);
 

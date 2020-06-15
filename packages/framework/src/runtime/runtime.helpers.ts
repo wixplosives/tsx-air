@@ -5,7 +5,7 @@ export function updateExpression(expMarkers: Comment[], values: IterableIterator
     let first!: Node;
     for (const v of values) {
         first = first || v;
-        expMarkers[1]?.parentNode?.insertBefore(v, expMarkers[1]);
+        expMarkers[1].parentNode!.insertBefore(v, expMarkers[1]);
     }
     // handle empty list
     first = first || expMarkers[1];
@@ -39,22 +39,12 @@ export function asSingleDomNode(value: any) {
 }
 
 export function remapChangedBit(changes: number, mapping?: Map<number, number>): number {
-    const remapBitAtIndex = (index: number) => {
-        const isolated = changes & (1<<index);
-        return mapping!.get(isolated) || 0;
-    }
-    const lastMeaningfulBitIndex = () => {
-        for (let i=0 ; i<63 ; i++) {
-            if (!(changes & (0xffffffff << i))) {
-                return i;
-            }
-        }
-        return 63;
-    }
     if (mapping) {
         let remapped = 0;
-        for (let i=0 ; i<lastMeaningfulBitIndex() ; i++) {
-            remapped |= remapBitAtIndex(i);
+        for (const [ch,pr] of mapping) {
+            if (changes & pr) {
+                remapped |= ch;
+            }
         }
         return remapped;
     } else {

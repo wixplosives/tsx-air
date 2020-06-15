@@ -3,7 +3,7 @@ import { updateExpression as _updateExpression, asDomNodes, remapChangedBit } fr
 import isArray from 'lodash/isArray';
 import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from '..';
 
-type Mutator = (obj: any) => number;
+type Mutator = () => any;
 
 export class Runtime {
     readonly HTMLElement: typeof HTMLElement;
@@ -11,14 +11,14 @@ export class Runtime {
     constructor(
         readonly window: Window = globalThis.window,
         readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = globalThis.requestAnimationFrame
-            
+
     ) {
         this.mockDom = window?.document?.createElement('div');
         this.document = window?.document;
         this.HTMLElement = window?.HTMLElement;
         this.Text = window?.Text;
         if (requestAnimationFrame !== undefined) {
-            requestAnimationFrame = requestAnimationFrame.bind(globalThis);
+            this.requestAnimationFrame = requestAnimationFrame.bind(globalThis);
         }
     }
     $stats = [] as RuntimeCycle[];
@@ -32,17 +32,14 @@ export class Runtime {
     private mockDom!: HTMLElement;
     private keyCounter = 0 | 0;
 
-    updateProps(instance: Displayable, mutator: Mutator) {
-        this.addChange(instance, mutator(instance.props));
+    update(instance: Displayable, bits:number, mutator: Mutator) {
+        this.addChange(instance, bits);
         this.triggerViewUpdate();
-    }
-
-    updateState(instance: Displayable, mutator: Mutator) {
-        this.addChange(instance, mutator(instance.state));
-        this.triggerViewUpdate();
+        return mutator();
     }
 
     updateExpression(exp: ExpressionDom, value: any) {
+        exp.value = value;
         _updateExpression([exp.start as Comment, exp.end as Comment], asDomNodes(value));
     }
 
@@ -57,12 +54,12 @@ export class Runtime {
     }
 
     getUpdatedInstance(vElm: VirtualElement<any>): Displayable {
-        const { key, owner } = vElm;
-        if (!key || !owner) {
+        const { key, parent, owner } = vElm;
+        if (!key || !owner || !parent) {
             throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
         }
-        if (key in owner.ctx.components) {
-            const instance = owner.ctx.components[key];
+        if (key in parent.ctx.components) {
+            const instance = parent.ctx.components[key];
             instance.props = vElm.props;
             this.addChange(instance, vElm.changes);
             return instance;
@@ -80,8 +77,7 @@ export class Runtime {
     private renderOrHydrate(vElm: VirtualElement<any>, dom?: HTMLElement): Displayable {
         const { key, props, state, type, parent } = vElm;
         if (Component.isType(type)) {
-            const comp = vElm.key && vElm.parent?.ctx.components[vElm.key]
-                || this.hydrateComponent(key!, parent, dom, type, props, state);
+            const comp = this.hydrateComponent(key!, parent, dom, type, props, state);
             if (vElm.parent && key) {
                 vElm.parent.ctx.components[key] = comp;
             }
@@ -131,7 +127,7 @@ export class Runtime {
         state?: any
     ): Comp {
         this.hydrating++;
-        const instance = type.factory.newInstance(key, { props, state, parent });
+        const instance = parent?.ctx.components[key] || type.factory.newInstance(key, { props, state, parent });
         const preRender = instance.preRender();
         // prerender already expressed in view ny toString
         this.pending.delete(instance);

@@ -72,6 +72,9 @@ const tsxAirToString = (exp: ts.Node) =>
 export const jsxTextExpressionReplacer: ReplacerCreator =
     ctx => node => {
         if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
+            if (!node.expression) {
+                return '';
+            }
             const exp = node.expression ? node.expression as ts.JsxExpression : asAst(`''`);
             ctx.expressions++;
             return {
