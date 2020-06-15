@@ -5,26 +5,26 @@ import { isStoreDefinition, toTsxCompatible } from './function';
 import get from 'lodash/get';
 import { FragmentData } from './fragment/jsx.fragment';
 
-export function generatePreRender(comp: CompDefinition, fragments:FragmentData[]) {
-    const statements = get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
-    const modified = [...parseStatements(comp, statements, fragments)];
+export function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
+    const body = get(comp.sourceAstNode.arguments[0], 'body');
+    const statements = get(body, 'statements')
+        ? get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[]
+        : [body]
+    const modified =  [...parseStatements(comp, statements, fragments)];
 
     return cMethod('preRender', [], [
-        ...setupClosure(comp, modified),
+        ...setupClosure(comp, modified, false),
         ...modified]);
 }
 
-function* parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments:FragmentData[]) {
+function* parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments: FragmentData[]) {
     const declaredVars = new Set<string>();
     for (const s of statements) {
         yield* parseStatement(comp, s, declaredVars, fragments);
     }
-    if (declaredVars.size) {
-        yield asAst(`this.volatile={${[...declaredVars].join(',')}}`);
-    }
 }
 
-function* parseStatement(comp: CompDefinition, statement: ts.Statement, declaredVars: Set<string>, fragments:FragmentData[]) {
+function* parseStatement(comp: CompDefinition, statement: ts.Statement, declaredVars: Set<string>, fragments: FragmentData[]) {
     if (ts.isVariableStatement(statement)) {
         const vars = [];
         for (const declaration of statement.declarationList.declarations) {
@@ -52,6 +52,11 @@ function* parseStatement(comp: CompDefinition, statement: ts.Statement, declared
     } else {
         if (!ts.isFunctionDeclaration(statement)) {
             yield toTsxCompatible(comp, fragments)(statement);
+        } else if (ts.isReturnStatement(statement)) {
+            if (declaredVars.size) {
+                yield asAst(`this.volatile={${[...declaredVars].join(',')}}`) as ts.Statement;
+            }
+            yield statement;
         }
     }
 }

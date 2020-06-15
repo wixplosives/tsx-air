@@ -26,16 +26,19 @@ export class Fragment extends Displayable {
         this.changesBitMap = _owner.changesBitMap;
     }
 
-    updateView(_changes: number): void {  }
+    updateView(_changes: number): void { }
 
     hydrateExpressions(values: any[], target: HTMLElement) {
         return this.hydrateInternals(values, target, 'X',
-            (v: any, t: Comment) => TSXAir.runtime.hydrateExpression(v, t))
+            (v: any, t: Comment) =>
+                this.ctx.expressions.push(
+                    TSXAir.runtime.hydrateExpression(v, t)));
     }
 
     hydrateComponents(virtualComps: VirtualElement[], target: HTMLElement) {
         this.hydrateInternals(virtualComps, target, 'C',
-            (c: VirtualElement, t: Comment) => TSXAir.runtime.hydrate(c, t.nextElementSibling as HTMLElement))
+            (c: VirtualElement, t: Comment) =>
+                TSXAir.runtime.hydrate(c, t.nextElementSibling as HTMLElement))
     }
 
     hydrateElements(target: HTMLElement) {
@@ -70,9 +73,7 @@ export class Fragment extends Displayable {
             }
         });
 
-        this.ctx.expressions = values.map(
-            v => hydrateFunc(v, comments.nextNode() as Comment)
-        );
+        values.forEach(v => hydrateFunc(v, comments.nextNode() as Comment));
     }
 
     comment(index: number, type: CommentPlaceholder) {

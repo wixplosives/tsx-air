@@ -142,7 +142,7 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
 export function getChangeBitsNames(used: UsedInScope): string[] {
     const ret: string[] = []
     if (used.props) {
-        Object.keys(used.props).forEach(k => ret.push(`props.${k}`));
+        Object.keys(used.props[Object.keys(used.props)[0]]).forEach(k => ret.push(`props.${k}`));
     }
     if (used.stores) {
         for (const [store, name] of Object.entries(used.stores)) {
@@ -180,18 +180,18 @@ function* getClosureProps(used: UsedInScope) {
     }
 }
 
-export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables) {
+export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, includeVolatile = true) {
     let used = (isArray(scope)
-        ? merge({read:{}, accessed:{}, modified:{}, executed:{}}, ...(scope as ts.Node[]).map(n => findUsedVariables(n)))
+        ? merge({ read: {}, accessed: {}, modified: {}, executed: {} }, ...(scope as ts.Node[]).map(n => findUsedVariables(n)))
         : scope) as UsedVariables
-    yield* addToClosure(getDirectDependencies(comp, used, true));
+    yield* addToClosure(getDirectDependencies(comp, used, true), includeVolatile);
     yield* addToClosure(Object.keys(used.executed).filter(
         name => comp.functions.some(fn => fn.name === name)
-    ));
+    ), includeVolatile);
 
 }
 
-export function* addToClosure(used: UsedInScope | string[]) {
+export function* addToClosure(used: UsedInScope | string[], includeVolatile: boolean) {
     if (isArray(used)) {
         if (used.length) {
             yield cConst(destructureNamed(used), asAst('this.owner') as ts.Expression);
@@ -199,7 +199,8 @@ export function* addToClosure(used: UsedInScope | string[]) {
     } else {
         yield* getClosureProps(used);
         yield* getClosureState(used);
-        yield* getClosureVolatile(used);
+        if (includeVolatile)
+            yield* getClosureVolatile(used);
     }
 }
 

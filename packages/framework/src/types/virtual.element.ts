@@ -37,6 +37,10 @@ export class VirtualElement<T extends typeof Displayable = any, P extends Displa
         return new VirtualElement(type, props, state, volatile, parent, key, changeBitRemapping, changes);
     };
 
+    get fullKey(): string {
+        return this.parent ? `${this.parent.fullKey}${this.key}` : this.key || 'NO KEY';
+    }
+
     get owner(): Component | undefined {
         return Component.is(this.parent) ? this.parent : this.parent?.owner;
     }

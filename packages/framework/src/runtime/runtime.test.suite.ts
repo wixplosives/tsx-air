@@ -5,17 +5,20 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { Component } from "../types";
 
-export function testRuntimeApi<P extends typeof Component, C extends typeof Component>(Parent: P, Child: C) {
+export function testRuntimeApi<P extends typeof Component, C extends typeof Component>(getCompiled: () => [any, any]) {
     describe('interacting with framework runtime (internal API)', () => {
+        let Parent: P;
+        let Child: C;
         let runtime: Runtime;
         let onNextFrame: FrameRequestCallback[] = [];
-        const domOf = <T extends Displayable>(c: T) => (c.getDomRoot() as HTMLElement).outerHTML;
+        const domOf = <T extends Displayable>(c: T) => (c.getDomRoot() as HTMLElement).outerHTML.replace(/>\s{2,}</g, '><');
 
         beforeEach(() => {
             onNextFrame = [];
             const { window } = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
             runtime = new Runtime(window, (fn: FrameRequestCallback) => (onNextFrame.push(fn), onNextFrame.length));
             TSXAir.runtime = runtime;
+            [Parent, Child] = getCompiled();
         });
 
         describe('render', () => {
@@ -52,6 +55,7 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
             beforeEach(() => {
                 instance = runtime.render(VirtualElement.root(Parent, { a: 10 })) as Component;
             });
+
             it(`changes the view on the next animation frame`, () => {
                 const initialHtml = domOf(instance);
                 runtime.updateProps(instance, (p) => (p.a = 0, instance.changesBitMap['props.a']));
@@ -78,13 +82,23 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
                 expect(domOf(instance)).to.eql(`<div><!--$111120X0-->5<!--$111120X0--> <!--$111120X1-->2<!--$111120X1--></div>`);
             });
 
+            it(`updated inner components`, () => {
+                // setup
+                runtime.updateProps(instance, (p) => (p.a = -5, instance.changesBitMap['props.a']));
+                onNextFrame[0](0);
+                expect(instance.getDomRoot().outerHTML).to.equal(`<span><!--$0C0--><div><!--$000X0-->-5<!--$000X0--> <!--$000X1-->5<!--$000X1--></div><!--$0C0--><!--$0X0-->-5<!--$0X0--></span>`);
+                // test
+                runtime.updateProps(instance, (p) => (p.a = -1, instance.changesBitMap['props.a']));
+                onNextFrame[1](0);
+                expect(instance.getDomRoot().outerHTML).to.equal(`<span><!--$0C0--><div><!--$000X0-->-1<!--$000X0--> <!--$000X1-->1<!--$000X1--></div><!--$0C0--><!--$0X0-->-1<!--$0X0--></span>`);
+            });
+
             it(`doesn't replace outer elements instances when inner html changes`, () => {
                 const initialDom = instance.getDomRoot();
                 runtime.updateProps(instance, (p) => (p.a = 11, instance.changesBitMap['props.a']));
                 onNextFrame[0](0);
                 expect(instance.getDomRoot()).to.equal(initialDom);
             });
-
 
             describe(`multiple changes in the same frame`, () => {
                 it(`runs preRender (user code) at most once per frame`, () => {

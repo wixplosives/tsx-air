@@ -3,7 +3,6 @@ import { generatePreRender } from './prerender';
 import { generateMethods } from './function';
 import { factory } from './factory';
 import { generateFragments } from './fragment';
-import ts from 'typescript';
 import { parseFragments } from './fragment/jsx.fragment';
 import { generateVirtualComponents } from './fragment/virtual.comp';
 
@@ -26,7 +25,6 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
         ]
     );
 
-    console.log(asCode(compClass));
     api.appendStatements(...generateFragments(comp, api, fragments));
     return compClass;
 };

@@ -56,22 +56,31 @@ export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[])
             return cStateCall(comp, n.expression);
         }
         if (n.parent && ts.isArrowFunction(n.parent)) {
-            return ts.createReturn(n as ts.Expression);
+            return ts.createReturn(
+                (processJsxElement(comp, fragments, n) || n) as ts.Expression
+            );
         }
-        if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) {
-            const frag = safely(
-                () => fragments.find(f => f.root.sourceAstNode === ((n as any)?.src || n)),
-                `Unidentified Fragment Instance`, f => !!f)!;
-            if (frag.isComponent) {
-                const [i, c] = findJsxComp(comp, n);
-                return asAst(`this.$${c.name}${i}`);
-            } else {
-                return asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this)`);
-            }
-        };
-        return undefined;
+        return processJsxElement(comp, fragments, n);
     }) as ts.Statement;
 };
+
+function processJsxElement(comp: CompDefinition, fragments: FragmentData[], n: ts.Node): ts.Expression | undefined {
+    if (ts.isParenthesizedExpression(n)) {
+        return processJsxElement(comp, fragments, n.expression);
+    }
+    if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) {
+        const frag = safely(
+            () => fragments.find(f => f.root.sourceAstNode === ((n as any)?.src || n)),
+            `Unidentified Fragment Instance`, f => !!f)!;
+        if (frag.isComponent) {
+            const [i, c] = findJsxComp(comp, n);
+            return asAst(`this.$${c.name}${i}`) as ts.Expression;
+        } else {
+            return asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this)`) as ts.Expression;
+        }
+    };
+    return undefined;
+}
 
 export const findJsxComp = (comp: CompDefinition, node: ts.Node): [number, JsxComponent] => {
     let compIndex = 0;
@@ -108,10 +117,9 @@ export const cStateCall = (comp: CompDefinition, exp: ts.Expression) => {
     for (const [store, v] of Object.entries(used.modified || {})) {
         if (comp.stores.some(({ name }) => name === store)) {
             usedStores.push(store);
-            Object.keys(v).forEach(field => changeBits.push(`${comp.name}.changeBitmask['${store}.${field}']`));
+            Object.keys(v).forEach(field => changeBits.push(`${comp.name}.changesBitMap['${store}.${field}']`));
         }
     }
-
     const stores = usedStores.join(',');
 
     return changeBits.length === 0

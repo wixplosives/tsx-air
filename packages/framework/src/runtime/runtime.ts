@@ -11,11 +11,15 @@ export class Runtime {
     constructor(
         readonly window: Window = globalThis.window,
         readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = globalThis.requestAnimationFrame
+            
     ) {
         this.mockDom = window?.document?.createElement('div');
         this.document = window?.document;
         this.HTMLElement = window?.HTMLElement;
         this.Text = window?.Text;
+        if (requestAnimationFrame !== undefined) {
+            requestAnimationFrame = requestAnimationFrame.bind(globalThis);
+        }
     }
     $stats = [] as RuntimeCycle[];
 
@@ -76,7 +80,8 @@ export class Runtime {
     private renderOrHydrate(vElm: VirtualElement<any>, dom?: HTMLElement): Displayable {
         const { key, props, state, type, parent } = vElm;
         if (Component.isType(type)) {
-            const comp = this.hydrateComponent(key!, parent, dom, type, props, state);
+            const comp = vElm.key && vElm.parent?.ctx.components[vElm.key]
+                || this.hydrateComponent(key!, parent, dom, type, props, state);
             if (vElm.parent && key) {
                 vElm.parent.ctx.components[key] = comp;
             }
@@ -146,7 +151,7 @@ export class Runtime {
         return r;
     }
 
-    private updateView = () => {
+    private updateView = (_: number) => {
         let depth = 0;
         do {
             depth++;

@@ -47,7 +47,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "compilers",
+            "name": "compilers (it)",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
                 "packages/compilers/**/*.it.ts?(x)",

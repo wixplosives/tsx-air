@@ -13,9 +13,9 @@ import {
     cMethod,
     asAst,
     JsxRoot,
+    astTemplate,
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { findJsxComp } from '../function';
 
 interface ToStringContext {
     expressions: number;
@@ -53,7 +53,10 @@ export const generateToString = (comp: CompDefinition, root: JsxRoot) => {
             return res;
         }));
 
-    return cMethod('toString', [], [...setupClosure(comp, participatingNodes), ts.createReturn(template)]);
+    return cMethod('toString', [], [...setupClosure(comp, participatingNodes),
+    ts.createReturn(
+        astTemplate(`this.unique(TMPL)`, { TMPL: template }) as any as ts.Expression
+    )]);
 };
 
 const toStringAstTemplate = asAst(`TSXAir.runtime.toString(EXP)`);

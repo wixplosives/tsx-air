@@ -9,7 +9,6 @@ import { generateHydrate } from './hydrate';
 export const generateFragmentClass = (comp: CompDefinition, fragment: FragmentData, api: FileTransformerAPI) => {
     const importedFragment = api.ensureImport('Fragment', '@tsx-air/framework');
     api.ensureImport('Factory', '@tsx-air/framework');
-    api.ensureImport('TSXAir', '@tsx-air/framework');
     const frag = cClass(
         fragment.id,
         importedFragment,

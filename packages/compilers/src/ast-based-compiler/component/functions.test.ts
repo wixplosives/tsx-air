@@ -51,15 +51,5 @@ describe('functions', () => {
             const func = evalStateSafeFunc(functions().WithVolatileFunction, { p: 1 }, { s: { a: 10 } }, { b: 100 });
             expect(func(1000)).to.equal(1111);
         });
-
-        // TODO remove
-        // it(`adds dependencies to functions postAnalysisData`, () => {
-        //     const { WithNonStateChangingCode, WithStateChangeOnly, WithVolatileFunction, WithVolatileVars } = functions();
-        //     [WithNonStateChangingCode, WithStateChangeOnly, WithVolatileFunction].forEach(evalStateSafeFunc);
-
-        //     expect(postAnalysisData.read(WithNonStateChangingCode.functions[0], 'dependencies')).to.eql(['s.a']);
-        //     expect(postAnalysisData.read(WithStateChangeOnly.functions[0], 'dependencies')).to.eql(['s.a']);
-        //     expect(postAnalysisData.read(WithVolatileFunction.functions[0], 'dependencies')).to.eql(['props.p', 's.a']);
-        // });
     });
 });

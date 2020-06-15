@@ -5,7 +5,7 @@ export function updateExpression(expMarkers: Comment[], values: IterableIterator
     let first!: Node;
     for (const v of values) {
         first = first || v;
-        expMarkers[1].parentNode?.insertBefore(v, expMarkers[1]);
+        expMarkers[1]?.parentNode?.insertBefore(v, expMarkers[1]);
     }
     // handle empty list
     first = first || expMarkers[1];
