@@ -45,7 +45,7 @@ export const compFuncByName = (comp: CompDefinition, name: string) => comp.funct
 export function getDirectDependencies(comp: CompDefinition, scope: UsedVariables, ignoreFuncReferences: boolean): UsedInScope {
     const used: UsedInScope = {};
     const _usedInScope = (name?: string) =>
-        name && name in scope.read
+        name && (name in scope.accessed)
         && !(ignoreFuncReferences && comp.functions.some(f => f.name === name));
 
     comp.volatileVariables.filter(_usedInScope).forEach(v =>
@@ -142,7 +142,8 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
 export function getChangeBitsNames(used: UsedInScope): string[] {
     const ret: string[] = []
     if (used.props) {
-        Object.keys(used.props[Object.keys(used.props)[0]]).forEach(k => ret.push(`props.${k}`));
+        const p = Object.keys(used.props).find(k => k !== '$refs')!;
+        Object.keys(used.props[p]).forEach(k => ret.push(`props.${k}`));
     }
     if (used.stores) {
         for (const [name, store] of Object.entries(used.stores)) {

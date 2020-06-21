@@ -4,7 +4,7 @@ import isString from 'lodash/isString';
 import { cloneDeep } from '.';
 import { asCode } from '..';
 
-export const asSourceFile = (statement: string, filename = 'mock.ts') =>
+export const asSourceFile = (statement: string, filename = 'mock.tsx') =>
     ts.createSourceFile(filename, statement, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 
 /**
@@ -52,7 +52,7 @@ export function asAst(statement: string, returnStatement = false, modifier?: (n:
 }
 
 export const astTemplate = (template: string, replacements: Record<string, ts.Node>) =>
-    cloneDeep(asAst(template), undefined, (n: ts.Node) => ts.isIdentifier(n)
+    asAst(template, false, (n: ts.Node) => ts.isIdentifier(n)
         ? replacements[asCode(n)]
         : undefined);
 

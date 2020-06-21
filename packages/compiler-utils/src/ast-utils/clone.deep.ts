@@ -3,6 +3,8 @@ import ts from 'typescript';
 
 type Modifier<S> = S extends ts.Node ? ((n: ts.Node, p: ts.Node) => S | undefined) : never;
 
+const excludeKeys = new Set(['nextContainer', 'src']);
+
 export function cloneDeep<T extends ts.Node>(node: T, parent?: ts.Node):T ;
 export function cloneDeep<T extends ts.Node, S extends ts.Node>(node: T, parent: ts.Node|undefined, modifier: Modifier<S>):T|S ;
 export function cloneDeep<T extends ts.Node, S>(node: T, parent?: ts.Node, modifier?: Modifier<S>):T|S {
@@ -21,7 +23,9 @@ export function cloneDeep<T extends ts.Node, S>(node: T, parent?: ts.Node, modif
             continue;
         }
         if (node[key] && (node[key] as any).kind) {
-            clone[key] = (cloneDeep(node[key] as any as ts.Node, node, modifier) as any);
+            if(!excludeKeys.has(key)) {
+                clone[key] = (cloneDeep(node[key] as any as ts.Node, node, modifier) as any);
+            }
             continue;
         }
         if (node[key] && (node[key] as any).length && (node[key] as any)[0].kind) {
@@ -30,7 +34,7 @@ export function cloneDeep<T extends ts.Node, S>(node: T, parent?: ts.Node, modif
         }
         clone[key] = node[key];
     }
-    (clone as any).src = node;
+    (clone as any).src = node?.src || node;
     return clone;
 };
 

@@ -4,15 +4,16 @@ import { postAnalysisData } from "../../../common/post.analysis.data";
 import get from "lodash/get";
 
 export function* parseFragments(comp: CompDefinition) {
+    const allFragments: FragmentData[] = [];
     const statements =
         (get(comp.sourceAstNode.arguments[0], 'body.statements')
             || [get(comp.sourceAstNode.arguments[0], 'body')]) as ts.Statement[];
     for (const s of statements) {
-        yield* processStatementJsxRoots(comp, s);
+        yield* processStatementJsxRoots(comp, s, allFragments);
     }
 }
 
-function* processStatementJsxRoots(comp: CompDefinition, node: ts.Node): Generator<FragmentData> {
+function* processStatementJsxRoots(comp: CompDefinition, node: ts.Node, allFragments: FragmentData[]): Generator<FragmentData> {
     const roots = _getJsxRoots(comp, node);
     for (const root of roots) {
         const hasInnerFragments = root.expressions.some(exp => exp.jsxRoots.length > 0);
@@ -30,9 +31,13 @@ function* processStatementJsxRoots(comp: CompDefinition, node: ts.Node): Generat
             hasInnerFragments,
             root,
             isComponent,
-            src: root.sourceAstNode
+            src: root.sourceAstNode,
+            allFragments,
+            comp
         });
         frag.src = node;
+        allFragments.push(frag);
+        
         if (frag.index === counter) {
             setCounter(comp, counter + 1);
         }
@@ -87,4 +92,6 @@ export interface FragmentData {
     root: JsxRoot;
     hasInnerFragments: boolean;
     src: ts.Node;
+    comp: CompDefinition;
+    allFragments: FragmentData[];
 }

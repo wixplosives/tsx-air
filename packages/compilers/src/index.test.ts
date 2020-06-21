@@ -28,7 +28,7 @@ xdescribe('compilers', () => {
             before(async () => {
                 await browserifyFiles(
                     packagePath('@tsx-air/framework', 'fixtures'),
-                    packagePath('@tsx-air/compilers', 'tmp'), 
+                    packagePath('@tsx-air/compilers', 'tmp'),
                     compiler,
                     'runtime.fixture.tsx',
                     'out.js',
@@ -64,8 +64,8 @@ xdescribe('compilers', () => {
     }
 });
 
-describe.only(`state`, ()=>{
-    let StatefulComp: typeof Component;
+describe.only(`state`, () => {
+    let Comp: typeof Component;
     let runtime: Runtime;
     let onNextFrame: FrameRequestCallback[] = [];
     const domOf = <T extends Displayable>(c: T) => (c.getDomRoot() as HTMLElement).outerHTML.replace(/>\s{2,}</g, '><');
@@ -76,11 +76,13 @@ describe.only(`state`, ()=>{
         runtime = new Runtime(window, (fn: FrameRequestCallback) => (onNextFrame.push(fn), onNextFrame.length));
         TSXAir.runtime = runtime;
     });
-    
+
     before(async () => {
+        const example = '03.thumb';
+        // const example = '01.stateless-parent-child';
         await browserifyFiles(
-            packagePath('@tsx-air/examples', 'src', 'examples', '02.stateful'),
-            packagePath('@tsx-air/compilers', 'tmp'), 
+            packagePath('@tsx-air/examples', 'src', 'examples', example),
+            packagePath('@tsx-air/compilers', 'tmp'),
             transformerCompilers[0],
             'suite.boilerplate.ts',
             'out.js',
@@ -98,20 +100,22 @@ describe.only(`state`, ()=>{
             transformers: transformerCompilers[0].transformers,
             fileName: 'compiled.mjs'
         }).outputText;
-        console.log(out);
         const script = new Script(out);
         try {
             const exports = {};
             const require = () => fr;
             const t = script.runInNewContext({ exports, require }, { filename: 'compiled.mjs', });
-            StatefulComp = exports.StatefulComp;
-            console.log(StatefulComp)
+
+            // Comp = exports.ParentComp;
+            Comp = exports.Thumb;
+            console.log(Comp)
         } catch (e) {
             console.log(e);
         }
     });
     it(`should `, () => {
-        const instance = render(StatefulComp, {initialState:'Yo'})
-        console.log(instance.$instance.getDomRoot().outerHTML);
+        // const instance = render(Comp, { name: 'bla.jpg' })
+        const instance = render(Comp, { url: 'bla.jpg' })
+        console.log(domOf(instance.$instance));
     });
 })

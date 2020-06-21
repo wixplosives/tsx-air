@@ -12,7 +12,7 @@ describe('generateToString', () => {
     let evalContext = {};
     const toStringOf = (compDef: CompDefinition, props: any, state: any = {}, volatile: any = {}, scope = {}) => {
         const asFunc = evalAst(asFunction(generateToString(compDef, compDef.jsxRoots[0])), { TSXAir, store, ...evalContext }) as Function;
-        return () => asFunc.apply({ props, state, volatile, ...scope });
+        return () => asFunc.apply({ props, state, volatile, ...scope, unique:i=>i });
     }
     it('generates a toString method based on the used props and state', () => {
         const comps = basicPatterns();

@@ -1,18 +1,19 @@
-import { CompDefinition, cMethod, asAst, JsxExpression, asCode } from "@tsx-air/compiler-utils";
+import { cMethod, asAst, JsxExpression, asCode } from "@tsx-air/compiler-utils";
 import { FragmentData } from "./jsx.fragment";
 import ts from "typescript";
 import { setupClosure } from "../helpers";
 import { uniqBy } from "lodash";
 import { tagHandlersUsed } from "../event.handlers";
-import { readFuncName } from "../function";
+import { readFuncName, toFragSafe } from "../function";
 
-export function generateHydrate(comp: CompDefinition, fragment: FragmentData) {
+export function generateHydrate(fragment: FragmentData) {
+    const { comp, allFragments: fragments } = fragment;
     const isAttribute = (exp: JsxExpression) =>
         ts.isJsxAttribute(exp.sourceAstNode.parent);
 
     const jsxExp = fragment.root.expressions.filter(e => !isAttribute(e));
     const dynamicAttributes = fragment.root.expressions.filter(isAttribute)
-    const expValues = jsxExp.map(exp => exp.expression);
+    const expValues = jsxExp.map(exp => asCode(toFragSafe(comp, fragments, exp)));
     const comps = fragment.root.components.map((c, i) => `this.$${c.name}${i}`);
     const dependencies = [
         ...fragment.root.expressions.map(exp => exp.sourceAstNode),

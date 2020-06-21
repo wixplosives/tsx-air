@@ -32,7 +32,7 @@ export class Runtime {
     private mockDom!: HTMLElement;
     private keyCounter = 0 | 0;
 
-    update(instance: Displayable, bits:number, mutator: Mutator) {
+    update(instance: Displayable, bits: number, mutator: Mutator) {
         this.addChange(instance, bits);
         this.triggerViewUpdate();
         return mutator();
@@ -67,8 +67,25 @@ export class Runtime {
             return this.render(vElm);
         }
     }
+
     getUniqueKey(prefix = '') {
         return `${prefix}${(this.keyCounter++).toString(36)}`;
+    }
+
+    when: (predicate: string[], action: () => void) => void = this.always;
+    private always(_: any, action: () => void) {
+        action();
+    }
+
+    spreadStyle(styleObj:string|object):string{
+        if (typeof styleObj === 'string') {
+            return styleObj;
+        }
+        let style = ''
+        for (const [key, val] of Object.entries(styleObj)) {
+            style = style + `${key}:${val};`
+        }
+        return style;
     }
 
     hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
@@ -155,7 +172,13 @@ export class Runtime {
             this.pending = new Map<Displayable, number>();
             for (let [instance, changes] of pending) {
                 if (Component.is(instance)) {
+                    this.when = (predicate, action) => {
+                        if (predicate.some(p => changes & instance.changesBitMap[p])) {
+                            action();
+                        }
+                    }
                     const preRender = instance.preRender();
+                    this.when = this.always;
                     // handle prerender state changes 
                     changes |= this.removeChanges(instance);
                     preRender.changes = remapChangedBit(changes, preRender.changeBitMapping);

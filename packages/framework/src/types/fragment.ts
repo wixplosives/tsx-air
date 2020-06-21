@@ -42,7 +42,7 @@ export class Fragment extends Displayable {
     }
 
     hydrateElements(target: HTMLElement) {
-        target.querySelectorAll(`[x-da="${this.fullKey}"]`).forEach(e => this.ctx.elements.push(e as HTMLElement));
+        target.parentNode?.querySelectorAll(`[x-da="${this.fullKey}"]`).forEach(e => this.ctx.elements.push(e as HTMLElement));
     }
 
     private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: Function): void {
@@ -80,7 +80,7 @@ export class Fragment extends Displayable {
         return `<!--${this.fullKey}${type}${index}-->`
     }
 
-    attribute(index: number) {
+    attribute(_: number) {
         return `x-da="${this.fullKey}"`;
     }
 

@@ -35,7 +35,6 @@ export class Component extends Displayable {
         return TSXAir.runtime.toString(this.preRender());
     }
 
-    *$afterUpdate(): IterableIterator<void> {/** Noop */ }
     preRender(): VirtualElement<any> { throw new Error(`not implemented`); }
 
     hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {

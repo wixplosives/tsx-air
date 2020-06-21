@@ -1,5 +1,4 @@
-import { cClass, FileTransformerAPI, CompDefinition, cStatic, astTemplate, cArrow, asAst, asCode } from '@tsx-air/compiler-utils';
-import { generatePreRender } from './prerender';
+import { cClass, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
 import { generateMethods } from './function';
 import { factory } from './factory';
 import { generateFragments } from './fragment';
@@ -20,7 +19,7 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
             cStatic('factory', factory(comp)),
             ...generateMethods(comp, fragments),
             ...fragments.filter(f => f.isComponent)
-                .map(c => generateVirtualComponents(comp, c)[0]),
+                .map(c => generateVirtualComponents(c)[0]),
         ]
     );
 

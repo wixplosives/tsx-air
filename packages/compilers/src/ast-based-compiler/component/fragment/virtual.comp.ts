@@ -4,8 +4,8 @@ import ts, { JsxExpression } from "typescript";
 import { dependantOnVars, setupClosure } from "../helpers";
 import { findJsxComp } from "../function";
 
-export const generateVirtualComponents = (comp: CompDefinition, fragment: FragmentData) =>
-    fragment.root.components.map(generateVCMethod(comp));
+export const generateVirtualComponents = (fragment: FragmentData) =>
+    fragment.root.components.map(generateVCMethod(fragment.comp));
 
 export const getVComp = (comp: CompDefinition, jsxComp: JsxComponent) => {
     const [index] = findJsxComp(comp, jsxComp.sourceAstNode);

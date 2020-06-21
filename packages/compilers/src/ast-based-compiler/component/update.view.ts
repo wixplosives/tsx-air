@@ -1,7 +1,6 @@
 import { dependantOnVars, getChangeBitsNames, setupClosure } from './helpers';
 import ts from 'typescript';
 import {
-    CompDefinition,
     JsxExpression,
     asCode,
     cMethod,
@@ -10,10 +9,12 @@ import {
 } from '@tsx-air/compiler-utils';
 import { FragmentData } from './fragment/jsx.fragment';
 import { getVComp } from './fragment/virtual.comp';
+import { toFragSafe } from './function';
 
-export function* generateUpdateView(comp: CompDefinition, fragment: FragmentData) {
+export function* generateUpdateView(fragment: FragmentData) {
+    const { comp } = fragment;
     const statements: ts.Statement[] = [];
-    generateExpUpdates(comp, fragment, statements);
+    generateExpUpdates(statements, fragment);
     if (statements.length) {
         yield cMethod('updateView', ['$ch'], [
             ...setupClosure(comp, fragment.root.aggregatedVariables),
@@ -22,8 +23,8 @@ export function* generateUpdateView(comp: CompDefinition, fragment: FragmentData
     }
 };
 
-
-function generateExpUpdates(comp: CompDefinition, fragment: FragmentData, statements: ts.Statement[]) {
+function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) {
+    const { comp, allFragments: fragments } = fragment;
     const addUpdate = (exp: JsxExpression | JsxComponent, setStatement: string) => {
         const dependencies = dependantOnVars(comp, exp.aggregatedVariables);
         const depBits = getChangeBitsNames(dependencies);
@@ -36,7 +37,7 @@ function generateExpUpdates(comp: CompDefinition, fragment: FragmentData, statem
         }
     };
     jsxExp(fragment).forEach((exp, i) =>
-        addUpdate(exp, `TSXAir.runtime.updateExpression(this.ctx.expressions[${i}], ${exp.expression})`)
+        addUpdate(exp, `TSXAir.runtime.updateExpression(this.ctx.expressions[${i}], ${asCode(toFragSafe(comp, fragments, exp))})`)
     );
     fragment.root.components.forEach((childComp) =>
         addUpdate(childComp, `TSXAir.runtime.getUpdatedInstance(this.${
@@ -46,7 +47,11 @@ function generateExpUpdates(comp: CompDefinition, fragment: FragmentData, statem
         const attr = exp.sourceAstNode.parent as ts.JsxAttribute;
         const name = asCode(attr.name);
         if (!name.startsWith('on')) {
-            addUpdate(exp, `this.ctx.elements[${elmIndex}].setAttribute('${name}', ${exp.expression});`)
+            let attrValue = exp.expression;
+            if (name === 'style') {
+                attrValue = `TSXAir.runtime.spreadStyle(${attrValue})`;
+            }
+            addUpdate(exp, `this.ctx.elements[${elmIndex}].setAttribute('${name}', ${attrValue});`)
         }
     }
 }
