@@ -13,7 +13,7 @@ export const features = [
 ];
 
 export function suite(api: ExampleSuiteApi, paths: ExamplePaths) {
-    it('should load the {url} image in two size', async () => {
+    it.only('should load the {url} image in two size', async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, {
             cssQuery: '.zoom',

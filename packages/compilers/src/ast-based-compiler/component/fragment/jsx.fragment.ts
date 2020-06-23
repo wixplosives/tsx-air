@@ -1,7 +1,8 @@
 import ts from "typescript";
-import { CompDefinition, JsxRoot, isJsxRoot, asCode, isComponentTag } from "@tsx-air/compiler-utils";
+import { CompDefinition, JsxRoot, isJsxRoot, asCode } from "@tsx-air/compiler-utils";
 import { postAnalysisData } from "../../../common/post.analysis.data";
 import get from "lodash/get";
+import { isComponentTag } from "@tsx-air/utils/src";
 
 export function* parseFragments(comp: CompDefinition) {
     const allFragments: FragmentData[] = [];

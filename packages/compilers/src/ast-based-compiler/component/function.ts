@@ -1,4 +1,4 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, isComponentTag } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, setNodeSrc } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { setupClosure, dependantOnVars, getChangeBitsNames } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
@@ -79,9 +79,9 @@ function generateMethodBind(func: FuncDefinition) {
     );
 }
 
-export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[], declaredVars?: Set<string>, allowWhenFunc: boolean) => {
+export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[], declaredVars?: Set<string>, allowWhenFunc: boolean=false) => {
     declaredVars = declaredVars || new Set<string>();
-    const parser = (s: ts.Node, skipArrow?: ts.Node) => {
+    const parser = (s: ts.Node, skipArrow?: any) => {
         const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n => {
             return swapVarDeclarations(comp, n, declaredVars!) ||
                 swapLambdas(n) ||
@@ -90,7 +90,6 @@ export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[],
                 handleArrowFunc(parser, n, skipArrow) ||
                 swapVirtualElements(comp, fragments, n);
         }) as ts.Statement;
-        ret.src = s;
         return ret;
     };
     return parser;
@@ -120,13 +119,11 @@ export function swapVirtualElements(comp: CompDefinition, fragments: FragmentDat
             const [i, c] = findJsxComp(comp, n);
             if (c) {
                 const ret = asAst(`this.$${c.name}${i}`) as ts.Expression;
-                ret.src = n?.src || n;
-                return ret;
+                return setNodeSrc(ret, n);
             }
         } else {
             const ret = asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this)`) as ts.Expression;
-            ret.src = n?.src || n;
-            return ret;
+            return setNodeSrc(ret, n);
         }
     };
     return undefined;

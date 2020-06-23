@@ -15,8 +15,8 @@ export class Component extends Displayable {
     constructor(
         readonly key: string,
         parent: Displayable | undefined,
-        readonly props: any,
-        readonly state: any,
+        props: any,
+        state: any,
         volatile = {}
     ) {
         super(key, parent, props, state, volatile,);

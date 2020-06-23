@@ -16,7 +16,8 @@ const compiler: Compiler = {
         feature('event', 'handler'),
         feature('lambda', 'handler'),
         feature('conditional', 'dom'),
-        feature('when','props','change', 'handler'),
+        feature('when', 'props', 'change', 'handler'),
+        feature('dom', 'ref'),
     ]
 };
 

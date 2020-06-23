@@ -23,7 +23,7 @@ export function render<Props>(component: CompCreator<Props> | typeof Component, 
     }
     const comp = TSXAir.runtime.render(VirtualElement.root(component, props, state));
     if (target) {
-        const dom = comp.getDomRoot();
+        const dom = comp.domRoot;
         switch (add) {
             case 'append':
                 target.append(dom);

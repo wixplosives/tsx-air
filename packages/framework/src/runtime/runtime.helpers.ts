@@ -32,7 +32,7 @@ export function asSingleDomNode(value: any) {
         value = TSXAir.runtime.getUpdatedInstance(value);
     }
     if (Displayable.is(value)) {
-        return value.getDomRoot();
+        return value.domRoot;
     }
     
     return new (TSXAir.runtime.Text)(value);

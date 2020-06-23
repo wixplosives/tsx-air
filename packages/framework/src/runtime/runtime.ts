@@ -77,7 +77,7 @@ export class Runtime {
         action();
     }
 
-    spreadStyle(styleObj:string|object):string{
+    spreadStyle(styleObj: string | object): string {
         if (typeof styleObj === 'string') {
             return styleObj;
         }
@@ -186,10 +186,13 @@ export class Runtime {
                     const nextRoot = this.getUpdatedInstance(preRender);
                     const root = instance.ctx.root as Displayable;
                     if (root !== nextRoot) {
-                        root.getDomRoot().parentNode?.insertBefore(nextRoot.getDomRoot(), root.getDomRoot());
-                        root.getDomRoot().remove();
+                        root.domRoot.parentNode?.insertBefore(nextRoot.domRoot, root.domRoot);
+                        root.domRoot.remove();
                         instance.ctx.root = nextRoot as Fragment;
-                        // TODO: discuss pruning strategy 
+                        if (!root.props.keepAlive) {
+                            instance.ctx.components[root.key].dispose();
+                            delete instance.ctx.components[root.key]
+                        }
                         instance.ctx.components[nextRoot.key] = nextRoot;
                     }
                 } else {

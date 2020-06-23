@@ -11,7 +11,7 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
         let Child: C;
         let runtime: Runtime;
         let onNextFrame: FrameRequestCallback[] = [];
-        const domOf = <T extends Displayable>(c: T) => (c.getDomRoot() as HTMLElement).outerHTML.replace(/>\s{2,}</g, '><');
+        const domOf = <T extends Displayable>(c: T) => (c.domRoot as HTMLElement).outerHTML.replace(/>\s{2,}</g, '><');
 
         beforeEach(() => {
             onNextFrame = [];
@@ -58,13 +58,13 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
 
             it(`changes the view on the next animation frame`, () => {
                 const initialHtml = domOf(instance);
-                runtime.updateProps(instance, (p) => (p.a = 0, instance.changesBitMap['props.a']));
+                runtime.update(instance, instance.changesBitMap['props.a'], () => (instance.props.a = 0));
                 expect(domOf(instance)).to.equal(initialHtml);
                 expect(onNextFrame).to.have.length(1);
                 onNextFrame[0](0);
                 expect(domOf(instance)).to.eql(`<div><!--$1111120X0-->5<!--$1111120X0--> <!--$1111120X1-->1<!--$1111120X1--></div>`);
                 onNextFrame = [];
-                runtime.updateProps(instance, (p) => (p.a = 4, instance.changesBitMap['props.a']));
+                runtime.update(instance, instance.changesBitMap['props.a'], () => (instance.props.a = 4));
                 expect(onNextFrame).to.have.length(1);
                 onNextFrame[0](0);
                 expect(domOf(instance)).to.eql(`<div><!--$120X0-->5<!--$120X0--> <!--$120X1-->2<!--$120X1--></div>`);
@@ -73,7 +73,7 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
             it(`changes the view over a few frames if maxDepthPerUpdate is excised`, () => {
                 instance = runtime.render(VirtualElement.root(Parent, { a: 0 })) as Component;
                 runtime.maxDepthPerUpdate = 3;
-                runtime.updateProps(instance, (p) => (p.a = 1, instance.changesBitMap['props.a']));
+                runtime.update(instance, instance.changesBitMap['props.a'], () => (instance.props.a = 1));
                 expect(onNextFrame).to.have.length(1);
                 onNextFrame[0](0);
                 expect(onNextFrame, `number of frames requested`).to.have.length(2);
@@ -84,26 +84,26 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
 
             it(`updated inner components`, () => {
                 // setup
-                runtime.updateProps(instance, (p) => (p.a = -5, instance.changesBitMap['props.a']));
+                runtime.update(instance, instance.changesBitMap['props.a'], () => (instance.props.a = -5));
                 onNextFrame[0](0);
                 expect(domOf(instance)).to.equal(`<span><!--$0C0--><div><!--$000X0-->-5<!--$000X0--> <!--$000X1-->5<!--$000X1--></div><!--$0C0--><!--$0X0-->-5<!--$0X0--></span>`);
                 // test
-                runtime.updateProps(instance, (p) => (p.a = -1, instance.changesBitMap['props.a']));
+                runtime.update(instance, instance.changesBitMap['props.a'], () => (instance.props.a = -1));
                 onNextFrame[1](0);
                 expect(domOf(instance)).to.equal(`<span><!--$0C0--><div><!--$000X0-->-1<!--$000X0--> <!--$000X1-->1<!--$000X1--></div><!--$0C0--><!--$0X0-->-1<!--$0X0--></span>`);
             });
 
             it(`doesn't replace outer elements instances when inner html changes`, () => {
-                const initialDom = instance.getDomRoot();
-                runtime.updateProps(instance, (p) => (p.a = 11, instance.changesBitMap['props.a']));
+                const initialDom = instance.domRoot;
+                runtime.update(instance, instance.changesBitMap['props.a'], () => (instance.props.a = 11));
                 onNextFrame[0](0);
-                expect(instance.getDomRoot()).to.equal(initialDom);
+                expect(instance.domRoot).to.equal(initialDom);
             });
 
             describe(`multiple changes in the same frame`, () => {
                 it(`runs preRender (user code) at most once per frame`, () => {
-                    runtime.updateProps(instance, (p) => (p.a = 0, instance.changesBitMap['props.a']));
-                    runtime.updateProps(instance, (p) => (p.a = 1, instance.changesBitMap['props.a']));
+                    runtime.update(instance, instance.changesBitMap['props.a'], () => (instance.props.a = 0));
+                    runtime.update(instance, instance.changesBitMap['props.a'], () => (instance.props.a = 1));
                     expect(onNextFrame).to.have.length(1);
                     sinon.spy(instance, 'preRender');
                     onNextFrame[0](0);

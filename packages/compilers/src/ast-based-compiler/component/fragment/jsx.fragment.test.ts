@@ -1,5 +1,4 @@
-import { evalAst } from "@tsx-air/compiler-utils/src";
-import { _getJsxRoots, parseFragments, FragmentData } from "./jsx.fragment";
+import { _getJsxRoots, parseFragments } from "./jsx.fragment";
 import get from "lodash/get";
 import ts from "typescript";
 import { getCompDef } from "@tsx-air/compiler-utils/src/analyzers/test.helpers";
@@ -16,31 +15,34 @@ describe('fragments', () => {
                 })`);
             const statements = get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
 
-            const fragments = [...parseFragments(comp)];
-            expect(fragments).to.have.length(3);
-            expect(fragments[0]).to.eql({
+            const allFragments = [...parseFragments(comp)];
+            expect(allFragments).to.have.length(3);
+            expect(allFragments[0]).to.eql({
                 root: comp.jsxRoots[0],
                 hasInnerFragments: false,
                 id: 'div0',
                 index: 0,
                 src: statements[1],
-                isComponent: false
+                isComponent: false,
+                allFragments,comp
             });
-            expect(fragments[1]).to.eql({
+            expect(allFragments[1]).to.eql({
                 root: comp.jsxRoots[1].expressions[0].jsxRoots[0],
                 hasInnerFragments: false,
                 id: 'InnerComp1',
                 index: 1,
                 src: statements[2],
-                isComponent: true
+                isComponent: true,
+                allFragments,comp
             });
-            expect(fragments[2]).to.eql({
+            expect(allFragments[2]).to.eql({
                 root: comp.jsxRoots[1],
                 hasInnerFragments: true,
                 id: 'div2',
                 index: 2,
                 src: statements[2],
-                isComponent: false
+                isComponent: false,
+                allFragments,comp
             });
         })
     });

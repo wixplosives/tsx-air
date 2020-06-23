@@ -29,7 +29,13 @@ export function generateHydrate(fragment: FragmentData) {
         bindings.push(asAst(`this.hydrateElements(t);`) as ts.Statement)
         const jsxElm = (d: JsxExpression) => d.sourceAstNode.parent.parent.parent as ts.JsxOpeningLikeElement;
         const elementsInCtx = uniqBy(dynamicAttributes, jsxElm).map(jsxElm);
-        for (const [func, attrs] of tagHandlersUsed(comp, fragment)) {
+        elementsInCtx.forEach(e => {
+            const ref = e.attributes.properties.find(a => asCode(a.name!) === 'ref');
+            if (ref) {
+                
+            }
+        })
+        for (const [func, attrs] of tagHandlersUsed(fragment)) {
             const handlerName = func.name || readFuncName(func);
             for (const handler of attrs) {
                 const elm = elementsInCtx.indexOf(jsxElm(handler));

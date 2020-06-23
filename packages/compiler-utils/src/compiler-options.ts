@@ -6,7 +6,6 @@ export const compilerOptions: ts.CompilerOptions = {
     jsx: ts.JsxEmit.Preserve,
     esModuleInterop: true,
     importHelpers: false,
-    // module: ts.ModuleKind.CommonJS
+    module: ts.ModuleKind.ESNext
     // declaration: false,
-
 };

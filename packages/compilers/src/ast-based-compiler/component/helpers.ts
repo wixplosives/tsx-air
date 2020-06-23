@@ -11,7 +11,7 @@ import {
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
-import { VOLATILE, STATE, PROPS } from '../consts';
+import { VOLATILE, STATE } from '../consts';
 import { merge, chain, defaultsDeep, mergeWith, omit } from 'lodash';
 import isArray from 'lodash/isArray';
 

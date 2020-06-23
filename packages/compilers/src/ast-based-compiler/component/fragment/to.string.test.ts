@@ -6,13 +6,16 @@ import { expect, use } from 'chai';
 import { TSXAir, store, Component } from '@tsx-air/framework';
 import { asFunction } from '../function';
 import sinon, { SinonStub } from 'sinon';
+import { parseFragments, FragmentData } from './jsx.fragment';
+import { identity } from 'lodash';
 use(chaiPlugin);
 
 describe('generateToString', () => {
     let evalContext = {};
-    const toStringOf = (compDef: CompDefinition, props: any, state: any = {}, volatile: any = {}, scope = {}) => {
-        const asFunc = evalAst(asFunction(generateToString(compDef, compDef.jsxRoots[0])), { TSXAir, store, ...evalContext }) as Function;
-        return () => asFunc.apply({ props, state, volatile, ...scope, unique:i=>i });
+    const toStringOf = (comp: CompDefinition, props: any, state: any = {}, volatile: any = {}, scope = {}) => {
+        const frag = parseFragments(comp).next().value as FragmentData;
+        const asFunc = evalAst(asFunction(generateToString(frag)), { TSXAir, store, ...evalContext }) as Function;
+        return () => asFunc.apply({ props, state, volatile, ...scope, unique:identity });
     }
     it('generates a toString method based on the used props and state', () => {
         const comps = basicPatterns();
@@ -37,14 +40,14 @@ describe('generateToString', () => {
         beforeEach(() => {
             stub = sinon.stub(TSXAir.runtime, 'toString');
         });
-        it(`uses nested components`, () => {
+        it(`uses TSXAir.runtime.toString to evaluate nested components`, () => {
             const { NestedStateless } = basicPatterns();
             evalContext = { PropsOnly: class PropsOnly extends Component { } };
             const mockVElm = {};
             const nested = toStringOf(NestedStateless, {
                 a: 'outer'
             }, {}, {}, {
-                $comp0: () => mockVElm
+                $PropsOnly0: mockVElm
             });
 
             stub.callsFake((x: any) => {

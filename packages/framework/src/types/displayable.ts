@@ -54,10 +54,10 @@ export class Displayable {
     }
 
     dispose() { };
-    getDomRoot(): HTMLElement | Text {
+    get domRoot(): HTMLElement | Text {
         const { root } = this.ctx;
         if (Displayable.is(root)) {
-            return root.getDomRoot();
+            return root.domRoot;
         }
         const { HTMLElement, Text } = TSXAir.runtime;
         if (root instanceof HTMLElement || root instanceof Text) {
