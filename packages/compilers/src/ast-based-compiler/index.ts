@@ -18,6 +18,7 @@ const compiler: Compiler = {
         feature('conditional', 'dom'),
         feature('when', 'props', 'change', 'handler'),
         feature('dom', 'ref'),
+        feature('high', 'framerate'),
     ]
 };
 

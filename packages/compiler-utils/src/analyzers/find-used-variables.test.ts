@@ -93,14 +93,6 @@ describe('findUsedVariables', () => {
         expect(findUsedVariables(ast).read).to.eql(expectedRead);
     });
 
-    it('finds property access out of context', () => {
-        const ast = asSourceFile(`
-                const a = props.a;
-            `);
-        let p =  (ast.statements[0] as ts.VariableStatement).declarationList.declarations[0].initializer!;
-        expect(findUsedVariables(p).read.props.a).not.to.be.undefined;
-        
-    });
     it('should ignore keys of assigned literals', () => {
         const ast = asSourceFile(`
             export const anObject = {
@@ -253,6 +245,28 @@ describe('findUsedVariables', () => {
             }
         });
     });
+    it('finds access to arrays (not including the index)', () => {
+        const ast = parseValue(`(aParam)=>{
+                const a = aParam.inner[0];
+                const b = aParam.inner[0].c;
+                const c = aParam.inner[aParam.index];
+            }`);
+
+        expect(findUsedVariables(ast).accessed).to.eql({
+            aParam: {
+                inner: {
+                    $refs: [`aParam.inner[0]`,
+                        `aParam.inner[0].c`,
+                        `aParam.inner[aParam.index]`
+                    ]
+                },
+                index: {
+                    $refs: [`aParam.inner[aParam.index]`]
+                }
+            }
+        });
+    });
+
     it('should mark reference by parameters as 2 separate access', () => {
         const ast = parseValue(`(aParam)=>{
                 // 'shouldBeIgnored' is ignored because it comes after a dynamic path access 
@@ -264,7 +278,7 @@ describe('findUsedVariables', () => {
                     $refs: [`aParam.internalObject[aParam.aKey].shouldBeIgnored`]
                 },
                 aKey: {
-                    $refs: [`(aParam)=>{\n                // 'shouldBeIgnored' is ignored because it comes after a dynamic path access \n                const a = aParam.internalObject[aParam.aKey].shouldBeIgnored;\n            }`]
+                    $refs: [`aParam.internalObject[aParam.aKey].shouldBeIgnored`]
                 }
             }
         });

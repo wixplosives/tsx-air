@@ -12,7 +12,7 @@ export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]
     nameFunctions(comp);
     yield generatePreRender(comp, fragments);
     for (const func of comp.functions) {
-        yield generateMethod(comp, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments);
+        yield generateMethod(comp, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.arguments);
         yield generateMethodBind(func);
     }
 }
@@ -25,7 +25,7 @@ export const writeFuncName = (func: FuncDefinition, name: string) =>
 function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
     return generateMethod(comp, 'preRender',
         get(comp.sourceAstNode.arguments[0], 'body'),
-        fragments, true);
+        fragments, [], true);
 }
 
 function nameFunctions(comp: CompDefinition) {
@@ -188,11 +188,11 @@ function parseStatements(comp: CompDefinition, statements: ts.Statement[], fragm
     return s;
 }
 
-function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragments: FragmentData[], allowWhenFunc = false) {
+function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragments: FragmentData[], args:string[], allowWhenFunc = false) {
     const statements = get(body, 'statements') || [body];
     const modified = [...parseStatements(comp, statements, fragments, allowWhenFunc)];
 
-    return cMethod(name, [], [
+    return cMethod(name, args, [
         ...setupClosure(comp, statements, false),
         ...modified]);
 }

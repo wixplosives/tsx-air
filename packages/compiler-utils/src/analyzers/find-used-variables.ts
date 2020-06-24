@@ -60,7 +60,7 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
                 addToAccessMap(paths.path, isModification, res, accessParent);
 
                 for (const path of paths.nestedAccess) {
-                    addToAccessMap(path, isModification, res, node);
+                    addToAccessMap(path, isModification, res, accessParent);
                 }
             } else {
                 ts.forEachChild(n, visitor);
@@ -143,6 +143,8 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
         if (ts.isElementAccessExpression(n)) {
             if (ts.isStringLiteral(n.argumentExpression)) {
                 path.unshift(n.argumentExpression.text);
+            } else if (ts.isNumericLiteral(n.argumentExpression)) {
+                path = [];
             } else if (isAccessNode(n.argumentExpression)) {
                 const innerAccess = accessToStringArr(n.argumentExpression);
                 nestedAccess.push(innerAccess.path, ...innerAccess.nestedAccess);

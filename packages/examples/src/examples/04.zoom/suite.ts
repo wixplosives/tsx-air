@@ -8,12 +8,12 @@ export const features = [
     feature('stateful', 'component'),
     feature('single', 'store'),
     feature('event', 'handler'),
-    feature('high', 'framerate'),
+    // feature('high', 'framerate'),
     feature('dom','ref')
 ];
 
 export function suite(api: ExampleSuiteApi, paths: ExamplePaths) {
-    it.only('should load the {url} image in two size', async () => {
+    it('should load the {url} image in two size', async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, {
             cssQuery: '.zoom',

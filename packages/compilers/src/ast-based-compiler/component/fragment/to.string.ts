@@ -81,19 +81,26 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
                         if (!ts.isJsxAttribute(attr)) throw new Error('Invalid attribute');
                         const { name, initializer } = attr;
                         const attrName = asCode(name);
-                        if (!/[(on[A-Z].*)(ref)]/.test(attrName)) {
+                        if (!/on[A-Z].*|ref/.test(attrName)) {
                             add(` ${attrName === 'className' ? 'class' : attrName}`);
                             if (initializer) {
                                 if (ts.isJsxExpression(initializer)) {
                                     add('="');
                                     if (initializer.expression) {
-                                        add({ exp: initializer.expression })
+                                        if (attrName === 'style') {
+                                            add({ exp: astTemplate(`TSXAir.runtime.spreadStyle(exp)`, { exp: initializer.expression }) });
+                                        } else {
+                                            add({ exp: initializer.expression });
+                                        }
                                     }
                                     add('"');
                                 } else {
                                     add(`=${asCode(initializer)}`);
                                 }
                             }
+                        }
+                        if (attrName === 'style' && initializer && ts.isJsxExpression(initializer)) {
+                            add(``)
                         }
                     });
                     add(`>`);

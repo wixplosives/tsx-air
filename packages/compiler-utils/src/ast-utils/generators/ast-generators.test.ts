@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import {  cClass, cObject, cAssign, cProperty, cImport, cStatic } from '.';
+import { cClass, cObject, cAssign, cProperty, cImport, cStatic } from '.';
 import ts from 'typescript';
 
 
@@ -76,21 +76,21 @@ describe('cClass', () => {
     });
     describe('class properties', () => {
         it('should support properties', () => {
-            expect(cClass('MyComp', undefined, undefined, [
+            expect(cClass('MyComp', undefined, undefined, false, [
                 cProperty('propA', ts.createTrue())
             ])).to.have.astLike(`class MyComp {
                 propA = true;
              }`);
         });
         it('should support static properties', () => {
-            expect(cClass('MyComp', undefined, undefined, [
+            expect(cClass('MyComp', undefined, undefined, false,  [
                 cStatic('propA', ts.createTrue())
             ])).to.have.astLike(`class MyComp {
                 static propA = true;
              }`);
         });
         it('should support complex properties', () => {
-            expect(cClass('MyComp', undefined, undefined, [
+            expect(cClass('MyComp', undefined, undefined, false, [
                 cStatic('propA', cObject({
                     a: 3,
                     b: 79

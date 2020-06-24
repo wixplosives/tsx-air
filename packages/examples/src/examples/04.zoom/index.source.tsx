@@ -23,7 +23,7 @@ export const Zoom = TSXAir((props: { url: string }) => {
     };
 
     // Shorthand for afterMount => addEventListener, afterUnmount => removeEventListener
-    delegate.window.onresize = updateDimensions;
+    window.onresize = updateDimensions;
 
     const updateZoomLocation = (e: MouseEvent) => {
         [state.x, state.y] = calcZoomFrameXY(e, state.zoomedOut.element!, state.zoomFrame, state.zoomedOutSize);
