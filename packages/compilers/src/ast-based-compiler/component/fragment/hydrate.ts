@@ -15,9 +15,6 @@ export function generateHydrate(fragment: FragmentData) {
     const dynamicAttributes = fragment.root.expressions.filter(isAttribute)
     const expValues = jsxExp.map(exp => asCode(toFragSafe(comp, fragments, exp)));
     const comps = fragment.root.components.map((c, i) => `this.$${c.name}${i}`);
-    const dependencies = [
-        ...fragment.root.expressions.map(exp => exp.sourceAstNode),
-        ...fragment.root.components.map(c => c.sourceAstNode)];
     const bindings: ts.Statement[] = [];
     if (expValues.length) {
         bindings.push(asAst(`this.hydrateExpressions([${expValues.join()}], t);`) as ts.Statement);
@@ -29,10 +26,12 @@ export function generateHydrate(fragment: FragmentData) {
         bindings.push(asAst(`this.hydrateElements(t);`) as ts.Statement)
         const jsxElm = (d: JsxExpression) => d.sourceAstNode.parent.parent.parent as ts.JsxOpeningLikeElement;
         const elementsInCtx = uniqBy(dynamicAttributes, jsxElm).map(jsxElm);
-        elementsInCtx.forEach(e => {
+        elementsInCtx.forEach((e, i) => {
             const ref = e.attributes.properties.find(a => asCode(a.name!) === 'ref');
             if (ref) {
-                
+                // @ts-ignore
+                const targetVar = asCode(ref.initializer.expression);
+                bindings.push(asAst(`${targetVar}.element=this.ctx.elements[${i}]`) as ts.Statement);
             }
         })
         for (const [func, attrs] of tagHandlersUsed(fragment)) {
@@ -48,7 +47,7 @@ export function generateHydrate(fragment: FragmentData) {
     }
 
     return cMethod('hydrate', ['_', 't'], [
-        ...setupClosure(comp, dependencies),
+        ...setupClosure(comp, bindings),
         ...bindings,
         asAst('this.ctx.root=t') as ts.Statement
     ]);

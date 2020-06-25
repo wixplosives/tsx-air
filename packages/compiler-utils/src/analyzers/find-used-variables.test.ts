@@ -283,6 +283,56 @@ describe('findUsedVariables', () => {
             }
         });
     });
+
+    it('finds destructured vars', () => {
+        const func = `(aParam)=>{
+            const {a,b} = aParam.internalObject;
+            const {internalObject} = aParam;
+        }`;
+        const ast = parseValue(func);
+        const $refs = [`{a,b} = aParam.internalObject`];
+        expect(findUsedVariables(ast).read).to.eql({
+            aParam: {
+                internalObject: {
+                    $refs: [`{internalObject} = aParam`],
+                    a: { $refs },
+                    b: { $refs }
+                }
+            }
+        });
+        expect(findUsedVariables(ast).defined).to.eql({
+            aParam: { $refs: ['aParam'] },
+            internalObject: { $refs: [`{internalObject} = aParam`] },
+            a: { $refs },
+            b: { $refs }
+        });
+    });
+
+    it('finds array-destructured vars', () => {
+        const func = `(aParam)=>{
+            const [a,b] = aParam.internalObject;
+            const c = [aParam]
+        }`;
+        const ast = parseValue(func);
+        const $refs = [`[a,b] = aParam.internalObject`];
+        expect(findUsedVariables(ast).read).to.eql({
+            aParam: {
+                $refs: [`const c = [aParam]`],
+                internalObject: {
+                    $refs,
+                    a: { $refs },
+                    b: { $refs }
+                }
+            }
+        });
+        expect(findUsedVariables(ast).defined).to.eql({
+            aParam: { $refs: ['aParam'] },
+            a: { $refs },
+            b: { $refs },
+            c: { $refs: [`const c = [aParam]`] }
+        });
+    });
+
     it('should accept filter function to allow ignoring nodes', () => {
         const ast = parseValue(`( externalMethodsParam )=>{
                 const definedInOuterScope = ( internalMethodParam )=>{

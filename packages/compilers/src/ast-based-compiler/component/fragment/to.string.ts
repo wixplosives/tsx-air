@@ -6,12 +6,14 @@ import {
     asCode,
     asAst,
     Modifier,
+    findUsedVariables,
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { swapVirtualElements } from '../function';
 import { FragmentData } from './jsx.fragment';
 import last from 'lodash/last';
 import { isComponentTag } from '@tsx-air/utils';
+import { merge } from 'lodash';
 
 
 export const generateToString = (fragment: FragmentData) => {
@@ -33,8 +35,9 @@ export const generateToString = (fragment: FragmentData) => {
             }
         ])
 
+    const vars = merge({}, ...fragment.root.expressions.map(e => e.aggregatedVariables));
     return cMethod('toString', [], [
-        ...setupClosure(comp, root.aggregatedVariables),
+        ...setupClosure(comp, vars, true),
         ts.createReturn(
             astTemplate(`this.unique(template)`, { template }) as any as ts.Expression
         )]);
@@ -58,7 +61,6 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
             chunks.push(val);
         }
     }
-
 
     const visitor = (n: ts.Node) => {
         // @ts-ignore
@@ -88,7 +90,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
                                     add('="');
                                     if (initializer.expression) {
                                         if (attrName === 'style') {
-                                            add({ exp: astTemplate(`TSXAir.runtime.spreadStyle(exp)`, { exp: initializer.expression }) });
+                                            add({ exp: astTemplate(`TSXAir.runtime.spreadStyle(exp)`, { exp: initializer.expression }) as any as ts.Expression });
                                         } else {
                                             add({ exp: initializer.expression });
                                         }

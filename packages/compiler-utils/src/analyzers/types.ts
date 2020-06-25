@@ -1,4 +1,4 @@
-import ts, { Expression } from 'typescript';
+import ts from 'typescript';
 
 export interface AnalyzerResult<T extends AnalyzedNode> {
     tsxAir: T | AnalysisError;

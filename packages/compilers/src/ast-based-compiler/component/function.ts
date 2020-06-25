@@ -4,12 +4,10 @@ import { setupClosure, dependantOnVars, getChangeBitsNames } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
 import { FragmentData } from './fragment/jsx.fragment';
 import { safely } from '@tsx-air/utils';
-import get from 'lodash/get';
-import { chain } from 'lodash';
-
+import { chain, get } from 'lodash';
 
 export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]) {
-    nameFunctions(comp);
+    assignFunctionNames(comp);
     yield generatePreRender(comp, fragments);
     for (const func of comp.functions) {
         yield generateMethod(comp, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.arguments);
@@ -23,15 +21,50 @@ export const writeFuncName = (func: FuncDefinition, name: string) =>
     postAnalysisData.write(func, 'name', name);
 
 function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
-    return generateMethod(comp, 'preRender',
-        get(comp.sourceAstNode.arguments[0], 'body'),
-        fragments, [], true);
+    const body = get(comp.sourceAstNode.arguments[0], 'body')
+    const statements = get(body, 'statements') || [body];
+    const modified = [
+        ...addNamedFunctions(comp),
+        ...parseStatements(comp, statements, fragments, true)
+    ];
+    return asMethod(comp, 'preRender', [], modified, false);
 }
 
-function nameFunctions(comp: CompDefinition) {
+function assignFunctionNames(comp: CompDefinition) {
     comp.functions.forEach((func, i) => {
         writeFuncName(func, func.name || `lambda${i}`);
     });
+}
+
+function* addNamedFunctions(comp: CompDefinition) {
+    const names = namedFuncs(comp);
+    if (names.length) {
+        yield asAst(`const  {${names.join(',')}}=this;`) as ts.Statement;
+    }
+}
+
+const namedFuncs = (comp: CompDefinition) =>
+    comp.functions.filter(f => f.name).map(f => f.name);
+
+function parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments: FragmentData[], isPreRender: boolean) {
+    const declaredVars = new Set<string>();
+    const parser = toTsxCompatible(comp, fragments, declaredVars, isPreRender);
+    const s = statements.map(parser);
+    if (isPreRender) {
+        if (declaredVars.size) {
+            s.splice(-1, 0, asAst(`this.volatile={${
+                [...declaredVars, ...namedFuncs(comp)].join(',')
+                }}`) as ts.Statement);
+        }
+    }
+    return s.filter(s => !ts.isEmptyStatement(s));
+}
+
+function generateMethodBind(func: FuncDefinition) {
+    const name = readFuncName(func);
+    return cProperty(name,
+        asAst(`(...args)=>this._${name}(...args)`) as ts.Expression
+    );
 }
 
 const handleWhenFunc = (comp: CompDefinition, n: ts.Node, allowWhenFunc: boolean) => {
@@ -72,14 +105,7 @@ const swapLambdas = (n: ts.Node) => {
     return undefined;
 };
 
-function generateMethodBind(func: FuncDefinition) {
-    const name = readFuncName(func);
-    return cProperty(name,
-        asAst(`(...args)=>this._${name}(...args)`) as ts.Expression
-    );
-}
-
-export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[], declaredVars?: Set<string>, allowWhenFunc: boolean=false) => {
+export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[], declaredVars?: Set<string>, allowWhenFunc: boolean = false) => {
     declaredVars = declaredVars || new Set<string>();
     const parser = (s: ts.Node, skipArrow?: any) => {
         const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n => {
@@ -98,7 +124,7 @@ export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[],
 export const toFragSafe = (comp: CompDefinition, fragments: FragmentData[], exp: JsxExpression, allowNonFrags = false): ts.Expression =>
     cloneDeep(exp.sourceAstNode.expression!, undefined, n => swapVirtualElements(comp, fragments, n, allowNonFrags)) as ts.Expression
 
-function handleArrowFunc(parser: (n: ts.Node, skipArrow:ts.Node) => ts.Node, n: ts.Node, skipArrow?:ts.Node) {
+function handleArrowFunc(parser: (n: ts.Node, skipArrow: ts.Node) => ts.Node, n: ts.Node, skipArrow?: ts.Node) {
     if (n !== skipArrow && n.parent && ts.isArrowFunction(n.parent)) {
         return ts.createReturn(
             parser(n, n) as ts.Expression
@@ -142,17 +168,15 @@ export const findJsxComp = (comp: CompDefinition, node: ts.Node): [-1, null] | [
     return [-1, null];
 }
 
-export function isStoreDefinition(comp: CompDefinition, node: ts.Statement | ts.VariableDeclaration) {
-    if (ts.isVariableStatement(node)) {
-        const used = findUsedVariables(node);
-        return comp.stores.some(store => used.defined[store.name]);
-    }
-    if (ts.isVariableDeclaration(node)) {
-        const name = asCode(node.name);
-        return comp.stores.some(store => store.name === name);
-    }
-    return false;
+function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragments: FragmentData[], args: string[]) {
+    const statements = get(body, 'statements') || [body];
+    const modified = [...parseStatements(comp, statements, fragments, false)];
+    return asMethod(comp, name, args, modified);
 }
+
+const asMethod = (comp: CompDefinition, name: string, args: string[], statements: ts.Statement[], unpackVolatile = true) => cMethod(name, args, [
+    ...setupClosure(comp, statements, unpackVolatile),
+    ...statements])
 
 const swapStateChanges = (comp: CompDefinition, n: ts.Node) => {
     if (ts.isExpressionStatement(n) && ts.isCallExpression(n.expression)) {
@@ -178,25 +202,6 @@ const swapStateChanges = (comp: CompDefinition, n: ts.Node) => {
     return undefined;
 };
 
-function parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments: FragmentData[], allowWhenFunc: boolean) {
-    const declaredVars = new Set<string>();
-    const parser = toTsxCompatible(comp, fragments, declaredVars, allowWhenFunc);
-    const s = statements.map(parser);
-    if (declaredVars.size) {
-        s.splice(-1, 0, asAst(`this.volatile={${[...declaredVars].join(',')}}`) as ts.Statement);
-    }
-    return s;
-}
-
-function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragments: FragmentData[], args:string[], allowWhenFunc = false) {
-    const statements = get(body, 'statements') || [body];
-    const modified = [...parseStatements(comp, statements, fragments, allowWhenFunc)];
-
-    return cMethod(name, args, [
-        ...setupClosure(comp, statements, false),
-        ...modified]);
-}
-
 function swapVarDeclarations(comp: CompDefinition, n: ts.Node, declaredVars: Set<string>) {
     if (ts.isVariableStatement(n)) {
         const declarations = chain(n.declarationList.declarations).filter(declaration => {
@@ -207,9 +212,14 @@ function swapVarDeclarations(comp: CompDefinition, n: ts.Node, declaredVars: Set
         }).flatMap(declaration => {
             if (ts.isObjectBindingPattern(declaration.name)) {
                 const bound = declaration.name.elements.filter(e => asCode(e.name) in comp.aggregatedVariables.accessed);
+                bound.forEach(b => declaredVars.add(asCode(b.name)));
                 return bound.length
                     ? ts.createVariableDeclaration(
-                        ts.createObjectBindingPattern(bound))
+                        ts.createObjectBindingPattern(bound), undefined,
+                        declaration.initializer
+                            ? declaration.initializer
+                            : undefined
+                    )
                     : []
             } else if (asCode(declaration.name) in comp.aggregatedVariables.accessed) {
                 declaredVars.add(asCode(declaration.name));
@@ -218,7 +228,9 @@ function swapVarDeclarations(comp: CompDefinition, n: ts.Node, declaredVars: Set
             return [];
         }).value();
         return declarations.length
-            ? ts.createVariableStatement(n.modifiers, declarations)
+            ? cloneDeep(
+                ts.createVariableStatement(undefined, ts.createVariableDeclarationList(
+                    declarations, n.declarationList.flags)))
             : ts.createEmptyStatement();
     }
     return undefined;
@@ -230,3 +242,15 @@ const isFunc = (v: ts.VariableDeclaration) => (v.initializer && (
 
 export const asFunction = (method: ts.MethodDeclaration) =>
     cFunction(method.parameters.map(i => i), method.body!);
+
+function isStoreDefinition(comp: CompDefinition, node: ts.Statement | ts.VariableDeclaration) {
+    if (ts.isVariableStatement(node)) {
+        const used = findUsedVariables(node);
+        return comp.stores.some(store => used.defined[store.name]);
+    }
+    if (ts.isVariableDeclaration(node)) {
+        const name = asCode(node.name);
+        return comp.stores.some(store => store.name === name);
+    }
+    return false;
+}

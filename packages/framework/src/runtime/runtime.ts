@@ -82,8 +82,8 @@ export class Runtime {
             return styleObj;
         }
         let style = ''
-        for (const [key, val] of Object.entries(styleObj)) {
-            style = style + `${key}:${val};`
+        for (const [key, value] of Object.entries(styleObj)) {
+            style = style + `${key}:${isNaN(Number(value)) ? value : (value | 0) + 'px'};`;
         }
         return style;
     }

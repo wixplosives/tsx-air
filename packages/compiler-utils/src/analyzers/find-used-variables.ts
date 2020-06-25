@@ -26,6 +26,16 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
         const accessParent = n.parent;
         if (accessParent) {
             if (isVariableLikeDeclaration(accessParent) && asCode(accessParent.name) === asCode(n)) {
+                if (ts.isVariableDeclaration(accessParent) && ts.isObjectBindingPattern(n)) {
+                    n.elements.forEach(e => {
+                        const name = asCode(e.name);
+                        res.defined[name] = withRef(accessParent);
+                        const init = asCode(accessParent.initializer!);
+                        addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
+                        addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
+                    })
+                    return;
+                }
                 if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
                     const definedAs = asCode(n);
                     res.defined[definedAs] = withRef(accessParent);
@@ -37,6 +47,9 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
             }
 
             if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
+                if (ts.isVariableDeclaration(accessParent) && ts.isObjectBindingPattern(accessParent.name)) {
+                    return;
+                }
                 if (
                     ts.isJsxSelfClosingElement(accessParent) ||
                     ts.isJsxOpeningElement(accessParent) ||
@@ -182,12 +195,14 @@ function withRef(ref: ts.Node, target?: RecursiveMap) {
     return target;
 }
 
-function addToAccessMap(path: string[], isModification: 'self' | boolean, map: UsedVariables, ref: ts.Node) {
+function addToAccessMap(path: string | string[], isModification: 'self' | boolean, map: UsedVariables, ref: ts.Node, ignoreRefInitializer = false) {
     if (path.length === 0) {
         return;
     }
-    // @ts-ignore    
-    ref = (!isModification && ref.initializer) ? ref.initializer : ref;
+    ref = (!ignoreRefInitializer && !isModification
+        && (ref as ts.VariableDeclaration).initializer)
+        ? (ref as ts.VariableDeclaration).initializer!
+        : ref;
     if (ts.isTemplateSpan(ref)) {
         ref = ref.parent;
     }

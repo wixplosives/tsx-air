@@ -15,42 +15,43 @@ export const Zoom = TSXAir((props: { url: string }) => {
     });
 
     const updateDimensions = () => {
-        [
-            state.original,
-            state.zoomFrame,
-            state.zoomedOutSize
-        ] = calculateDimensions(state.root.element!, state.zoomedIn.element!, state.zoomedOut.element!);
+        const calc = calculateDimensions(state.root.element!, state.zoomedIn.element!, state.zoomedOut.element!);
+
+        state.original = calc[0]
+        state.zoomFrame = calc[1]
+        state.zoomedOutSize = calc[2]
+        // [
+        //     state.original,
+        //     state.zoomFrame,
+        //     state.zoomedOutSize
+        // ] = calculateDimensions(state.root.element!, state.zoomedIn.element!, state.zoomedOut.element!);
     };
 
     // Shorthand for afterMount => addEventListener, afterUnmount => removeEventListener
     window.onresize = updateDimensions;
 
     const updateZoomLocation = (e: MouseEvent) => {
-        [state.x, state.y] = calcZoomFrameXY(e, state.zoomedOut.element!, state.zoomFrame, state.zoomedOutSize);
+        const calc = calcZoomFrameXY(e, state.zoomedOut.element!, state.zoomFrame, state.zoomedOutSize);
+        state.x = calc[0];
+        state.y = calc[1];
+        // [state.x, state.y] = calcZoomFrameXY(e, state.zoomedOut.element!, state.zoomFrame, state.zoomedOutSize);
     };
 
-    const {
-        zoomedOut,
-        zoomedIn,
-        root,
-        x,
-        y,
-        original,
-        zoomFrame,
-        zoomedOutSize
-    } = state;
-    return <div className="zoom" ref={root} onMouseMove={updateZoomLocation}>
+    // const { x, y, original, zoomFrame, zoomedOutSize } = state;
+
+    return <div className="zoom" ref={state.root} onMouseMove={updateZoomLocation}>
         <div className="zoomedIn">
-            <img src={props.url} alt="Cute animal, up close" ref={zoomedIn} onLoad={updateDimensions} />
+            <img src={props.url} alt="Cute animal, up close" ref={state.zoomedIn} onLoad={updateDimensions}
+                style={{
+                    left: -state.x / state.zoomedOutSize.width * state.original.width,
+                    top: -state.y / state.zoomedOutSize.height * state.original.height
+                }}
+            />
         </div>
 
         <div className="zoomedOut">
-            <img src={props.url} alt="Cute animal, zoomed out" ref={zoomedOut}
-                style={{
-                    left: -x / zoomedOutSize.width * original.width,
-                    top: -y / zoomedOutSize.height * original.height
-                }} />
-            <div className="zoomed" style={{ top: y, left: x, ...zoomFrame }} />
+            <img src={props.url} alt="Cute animal, zoomed out" ref={state.zoomedOut} />
+            <div className="zoomed" style={{ top: state.y, left: state.x, ...state.zoomFrame }} />
         </div>
     </div >;
 });

@@ -115,12 +115,10 @@ function expandDependencies(comp: CompDefinition, scope: UsedVariables, name: st
     const refs: UsedVariables = { accessed: {}, read: {}, modified: {}, executed: {}, defined: {} };
     changed.forEach(ref => {
         const found = findUsedVariables(ref);
-        mergeWith(refs.read, found.read, (a, b) => {
-            if (isArray(a)) {
-                return chain(a).concat(b).uniq().value();
-            } else return;
-        });
+        mergeWith(refs.read, found.read, (a, b) =>
+            isArray(a) ? chain(a).concat(b).uniq().value() : undefined);
     });
+    refs.accessed = refs.read;
     return refs;
 }
 
@@ -182,9 +180,8 @@ function* getClosureProps(used: UsedInScope) {
 }
 
 export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, includeVolatile = true) {
-    let used = (isArray(scope)
-        ? merge({ read: {}, accessed: {}, modified: {}, executed: {} }, ...(scope as ts.Node[]).map(n => findUsedVariables(n)))
-        : scope) as UsedVariables
+    const f = ((isArray(scope) ? scope : [scope]) as ts.Node[]).map(s => (s.read && s.accessed) ? s : findUsedVariables(s));
+    const used = merge({ read: {}, accessed: {}, modified: {}, executed: {} }, ...f);
     yield* addToClosure(getDirectDependencies(comp, used, true), includeVolatile);
     yield* addToClosure(Object.keys(used.executed).filter(
         name => comp.functions.some(fn => fn.name === name)
