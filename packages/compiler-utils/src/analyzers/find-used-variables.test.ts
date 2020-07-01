@@ -308,7 +308,7 @@ describe('findUsedVariables', () => {
         });
     });
 
-    it('finds array-destructured vars', () => {
+    xit('finds array-destructured vars', () => {
         const func = `(aParam)=>{
             const [a,b] = aParam.internalObject;
             const c = [aParam]

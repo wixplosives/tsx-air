@@ -191,7 +191,9 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
 function withRef(ref: ts.Node, target?: RecursiveMap) {
     target = target || {};
     target.$refs = target.$refs || [];
-    target.$refs.push(ref);
+    if (!target.$refs.includes(ref)) {
+        target.$refs.push(ref);
+    } 
     return target;
 }
 
