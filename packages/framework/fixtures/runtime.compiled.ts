@@ -22,8 +22,8 @@ export class CompiledParent extends Component {
         return VirtualElement.component(
             '2', CompiledChild, this,
             new Map<number, number>([
-                [this.changesBitMap['state.counter'], CompiledChild.factory.changesBitMap['props.ca']],
-                [this.changesBitMap['props.a'], CompiledChild.factory.changesBitMap['props.cb']],
+                [CompiledChild.factory.changesBitMap['props.ca'], this.changesBitMap['state.counter']],
+                [CompiledChild.factory.changesBitMap['props.cb'], this.changesBitMap['props.a']],
             ]), { ca: this.props.a, cb: this.state.state.counter });
     }
 }
@@ -43,10 +43,11 @@ export class ParentFrag0 extends Fragment {
     get $comp0() {
         const { props } = this;
         return VirtualElement.component('0', CompiledChild, this,
-            new Map<number, number>([[this.changesBitMap['props.a'],
-            CompiledChild.factory.changesBitMap['props.ca']
-            | CompiledChild.factory.changesBitMap['props.cb']
-            ]]), { ca: props.a, cb: -props.a })
+            new Map<number, number>(
+                [
+                    [CompiledChild.factory.changesBitMap['props.ca'], this.changesBitMap['props.a']],
+                    [CompiledChild.factory.changesBitMap['props.cb'], this.changesBitMap['props.a']]
+                ]), { ca: props.a, cb: -props.a })
     }
 
     hydrate(_: any, target: HTMLElement) {
@@ -95,7 +96,9 @@ export class ChildFrag0 extends Fragment {
     }
 
     toString(): string {
-        const r = this.unique(`<div><!--X-->${TSXAir.runtime.toString(this.props.ca)}<!--X--> <!--X-->${TSXAir.runtime.toString(this.props.cb)}<!--X--></div>`);
+        const r = this.unique(`<div><!--X-->${
+            TSXAir.runtime.toString(this.props.ca)}<!--X--> <!--X-->${
+            TSXAir.runtime.toString(this.props.cb)}<!--X--></div>`);
         return r;
     }
 }

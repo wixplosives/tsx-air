@@ -6,7 +6,6 @@ import {
     asCode,
     asAst,
     Modifier,
-    findUsedVariables,
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { swapVirtualElements } from '../function';
