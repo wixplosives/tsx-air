@@ -16,8 +16,8 @@ ChildComp.render = (props: Props, _?: object, target?: HTMLElement, add?: Render
     child.classList.add('child');
     target.append(child);
     return {
-        updateProps: (_props: Props) => {
-            child.textContent = `Child: ${props.name}`;
+        updateProps: (p: Props) => {
+            child.textContent = `Child: ${p.name}`;
         },
     } as ComponentApi<Props>;
 };
@@ -35,9 +35,9 @@ ParentComp.render = (props: Props, _?: object, target?: HTMLElement, add?: Rende
     const child = ChildComp.render(props, undefined, parent as HTMLElement, 'append');
     target.append(parent);
     return {
-        updateProps: (_props: Props) => {
-            parent.childNodes[0].textContent = `Parent: ${props.name}`;
-            child.updateProps(props);
+        updateProps: (p: Props) => {
+            parent.childNodes[0].textContent = `Parent: ${p.name}`;
+            child.updateProps(p);
         },
     } as ComponentApi<Props>;
 };
