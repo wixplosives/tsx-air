@@ -1,4 +1,4 @@
-import { CompDefinition, findUsedVariables, asAst, cGet, JsxComponent, asCode } from '@tsx-air/compiler-utils';
+import { CompDefinition, findUsedVariables, asAst, cGet, JsxComponent } from '@tsx-air/compiler-utils';
 import { FragmentData } from './jsx.fragment';
 import ts, { JsxExpression } from 'typescript';
 import { dependantOnVars, setupClosure } from '../helpers';

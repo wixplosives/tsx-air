@@ -66,7 +66,7 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
     } as AnalyzerResult<CompDefinition>;
 };
 
-function* findStatementReturns(statement?: ts.Node | ts.Node[] | ts.NodeArray<ts.Node>) {
+function* findStatementReturns(statement?: ts.Node | ts.Node[] | ts.NodeArray<ts.Node>):Generator<Return> {
     if (isArray(statement)) {
         for (const s of statement) {
             yield* findStatementReturns(s);
@@ -80,8 +80,8 @@ function* findStatementReturns(statement?: ts.Node | ts.Node[] | ts.NodeArray<ts
                 break;
 
             case ts.SyntaxKind.SwitchStatement:
-                const switchs = statement as ts.SwitchStatement;
-                for (const clause of switchs.caseBlock.clauses) {
+                const switches = statement as ts.SwitchStatement;
+                for (const clause of switches.caseBlock.clauses) {
                     yield* findStatementReturns(clause.statements);
                 }
                 break;

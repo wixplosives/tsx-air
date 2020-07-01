@@ -1,4 +1,4 @@
-import { CompDefinition, FileTransformerAPI, asAst, asCode } from '@tsx-air/compiler-utils';
+import { CompDefinition, FileTransformerAPI, asAst } from '@tsx-air/compiler-utils';
 import { FragmentData } from './jsx.fragment';
 import { generateFragmentClass } from './fragment.class';
 import ts from 'typescript';

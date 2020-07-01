@@ -6,7 +6,7 @@ import { ComponentApi } from '../api/component';
 
 export class Component extends Displayable {
     public static factory: CompFactory<any>;
-    public static render: (_props:object, _state?:object, _target?:HTMLElement, _add?:RenderTarget)=>ComponentApi;
+    public static render: <PROPS=any>(_props:object, _state?:object, _target?:HTMLElement, _add?:RenderTarget)=>ComponentApi<PROPS>;
     public static is(x: any): x is Component {
         return x && x instanceof Component;
     }
