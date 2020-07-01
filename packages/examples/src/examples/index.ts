@@ -3,7 +3,6 @@ export const shouldBeCompiled = [
     '02.stateful',
     '03.thumb',
     '04.zoom',
-    '05.framerate',
 ];
 
 export const base = __dirname;

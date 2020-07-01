@@ -1,106 +1,79 @@
-import { Component, Factory, runtime, runtimeUtils } from '@tsx-air/framework';
-import { ZoomCtx, ZoomProps, ZoomState, initialState, calcZoomFrameXY, calculateDimensions } from './helper';
+import { CompCreator, RefHolder } from "@tsx-air/framework/src/api/types";
+import { RenderTarget, ComponentApi } from "@tsx-air/framework/src";
+import { Area, calculateDimensions, calcZoomFrameXY } from "./helper";
 
-export class Zoom extends Component<ZoomCtx, ZoomProps, ZoomState> {
-    public static factory: Factory<Zoom>;
-    public static readonly changeBitmask = {
-        'props.url': 1 << 0,
-        'state.zoomedOut': 1 << 1,
-        'state.zoomedIn': 1 << 2,
-        'state.root': 1 << 3,
-        'state.x': 1 << 4,
-        'state.y': 1 << 5,
-        'state.original': 1 << 6,
-        'state.zoomFrame': 1 << 7,
-        'state.zoomedOutSize': 1 << 8
-    };
-
-    public updateView(newProps: ZoomProps, { state }: ZoomState, _:any, changeMap: number): void {
-        if (changeMap & Zoom.changeBitmask['props.url']) {
-            this.context.zoomedIn.src = this.context.zoomedOut.src = newProps.url;
-        }
-        if (
-            changeMap &
-            (Zoom.changeBitmask['state.x'] |
-                Zoom.changeBitmask['state.y'] |
-                Zoom.changeBitmask['state.zoomedOutSize'] |
-                Zoom.changeBitmask['state.original'])
-        ) {
-            const { x, y, zoomedOutSize, original } = state;
-            runtimeUtils.setStyle(this.context.zoomedIn, {
-                left: (-x / zoomedOutSize.width) * original.width,
-                top: (-y / zoomedOutSize.height) * original.height
-            });
-        }
-        if (
-            changeMap &
-            (Zoom.changeBitmask['state.x'] | Zoom.changeBitmask['state.y'] | Zoom.changeBitmask['state.zoomFrame'])
-        ) {
-            const { x, y, zoomFrame } = state;
-            runtimeUtils.setStyle(this.context.zoomFrame, { top: y, left: x, ...zoomFrame });
-        }
-    }
-
-    public $afterMount(_ref: HTMLElement) {
-        this.context.root.addEventListener('mousemove', e => this.updateZoomLocation(e));
-        this.context.zoomedIn.onload = this.updateDimensions;
-        window.addEventListener('resize', this.updateDimensions);
-    }
-
-    public $afterUnmount() {
-        window.removeEventListener('resize', this.updateDimensions);
-    }
-
-    private updateDimensions = () => {
-        const { root, zoomedIn, zoomedOut } = this.context;
-        runtime.updateState(this as Zoom, {}, ({ state }) => {
-            // @ts-ignore
-            [state.original, state.zoomFrame, state.zoomedOutSize] = calculateDimensions(root, zoomedIn, zoomedOut);
-            return (
-                Zoom.changeBitmask['state.original'] |
-                Zoom.changeBitmask['state.zoomFrame'] |
-                Zoom.changeBitmask['state.zoomedOutSize']
-            );
-        });
-    };
-
-    private updateZoomLocation = (e: MouseEvent) => {
-        runtime.updateState(this as Zoom, {}, ({ state }) => {
-            // @ts-ignore
-            [state.x, state.y] = calcZoomFrameXY(e, state.zoomedOut.element!, state.zoomFrame, state.zoomedOutSize);
-            return Zoom.changeBitmask['state.x'] | Zoom.changeBitmask['state.y'];
-        });
-    };
+interface Props {
+    url: string;
 }
+export const Zoom: CompCreator<Props> = (props: Props) => ({
+    props
+});
+Zoom.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarget) => {
+    if (!target || add !== 'append') {
+        throw 'Now supported in this example';
+    }
 
-Zoom.factory = {
-    unique: Symbol('ZoomFactory'),
-    toString: (props, state?) => {
-        state = state || initialState(props);
-        return `<div class="zoom" ref={main}>
-            <div class="zoomedIn">
-                <img src="${props.url}" alt="Cute animal, up close" ref={zoomedIn} />
-            </div>
+    const state = {
+        zoomedOut: {} as RefHolder<HTMLImageElement>,
+        zoomedIn: {} as RefHolder<HTMLImageElement>,
+        root: {} as RefHolder<HTMLDivElement>,
+        x: 0,
+        y: 0,
+        original: new Area(),
+        zoomFrame: new Area(),
+        zoomedOutSize: new Area(1, 1),
+    };
 
-            <div class="zoomedOut">
-                <img src="${props.url}" alt="Cute animal, zoomed out" />
-                <div class="zoomed" />
-            </div>
-        </div >`;
-    },
-    hydrate: (root: HTMLElement, props: ZoomProps, s?: ZoomState) => {
-        s = s || initialState();
-        const { state } = s;
-        const context: ZoomCtx = {
-            root: root as HTMLDivElement,
-            zoomedIn: root.children[0].children[0] as HTMLImageElement,
-            zoomedOut: root.children[1].children[0] as HTMLImageElement,
-            zoomFrame: root.children[1].children[1] as HTMLDivElement
-        };
-        state.zoomedIn.element = context.zoomedIn;
-        state.zoomedOut.element = context.zoomedOut;
-        state.root.element = context.root;
-        return new Zoom(context, props, s);
-    },
-    initialState
-} as Factory<Zoom>;
+    const updateZoomLocation = (e: MouseEvent) => {
+        [state.x, state.y] = calcZoomFrameXY(e, state.zoomedOut.element!, state.zoomFrame, state.zoomedOutSize);
+        requestAnimationFrame(updateView);
+    };
+
+    const updateDimensions = () => requestAnimationFrame(() => {
+        [
+            state.original,
+            state.zoomFrame,
+            state.zoomedOutSize
+        ] = calculateDimensions(state.root.element!, state.zoomedIn.element!, state.zoomedOut.element!);
+        updateView();
+    });
+
+    target.innerHTML = `<div class="zoom">
+    <div class="zoomedIn">
+        <img src=${props.url} alt="Cute animal, up close"></img>
+    </div>
+
+    <div class="zoomedOut">
+        <img src=${props.url} alt="Cute animal, zoomed out"  ></img>
+        <div class="zoomed" />
+    </div>
+</div >`
+    const root = target.children[0] as HTMLDivElement;
+    root.addEventListener('mousemove', updateZoomLocation);
+    state.root.element = root;
+    const imgs = root.querySelectorAll('img');
+    state.zoomedIn.element = imgs[0];
+    imgs[0].addEventListener('load', updateDimensions);
+    state.zoomedOut.element = imgs[1];
+    const zoomed = imgs[1].nextElementSibling!;
+
+    const updateView = () => {
+        imgs[0].setAttribute('style', `left: ${
+            -state.x / state.zoomedOutSize.width * state.original.width}px;top: ${
+            -state.y / state.zoomedOutSize.height * state.original.height}px`)
+
+        zoomed.setAttribute('style', `top:${
+            state.y}px;left:${state.x}px;width:${
+            state.zoomFrame.width}px;height:${
+            state.zoomFrame.height}px`)
+    }
+    updateView();
+
+    return {
+        updateProps: (props: Props) => {
+            imgs[0].setAttribute('src', props.url);
+            imgs[1].setAttribute('src', props.url);
+            requestAnimationFrame(updateView);
+        },
+    } as ComponentApi<Props>;
+}

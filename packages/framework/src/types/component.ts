@@ -1,7 +1,8 @@
-import { CompFactory } from './factory';
+import { CompFactory, RenderTarget } from './factory';
 import { TSXAir } from '../api/types';
 import { VirtualElement } from './virtual.element';
 import { Displayable } from './displayable';
+import { ComponentApi } from '../api/component';
 
 export class Component extends Displayable {
     static factory: CompFactory<any>;
@@ -11,6 +12,7 @@ export class Component extends Displayable {
     static isType(x: any): x is typeof Component {
         return x && x.prototype instanceof Component;
     }
+    static render: (_props:object, _state?:object, _target?:HTMLElement, _add?:RenderTarget)=>ComponentApi;
 
     constructor(
         readonly key: string,

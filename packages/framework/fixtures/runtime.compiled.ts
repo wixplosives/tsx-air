@@ -9,9 +9,9 @@ export class CompiledParent extends Component {
     }, () => ({ state: { counter: 0 } }));
 
     preRender(): VirtualElement<any> {
-        TSXAir.runtime.updateState(this, ({ state }) => {
-            state.counter++;
-            return this.changesBitMap['state.counter'];
+        const { state } = this.state;
+        TSXAir.runtime.update(this, this.changesBitMap['state.counter'], () => {
+            return state.counter++;
         });
         if (this.props.a < 0) {
             return VirtualElement.fragment('0', ParentFrag0, this);
@@ -59,7 +59,7 @@ export class ParentFrag0 extends Fragment {
     toString(): string {
         const r = this.unique(`<span><!--C-->${
             TSXAir.runtime.toString(this.$comp0)
-        }<!--C--><!--X-->${
+            }<!--C--><!--X-->${
             TSXAir.runtime.toString(this.props.a)
             }<!--X--></span>`);
         return r;

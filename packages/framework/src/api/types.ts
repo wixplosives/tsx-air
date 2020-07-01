@@ -1,20 +1,19 @@
-import { Factory, CompFactory } from '../types/factory';
+import { Factory, CompFactory, RenderTarget } from '../types/factory';
 import { IntrinsicElements as IntrinsicElementsImported } from './dom';
 import runtime from '../runtime';
+import { ComponentApi } from './component';
 
-export interface TsxAirNode<PROPS, T extends string | Factory<any>> {
-    type: T;
+export interface TsxAirNode<PROPS> {
     props: PROPS;
-    key?: string | number | null;
 }
 
-export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props, Factory<any>> | CompCreator<any> | Array<CompCreator<any>> | HTMLElement;
+export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props> | CompCreator<Props> | CompCreator<any> | Array<CompCreator<any>> | HTMLElement | Array<TsxAirChild<Props>>;
 
 // This interface serves as a component definition in pre-compiled code
 export interface CompCreator<Props> {
-    (props: Props): TsxAirNode<Props, CompFactory<any>>;
-    factory: CompFactory<any>;
+    (props: Props): TsxAirNode<Props>;
     key?: string | number | null;
+    render: (props:Props, state?:object, target?:HTMLElement, add?:RenderTarget)=>ComponentApi<Props>;
 }
 
 export const TSXAir = <Props>(t: (props: Props) => TsxAirChild<Props> | Promise<TsxAirChild<Props>>) =>
@@ -27,7 +26,7 @@ export namespace TSXAir {
     export namespace JSX {
         export type Element = TsxAirChild<any>;
         export interface IntrinsicAttributes {
-            key?: string;
+            key?: any;
         }
         export interface ElementChildrenAttribute { children: {}; }
         export type IntrinsicElements = IntrinsicElementsImported;

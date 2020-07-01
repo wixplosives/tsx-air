@@ -39,12 +39,16 @@ export const matchImages =
         if (match !== 0) {
             await new Promise((_, reject) => {
                 const diffPath = join(outputDir, `diff-${name}`);
-                diff.pack().pipe(
-                    createWriteStream(diffPath))
-                    .on('close', () => {
-                        reject(new Error(`Images are not similar: ${name} does not look as expected
+                const actualPath = join(outputDir, `actual-${name}`);
+                new PNG(actualImage).pack().pipe(
+                    createWriteStream(actualPath)
+                ).on('close', () =>
+                    diff.pack().pipe(
+                        createWriteStream(diffPath))
+                        .on('close', () => {
+                            reject(new Error(`Images are not similar: ${name} does not look as expected
     See the diff at ${diffPath}`));
-                    });
+                        }));
             });
         }
     };
