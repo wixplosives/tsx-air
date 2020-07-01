@@ -10,7 +10,7 @@ export class TsxComponentApi<Props> {
     constructor(readonly $instance: Component) { }
     public updateProps = (props: Props) => {
         TSXAir.runtime.update(this.$instance, -1, () => this.$instance.props = props);
-    }
+    };
 
     public setProp = (key: keyof Props, value: ValueOf<Props>) =>
         TSXAir.runtime.update(this.$instance,

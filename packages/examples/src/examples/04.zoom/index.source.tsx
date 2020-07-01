@@ -1,6 +1,6 @@
 
 import { calculateDimensions, Area, calcZoomFrameXY } from './helper';
-import { TSXAir, store, RefHolder, delegate } from '@tsx-air/framework';
+import { TSXAir, store, RefHolder } from '@tsx-air/framework';
 
 export const Zoom = TSXAir((props: { url: string }) => {
     const state = store({
@@ -17,9 +17,9 @@ export const Zoom = TSXAir((props: { url: string }) => {
     const updateDimensions = () => {
         const calc = calculateDimensions(state.root.element!, state.zoomedIn.element!, state.zoomedOut.element!);
 
-        state.original = calc[0]
-        state.zoomFrame = calc[1]
-        state.zoomedOutSize = calc[2]
+        state.original = calc[0];
+        state.zoomFrame = calc[1];
+        state.zoomedOutSize = calc[2];
         // [
         //     state.original,
         //     state.zoomFrame,

@@ -14,9 +14,9 @@ describe('generateToString', () => {
     let evalContext = {};
     const toStringOf = (comp: CompDefinition, props: any, state: any = {}, volatile: any = {}, scope = {}) => {
         const frag = parseFragments(comp).next().value as FragmentData;
-        const asFunc = evalAst(asFunction(generateToString(frag)), { TSXAir, store, ...evalContext }) as Function;
+        const asFunc = evalAst(asFunction(generateToString(frag)), { TSXAir, store, ...evalContext }) as ()=>any;
         return () => asFunc.apply({ props, state, volatile, ...scope, unique:identity });
-    }
+    };
     it('generates a toString method based on the used props and state', () => {
         const comps = basicPatterns();
 
@@ -54,7 +54,7 @@ describe('generateToString', () => {
                 expect(x).to.eql(mockVElm);
                 return `MockVirtualComponent`;
             });
-            expect(nested()).to.be.eql(`<div><!--C-->MockVirtualComponent<!--C--></div>`);;
+            expect(nested()).to.be.eql(`<div><!--C-->MockVirtualComponent<!--C--></div>`);
         });
         afterEach(() => {
             stub.restore();
@@ -74,7 +74,7 @@ describe('generateToString', () => {
             owner: {
                 someFunc: (x: string) => {
                     expect(x).to.eql('const');
-                    return 'func'
+                    return 'func';
                 }
             }
         });

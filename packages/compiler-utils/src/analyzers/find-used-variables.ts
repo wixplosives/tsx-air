@@ -33,7 +33,7 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
                         const init = asCode(accessParent.initializer!);
                         addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
                         addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
-                    })
+                    });
                     return;
                 }
                 if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
@@ -176,7 +176,7 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
         return {
             path: [],
             nestedAccess: []
-        }
+        };
     }
     if (!ts.isIdentifier(n)) {
         throw new Error('unhandled input in accessToStringArr');

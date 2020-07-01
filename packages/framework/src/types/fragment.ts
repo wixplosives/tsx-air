@@ -1,15 +1,15 @@
-import { Displayable } from "./displayable";
-import { Component } from "./component";
-import { TSXAir } from "..";
-import { VirtualElement } from "./virtual.element";
+import { Displayable } from './displayable';
+import { Component } from './component';
+import { TSXAir } from '..';
+import { VirtualElement } from './virtual.element';
 
 type CommentPlaceholder = 'X' | 'E' | 'C';
 
 export class Fragment extends Displayable {
-    static is(x: any): x is Fragment {
+    public static is(x: any): x is Fragment {
         return x && x instanceof Fragment;
     }
-    static isType(x: any): x is typeof Fragment {
+    public static isType(x: any): x is typeof Fragment {
         return x.prototype instanceof Fragment;
     }
 
@@ -17,7 +17,7 @@ export class Fragment extends Displayable {
         key: string,
         parent: Displayable
     ) {
-        let _owner = Component.is(parent) ? parent : parent.owner;
+        const _owner = Component.is(parent) ? parent : parent.owner;
         if (!_owner) {
             throw new Error('Invalid fragment: no owner component');
         }
@@ -26,26 +26,43 @@ export class Fragment extends Displayable {
         this.changesBitMap = _owner.changesBitMap;
     }
 
-    updateView(_changes: number): void { }
+    public updateView(_changes: number): void {/* */}
 
-    hydrateExpressions(values: any[], target: HTMLElement) {
+    public hydrateExpressions(values: any[], target: HTMLElement) {
         return this.hydrateInternals(values, target, 'X',
             (v: any, t: Comment) =>
                 this.ctx.expressions.push(
                     TSXAir.runtime.hydrateExpression(v, t)));
     }
 
-    hydrateComponents(virtualComps: VirtualElement[], target: HTMLElement) {
+    public hydrateComponents(virtualComps: VirtualElement[], target: HTMLElement) {
         this.hydrateInternals(virtualComps, target, 'C',
             (c: VirtualElement, t: Comment) =>
-                TSXAir.runtime.hydrate(c, t.nextElementSibling as HTMLElement))
+                TSXAir.runtime.hydrate(c, t.nextElementSibling as HTMLElement));
     }
 
-    hydrateElements(target: HTMLElement) {
+    public hydrateElements(target: HTMLElement) {
         target.parentNode?.querySelectorAll(`[x-da="${this.fullKey}"]`).forEach(e => this.ctx.elements.push(e as HTMLElement));
     }
 
-    private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: Function): void {
+    public comment(index: number, type: CommentPlaceholder) {
+        return `<!--${this.fullKey}${type}${index}-->`;
+    }
+
+    public attribute(_: number) {
+        return `x-da="${this.fullKey}"`;
+    }
+
+    public unique(str: string) {
+        return this.withUniq(
+            this.withUniq(str,
+                '<!--X-->', (i: number) => this.comment(i, 'X')),
+            '<!--C-->', (i: number) => this.comment(i, 'C'))
+            .replace(/x-da="!"/g, `x-da="${this.fullKey}"`);
+
+    }
+
+    private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: (v:any, c:Comment)=>void): void {
         let expressionIndex = 0;
         let inExpressionString = false;
         const { document, window } = TSXAir.runtime;
@@ -53,7 +70,7 @@ export class Fragment extends Displayable {
         const { NodeFilter } = window;
 
         const comments = document.createNodeIterator(target, NodeFilter.SHOW_COMMENT, {
-            acceptNode: (node) => {
+            acceptNode:node => {
                 if (inExpressionString) {
                     if (`<!--${node.textContent}-->` === this.comment(expressionIndex, type)) {
                         expressionIndex++;
@@ -76,23 +93,6 @@ export class Fragment extends Displayable {
         values.forEach(v => hydrateFunc(v, comments.nextNode() as Comment));
     }
 
-    comment(index: number, type: CommentPlaceholder) {
-        return `<!--${this.fullKey}${type}${index}-->`
-    }
-
-    attribute(_: number) {
-        return `x-da="${this.fullKey}"`;
-    }
-
-    unique(str: string) {
-        return this.withUniq(
-            this.withUniq(str,
-                '<!--X-->', (i: number) => this.comment(i, 'X')),
-            '<!--C-->', (i: number) => this.comment(i, 'C'))
-            .replace(/x-da="!"/g, `x-da="${this.fullKey}"`);
-
-    }
-
     private withUniq(str: string, placeholder: string, replace: (i: number) => string, withTrailing = true): string {
         const src = str.split(placeholder);
         const res = [];
@@ -101,8 +101,9 @@ export class Fragment extends Displayable {
         for (const chunk of src) {
             if (!skipNext) {
                 const comment = replace(expCount++);
-                res.push(comment)
+                res.push(comment);
                 res.push(chunk);
+                // tslint:disable-next-line
                 withTrailing && res.push(comment);
             } else {
                 res.push(chunk);

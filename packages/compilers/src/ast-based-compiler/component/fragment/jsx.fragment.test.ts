@@ -1,8 +1,8 @@
-import { _getJsxRoots, parseFragments } from "./jsx.fragment";
-import get from "lodash/get";
-import ts from "typescript";
-import { getCompDef } from "@tsx-air/compiler-utils/src/analyzers/test.helpers";
-import { expect } from "chai";
+import { _getJsxRoots, parseFragments } from './jsx.fragment';
+import get from 'lodash/get';
+import ts from 'typescript';
+import { getCompDef } from '@tsx-air/compiler-utils/src/analyzers/test.helpers';
+import { expect } from 'chai';
 
 
 describe('fragments', () => {
@@ -44,7 +44,7 @@ describe('fragments', () => {
                 isComponent: false,
                 allFragments,comp
             });
-        })
+        });
     });
 
    
@@ -62,9 +62,9 @@ describe('fragments', () => {
                 expect([..._getJsxRoots(comp, statements[0])]).to.eql([]);
                 expect([..._getJsxRoots(comp, statements[1])]).to.eql([comp.jsxRoots[0]]);
                 expect([..._getJsxRoots(comp, statements[2])]).to.eql([comp.jsxRoots[1].expressions[0].jsxRoots[0], comp.jsxRoots[1]]);
-                expect([..._getJsxRoots(comp, statements[3])]).to.eql([comp.jsxRoots[2].expressions[0].jsxRoots[0], comp.jsxRoots[2]]);;
-            })
-        })
+                expect([..._getJsxRoots(comp, statements[3])]).to.eql([comp.jsxRoots[2].expressions[0].jsxRoots[0], comp.jsxRoots[2]]);
+            });
+        });
 
     });
 });

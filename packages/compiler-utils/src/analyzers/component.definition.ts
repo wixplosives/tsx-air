@@ -99,7 +99,7 @@ function* findStatementReturns(statement?: ts.Node | ts.Node[] | ts.NodeArray<ts
                 break;
 
             case ts.SyntaxKind.ReturnStatement:
-                const ret = statement as ts.ReturnStatement
+                const ret = statement as ts.ReturnStatement;
                 yield {
                     kind: 'Return',
                     sourceAstNode: ret,
@@ -107,7 +107,7 @@ function* findStatementReturns(statement?: ts.Node | ts.Node[] | ts.NodeArray<ts
                     value: ret.expression
                         ? asCode(ret.expression)
                         : 'undefined'
-                }
+                };
                 break;
         }
     }

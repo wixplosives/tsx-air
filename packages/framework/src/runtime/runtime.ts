@@ -6,8 +6,23 @@ import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from 
 type Mutator = () => any;
 
 export class Runtime {
-    readonly HTMLElement: typeof HTMLElement;
-    readonly Text: typeof Text;
+    public readonly HTMLElement: typeof HTMLElement;
+    public readonly Text: typeof Text;
+    public $stats = [] as RuntimeCycle[];
+
+    public readonly document: Document;
+    public maxDepthPerUpdate = 50;
+    public maxDepth = 100;
+
+    public when: (predicate: string[], action: () => void) => void = this.always;
+
+    public hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
+    public render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
+    private pending = new Map<Displayable, number>();
+    private viewUpdatePending: boolean = false;
+    private hydrating = 0;
+    private mockDom!: HTMLElement;
+    private keyCounter = 0 | 0;
     constructor(
         readonly window: Window = globalThis.window,
         readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = globalThis.requestAnimationFrame
@@ -15,35 +30,27 @@ export class Runtime {
     ) {
         this.mockDom = window?.document?.createElement('div');
         this.document = window?.document;
+        // @ts-ignore
         this.HTMLElement = window?.HTMLElement;
+        // @ts-ignore
         this.Text = window?.Text;
         if (requestAnimationFrame !== undefined) {
             this.requestAnimationFrame = requestAnimationFrame.bind(globalThis);
         }
     }
-    $stats = [] as RuntimeCycle[];
 
-    readonly document: Document;
-    private pending = new Map<Displayable, number>();
-    private viewUpdatePending: boolean = false;
-    public maxDepthPerUpdate = 50;
-    public maxDepth = 100;
-    private hydrating = 0;
-    private mockDom!: HTMLElement;
-    private keyCounter = 0 | 0;
-
-    update(instance: Displayable, bits: number, mutator: Mutator) {
+    public update(instance: Displayable, bits: number, mutator: Mutator) {
         this.addChange(instance, bits);
         this.triggerViewUpdate();
         return mutator();
     }
 
-    updateExpression(exp: ExpressionDom, value: any) {
+    public updateExpression(exp: ExpressionDom, value: any) {
         exp.value = value;
         _updateExpression([exp.start as Comment, exp.end as Comment], asDomNodes(value));
     }
 
-    toString(x: any): string {
+    public toString(x: any): string {
         if (isArray(x)) {
             return x.map(i => this.toString(i)).join('');
         }
@@ -53,7 +60,7 @@ export class Runtime {
         return x?.toString() || '';
     }
 
-    getUpdatedInstance(vElm: VirtualElement<any>): Displayable {
+    public getUpdatedInstance(vElm: VirtualElement<any>): Displayable {
         const { key, parent, owner } = vElm;
         if (!key || !owner || !parent) {
             throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
@@ -68,28 +75,46 @@ export class Runtime {
         }
     }
 
-    getUniqueKey(prefix = '') {
+    public getUniqueKey(prefix = '') {
         return `${prefix}${(this.keyCounter++).toString(36)}`;
     }
 
-    when: (predicate: string[], action: () => void) => void = this.always;
-    private always(_: any, action: () => void) {
-        action();
-    }
-
-    spreadStyle(styleObj: string | object): string {
+    public spreadStyle(styleObj: string | object): string {
         if (typeof styleObj === 'string') {
             return styleObj;
         }
-        let style = ''
+        let style = '';
         for (const [key, value] of Object.entries(styleObj)) {
             style = style + `${key}:${isNaN(Number(value)) ? value : (value | 0) + 'px'};`;
         }
         return style;
     }
 
-    hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
-    render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
+    public hydrateExpression(value: any, start: Comment): ExpressionDom {
+        value = isArray(value) ? value : [value];
+        let hydratedDomNode: Node = start;
+        const hydrated = value
+            .filter((i: any) => i !== undefined && i !== null && i !== '')
+            .map((i: any) => {
+                hydratedDomNode = hydratedDomNode.nextSibling!;
+                if (VirtualElement.is(i)) {
+                    return this.hydrate(i, hydratedDomNode as HTMLElement);
+                }
+                return i.toString();
+            });
+        if (!(hydratedDomNode.nextSibling instanceof
+            // @ts-ignore
+            this.window.Comment)) {
+            throw new Error(`Hydration error: Expression does not match data. (no ending comment)`);
+        }
+        return {
+            start, end: hydratedDomNode.nextSibling as Comment,
+            value: hydrated
+        };
+    }
+    private always(_: any, action: () => void) {
+        action();
+    }
 
     private renderOrHydrate(vElm: VirtualElement<any>, dom?: HTMLElement): Displayable {
         const { key, props, state, type, parent } = vElm;
@@ -110,29 +135,6 @@ export class Runtime {
             vElm.parent.ctx.components[key] = instance;
         }
         return instance;
-    }
-
-    hydrateExpression(value: any, start: Comment): ExpressionDom {
-        value = isArray(value) ? value : [value];
-        let hydratedDomNode: Node = start;
-        const hydrated = value
-            .filter((i: any) => i !== undefined && i !== null && i !== '')
-            .map((i: any) => {
-                hydratedDomNode = hydratedDomNode.nextSibling!;
-                if (VirtualElement.is(i)) {
-                    return this.hydrate(i, hydratedDomNode as HTMLElement);
-                }
-                return i.toString();
-            });
-        if (!(hydratedDomNode.nextSibling instanceof
-            //@ts-ignore
-            this.window.Comment)) {
-            throw new Error(`Hydration error: Expression does not match data. (no ending comment)`);
-        }
-        return {
-            start, end: hydratedDomNode.nextSibling as Comment,
-            value: hydrated
-        }
     }
 
     private hydrateComponent<Comp extends Component>(
@@ -176,7 +178,7 @@ export class Runtime {
                         if (predicate.some(p => changes & instance.changesBitMap[p])) {
                             action();
                         }
-                    }
+                    };
                     const preRender = instance.preRender();
                     this.when = this.always;
                     // handle prerender state changes 
@@ -191,7 +193,7 @@ export class Runtime {
                         instance.ctx.root = nextRoot as Fragment;
                         if (!root.props.keepAlive) {
                             instance.ctx.components[root.key].dispose();
-                            delete instance.ctx.components[root.key]
+                            delete instance.ctx.components[root.key];
                         }
                         instance.ctx.components[nextRoot.key] = nextRoot;
                     }

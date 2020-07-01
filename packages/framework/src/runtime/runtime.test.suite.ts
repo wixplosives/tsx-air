@@ -1,9 +1,9 @@
-import { Runtime } from "./runtime";
-import { Displayable, TSXAir, VirtualElement } from "..";
-import { JSDOM } from "jsdom";
-import { expect } from "chai";
-import sinon from "sinon";
-import { Component } from "../types";
+import { Runtime } from './runtime';
+import { Displayable, TSXAir, VirtualElement } from '..';
+import { JSDOM } from 'jsdom';
+import { expect } from 'chai';
+import sinon from 'sinon';
+import { Component } from '../types';
 
 export function testRuntimeApi<P extends typeof Component, C extends typeof Component>(getCompiled: () => [any, any]) {
     describe('interacting with framework runtime (internal API)', () => {
@@ -77,7 +77,7 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
                 expect(onNextFrame).to.have.length(1);
                 onNextFrame[0](0);
                 expect(onNextFrame, `number of frames requested`).to.have.length(2);
-                onNextFrame[1](0)
+                onNextFrame[1](0);
                 expect(onNextFrame, `number of frames it took to update`).to.have.length(2);
                 expect(domOf(instance)).to.eql(`<div><!--$111120X0-->5<!--$111120X0--> <!--$111120X1-->2<!--$111120X1--></div>`);
             });

@@ -107,6 +107,6 @@ describe('TSXAir component definition', () => {
 
             expect(comp.returns).to.have.length(10);
             comp.returns.forEach((r,i) => expect(r.value).to.equal(`<div>ret ${i}</div>`));
-        })
-    })
+        });
+    });
 });

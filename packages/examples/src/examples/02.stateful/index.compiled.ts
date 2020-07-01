@@ -1,8 +1,8 @@
-import { CompCreator } from "@tsx-air/framework/src/api/types";
-import { RenderTarget, ComponentApi } from "@tsx-air/framework/src";
+import { CompCreator } from '@tsx-air/framework/src/api/types';
+import { RenderTarget, ComponentApi } from '@tsx-air/framework/src';
 
 interface Props {
-    initialState: string
+    initialState: string;
 }
 export const StatefulComp: CompCreator<Props> = (props: Props) => ({
     props
@@ -25,10 +25,10 @@ StatefulComp.render = (props: Props, _?: object, target?: HTMLElement, add?: Ren
     const onClickB = () => {
         state.b = `${props.initialState} B (${++state.bCounter})`;
         updateView();
-    }
+    };
 
     if (!target || add !== 'append') {
-        throw 'Now supported in this example';
+        throw new Error('Now supported in this example');
     }
 
     target.innerHTML = `<div>
@@ -40,23 +40,23 @@ StatefulComp.render = (props: Props, _?: object, target?: HTMLElement, add?: Ren
 </div>
 <div class="changeCount">View rendered ${state.changeCount} times</div>
 <div class="volatile">volatile variable is still at ${volatile}</div>
-</div>`
+</div>`;
     const divs = target.children[0].querySelectorAll('div');
     divs[0].addEventListener('click', onClickA);
     divs[1].addEventListener('click', onClickB);
 
     const updateView = () => {
+        // tslint:disable-next-line
         let volatile = 0;
         volatile++;
         state.changeCount += volatile;
-        divs[0].textContent = state.a
-        divs[1].textContent = state.b
+        divs[0].textContent = state.a;
+        divs[1].textContent = state.b;
         divs[2].textContent = `View rendered ${state.changeCount} times`;
         divs[3].textContent = `volatile variable is still at ${volatile}`;
-    }
+    };
     updateView();
     return {
-        updateProps: (props: Props) => {
-        },
+        updateProps: (_props: Props) => void 0,
     } as ComponentApi<Props>;
-}
+};

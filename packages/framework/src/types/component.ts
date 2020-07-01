@@ -5,14 +5,14 @@ import { Displayable } from './displayable';
 import { ComponentApi } from '../api/component';
 
 export class Component extends Displayable {
-    static factory: CompFactory<any>;
-    static is(x: any): x is Component {
+    public static factory: CompFactory<any>;
+    public static render: (_props:object, _state?:object, _target?:HTMLElement, _add?:RenderTarget)=>ComponentApi;
+    public static is(x: any): x is Component {
         return x && x instanceof Component;
     }
-    static isType(x: any): x is typeof Component {
+    public static isType(x: any): x is typeof Component {
         return x && x.prototype instanceof Component;
     }
-    static render: (_props:object, _state?:object, _target?:HTMLElement, _add?:RenderTarget)=>ComponentApi;
 
     constructor(
         readonly key: string,
@@ -33,13 +33,13 @@ export class Component extends Displayable {
         }
     }
 
-    toString(): string {
+    public toString(): string {
         return TSXAir.runtime.toString(this.preRender());
     }
 
-    preRender(): VirtualElement<any> { throw new Error(`not implemented`); }
+    public preRender(): VirtualElement<any> { throw new Error(`not implemented`); }
 
-    hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {
+    public hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {
         this.ctx.root = TSXAir.runtime.hydrate(preRendered, target);
     }
 }

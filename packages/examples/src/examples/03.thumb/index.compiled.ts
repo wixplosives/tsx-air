@@ -1,5 +1,5 @@
-import { CompCreator } from "@tsx-air/framework/src/api/types";
-import { RenderTarget, ComponentApi } from "@tsx-air/framework/src";
+import { CompCreator } from '@tsx-air/framework/src/api/types';
+import { RenderTarget, ComponentApi } from '@tsx-air/framework/src';
 
 interface Props {
     url: string;
@@ -9,13 +9,13 @@ export const Thumb: CompCreator<Props> = (props: Props) => ({
 });
 Thumb.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarget) => {
     if (!target || add !== 'append') {
-        throw 'Now supported in this example';
+        throw new Error('Now supported in this example');
     }
 
     const state = {
         imageLoaded: false
     };
-    target.innerHTML = `<div class="thumb"></div>`
+    target.innerHTML = `<div class="thumb"></div>`;
     const root = target.children[0];
     const preloader = document.createElement('div');    
     preloader.classList.add('preloader');
@@ -35,15 +35,15 @@ Thumb.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarg
             root.prepend(preloader);
             img.setAttribute('style', 'display:none');
         }
-    }
+    };
 
     updateView();
 
     return {
-        updateProps: (props: Props) => {
-            img.setAttribute('src', props.url);
+        updateProps: (p: Props) => {
+            img.setAttribute('src', p.url);
             state.imageLoaded = false;
             updateView();
         },
     } as ComponentApi<Props>;
-}
+};

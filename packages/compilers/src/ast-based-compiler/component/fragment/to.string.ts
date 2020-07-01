@@ -28,11 +28,11 @@ export const generateToString = (fragment: FragmentData) => {
                     a => ts.isJsxAttribute(a)
                         && a.initializer && ts.isJsxExpression(a.initializer))) {
                     return ts.createJsxAttributes([...n.properties.map(p => cloneDeep(p)),
-                    ts.createJsxAttribute(ts.createIdentifier('x-da'), ts.createStringLiteral('!'))])
+                    ts.createJsxAttribute(ts.createIdentifier('x-da'), ts.createStringLiteral('!'))]);
                 }
                 return undefined;
             }
-        ])
+        ]);
 
     const vars = merge({}, ...fragment.root.expressions.map(e => e.aggregatedVariables));
     return cMethod('toString', [], [
@@ -42,13 +42,13 @@ export const generateToString = (fragment: FragmentData) => {
         )]);
 };
 
-export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: Modifier<any>[]) => {
+export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElement, replacers: Array<Modifier<any>>) => {
     let replaced = jsx;
     for (const replacer of replacers) {
         replaced = cloneDeep(replaced, undefined, replacer) as ts.JsxElement;
     }
-    type Exp = { exp: ts.Expression };
-    const chunks: [string, ...(Exp | string)[]] = [''];
+    interface Exp { exp: ts.Expression; }
+    const chunks: [string, ...Array<Exp | string>] = [''];
     const add = (val: Exp | string) => {
         if (typeof val === 'string') {
             if (typeof last(chunks) === 'string') {
@@ -59,7 +59,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
         } else {
             chunks.push(val);
         }
-    }
+    };
 
     const visitor = (n: ts.Node) => {
         // @ts-ignore
@@ -79,7 +79,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
                     const nn = n as ts.JsxOpeningElement;
                     add(`<${asCode(nn.tagName)}`);
                     nn.attributes.properties.forEach((attr: ts.JsxAttributeLike) => {
-                        if (!ts.isJsxAttribute(attr)) throw new Error('Invalid attribute');
+                        if (!ts.isJsxAttribute(attr)) { throw new Error('Invalid attribute'); }
                         const { name, initializer } = attr;
                         const attrName = asCode(name);
                         if (!/on[A-Z].*|ref/.test(attrName)) {
@@ -101,7 +101,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
                             }
                         }
                         if (attrName === 'style' && initializer && ts.isJsxExpression(initializer)) {
-                            add(``)
+                            add(``);
                         }
                     });
                     add(`>`);
@@ -144,7 +144,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
                     : ts.createTemplateMiddle(chunks[i + 1] as string))
             );
         }
-    })
+    });
 
     return cloneDeep(ts.createTemplateExpression(ts.createTemplateHead(head), spans));
 };

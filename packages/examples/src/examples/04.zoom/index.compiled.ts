@@ -1,6 +1,6 @@
-import { CompCreator, RefHolder } from "@tsx-air/framework/src/api/types";
-import { RenderTarget, ComponentApi } from "@tsx-air/framework/src";
-import { Area, calculateDimensions, calcZoomFrameXY } from "./helper";
+import { CompCreator, RefHolder } from '@tsx-air/framework/src/api/types';
+import { RenderTarget, ComponentApi } from '@tsx-air/framework/src';
+import { Area, calculateDimensions, calcZoomFrameXY } from './helper';
 
 interface Props {
     url: string;
@@ -10,7 +10,7 @@ export const Zoom: CompCreator<Props> = (props: Props) => ({
 });
 Zoom.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarget) => {
     if (!target || add !== 'append') {
-        throw 'Now supported in this example';
+        throw new Error('Now supported in this example');
     }
 
     const state = {
@@ -47,7 +47,7 @@ Zoom.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarge
         <img src=${props.url} alt="Cute animal, zoomed out"  ></img>
         <div class="zoomed" />
     </div>
-</div >`
+</div >`;
     const root = target.children[0] as HTMLDivElement;
     root.addEventListener('mousemove', updateZoomLocation);
     state.root.element = root;
@@ -60,20 +60,20 @@ Zoom.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarge
     const updateView = () => {
         imgs[0].setAttribute('style', `left: ${
             -state.x / state.zoomedOutSize.width * state.original.width}px;top: ${
-            -state.y / state.zoomedOutSize.height * state.original.height}px`)
+            -state.y / state.zoomedOutSize.height * state.original.height}px`);
 
         zoomed.setAttribute('style', `top:${
             state.y}px;left:${state.x}px;width:${
             state.zoomFrame.width}px;height:${
-            state.zoomFrame.height}px`)
-    }
+            state.zoomFrame.height}px`);
+    };
     updateView();
 
     return {
-        updateProps: (props: Props) => {
+        updateProps: (_props: Props) => {
             imgs[0].setAttribute('src', props.url);
             imgs[1].setAttribute('src', props.url);
             requestAnimationFrame(updateView);
         },
     } as ComponentApi<Props>;
-}
+};

@@ -52,7 +52,7 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                         ]));
                         after(function () {
                             if (this.test?.parent?.tests.every(t => t.isPassed())) {
-                                // rimraf(paths.temp, () => null);
+                                rimraf(paths.temp, () => null);
                             }
                         });
 

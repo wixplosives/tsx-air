@@ -19,9 +19,9 @@ export function* generateUpdateView(fragment: FragmentData) {
         yield cMethod('updateView', ['$ch'], [
             ...setupClosure(comp, fragment.root.aggregatedVariables),
             asAst(`const $b=this.changesBitMap;`) as ts.Statement,
-            ...statements])
+            ...statements]);
     }
-};
+}
 
 function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) {
     const { comp, allFragments: fragments } = fragment;
@@ -33,13 +33,13 @@ function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) 
             statements.push(
                 ts.createIf(asAst(`$ch & (${bits.join('|')})`) as ts.Expression,
                     asAst(setStatement) as ts.Statement
-                ))
+                ));
         }
     };
     jsxExp(fragment).forEach((exp, i) =>
         addUpdate(exp, `TSXAir.runtime.updateExpression(this.ctx.expressions[${i}], ${asCode(toFragSafe(comp, fragments, exp))})`)
     );
-    fragment.root.components.forEach((childComp) =>
+    fragment.root.components.forEach(childComp =>
         addUpdate(childComp, `TSXAir.runtime.getUpdatedInstance(this.${
             getVComp(comp, childComp).name}.withChanges($ch))`)
     );
@@ -51,7 +51,7 @@ function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) 
             if (name === 'style') {
                 attrValue = `TSXAir.runtime.spreadStyle(${attrValue})`;
             }
-            addUpdate(exp, `this.ctx.elements[${elmIndex}].setAttribute('${name}', ${attrValue});`)
+            addUpdate(exp, `this.ctx.elements[${elmIndex}].setAttribute('${name}', ${attrValue});`);
         }
     }
 }
@@ -70,4 +70,4 @@ const dynamicAttrs = (fragment: FragmentData) => {
             map.set(a, elms.size - 1);
         });
     return map;
-}
+};

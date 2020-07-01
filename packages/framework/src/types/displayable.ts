@@ -1,4 +1,4 @@
-import { TSXAir, Component, Fragment, Factory } from "..";
+import { TSXAir, Component, Fragment, Factory } from '..';
 
 export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
 
@@ -15,36 +15,6 @@ export interface DisplayableData {
     parent?: Displayable;
 }
 export class Displayable {
-    static factory: Factory<any>;
-    static is(x: any): x is Displayable {
-        return x && x instanceof Displayable;
-    }
-
-    constructor(
-        readonly key: string,
-        parent: Displayable | DisplayableData | undefined,
-        public props: any,
-        public state: any,
-        public volatile: any,
-    ) {
-        // requestAnimationFrame(() => this.$afterMount());
-        this.innerKey = TSXAir.runtime.getUniqueKey();
-        while (parent && !Displayable.is(parent)) {
-            parent = parent.parent;
-        }
-        this.parent = parent;
-    }
-    afterMount(_ref: Elm) {/** add event listeners */ }
-    afterUnmount() {/** dispose of stuff */ }
-    readonly changesBitMap!: Record<string, number>;
-    readonly innerKey!: string;
-    readonly ctx: Ctx = {
-        root: null,
-        expressions: [],
-        elements: [],
-        components: {}
-    };
-    parent: Displayable | undefined;
 
     get fullKey(): string {
         return this.parent ? `${this.parent.fullKey}${this.key}` : this.key;
@@ -53,7 +23,6 @@ export class Displayable {
         return Component.is(this.parent) ? this.parent : this.parent?.owner;
     }
 
-    dispose() { };
     get domRoot(): HTMLElement | Text {
         const { root } = this.ctx;
         if (Displayable.is(root)) {
@@ -65,8 +34,38 @@ export class Displayable {
         }
         throw new Error(`Invalid Displayable: root is not a Displayable/HTMLElement`);
     }
-    hydrate(_preRender: DisplayableData, _target: HTMLElement): void { throw new Error(`not implemented`); }
-    toString(): string { throw new Error(`not implemented`); }
+    public static factory: Factory<any>;
+    public static is(x: any): x is Displayable {
+        return x && x instanceof Displayable;
+    }
+    public readonly changesBitMap!: Record<string, number>;
+    public readonly innerKey!: string;
+    public readonly ctx: Ctx = {
+        root: null,
+        expressions: [],
+        elements: [],
+        components: {}
+    };
+    public parent: Displayable | undefined;
+
+    constructor(
+        readonly key: string,
+        parent: Displayable | DisplayableData | undefined,
+        public props: any,
+        public state: any,
+        public volatile: any,
+    ) {
+        this.innerKey = TSXAir.runtime.getUniqueKey();
+        while (parent && !Displayable.is(parent)) {
+            parent = parent.parent;
+        }
+        this.parent = parent;
+    }
+    public afterMount(_ref: Elm) {/** add event listeners */ }
+    public afterUnmount() {/** dispose of stuff */ }
+
+    public dispose() {/** dispose of stuff */}    public hydrate(_preRender: DisplayableData, _target: HTMLElement): void { throw new Error(`not implemented`); }
+    public toString(): string { throw new Error(`not implemented`); }
 }
 
 export interface ExpressionDom {

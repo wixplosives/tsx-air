@@ -1,5 +1,5 @@
-import isArray from "lodash/isArray";
-import { TSXAir, Displayable, VirtualElement } from "..";
+import isArray from 'lodash/isArray';
+import { TSXAir, Displayable, VirtualElement } from '..';
 
 export function updateExpression(expMarkers: Comment[], values: IterableIterator<Text | HTMLElement>) {
     let first!: Node;

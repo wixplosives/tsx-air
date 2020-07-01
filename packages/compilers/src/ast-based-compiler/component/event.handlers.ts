@@ -3,10 +3,6 @@ import { isEventHandler } from '../../common/jsx.event.handler';
 import { postAnalysisData } from '../../common/post.analysis.data';
 import { FragmentData } from './fragment/jsx.fragment';
 
-export const refUsed = (fragment:FragmentData) => {
-    fragment.root.expressions.filter
-}
-
 export const tagHandlersUsed = (fragment:FragmentData) => {
     const expressionsWithHandlers =
         fragment.root.expressions.filter(isEventHandler);

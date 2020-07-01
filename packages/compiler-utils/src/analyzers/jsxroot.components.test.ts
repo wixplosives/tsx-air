@@ -8,7 +8,7 @@ describe('Jsx Components', () => {
     let comp: CompDefinition;
     let comp1: JsxComponent;
     let comp2: JsxComponent;
-    let comp2_2: JsxComponent;
+    let comp2i2: JsxComponent;
     let comp3: JsxComponent;
     let comp4: JsxComponent;
     let comp5: JsxComponent;
@@ -23,7 +23,7 @@ describe('Jsx Components', () => {
                         <Comp4 str="true" static={666} dynamic={props.name} multi={props.a*props.b+4}>{props.child}</Comp4>
                         <Comp5 noValue />
                     </div>;})`).comp as CompDefinition;
-        [comp1, comp2, comp2_2, comp3, comp4, comp5] = comp.jsxRoots[0].components;
+        [comp1, comp2, comp2i2, comp3, comp4, comp5] = comp.jsxRoots[0].components;
     });
 
     it('should find components', () => {
@@ -31,7 +31,7 @@ describe('Jsx Components', () => {
     });
 
     it('should find component properties', () => {
-        [comp1, comp2, comp2_2].forEach(c => {
+        [comp1, comp2, comp2i2].forEach(c => {
             expect(c.props).to.have.length(0);
         });
         [comp3, comp4].forEach(c => {

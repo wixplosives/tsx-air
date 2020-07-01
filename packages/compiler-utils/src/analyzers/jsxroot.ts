@@ -103,4 +103,4 @@ function jsxRoot(sourceAstNode: JsxElm) {
         }
         return children;
     }
-};
+}

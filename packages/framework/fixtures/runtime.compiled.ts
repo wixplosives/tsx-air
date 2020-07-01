@@ -1,14 +1,14 @@
-import { Component, CompFactory, TSXAir, Factory } from "../src";
-import { VirtualElement } from "../src/types/virtual.element";
-import { Fragment } from "../src/types/fragment";
+import { Component, CompFactory, TSXAir, Factory } from '../src';
+import { VirtualElement } from '../src/types/virtual.element';
+import { Fragment } from '../src/types/fragment';
 
 export class CompiledParent extends Component {
-    static factory: CompFactory<typeof CompiledParent> = new CompFactory<typeof CompiledParent>(CompiledParent, {
+    public static factory: CompFactory<typeof CompiledParent> = new CompFactory<typeof CompiledParent>(CompiledParent, {
         'props.a': 1,
         'state.counter': 2
     }, () => ({ state: { counter: 0 } }));
 
-    preRender(): VirtualElement<any> {
+    public preRender(): VirtualElement<any> {
         const { state } = this.state;
         TSXAir.runtime.update(this, this.changesBitMap['state.counter'], () => {
             return state.counter++;
@@ -27,11 +27,11 @@ export class CompiledParent extends Component {
             ]), { ca: this.props.a, cb: this.state.state.counter });
     }
 }
-
+// tslint:disable:max-classes-per-file
 export class ParentFrag0 extends Fragment {
-    static factory: Factory<typeof ParentFrag0> = new Factory<typeof ParentFrag0>(
+    public static factory: Factory<typeof ParentFrag0> = new Factory<typeof ParentFrag0>(
         ParentFrag0, CompiledParent.factory.changesBitMap);
-    updateView(changes: number): void {
+    public updateView(changes: number): void {
         if (changes & this.changesBitMap['props.a']) {
             TSXAir.runtime.updateExpression(this.ctx.expressions[0], this.props.a);
         }
@@ -47,17 +47,17 @@ export class ParentFrag0 extends Fragment {
                 [
                     [CompiledChild.factory.changesBitMap['props.ca'], this.changesBitMap['props.a']],
                     [CompiledChild.factory.changesBitMap['props.cb'], this.changesBitMap['props.a']]
-                ]), { ca: props.a, cb: -props.a })
+                ]), { ca: props.a, cb: -props.a });
     }
 
-    hydrate(_: any, target: HTMLElement) {
+    public hydrate(_: any, target: HTMLElement) {
         const { props } = this;
         this.hydrateExpressions([props.a], target);
         this.hydrateComponents([this.$comp0], target);
         this.ctx.root = target;
     }
 
-    toString(): string {
+    public toString(): string {
         const r = this.unique(`<span><!--C-->${
             TSXAir.runtime.toString(this.$comp0)
             }<!--C--><!--X-->${
@@ -68,19 +68,19 @@ export class ParentFrag0 extends Fragment {
 }
 
 export class CompiledChild extends Component {
-    static factory: CompFactory<typeof CompiledChild> = new CompFactory<typeof CompiledChild>(CompiledChild, {
+    public static factory: CompFactory<typeof CompiledChild> = new CompFactory<typeof CompiledChild>(CompiledChild, {
         'props.ca': 4, 'props.cb': 8
     });
 
-    preRender(): VirtualElement<typeof ChildFrag0> {
+    public preRender(): VirtualElement<typeof ChildFrag0> {
         return VirtualElement.fragment('0', ChildFrag0, this);
     }
 }
 
 export class ChildFrag0 extends Fragment {
-    static factory: Factory<typeof ChildFrag0> = new Factory<typeof ChildFrag0>(
+    public static factory: Factory<typeof ChildFrag0> = new Factory<typeof ChildFrag0>(
         ChildFrag0, CompiledChild.factory.changesBitMap);
-    updateView(changes: number): void {
+    public updateView(changes: number): void {
         if (changes & this.changesBitMap['props.ca']) {
             TSXAir.runtime.updateExpression(this.ctx.expressions[0], this.props.ca);
         }
@@ -89,13 +89,13 @@ export class ChildFrag0 extends Fragment {
         }
     }
 
-    hydrate(_: any, target: HTMLElement) {
+    public hydrate(_: any, target: HTMLElement) {
         const { props } = this;
         this.hydrateExpressions([props.ca, props.cb], target);
         this.ctx.root = target;
     }
 
-    toString(): string {
+    public toString(): string {
         const r = this.unique(`<div><!--X-->${
             TSXAir.runtime.toString(this.props.ca)}<!--X--> <!--X-->${
             TSXAir.runtime.toString(this.props.cb)}<!--X--></div>`);

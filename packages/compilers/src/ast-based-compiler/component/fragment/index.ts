@@ -1,7 +1,7 @@
-import { CompDefinition, FileTransformerAPI, asAst, asCode } from "@tsx-air/compiler-utils";
-import { FragmentData } from "./jsx.fragment";
-import { generateFragmentClass } from "./fragment.class";
-import ts from "typescript";
+import { CompDefinition, FileTransformerAPI, asAst, asCode } from '@tsx-air/compiler-utils';
+import { FragmentData } from './jsx.fragment';
+import { generateFragmentClass } from './fragment.class';
+import ts from 'typescript';
 
 export function* generateFragments(comp: CompDefinition, api: FileTransformerAPI, fragments: FragmentData[]) {
     for (const fragment of fragments) {

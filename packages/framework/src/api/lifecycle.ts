@@ -1,4 +1,4 @@
-import { TSXAir } from "./types";
+import { TSXAir } from './types';
 
 export function when(predicate: any | any[], action: () => void) {
     TSXAir.runtime.when(predicate, action);

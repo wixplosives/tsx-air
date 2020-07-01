@@ -35,7 +35,7 @@ describe('TSXAir component analyzer: Jsx', () => {
             const inner = comp.jsxRoots[0].expressions[0].jsxRoots[0].sourceAstNode.getText();
             expect(inner).to.equal('<div />');
             expect(outer).to.equal('<div>{<div />}</div>');
-        })
+        });
         it(`treats conditional JSX withing a expression as roots`, () => {
             const { comp } = getCompDef(`const Comp = TSXAir(props=>
                  <div>{props.a > 0 ? <span>+</span> : <div>-</div>}</div>
@@ -49,7 +49,7 @@ describe('TSXAir component analyzer: Jsx', () => {
             expect(plus).to.equal('<span>+</span>');
             expect(minus).to.equal('<div>-</div>');
             expect(ret).to.equal('<div>{props.a > 0 ? <span>+</span> : <div>-</div>}</div>');
-        })
+        });
 
         it('should find dynamic expression and their dependencies', () => {
             const { comp } = getCompDef(`const Comp = TSXAir(props => { 

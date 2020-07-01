@@ -21,7 +21,7 @@ export const writeFuncName = (func: FuncDefinition, name: string) =>
     postAnalysisData.write(func, 'name', name);
 
 function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
-    const body = get(comp.sourceAstNode.arguments[0], 'body')
+    const body = get(comp.sourceAstNode.arguments[0], 'body');
     const statements = get(body, 'statements') || [body];
     const modified = [
         ...addNamedFunctions(comp),
@@ -49,15 +49,15 @@ const namedFuncs = (comp: CompDefinition) =>
 function parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments: FragmentData[], isPreRender: boolean) {
     const declaredVars = new Set<string>();
     const parser = toTsxCompatible(comp, fragments, declaredVars, isPreRender);
-    const s = statements.map(parser);
+    const parsed = statements.map(parser);
     if (isPreRender) {
         if (declaredVars.size) {
-            s.splice(-1, 0, asAst(`this.volatile={${
+            parsed.splice(-1, 0, asAst(`this.volatile={${
                 [...declaredVars, ...namedFuncs(comp)].join(',')
                 }}`) as ts.Statement);
         }
     }
-    return s.filter(s => !ts.isEmptyStatement(s));
+    return parsed.filter(s => !ts.isEmptyStatement(s));
 }
 
 function generateMethodBind(func: FuncDefinition) {
@@ -67,10 +67,10 @@ function generateMethodBind(func: FuncDefinition) {
     );
 }
 
-const handleWhenFunc = (comp: CompDefinition, n: ts.Node, allowWhenFunc: boolean) => {
-    if (ts.isExpressionStatement(n) &&
-        ts.isCallExpression(n.expression)) {
-        const call = n.expression;
+const handleWhenFunc = (comp: CompDefinition, node: ts.Node, allowWhenFunc: boolean) => {
+    if (ts.isExpressionStatement(node) &&
+        ts.isCallExpression(node.expression)) {
+        const call = node.expression;
         if (asCode(call.expression) === 'when') {
             if (allowWhenFunc) {
                 const funcName = readNodeFuncName(call.arguments[1]);
@@ -89,7 +89,7 @@ const handleWhenFunc = (comp: CompDefinition, n: ts.Node, allowWhenFunc: boolean
         }
     }
     return undefined;
-}
+};
 
 const swapLambdas = (n: ts.Node) => {
     if (ts.isFunctionExpression(n) || ts.isArrowFunction(n)) {
@@ -100,7 +100,7 @@ const swapLambdas = (n: ts.Node) => {
             ),
             undefined,
             []
-        )
+        );
     }
     return undefined;
 };
@@ -119,10 +119,10 @@ export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[],
         return ret;
     };
     return parser;
-}
+};
 
 export const toFragSafe = (comp: CompDefinition, fragments: FragmentData[], exp: JsxExpression, allowNonFrags = false): ts.Expression =>
-    cloneDeep(exp.sourceAstNode.expression!, undefined, n => swapVirtualElements(comp, fragments, n, allowNonFrags)) as ts.Expression
+    cloneDeep(exp.sourceAstNode.expression!, undefined, n => swapVirtualElements(comp, fragments, n, allowNonFrags)) as ts.Expression;
 
 function handleArrowFunc(parser: (n: ts.Node, skipArrow: ts.Node) => ts.Node, n: ts.Node, skipArrow?: ts.Node) {
     if (n !== skipArrow && n.parent && ts.isArrowFunction(n.parent)) {
@@ -151,7 +151,7 @@ export function swapVirtualElements(comp: CompDefinition, fragments: FragmentDat
             const ret = asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this)`) as ts.Expression;
             return setNodeSrc(ret, n);
         }
-    };
+    }
     return undefined;
 }
 
@@ -166,7 +166,7 @@ export const findJsxComp = (comp: CompDefinition, node: ts.Node): [-1, null] | [
         }
     }
     return [-1, null];
-}
+};
 
 function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragments: FragmentData[], args: string[]) {
     const statements = get(body, 'statements') || [body];
@@ -176,7 +176,7 @@ function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragm
 
 const asMethod = (comp: CompDefinition, name: string, args: string[], statements: ts.Statement[], unpackVolatile = true) => cMethod(name, args, [
     ...setupClosure(comp, statements, unpackVolatile),
-    ...statements])
+    ...statements]);
 
 const swapStateChanges = (comp: CompDefinition, n: ts.Node) => {
     if (ts.isExpressionStatement(n) && ts.isCallExpression(n.expression)) {
@@ -184,7 +184,7 @@ const swapStateChanges = (comp: CompDefinition, n: ts.Node) => {
     }
     const exp = (ts.isAsExpression(n) || ts.isExpressionStatement(n))
         ? n.expression
-        : ((ts.isBinaryExpression(n) || ts.isPrefixUnaryExpression(n) || ts.isPostfixUnaryExpression(n)) && n)
+        : ((ts.isBinaryExpression(n) || ts.isPrefixUnaryExpression(n) || ts.isPostfixUnaryExpression(n)) && n);
     if (exp) {
         const used = findUsedVariables(exp);
         const changeBits: string[] = [];
@@ -206,7 +206,7 @@ function swapVarDeclarations(comp: CompDefinition, n: ts.Node, declaredVars: Set
     if (ts.isVariableStatement(n)) {
         const declarations = chain(n.declarationList.declarations).filter(declaration => {
             if (declaration.initializer) {
-                return !(isStoreDefinition(comp, declaration) || isFunc(declaration))
+                return !(isStoreDefinition(comp, declaration) || isFunc(declaration));
             }
             return true;
         }).flatMap(declaration => {
@@ -220,10 +220,10 @@ function swapVarDeclarations(comp: CompDefinition, n: ts.Node, declaredVars: Set
                             ? declaration.initializer
                             : undefined
                     )
-                    : []
+                    : [];
             } else if (asCode(declaration.name) in comp.aggregatedVariables.accessed) {
                 declaredVars.add(asCode(declaration.name));
-                return declaration
+                return declaration;
             }
             return [];
         }).value();

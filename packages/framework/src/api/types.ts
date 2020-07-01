@@ -1,4 +1,4 @@
-import { Factory, CompFactory, RenderTarget } from '../types/factory';
+import { RenderTarget } from '../types/factory';
 import { IntrinsicElements as IntrinsicElementsImported } from './dom';
 import runtime from '../runtime';
 import { ComponentApi } from './component';

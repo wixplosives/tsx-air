@@ -1,4 +1,4 @@
 export class RuntimeConfig {
-    window:Window = globalThis.window;
-    document:Document = globalThis.window?.document;
+    public window:Window = globalThis.window;
+    public document:Document = globalThis.window?.document;
 }

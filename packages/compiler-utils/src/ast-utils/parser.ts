@@ -59,4 +59,4 @@ export const astTemplate = (template: string, replacements: Record<string, ts.No
 export const replaceWith = (id: string, replacement: ts.Node) =>
     (n: ts.Node) => ts.isIdentifier(n) && asCode(n) === id
         ? replacement
-        : undefined
+        : undefined;

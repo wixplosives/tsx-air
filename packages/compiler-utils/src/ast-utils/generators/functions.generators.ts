@@ -35,7 +35,7 @@ export const cCompactArrow = (
     if (returnValue) {
         return body?.length
             ? cArrow(params, [...body, ts.createReturn(returnValue)])
-            : cArrow(params, returnValue)
+            : cArrow(params, returnValue);
     } else {
         return body?.length
             ? cArrow(params, body)

@@ -1,4 +1,4 @@
-import { TSXAir } from "@tsx-air/framework";
+import { TSXAir } from '@tsx-air/framework';
 
 const Menu = TSXAir((p: { title: string, children: any }) =>
     <div>

@@ -1,8 +1,8 @@
-import { CompDefinition, findUsedVariables, asAst, cGet, JsxComponent, asCode } from "@tsx-air/compiler-utils";
-import { FragmentData } from "./jsx.fragment";
-import ts, { JsxExpression } from "typescript";
-import { dependantOnVars, setupClosure } from "../helpers";
-import { findJsxComp } from "../function";
+import { CompDefinition, findUsedVariables, asAst, cGet, JsxComponent, asCode } from '@tsx-air/compiler-utils';
+import { FragmentData } from './jsx.fragment';
+import ts, { JsxExpression } from 'typescript';
+import { dependantOnVars, setupClosure } from '../helpers';
+import { findJsxComp } from '../function';
 
 export const generateVirtualComponents = (fragment: FragmentData) =>
     fragment.root.components.map(generateVCMethod(fragment.comp));
@@ -13,14 +13,14 @@ export const getVComp = (comp: CompDefinition, jsxComp: JsxComponent) => {
         name: `$${jsxComp.name}${index}`,
         index
     };
-}
+};
 
 const generateVCMethod = (comp: CompDefinition) =>
     (jsxComp: JsxComponent) => {
         const mapping = calcRemapping(comp, jsxComp);
         const preMapping = mapping === 'undefined' ? [] : [
             asAst(`const $pr=this.changesBitMap, $ch=${jsxComp.name}.changesBitMap;`) as ts.Statement
-        ]
+        ];
         const { name, index } = getVComp(comp, jsxComp);
         return cGet(name, [
             ...setupClosure(comp, jsxComp.aggregatedVariables),
@@ -31,7 +31,7 @@ const generateVCMethod = (comp: CompDefinition) =>
                 ) as ts.Expression
             )]
         );
-    }
+    };
 
 
 function calcRemapping(comp: CompDefinition, jsxComp: JsxComponent) {
@@ -53,15 +53,16 @@ function calcRemapping(comp: CompDefinition, jsxComp: JsxComponent) {
 }
 
 const propsAsObj = (jsxComp: JsxComponent) => `{${jsxComp.props.map(p => p.name + ':' +
-    //@ts-ignore
+    // @ts-ignore
     ((p.value as JsxExpression)?.expression
-        || p.value)).join(',')}}`
+        || p.value)).join(',')}}`;
 
 function dependenciesAsBitMapOr(comp: CompDefinition, exp: ts.Expression) {
     const dependencies = dependantOnVars(comp, findUsedVariables(exp));
     const res = [];
     if (dependencies.props) {
         const props = dependencies.props[Object.keys(dependencies.props)[0]];
+        // tslint:disable:forin
         for (const prop in props) {
             res.push(`$pr['props.${prop}']`);
         }

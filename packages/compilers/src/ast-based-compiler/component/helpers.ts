@@ -28,7 +28,7 @@ export const getGenericMethodParamsByUsedInScope = (used: UsedInScope, includeVo
     const state = retValue(used.stores, STATE);
     const props = chain(used.props).keys().first().value();
     return [props, state, volatile];
-}
+};
 
 export const getGenericMethodParams = (
     comp: CompDefinition,
@@ -62,11 +62,11 @@ export function getDirectDependencies(comp: CompDefinition, scope: UsedVariables
     return used;
 }
 type U<T> = UsedInScope<T> | UsedVariables<T> | RecursiveMap<T>;
-export function mergeRefMap<T, R extends U<T>>(obj: R, ...add: R[]): R {
-    add.forEach(added => mergeWith(obj, added, (a, b) => {
+export function mergeRefMap<T, R extends U<T>>(obj: R, ...newUsed: R[]): R {
+    newUsed.forEach(added => mergeWith(obj, added, (a, b) => {
         if (isArray(a)) {
             return chain(a).concat(b).uniq().value();
-        } else return;
+        } else { return; }
     }));
     return obj as R;
 }
@@ -76,7 +76,7 @@ const add = (target: UsedInScope, added: RecursiveMap, prefix: string) => {
     mergeWith(target, { [prefix]: added }, (a, b) => {
         if (isArray(a)) {
             return chain(a).concat(b).uniq().value();
-        } else return;
+        } else { return; }
     });
 };
 
@@ -129,7 +129,7 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
         const newRefs = expandDependencies(comp, comp.variables, toBeExpanded.pop()!);
         Object.keys(newRefs.read).forEach(k => {
             if (!flat.volatile![k] && comp.propsIdentifier !== k && !comp.stores.some(({ name }) => name === k)) {
-                toBeExpanded.push(k)
+                toBeExpanded.push(k);
             }
         });
         addAll(comp, flat, newRefs);
@@ -138,7 +138,7 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
 }
 
 export function getChangeBitsNames(used: UsedInScope): string[] {
-    const ret: string[] = []
+    const ret: string[] = [];
     if (used.props) {
         const p = Object.keys(used.props).find(k => k !== '$refs')!;
         Object.keys(used.props[p]).forEach(k => ret.push(`props.${k}`));
@@ -180,7 +180,11 @@ function* getClosureProps(used: UsedInScope) {
 }
 
 export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, includeVolatile = true) {
-    const f = ((isArray(scope) ? scope : [scope]) as ts.Node[]).map(s => (s.read && s.accessed) ? s : findUsedVariables(s));
+    const f = ((isArray(scope) ? scope : [scope]) as ts.Node[]).map(s =>
+        // @ts-ignore: handle UsedVariables scope
+        (s.read && s.accessed)
+            ? s
+            : findUsedVariables(s));
     const used = merge({ read: {}, accessed: {}, modified: {}, executed: {} }, ...f);
     yield* addToClosure(getDirectDependencies(comp, used, true), includeVolatile);
     yield* addToClosure(Object.keys(used.executed).filter(
@@ -197,8 +201,9 @@ export function* addToClosure(used: UsedInScope | string[], includeVolatile: boo
     } else {
         yield* getClosureProps(used);
         yield* getClosureState(used);
-        if (includeVolatile)
+        if (includeVolatile) {
             yield* getClosureVolatile(used);
+        }
     }
 }
 
@@ -206,7 +211,7 @@ const destructureNamed = (keys: string[]) => ts.createObjectBindingPattern(
     keys.map(key =>
         ts.createBindingElement(undefined, undefined, ts.createIdentifier(key), undefined)
     )
-)
+);
 
 const destructure = (map: RecursiveMap) =>
     map && Object.keys(map).length

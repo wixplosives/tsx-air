@@ -16,6 +16,7 @@ export const WithNonStateChangingCode = TSXAir(() => {
     const onClick = () => {
         const a = 1;
         if (a === 1) {
+            // tslint:disable-next-line
             console.log(s.a);
         }
     };

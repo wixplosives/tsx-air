@@ -7,7 +7,7 @@ import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { compile } from './compile';
 import { packagePath } from '@tsx-air/utils/packages';
 import { Compiler } from '@tsx-air/types';
-import { asJs_x } from '@tsx-air/utils';
+import { asJsX } from '@tsx-air/utils';
 
 export interface BrowserifyOptions {
     base: string;
@@ -31,7 +31,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
     );
 
     const wp = webpack({
-        entry: join(outDir, 'src.js', asJs_x(entry)),
+        entry: join(outDir, 'src.js', asJsX(entry)),
         mode: !debug ? 'production' : 'development',
         output: {
             filename: basename(output),
