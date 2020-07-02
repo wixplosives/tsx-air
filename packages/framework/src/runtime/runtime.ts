@@ -1,215 +1,218 @@
-import { Component, Dom } from '../types/component';
-import { PropsOf, StateOf, Factory } from '../types/factory';
-import cloneDeep from 'lodash/cloneDeep';
 import { RuntimeCycle } from './stats';
+import { updateExpression as _updateExpression, asDomNodes, remapChangedBit } from './runtime.helpers';
+import isArray from 'lodash/isArray';
+import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from '..';
 
-type Mutator = (obj: any) => number;
-type StateMutator<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State>
-    ? (state: State) => number
-    : never;
-type PropsMutator<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State>
-    ? (props: Props) => number
-    : never;
-type PropMutation<Comp> = Comp extends Component<infer _Dom, infer Props, infer _State>
-    ? [Comp, PropsMutator<Props>]
-    : never;
-type StateMutation<Comp> = Comp extends Component<infer _Dom, infer _Props, infer State>
-    ? [Comp, StateMutator<State>]
-    : never;
-
-const flags = {
-    preRender: 1 << 63
-};
+type Mutator = () => any;
 
 export class Runtime {
-    public readonly flags = flags;
-
+    public readonly HTMLElement: typeof HTMLElement;
+    public readonly Text: typeof Text;
     public $stats = [] as RuntimeCycle[];
 
-    private pending: {
-        props: Array<PropMutation<Component>>;
-        states: Array<StateMutation<Component>>;
-        requested: Map<Component, IterableIterator<void>>;
-    } = {
-        props: [],
-        states: [],
-        requested: new Map()
-    };
+    public readonly document: Document;
+    public maxDepthPerUpdate = 50;
+    public maxDepth = 100;
 
-    private ignoreStateChanges = new Set<Component>();
+    public when: (predicate: string[], action: () => void) => void = this.always;
+
+    public hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
+    public render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
+    private pending = new Map<Displayable, number>();
     private viewUpdatePending: boolean = false;
+    private hydrating = 0;
+    private mockDom!: HTMLElement;
+    private keyCounter = 0 | 0;
+    constructor(
+        readonly window: Window = globalThis.window,
+        readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = globalThis.requestAnimationFrame
 
-    public $tick = (fn: FrameRequestCallback) => window.requestAnimationFrame(fn);
-    public execute<Comp extends Component>(instance: Comp, method: (...args: any[]) => any, ...args: any[]) {
-        const volatile = this.preRender(instance, instance.props, instance.state);
-        return method.apply(instance, [instance.props, instance.state, volatile, ...args]);
-    }
-    public updateProps<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
-        instance: Comp,
-        mutator: PropsMutator<Comp>
     ) {
+        this.mockDom = window?.document?.createElement('div');
+        this.document = window?.document;
         // @ts-ignore
-        this.pending.props.push([instance, mutator]);
+        this.HTMLElement = window?.HTMLElement;
+        // @ts-ignore
+        this.Text = window?.Text;
+        if (requestAnimationFrame !== undefined) {
+            this.requestAnimationFrame = requestAnimationFrame.bind(globalThis);
+        }
+    }
+
+    public update(instance: Displayable, bits: number, mutator: Mutator) {
+        this.addChange(instance, bits);
         this.triggerViewUpdate();
+        return mutator();
     }
 
-    public updateState<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
-        instance: Comp,
-        localState: State,
-        mutator: StateMutator<Comp>
-    ) {
-        if (this.ignoreStateChanges.has(instance)) {
-            return;
+    public updateExpression(exp: ExpressionDom, value: any) {
+        exp.value = value;
+        _updateExpression([exp.start as Comment, exp.end as Comment], asDomNodes(value));
+    }
+
+    public toString(x: any): string {
+        if (isArray(x)) {
+            return x.map(i => this.toString(i)).join('');
         }
-        if (!this.isMockComponent(instance)) {
-            // @ts-ignore
-            this.pending.states.push([instance, mutator]);
-            this.triggerViewUpdate();
+        if (VirtualElement.is(x)) {
+            return this.getUpdatedInstance(x).toString();
+        }
+        return x?.toString() || '';
+    }
+
+    public getUpdatedInstance(vElm: VirtualElement<any>): Displayable {
+        const { key, parent, owner } = vElm;
+        if (!key || !owner || !parent) {
+            throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
+        }
+        if (key in parent.ctx.components) {
+            const instance = parent.ctx.components[key];
+            instance.props = vElm.props;
+            this.addChange(instance, vElm.changes);
+            return instance;
         } else {
-            mutator(localState);
+            return this.render(vElm);
         }
     }
 
-    public render<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
-        target: HTMLElement,
-        factory: Factory<Comp>,
-        props: PropsOf<Comp>,
-        state?: StateOf<Comp>
+    public getUniqueKey(prefix = '') {
+        return `${prefix}${(this.keyCounter++).toString(36)}`;
+    }
+
+    public spreadStyle(styleObj: string | object): string {
+        if (typeof styleObj === 'string') {
+            return styleObj;
+        }
+        let style = '';
+        for (const [key, value] of Object.entries(styleObj)) {
+            style = style + `${key}:${isNaN(Number(value)) ? value : (value | 0) + 'px'};`;
+        }
+        return style;
+    }
+
+    public hydrateExpression(value: any, start: Comment): ExpressionDom {
+        value = isArray(value) ? value : [value];
+        let hydratedDomNode: Node = start;
+        const hydrated = value
+            .filter((i: any) => i !== undefined && i !== null && i !== '')
+            .map((i: any) => {
+                hydratedDomNode = hydratedDomNode.nextSibling!;
+                if (VirtualElement.is(i)) {
+                    return this.hydrate(i, hydratedDomNode as HTMLElement);
+                }
+                return i.toString();
+            });
+        if (!(hydratedDomNode.nextSibling instanceof
+            // @ts-ignore
+            this.window.Comment)) {
+            throw new Error(`Hydration error: Expression does not match data. (no ending comment)`);
+        }
+        return {
+            start, end: hydratedDomNode.nextSibling as Comment,
+            value: hydrated
+        };
+    }
+    private always(_: any, action: () => void) {
+        action();
+    }
+
+    private renderOrHydrate(vElm: VirtualElement<any>, dom?: HTMLElement): Displayable {
+        const { key, props, state, type, parent } = vElm;
+        if (Component.isType(type)) {
+            const comp = this.hydrateComponent(key!, parent, dom, type, props, state);
+            if (vElm.parent && key) {
+                vElm.parent.ctx.components[key] = comp;
+            }
+            return comp;
+        }
+        const instance = type.factory.newInstance(vElm.key!, vElm);
+        if (!dom) {
+            this.mockDom.innerHTML = instance.toString();
+            dom = this.mockDom.children[0] as HTMLElement;
+        }
+        instance.hydrate(vElm, dom);
+        if (vElm.parent && key) {
+            vElm.parent.ctx.components[key] = instance;
+        }
+        return instance;
+    }
+
+    private hydrateComponent<Comp extends Component>(
+        key: string,
+        parent: Displayable | undefined,
+        domNode: HTMLElement | undefined,
+        type: typeof Component,
+        props: any,
+        state?: any
     ): Comp {
-        const safeState = state || factory.initialState(props);
-        target.innerHTML = factory.toString(props, safeState);
-        const compHtml = target.children[0] as HTMLElement;
-        return factory.hydrate(compHtml, props, safeState);
+        this.hydrating++;
+        const instance = parent?.ctx.components[key] || type.factory.newInstance(key, { props, state, parent });
+        const preRender = instance.preRender();
+        // prerender already expressed in view ny toString
+        this.pending.delete(instance);
+        instance.ctx.root = this.renderOrHydrate(preRender, domNode);
+        this.hydrating--;
+        return instance;
     }
 
-    public preRender<Ctx extends Dom, Props, State, Comp extends Component<Ctx, Props, State>>(
-        instance: Comp,
-        props: Props,
-        state: State,
-        changeState = false
-    ) {
-        if (!changeState) {
-            this.ignoreStateChanges.add(instance);
-        }
-        const v: object = instance.$preRender(props || instance.props, state || instance.state);
-        if (!changeState) {
-            this.ignoreStateChanges.delete(instance);
-        }
-        return v;
+    private addChange(instance: Displayable, change: number) {
+        const currentChange = (this.pending.get(instance) as number) | change;
+        this.pending.set(instance, currentChange);
     }
 
-    public toStringPreRender<Props, State>(compType: any, props: Props, state: State) {
-        // TODO: remove this hack after changing update state/props to be sync
-        const mockComp = { props, state };
-        const v = compType.prototype.$preRender.call(mockComp, props, state);
-        return v;
+    private removeChanges(instance: Displayable) {
+        const r = (this.pending.get(instance)! | 0);
+        this.pending.delete(instance);
+        return r;
     }
 
-    private isMockComponent(instance: any) {
-        return !instance.$updateView;
-    }
+    private updateView = (_: number) => {
+        let depth = 0;
+        do {
+            depth++;
+            const { pending } = this;
+            this.pending = new Map<Displayable, number>();
+            for (let [instance, changes] of pending) {
+                if (Component.is(instance)) {
+                    this.when = (predicate, action) => {
+                        if (predicate.some(p => changes & instance.changesBitMap[p])) {
+                            action();
+                        }
+                    };
+                    const preRender = instance.preRender();
+                    this.when = this.always;
+                    // handle prerender state changes 
+                    changes |= this.removeChanges(instance);
+                    preRender.changes = remapChangedBit(changes, preRender.changeBitMapping);
 
-    private mutate(
-        mutator: Mutator,
-        instance: Component,
-        initialData: any,
-        mutatedData: Map<Component, any>,
-        changeBitmasks: Map<Component, number>
-    ) {
-        if (!mutatedData.has(instance)) {
-            mutatedData.set(instance, cloneDeep(initialData));
-        }
-        const modMapping = mutator(mutatedData.get(instance));
-        const oldChangeMap = changeBitmasks.get(instance) || 0;
-        const newChangeMap = oldChangeMap | modMapping;
-        changeBitmasks.set(instance, newChangeMap);
-        return !(modMapping & flags.preRender);
-    }
-
-    private runAllMutations(
-        changeBitmasks: Map<Component, number>,
-        updatesCount: Map<Component, number>,
-        latestProps: Map<Component, {}>,
-        latestStates: Map<Component, {}>
-    ) {
-        const { props, states, requested } = this.pending;
-        this.pending = { props: [], states: [], requested };
-
-        props.forEach(([instance, mutator]) => {
-            if (this.mutate(mutator, instance, instance.props, latestProps, changeBitmasks)) {
-                updatesCount.set(instance, (updatesCount.get(instance) || 0) + 1);
+                    const nextRoot = this.getUpdatedInstance(preRender);
+                    const root = instance.ctx.root as Displayable;
+                    if (root !== nextRoot) {
+                        root.domRoot.parentNode?.insertBefore(nextRoot.domRoot, root.domRoot);
+                        root.domRoot.remove();
+                        instance.ctx.root = nextRoot as Fragment;
+                        if (!root.props.keepAlive) {
+                            instance.ctx.components[root.key].dispose();
+                            delete instance.ctx.components[root.key];
+                        }
+                        instance.ctx.components[nextRoot.key] = nextRoot;
+                    }
+                } else {
+                    (instance as Fragment).updateView(changes);
+                }
             }
-        });
-        states.forEach(([instance, mutator]) => {
-            if (this.mutate(mutator, instance, instance.state, latestStates, changeBitmasks)) {
-                updatesCount.set(instance, (updatesCount.get(instance) || 0) + 1);
-            }
-        });
-    }
-
-    private updateViewOnce() {
-        const changeBitmasks = new Map<Component, number>([...this.pending.requested.keys()].map(k => [k, 0]));
-        const updatesCount = new Map<Component, number>();
-        const latestProps = new Map<Component, {}>();
-        const latestStates = new Map<Component, {}>();
-
-        this.runAllMutations(changeBitmasks, updatesCount, latestProps, latestStates);
-
-        changeBitmasks.forEach((changeMap, instance) => {
-            const getNew = () => [
-                latestProps.get(instance) || instance.props,
-                latestStates.get(instance) || instance.state
-            ];
-            let [newProps, newState] = getNew();
-
-            let volatile: any = null;
-            for (let i = 0; i < (updatesCount.get(instance) || 0); i++) {
-                volatile = this.preRender(instance, newProps, newState, !volatile);
-                this.runAllMutations(changeBitmasks, updatesCount, latestProps, latestStates);
-                [newProps, newState] = getNew();
-            }
-            changeMap = changeBitmasks.get(instance)!;
-            instance.$updateView(newProps, newState, volatile, changeMap);
-            // @ts-ignore
-            instance.props = newProps;
-            // @ts-ignore
-            instance.state = newState;
-        });
-        return changeBitmasks.keys();
-    }
-
-    private updateView = () => {
-        const stateTime = performance.now();
+        } while (this.pending.size && depth < this.maxDepthPerUpdate);
 
         this.viewUpdatePending = false;
-        const changed = new Set<Component>();
-        for (const i of this.updateViewOnce()) {
-            changed.add(i);
+        if (this.pending.size) {
+            this.triggerViewUpdate();
         }
-
-        if (changed.size > 0) {
-            this.$tick(() => {
-                changed.forEach(i => {
-                    const req = this.pending.requested.get(i) || (i.$afterUpdate && i.$afterUpdate());
-                    if (req && !req.next().done) {
-                        this.pending.requested.set(i, req);
-                    } else {
-                        this.pending.requested.delete(i);
-                    }
-                });
-            });
-        }
-        this.$stats.push({
-            stateTime,
-            endTime: performance.now(),
-            changed: changed.size
-        });
     };
 
     private triggerViewUpdate() {
-        if (!this.viewUpdatePending) {
+        if (!this.viewUpdatePending && !this.hydrating) {
             this.viewUpdatePending = true;
-            this.$tick(this.updateView);
+            this.requestAnimationFrame(this.updateView);
         }
     }
 }

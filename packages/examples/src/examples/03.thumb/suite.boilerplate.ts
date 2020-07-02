@@ -1,5 +1,4 @@
-import { render } from '@tsx-air/framework';
 import { Thumb } from './index.source';
 
-const element = document.querySelector('div');
-(window as any).app = render(element!, Thumb, { url: '/images/pretty-boy.jpg' });
+const element = document.querySelector('div')!;
+(window as any).app = Thumb.render({ url: '/images/pretty-boy.jpg' }, undefined, element, 'append');

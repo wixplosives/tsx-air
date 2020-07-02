@@ -89,7 +89,7 @@ describe('findUsedVariables', () => {
         const expectedRead = omit(expectedAccessed, `aParam.replacedProperty`);
 
         expect(findUsedVariables(ast).modified).to.eql(expectedModified);
-        expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql(expectedAccessed);        
+        expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql(expectedAccessed);
         expect(findUsedVariables(ast).read).to.eql(expectedRead);
     });
 
@@ -143,7 +143,7 @@ describe('findUsedVariables', () => {
         const ast = asSourceFile(`
             export const aJSXRoot = <div><Comp>hello<Comp></div>
             `);
-        const expected: UsedVariables = {
+        const expected: UsedVariables<string> = {
             read: {},
             accessed: {},
             defined: {
@@ -166,7 +166,7 @@ describe('findUsedVariables', () => {
                 title: 'a'
             }
             `);
-        const expected: UsedVariables = {
+        const expected: UsedVariables<string> = {
             read: {},
             accessed: {},
             defined: {
@@ -245,6 +245,28 @@ describe('findUsedVariables', () => {
             }
         });
     });
+    it('finds access to arrays (not including the index)', () => {
+        const ast = parseValue(`(aParam)=>{
+                const a = aParam.inner[0];
+                const b = aParam.inner[0].c;
+                const c = aParam.inner[aParam.index];
+            }`);
+
+        expect(findUsedVariables(ast).accessed).to.eql({
+            aParam: {
+                inner: {
+                    $refs: [`aParam.inner[0]`,
+                        `aParam.inner[0].c`,
+                        `aParam.inner[aParam.index]`
+                    ]
+                },
+                index: {
+                    $refs: [`aParam.inner[aParam.index]`]
+                }
+            }
+        });
+    });
+
     it('should mark reference by parameters as 2 separate access', () => {
         const ast = parseValue(`(aParam)=>{
                 // 'shouldBeIgnored' is ignored because it comes after a dynamic path access 
@@ -256,11 +278,61 @@ describe('findUsedVariables', () => {
                     $refs: [`aParam.internalObject[aParam.aKey].shouldBeIgnored`]
                 },
                 aKey: {
-                    $refs: [`(aParam)=>{\n                // 'shouldBeIgnored' is ignored because it comes after a dynamic path access \n                const a = aParam.internalObject[aParam.aKey].shouldBeIgnored;\n            }`]
+                    $refs: [`aParam.internalObject[aParam.aKey].shouldBeIgnored`]
                 }
             }
         });
     });
+
+    it('finds destructured vars', () => {
+        const func = `(aParam)=>{
+            const {a,b} = aParam.internalObject;
+            const {internalObject} = aParam;
+        }`;
+        const ast = parseValue(func);
+        const $refs = [`{a,b} = aParam.internalObject`];
+        expect(findUsedVariables(ast).read).to.eql({
+            aParam: {
+                internalObject: {
+                    $refs: [`{internalObject} = aParam`],
+                    a: { $refs },
+                    b: { $refs }
+                }
+            }
+        });
+        expect(findUsedVariables(ast).defined).to.eql({
+            aParam: { $refs: ['aParam'] },
+            internalObject: { $refs: [`{internalObject} = aParam`] },
+            a: { $refs },
+            b: { $refs }
+        });
+    });
+
+    xit('finds array-destructured vars', () => {
+        const func = `(aParam)=>{
+            const [a,b] = aParam.internalObject;
+            const c = [aParam]
+        }`;
+        const ast = parseValue(func);
+        const $refs = [`[a,b] = aParam.internalObject`];
+        expect(findUsedVariables(ast).read).to.eql({
+            aParam: {
+                $refs: [`const c = [aParam]`],
+                internalObject: {
+                    $refs,
+                    a: { $refs },
+                    b: { $refs }
+                }
+            }
+        });
+        expect(findUsedVariables(ast).defined).to.eql({
+            aParam: { $refs: ['aParam'] },
+            a: { $refs },
+            b: { $refs },
+            c: { $refs: [`const c = [aParam]`] }
+        });
+    });
+
     it('should accept filter function to allow ignoring nodes', () => {
         const ast = parseValue(`( externalMethodsParam )=>{
                 const definedInOuterScope = ( internalMethodParam )=>{

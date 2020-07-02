@@ -24,6 +24,33 @@ describe('TSXAir component analyzer: Jsx', () => {
             expect(comp.jsxRoots[0].expressions).to.have.length(2);
         });
 
+        it(`treats JSX withing a expression as roots`, () => {
+            const { comp } = getCompDef(`const Comp = TSXAir(props=>
+                 <div>{<div />}</div>
+            )`);
+
+            expect(comp.jsxRoots).to.have.length(1);
+            const outer = comp.jsxRoots[0].sourceAstNode.getText();
+            expect(comp.jsxRoots[0].expressions[0].jsxRoots).to.have.length(1);
+            const inner = comp.jsxRoots[0].expressions[0].jsxRoots[0].sourceAstNode.getText();
+            expect(inner).to.equal('<div />');
+            expect(outer).to.equal('<div>{<div />}</div>');
+        });
+        it(`treats conditional JSX withing a expression as roots`, () => {
+            const { comp } = getCompDef(`const Comp = TSXAir(props=>
+                 <div>{props.a > 0 ? <span>+</span> : <div>-</div>}</div>
+            )`);
+
+            expect(comp.jsxRoots).to.have.length(1);
+            const ret = comp.jsxRoots[0].sourceAstNode.getText();
+            expect(comp.jsxRoots[0].expressions[0].jsxRoots).to.have.length(2);
+            const plus = comp.jsxRoots[0].expressions[0].jsxRoots[0].sourceAstNode.getText();
+            const minus = comp.jsxRoots[0].expressions[0].jsxRoots[1].sourceAstNode.getText();
+            expect(plus).to.equal('<span>+</span>');
+            expect(minus).to.equal('<div>-</div>');
+            expect(ret).to.equal('<div>{props.a > 0 ? <span>+</span> : <div>-</div>}</div>');
+        });
+
         it('should find dynamic expression and their dependencies', () => {
             const { comp } = getCompDef(`const Comp = TSXAir(props => { 
                 return <div>{props.name}</div>;})`);

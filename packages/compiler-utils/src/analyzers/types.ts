@@ -11,7 +11,7 @@ export type AnalyzedNodeType = 'CompDefinition' | 'JsxFragment' |
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
     'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' |
     'exportSpecifier' | 'reExport' | 'funcDefinition' | 'storeDefinition' |
-    'Namespace' | 'UsedNamespaceProperty'
+    'Namespace' | 'UsedNamespaceProperty' | 'Return'
     ;
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
@@ -94,6 +94,13 @@ export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     functions: FuncDefinition[];
     stores: StoreDefinition[];
     volatileVariables: string[];
+    returns: Return[];
+}
+
+export interface Return extends AnalyzedNode<ts.ReturnStatement|ts.Expression> {
+    kind: 'Return';
+    value: string;
+    parentStatement: ts.Statement|ts.Expression;
 }
 
 export interface Namespace extends NodeWithVariables<ts.ParameterDeclaration | ts.VariableDeclaration> {
@@ -116,6 +123,7 @@ export interface JsxFragment extends NodeWithVariables<ts.JsxFragment> {
 export interface JsxExpression extends NodeWithVariables<ts.JsxExpression> {
     kind: 'JsxExpression';
     expression: string;
+    jsxRoots: JsxRoot[];
 }
 
 export interface JsxComponent extends NodeWithVariables<JsxElm> {

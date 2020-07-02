@@ -2,9 +2,11 @@ import ts from 'typescript';
 import { _cFunc } from './helpers';
 import { cAccess } from '.';
 
-export const cFunction = (params: string[], statements: ts.Statement[]) => {
-    return ts.createFunctionExpression(undefined, undefined, undefined, undefined,
-        cParams(params), undefined, ts.createBlock(statements));
+export const cFunction = (
+    params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>,
+    body: ts.Block | ts.Statement[]) => {
+    const { _params, _body } = _cFunc(params, body);
+    return ts.createFunctionExpression(undefined, undefined, undefined, undefined, _params, undefined, _body);
 };
 
 export const cParams = (params: string[]) => params.map(val => ts.createParameter(undefined, undefined, undefined, val));
@@ -19,9 +21,28 @@ export const cCall = (callPath: string[], args: ts.Expression[]) => {
 };
 
 export const cArrow = (
-    params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>, body: ts.ConciseBody | ts.Statement[]) => {
+    params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>,
+    body: ts.ConciseBody | ts.Statement[]) => {
     const { _params, _body } = _cFunc(params, body as ts.Expression);
     return ts.createArrowFunction(undefined, undefined, _params, undefined, undefined, _body);
+};
+
+export const cCompactArrow = (
+    params: Array<string | ts.ObjectBindingPattern | ts.ParameterDeclaration | undefined>,
+    body: ts.Statement[],
+    returnValue: ts.Expression
+) => {
+    if (returnValue) {
+        return body?.length
+            ? cArrow(params, [...body, ts.createReturn(returnValue)])
+            : cArrow(params, returnValue);
+    } else {
+        return body?.length
+            ? cArrow(params, body)
+            : cArrow([], ts.createIdentifier('undefined'));
+
+    }
+
 };
 
 export const cSpreadParams = (name: string) =>

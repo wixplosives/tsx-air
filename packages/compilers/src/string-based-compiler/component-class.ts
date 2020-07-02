@@ -20,7 +20,7 @@ export const compClass = (dom: DomBindings, def: CompDefinition) => {
         const props = aggregatedVariables.accessed[propsIdentifier || ''];
         const usedProps = props ? Object.keys(props) : [];
 
-        return `$updateView(newProps, newState, changeMap) {
+        return `updateView(newProps, newState, changeMap) {
             ${usedProps.map(handlePropChange)}
         }`;
     }

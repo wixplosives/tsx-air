@@ -12,6 +12,7 @@ export const withoutExt = (path: string) => {
     return path;
 };
 
+export const asJsX = (path: string) => `${withoutExt(path)}.js${/x$/.test(path)?'x':''}`;
 export const asJs = (path: string) => `${withoutExt(path)}.js`;
 export const asTs = (path: string) => `${withoutExt(path)}.ts`;
 export const asTsx = (path: string) => `${withoutExt(path)}.tsx`;

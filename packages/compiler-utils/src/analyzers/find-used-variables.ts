@@ -26,6 +26,16 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
         const accessParent = n.parent;
         if (accessParent) {
             if (isVariableLikeDeclaration(accessParent) && asCode(accessParent.name) === asCode(n)) {
+                if (ts.isVariableDeclaration(accessParent) && ts.isObjectBindingPattern(n)) {
+                    n.elements.forEach(e => {
+                        const name = asCode(e.name);
+                        res.defined[name] = withRef(accessParent);
+                        const init = asCode(accessParent.initializer!);
+                        addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
+                        addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
+                    });
+                    return;
+                }
                 if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
                     const definedAs = asCode(n);
                     res.defined[definedAs] = withRef(accessParent);
@@ -37,6 +47,9 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
             }
 
             if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
+                if (ts.isVariableDeclaration(accessParent) && ts.isObjectBindingPattern(accessParent.name)) {
+                    return;
+                }
                 if (
                     ts.isJsxSelfClosingElement(accessParent) ||
                     ts.isJsxOpeningElement(accessParent) ||
@@ -60,7 +73,7 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
                 addToAccessMap(paths.path, isModification, res, accessParent);
 
                 for (const path of paths.nestedAccess) {
-                    addToAccessMap(path, isModification, res, node);
+                    addToAccessMap(path, isModification, res, accessParent);
                 }
             } else {
                 ts.forEachChild(n, visitor);
@@ -92,7 +105,7 @@ export const modifyingOperators = [
 
 
 export const selfModifyingOperators = [
-    ts.SyntaxKind.PlusPlusToken, 
+    ts.SyntaxKind.PlusPlusToken,
     ts.SyntaxKind.PlusEqualsToken,
     ts.SyntaxKind.MinusEqualsToken,
     ts.SyntaxKind.AsteriskEqualsToken,
@@ -143,6 +156,8 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
         if (ts.isElementAccessExpression(n)) {
             if (ts.isStringLiteral(n.argumentExpression)) {
                 path.unshift(n.argumentExpression.text);
+            } else if (ts.isNumericLiteral(n.argumentExpression)) {
+                path = [];
             } else if (isAccessNode(n.argumentExpression)) {
                 const innerAccess = accessToStringArr(n.argumentExpression);
                 nestedAccess.push(innerAccess.path, ...innerAccess.nestedAccess);
@@ -157,6 +172,12 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
         }
     }
 
+    if (asCode(n).startsWith('this.') || asCode(n.parent).startsWith('this.')) {
+        return {
+            path: [],
+            nestedAccess: []
+        };
+    }
     if (!ts.isIdentifier(n)) {
         throw new Error('unhandled input in accessToStringArr');
     }
@@ -170,13 +191,20 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
 function withRef(ref: ts.Node, target?: RecursiveMap) {
     target = target || {};
     target.$refs = target.$refs || [];
-    target.$refs.push(ref);
+    if (!target.$refs.includes(ref)) {
+        target.$refs.push(ref);
+    } 
     return target;
 }
 
-function addToAccessMap(path: string[], isModification: 'self' | boolean, map: UsedVariables, ref: ts.Node) {
-    // @ts-ignore    
-    ref = (!isModification && ref.initializer) ? ref.initializer : ref;
+function addToAccessMap(path: string | string[], isModification: 'self' | boolean, map: UsedVariables, ref: ts.Node, ignoreRefInitializer = false) {
+    if (path.length === 0) {
+        return;
+    }
+    ref = (!ignoreRefInitializer && !isModification
+        && (ref as ts.VariableDeclaration).initializer)
+        ? (ref as ts.VariableDeclaration).initializer!
+        : ref;
     if (ts.isTemplateSpan(ref)) {
         ref = ref.parent;
     }

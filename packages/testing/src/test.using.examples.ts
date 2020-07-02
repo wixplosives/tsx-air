@@ -42,7 +42,7 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                             this.timeout(process.env.CI ? 15000 : 6000);
                             this.retries(0);
                             return safely(
-                                () => browserifyBoilerplate(path, paths.temp, compiler),
+                                () => browserifyFiles(path, paths.temp, compiler),
                                 'Failed to compile'
                             );
                         });
@@ -79,11 +79,11 @@ const getUnsupported = (features: Features, compiler: Compiler) => {
     ));
 };
 
-const browserifyBoilerplate = async (examplePath: string, target: string,
-    compiler: Compiler) => await browserify({
-        base: examplePath,
-        entry: 'suite.boilerplate.ts',
-        output: join(target, 'boilerplate.js'),
+export const browserifyFiles = async (inputDir: string, outputDir: string,
+    compiler: Compiler, entry='suite.boilerplate.ts', outputFile='boilerplate.js') => await browserify({
+        base: inputDir,
+        entry,
+        output: join(outputDir, outputFile),
         debug: !!process.env.DEBUG,
         compiler
     });

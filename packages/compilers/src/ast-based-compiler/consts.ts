@@ -1,3 +1,3 @@
-export const PROPS = '$p';
-export const STATE = '$s';
-export const VOLATILE = '$v';
+export const PROPS = 'props';
+export const STATE = 'state';
+export const VOLATILE = 'volatile';

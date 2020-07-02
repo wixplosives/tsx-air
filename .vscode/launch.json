@@ -5,6 +5,18 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "framework",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "packages/framework/**/*.test.ts?(x)",
+                "--timeout",
+                "99999999"
+            ],
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "examples",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
@@ -35,12 +47,12 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "compilers",
+            "name": "compilers (it)",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
                 "packages/compilers/**/*.it.ts?(x)",
                 "--timeout",
-                "999999"
+                "999999999"
             ],
             "internalConsoleOptions": "openOnSessionStart",
             "env": {

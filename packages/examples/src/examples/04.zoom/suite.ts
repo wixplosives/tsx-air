@@ -8,8 +8,8 @@ export const features = [
     feature('stateful', 'component'),
     feature('single', 'store'),
     feature('event', 'handler'),
-    feature('high', 'framerate'),
-    feature('dom','ref')
+    // feature('high', 'framerate'),
+    feature('dom', 'ref')
 ];
 
 export function suite(api: ExampleSuiteApi, paths: ExamplePaths) {
@@ -46,7 +46,7 @@ export function suite(api: ExampleSuiteApi, paths: ExamplePaths) {
                 [300, 300], [300, 400]]; // move around outside the zoomed image
             const namesOfLocations = mouseLocations.map(([x, y]: number[]) => `zoomedIn-${x}-${y}.png`);
             const expected = loadPngs(namesOfLocations.map(f => join(paths.path, 'expected', f)), 1000 / 60);
-            (await api.domContentLoaded).setViewport({
+            await (await api.beforeLoading).setViewport({
                 height: 1000, width: 1000
             });
 

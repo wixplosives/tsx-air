@@ -1,126 +1,62 @@
-import { Component, Factory, runtime } from '@tsx-air/framework';
+import { CompCreator } from '@tsx-air/framework/src/api/types';
+import { RenderTarget, ComponentApi } from '@tsx-air/framework/src';
 
-// Inferred from the TSX all possible return values
-interface StatefulCompCtx {
-    root: HTMLElement;
-    elm0: HTMLDivElement;
-    exp1: Text;
-    elm2: HTMLDivElement;
-    exp3: Text;
-    exp4: Text;
-}
-
-interface StatefulCompProps {
+interface Props {
     initialState: string;
 }
-// All the component scope vars [possibly only those who are bound to the view]
-interface StatefulCompState {
-    state: { a: string; b: string; aCounter: number, bCounter: number, changeCount: number };
-}
-
-export class StatefulComp extends Component<StatefulCompCtx, StatefulCompProps, StatefulCompState> {
-    public static factory: Factory<StatefulComp>;
-    public static readonly changeBitmask: Record<string, number> = {
-        'props.initialState': 1 << 0,
-        'state.a': 1 << 1,
-        'state.b': 1 << 2,
-        'state.changeCount': 1 << 3,
-        'state.aCounter': 1 << 4,
-        'state.bCounter': 1 << 5,
+export const StatefulComp: CompCreator<Props> = (props: Props) => ({
+    props
+});
+StatefulComp.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarget) => {
+    const state = {
+        a: props.initialState + 'A',
+        b: props.initialState + 'B',
+        aCounter: 0,
+        bCounter: 0,
+        changeCount: 0
     };
-    public onClickA!: () => any;
-    public onClickB!: () => any;
+    let volatile = 0;
+    volatile++;
 
-    constructor(readonly ctx: StatefulCompCtx, readonly props: StatefulCompProps, readonly state: StatefulCompState) {
-        super(ctx, props, state);
-        this.onClickA = () => runtime.execute(this, this._onClickA);
-        this.onClickB = () => runtime.execute(this, this._onClickB);
+    const onClickA = () => {
+        state.a = `${props.initialState} A (${++state.aCounter})`;
+        updateView();
+    };
+    const onClickB = () => {
+        state.b = `${props.initialState} B (${++state.bCounter})`;
+        updateView();
+    };
+
+    if (!target || add !== 'append') {
+        throw new Error('Now supported in this example');
     }
 
-    public $preRender(_props: StatefulCompProps, _state: StatefulCompState) {
+    target.innerHTML = `<div>
+<div class="btn">
+    ${state.a}
+</div>
+<div class="btn">
+    ${state.b}
+</div>
+<div class="changeCount">View rendered ${state.changeCount} times</div>
+<div class="volatile">volatile variable is still at ${volatile}</div>
+</div>`;
+    const divs = target.children[0].querySelectorAll('div');
+    divs[0].addEventListener('click', onClickA);
+    divs[1].addEventListener('click', onClickB);
+
+    const updateView = () => {
+        // tslint:disable-next-line
         let volatile = 0;
         volatile++;
-        runtime.updateState(
-            this as StatefulComp, _state, ({ state }) => {
-                state.changeCount += volatile;
-                return StatefulComp.changeBitmask['state.changeCount'];
-            });
-        return { volatile };
-    }
-
-    public $updateView(_: StatefulCompProps, { state }: StatefulCompState, _volatile: any, changeMap: number): void {
-        if (changeMap & StatefulComp.changeBitmask['state.a']) {
-            this.context.exp1.textContent = state.a;
-        }
-        if (changeMap & StatefulComp.changeBitmask['state.b']) {
-            this.context.exp3.textContent = state.b;
-        }
-        if (changeMap & StatefulComp.changeBitmask['state.changeCount']) {
-            this.context.exp4.textContent = `${state.changeCount}`;
-        }
-    }
-
-    public $afterMount(_: HTMLElement) {
-        this.context.elm0.addEventListener('click', this.onClickA);
-        this.context.elm2.addEventListener('click', this.onClickB);
-    }
-
-    private _onClickA = (props: StatefulCompProps, s: StatefulCompState, _volatile: any) =>
-        runtime.updateState(this as StatefulComp, s, ({ state }: StatefulCompState) => {
-            state.a = `${props.initialState} A (${++state.aCounter})`;
-            return StatefulComp.changeBitmask['state.a'] | StatefulComp.changeBitmask['state.aCounter'];
-        });
-
-    private _onClickB = (props: StatefulCompProps, s: StatefulCompState, _volatile: any) =>
-        runtime.updateState(this as StatefulComp, s, ({ state }: StatefulCompState) => {
-            state.b = `${props.initialState} B (${++state.bCounter})`;
-            return StatefulComp.changeBitmask['state.b'] | StatefulComp.changeBitmask['state.bCounter'];
-        });
-}
-
-const initialState = (props: StatefulCompProps) =>
-    ({
-        state: {
-            a: props.initialState + 'A',
-            b: props.initialState + 'B',
-            aCounter: 0,
-            bCounter: 0,
-            changeCount: 0
-        }
-    } as StatefulCompState);
-
-StatefulComp.factory = {
-    unique: Symbol('StatefulCompFactory'),
-    initialState,
-    toString: (props, s?) => {
-        const { volatile } = runtime.toStringPreRender(StatefulComp, props, s);
-        const { state } = s || initialState(props);
-        return `<div>
-        <div class="btn">
-            <!-- -->${state.a}<!-- -->
-        </div>
-        <div class="btn">
-            <!-- -->${state.b}<!-- -->
-        </div>
-        <div>
-           state changed <!-- state.changeCount -->${state.changeCount}<!-- --> times 
-        </div>
-        <div>
-           volatile variable is still at <!-- state.changeCount -->${volatile}<!-- -->
-        </div>
-    </div>`;
-    },
-    hydrate: (root, props, state) =>
-        new StatefulComp(
-            {
-                root,
-                elm0: root.children[0] as HTMLDivElement,
-                exp1: root.children[0].childNodes[2] as Text,
-                elm2: root.children[1] as HTMLDivElement,
-                exp3: root.children[1].childNodes[2] as Text,
-                exp4: root.children[2].childNodes[2] as Text,
-            },
-            props,
-            state || initialState(props)
-        )
+        state.changeCount += volatile;
+        divs[0].textContent = state.a;
+        divs[1].textContent = state.b;
+        divs[2].textContent = `View rendered ${state.changeCount} times`;
+        divs[3].textContent = `volatile variable is still at ${volatile}`;
+    };
+    updateView();
+    return {
+        updateProps: (_props: Props) => void 0,
+    } as ComponentApi<Props>;
 };

@@ -78,4 +78,35 @@ describe('TSXAir component definition', () => {
             expect(comp.volatileVariables).to.eql(['a', 'b', 'c', 'd', 'e']);
         });
     });
+    describe(`returns`, () => {
+        it(`contains all the return paths`, () => {
+            const { comp } = getCompDef(`const Comp = TSXAir(p => {
+                if (p.a === 0) {
+                    return <div>ret 0</div>
+                } else {
+                    return <div>ret 1</div>
+                }
+                do {
+                    return <div>ret 2</div>
+                } while (true);
+                while (true) {
+                    return <div>ret 3</div>
+                }
+                switch(p.a){
+                    case 4: return <div>ret 4</div>;
+                    case 5: return <div>ret 5</div>;
+                    break;
+                    default: return <div>ret 6</div>
+                }
+                { return <div>ret 7</div> }
+                for (const a of p.a) {
+                    if (a === 0) return <div>ret 8</div>
+                } 
+                return <div>ret 9</div>;
+            })`);
+
+            expect(comp.returns).to.have.length(10);
+            comp.returns.forEach((r,i) => expect(r.value).to.equal(`<div>ret ${i}</div>`));
+        });
+    });
 });

@@ -1,66 +1,43 @@
-import { Factory, runtime, Component, Dom } from '@tsx-air/framework';
+import { CompCreator } from '@tsx-air/framework/src/api/types';
+import { RenderTarget, ComponentApi } from '@tsx-air/framework/src';
 
-interface ParentCompProps { name: string; }
-interface ParentCompCtx extends Dom {
-    text1: ChildNode;
-    childComp1: ChildComp;
+interface Props {
+    name: string;
 }
-
-export class ParentComp extends Component<ParentCompCtx, ParentCompProps> {
-    public static factory: Factory<ParentComp>;
-    public static readonly changeBitmask = {
-        'props.name': 1 << 0
-    };
-
-    public $updateView(newProps: ParentCompProps, _stores:{}, _volatile:{}, changeMap: number): void {
-        if (changeMap & ParentComp.changeBitmask['props.name']) {
-            this.context.text1.textContent = newProps.name;
-            runtime.updateProps(this.context.childComp1 as ChildComp, (p: ParentCompProps) => {
-                p.name = newProps.name;
-                return ChildComp.changeBitmask['props.name'];
-            });
-        }
+export const ChildComp: CompCreator<Props> = (props: Props) => ({
+    props
+});
+ChildComp.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarget) => {
+    if (!target || add !== 'append') {
+        throw new Error('Now supported in this example');
     }
-}
-
-ParentComp.factory = {
-    unique: Symbol('ParentComp'),
-    toString: props => `<div class="parent">
-      Parent: <!-- start props.name -->${props.name}<!-- end props.name -->
-      ${ChildComp.factory.toString(props)}
-    </div>`,
-    hydrate: (root, props, state) => new ParentComp(
-        {
-            root,
-            text1: root.childNodes[2],
-            childComp1: ChildComp.factory.hydrate(root.children[0] as HTMLElement, props)
-        }, props, state!),
-    initialState: (_: any) => ({})
+    const child = document.createElement('div');
+    child.textContent = `Child: ${props.name}`;
+    child.classList.add('child');
+    target.append(child);
+    return {
+        updateProps: (p: Props) => {
+            child.textContent = `Child: ${p.name}`;
+        },
+    } as ComponentApi<Props>;
 };
 
-interface ChildCompProps { name: string; }
-interface ChildCompCtx extends Dom { text1: Text; }
-
-// tslint:disable-next-line: max-classes-per-file
-export class ChildComp extends Component<ChildCompCtx, ChildCompProps> {
-    public static factory: Factory<ChildComp>;
-    public static readonly changeBitmask = {
-        'props.name': 1 << 0
-    };
-
-    public $updateView(newProps: ChildCompProps, _stores:{}, _volatile:{}, changeMap: number): void {
-        if (changeMap & ChildComp.changeBitmask['props.name']) {
-            this.context.text1.textContent = newProps.name;
-        }
+export const ParentComp: CompCreator<Props> = (props: Props) => ({
+    props
+});
+ParentComp.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarget) => {
+    if (!target || add !== 'append') {
+        throw new Error('Now supported in this example');
     }
-}
-
-ChildComp.factory = {
-    unique: Symbol('ChildComp'),
-    toString: (props: { name: string }) => `<div class="child">Child: <!-- start props.name -->${props.name}<!-- end props.name --></div>`,
-    hydrate: (root, props, $s) => new ChildComp({
-        root,
-        text1: root.childNodes[2] as Text,
-    }, props, $s!),
-    initialState: (_: any) => ({})
+    const parent = document.createElement('div');
+    parent.textContent = `Parent: ${props.name}`;
+    parent.classList.add('parent');
+    const child = ChildComp.render(props, undefined, parent as HTMLElement, 'append');
+    target.append(parent);
+    return {
+        updateProps: (p: Props) => {
+            parent.childNodes[0].textContent = `Parent: ${p.name}`;
+            child.updateProps(p);
+        },
+    } as ComponentApi<Props>;
 };

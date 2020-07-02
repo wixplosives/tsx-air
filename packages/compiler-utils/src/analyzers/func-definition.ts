@@ -23,7 +23,7 @@ export const funcDefinition: Analyzer<FuncDefinition> = astNode => {
         aggregatedVariables,
         definedFunctions: functions(astNode.body),
         arguments: astNode.parameters.map(param => param.name.getText()),
-        jsxRoots: jsxRoots(astNode, undefined)
+        jsxRoots: jsxRoots(astNode)
     };
     const astToTsxAir = aggregateAstNodeMapping(funcDef.jsxRoots);
     addToNodesMap(astToTsxAir, funcDef);

@@ -94,7 +94,7 @@ describe('examples index API', () => {
                     const module = await await (await example.build).module;
                     expect(await (await example.build).error, `Error building ${exampleName}`).to.equal(undefined);
                     expect(module.runExample, `${exampleName}/runner#runExample is not a function`).to.be.a('function');
-                    expect(module.Component).to.haveOwnProperty('factory');
+                    expect(module.Component).to.haveOwnProperty('render');
                     expect(loaded, 'Some minimal example resources were not loaded')
                         .to.include.all.members(minimalExampleSources
                             .map(r => `/examples/${exampleName}${r}`));

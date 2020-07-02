@@ -1,5 +1,4 @@
 import { Component } from './../types/component';
-import { Factory, PropsOf } from './../types/factory';
 
 export function assignTextContent(field: { textContent: string | null }, value: string) {
     return () => field.textContent = value;
@@ -14,10 +13,6 @@ type ValueOf<T> = T[keyof T];
 export type KeyValueTuple<T> = ValueOf<AllKeyValueTuplesByKey<T>>;
 
 export type ChangeHandlers<T> = { [key in keyof T]: (value: T[key]) => void };
-
-export function toStringChildren<Child>(props: Array<PropsOf<Child>>, factory: Factory<Child>): string {
-    return props.map(p => factory.toString(p)).join('');
-}
 
 const validKeys = (data: object) => Object.keys(data)
     // @ts-ignore
@@ -52,7 +47,7 @@ export function updateSpreadElement(elm: HTMLElement, data: object) {
     }
 }
 
-export function setProp<Props>(instance: Component<any, Props, any>, p: Props, value: any, key: keyof Props) {
+export function setProp<Props>(instance: Component, p: Props, value: any, key: keyof Props) {
     if (p[key] !== value) {
         p[key] = value;
         // @ts-ignore

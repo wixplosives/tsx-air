@@ -15,7 +15,10 @@ const compiler: Compiler = {
         feature('nested', 'stateless', 'component'),
         feature('event', 'handler'),
         feature('lambda', 'handler'),
-        // feature('when', 'props', 'change', 'handler'),
+        feature('conditional', 'dom'),
+        feature('when', 'props', 'change', 'handler'),
+        feature('dom', 'ref'),
+        feature('high', 'framerate'),
     ]
 };
 

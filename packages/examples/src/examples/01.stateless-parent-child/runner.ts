@@ -1,4 +1,3 @@
-import { render } from '@tsx-air/framework';
 import { ParentComp } from './index.source';
 
 export const runExample = (element: HTMLElement) => {
@@ -6,7 +5,7 @@ export const runExample = (element: HTMLElement) => {
     let count = 0;
     let frames = 0;
     const startTime = performance.now();
-    const app = render(element, ParentComp, { name: `Initial count: ${count}` });
+    const app = ParentComp.render({ name: `Initial count: ${count}` }, undefined, element, 'append');
     const isViewUpdated = () => {
         const countDisplayed = element.innerText.match(new RegExp(`${count}`, 'g'));
         return (countDisplayed && countDisplayed.length === 2);
@@ -32,4 +31,4 @@ export const runExample = (element: HTMLElement) => {
     framesCounter();
 };
 
-export {ParentComp as Component};
+export { ParentComp as Component };

@@ -2,6 +2,7 @@ import ts from 'typescript';
 
 export const tsKindInverse: Record<ts.SyntaxKind, string> = {
     [ts.SyntaxKind.Unknown]: 'Unknown',
+    [ts.SyntaxKind.JSDocImplementsTag]: 'JSDocImplementsTag',
     [ts.SyntaxKind.EndOfFileToken]: 'EndOfFileToken',
     [ts.SyntaxKind.SingleLineCommentTrivia]: 'SingleLineCommentTrivia',
     [ts.SyntaxKind.MultiLineCommentTrivia]: 'MultiLineCommentTrivia',

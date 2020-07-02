@@ -1,32 +1,29 @@
-import { cClass, cObject, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
-import { generateUpdateView } from './update.view';
-import { generateToString } from './factory/to.string';
-import { generateHydrate } from './factory/hydrate';
-import { generateInitialState } from './factory/initial.state';
-import { generateChangeBitMask } from './bitmask';
-import { generateDomBindings } from '../../common/dom.binding';
-import { generatePreRender } from './prerender';
+import { cClass, FileTransformerAPI, CompDefinition, cStatic } from '@tsx-air/compiler-utils';
 import { generateMethods } from './function';
-import { generateAfterMount } from './event.handlers';
+import { factory } from './factory';
+import { generateFragments } from './fragment';
+import { parseFragments } from './fragment/jsx.fragment';
+import { generateVirtualComponents } from './fragment/virtual.comp';
 
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
     const importedComponent = api.ensureImport('Component', '@tsx-air/framework');
-    const binding = generateDomBindings(comp);
-    const info = comp.jsxRoots[0];
-    const res = cClass(
+    api.ensureImport('VirtualElement', '@tsx-air/framework');
+    api.ensureImport('CompFactory', '@tsx-air/framework');
+    const fragments = [...parseFragments(comp)];
+    const compClass = cClass(
         comp.name!,
         importedComponent,
-        undefined, [
-        cStatic('factory', cObject({
-            toString: generateToString(info, comp),
-            hydrate: generateHydrate(comp, binding),
-            initialState: generateInitialState(comp),
-        })),
-        cStatic('changeBitmask', generateChangeBitMask(comp)),
-        ...generateMethods(comp),
-        ...generateAfterMount(comp, binding),
-        ...generatePreRender(comp),
-        generateUpdateView(comp, binding),
-    ]);
-    return res;
+        undefined,
+        true,
+        [
+            cStatic('factory', factory(comp)),
+            ...generateMethods(comp, fragments),
+            ...fragments.filter(f => f.isComponent)
+                .map(c => generateVirtualComponents(c)[0]),
+        ]
+    );
+
+    api.appendStatements(...generateFragments(comp, api, fragments));
+    return compClass;
 };
+
