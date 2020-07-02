@@ -1,28 +1,33 @@
-import { Setter, Getter } from '../types/type-utils';
+type AllowedKeys = Exclude<string, '$bits' | '$data' | '$listeners' | '$subscribe' | '$unsubscribe' | '$dispatch'>;
+type StoreValue = Record<AllowedKeys, any>;
+export type CompiledStore<T extends StoreValue = any> = {
+    $bits: {
+        [key in keyof T]: number;
+    };
+    $data: T;
+    $listeners: Set<StoreChangeCallback<T>>;
+    $subscribe: (cb: StoreChangeCallback<T>) => void;
+    $unsubscribe: (cb: StoreChangeCallback<T>) => void;
+    $dispatch: (change: number) => void;
+} & {
+    [key in AllowedKeys]: number;
+};
+export type StoreChangeCallback<T = any> = (store: CompiledStore<T>, changed: number) => void;
 
-export interface StoreApi<T> {
-    $set: Setter<T>;
-    $get: Getter<T>;
-    $subscribe: (onchange: () => void) => void;
+export class BaseCompiledStore {
+    public $listeners = new Set<StoreChangeCallback>();
+
+    public $subscribe(cb: StoreChangeCallback) {
+        this.$listeners.add(cb);
+    }
+    public $unsubscribe(cb: StoreChangeCallback) {
+        this.$listeners.delete(cb);
+    }
+    public $dispatch(change: number) {
+        for (const listener of this.$listeners) {
+            listener(this as any, change);
+        }
+    }
 }
 
-export interface AsyncStoreApi<T> {
-    $pending: boolean;
-    $rejected?: any;
-    $resolved?: T;
-    $promise: Promise<T>;
-}
-
-export type Store<T> = T & StoreApi<T>;
-export type AsyncStore<T> = Store<T> & AsyncStoreApi<T>;
-
-export interface StoreFactory {
-    <T>(initial: T): Store<T>;
-    derived<T>(value: T): T;
-    async<T>(p:Promise<T>): AsyncStore<T>;
-}
-
-
-export const store: StoreFactory = <T>(initial: T) => initial as Store<T>;
-store.derived = (val: any) => val;
-store.async = <T>(_p:Promise<T>) => ({}) as AsyncStore<T>;
+export const store = <T extends StoreValue>(item: T) => item;

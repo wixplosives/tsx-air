@@ -2,45 +2,43 @@ import { Displayable, DisplayableData } from './displayable';
 import { Component } from './component';
 import { Fragment } from './fragment';
 import { TSXAir, VirtualElement, TsxComponentApi } from '..';
+import { CompiledStore } from '../api/store';
 
 export class Factory<D extends typeof Displayable> {
-    constructor(readonly type: D, readonly changesBitMap: Record<string, number>) {
-        (type as any).changesBitMap = changesBitMap;
-    }
+    constructor(readonly type: D) {}
 
     // creates an instance (with empty context)
-    public newInstance(key: string, parent: DisplayableData): InstanceType<D> {
-        if (Fragment.isType(this.type)) {
-            // @ts-ignore
-            return new this.type(key, parent) as InstanceType<D>;
-        }
-        throw new Error(`Invalid fragment`);
-    }
+    // public newInstance(key: string, parent: DisplayableData): InstanceType<D> {
+    //     if (Fragment.isType(this.type)) {
+    //         // @ts-ignore
+    //         return new this.type(key, parent) as InstanceType<D>;
+    //     }
+    //     throw new Error(`Invalid fragment`);
+    // }
 }
 
 export type RenderTarget = 'append' | 'before' | 'replace';
 // tslint:disable:max-classes-per-file
 export class CompFactory<C extends typeof Component> extends Factory<C> {
-    constructor(readonly type: C, readonly changesBitMap: Record<string, number>, readonly initialState = (_: any) => ({})) {
-        super(type, changesBitMap);
+    constructor(readonly type: C, readonly stores: Record<string, new (t: any) => CompiledStore>) {
+        super(type);
         type.render = (props: object, state?: object, target?: HTMLElement, add: RenderTarget = 'append') =>
             this.render(type, props, state, target, add);
     }
-    public newInstance(key: string, data: DisplayableData): InstanceType<C> {
-        if (Component.isType(this.type)) {
-            // @ts-ignore
-            const instance = new this.type(key,
-                data.parent!,
-                data.props || {},
-                data.state ||
-                this.initialState(data.props),
-                {});
-            // @ts-ignore
-            instance.changesBitMap = this.changesBitMap;
-            return instance as InstanceType<C>;
-        }
-        throw new Error(`Invalid component`);
-    }
+    // public newInstance(key: string, data: DisplayableData): InstanceType<C> {
+    //     if (Component.isType(this.type)) {
+    //         // @ts-ignore
+    //         const instance = new this.type(
+    //             key,
+    //             data.parent!,
+    //             data.props || {},
+    //         );
+    //         // @ts-ignore
+    //         instance.changesBitMap = this.changesBitMap;
+    //         return instance as InstanceType<C>;
+    //     }
+    //     throw new Error(`Invalid component`);
+    // }
 
     public render(component: C, props: any, state: any, target?: HTMLElement, add?: RenderTarget) {
         if (!Component.isType(component)) {

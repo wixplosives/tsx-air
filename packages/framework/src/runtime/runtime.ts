@@ -26,7 +26,6 @@ export class Runtime {
     constructor(
         readonly window: Window = globalThis.window,
         readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = globalThis.requestAnimationFrame
-
     ) {
         this.mockDom = window?.document?.createElement('div');
         this.document = window?.document;
@@ -39,6 +38,9 @@ export class Runtime {
         }
     }
 
+    public invalidate(comp: Component) {
+        this.pending.set(comp, -1);
+    }
     public update(instance: Displayable, bits: number, mutator: Mutator) {
         this.addChange(instance, bits);
         this.triggerViewUpdate();
@@ -102,13 +104,18 @@ export class Runtime {
                 }
                 return i.toString();
             });
-        if (!(hydratedDomNode.nextSibling instanceof
-            // @ts-ignore
-            this.window.Comment)) {
+        if (
+            !(
+                hydratedDomNode.nextSibling instanceof
+                // @ts-ignore
+                this.window.Comment
+            )
+        ) {
             throw new Error(`Hydration error: Expression does not match data. (no ending comment)`);
         }
         return {
-            start, end: hydratedDomNode.nextSibling as Comment,
+            start,
+            end: hydratedDomNode.nextSibling as Comment,
             value: hydrated
         };
     }
@@ -161,7 +168,7 @@ export class Runtime {
     }
 
     private removeChanges(instance: Displayable) {
-        const r = (this.pending.get(instance)! | 0);
+        const r = this.pending.get(instance)! | 0;
         this.pending.delete(instance);
         return r;
     }
@@ -181,7 +188,7 @@ export class Runtime {
                     };
                     const preRender = instance.preRender();
                     this.when = this.always;
-                    // handle prerender state changes 
+                    // handle prerender state changes
                     changes |= this.removeChanges(instance);
                     preRender.changes = remapChangedBit(changes, preRender.changeBitMapping);
 
