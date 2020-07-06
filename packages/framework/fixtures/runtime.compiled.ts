@@ -9,7 +9,7 @@ export class CompiledParent extends Component {
     }, () => ({ state: { counter: 0 } }));
 
     public preRender(): VirtualElement<any> {
-        const { state } = this.state;
+        const { state } = this.stores;
         TSXAir.runtime.update(this, this.changesBitMap['state.counter'], () => {
             return state.counter++;
         });
@@ -24,7 +24,7 @@ export class CompiledParent extends Component {
             new Map<number, number>([
                 [CompiledChild.factory.changesBitMap['props.ca'], this.changesBitMap['state.counter']],
                 [CompiledChild.factory.changesBitMap['props.cb'], this.changesBitMap['props.a']],
-            ]), { ca: this.props.a, cb: this.state.state.counter });
+            ]), { ca: this.props.a, cb: this.stores.state.counter });
     }
 }
 // tslint:disable:max-classes-per-file
@@ -36,7 +36,7 @@ export class ParentFrag0 extends Fragment {
             TSXAir.runtime.updateExpression(this.ctx.expressions[0], this.props.a);
         }
         if (changes & this.changesBitMap['props.a']) {
-            TSXAir.runtime.getUpdatedInstance(this.$comp0.withChanges(changes));
+            TSXAir.runtime.getInstance(this.$comp0.withChanges(changes));
         }
     }
 

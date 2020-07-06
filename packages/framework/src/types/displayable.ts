@@ -1,4 +1,5 @@
-import { TSXAir, Component, Fragment, Factory } from '..';
+import { TSXAir, Component, Fragment } from '..';
+import { Store, Observable } from '../runtime/store';
 
 export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
 
@@ -11,7 +12,6 @@ interface Ctx {
 
 export interface DisplayableData {
     props: any;
-    state?: any;
     parent?: Displayable;
 }
 export class Displayable {
@@ -34,26 +34,26 @@ export class Displayable {
         }
         throw new Error(`Invalid Displayable: root is not a Displayable/HTMLElement`);
     }
-    public static factory: Factory<any>;
-    public static is(x: any): x is Displayable {
+
+    static is(x: any): x is Displayable {
         return x && x instanceof Displayable;
     }
-    public readonly changesBitMap!: Record<string, number>;
-    public readonly innerKey!: string;
-    public readonly ctx: Ctx = {
+    readonly changesBitMap!: Record<string, number>;
+    readonly innerKey!: string;
+    readonly ctx: Ctx = {
         root: null,
         expressions: [],
         elements: [],
         components: {}
     };
-    public parent: Displayable | undefined;
+    parent: Displayable | undefined;
+    stores!: Record<string, Store> & Record<'props', Store>;
+    volatile!: any;
+    modified: Map<Store, number> = new Map();
 
     constructor(
         readonly key: string,
         parent: Displayable | DisplayableData | undefined,
-        public props: any,
-        public state: any,
-        public volatile: any,
     ) {
         this.innerKey = TSXAir.runtime.getUniqueKey();
         while (parent && !Displayable.is(parent)) {
@@ -61,11 +61,25 @@ export class Displayable {
         }
         this.parent = parent;
     }
-    public afterMount(_ref: Elm) {/** add event listeners */ }
-    public afterUnmount() {/** dispose of stuff */ }
 
-    public dispose() {/** dispose of stuff */}    public hydrate(_preRender: DisplayableData, _target: HTMLElement): void { throw new Error(`not implemented`); }
-    public toString(): string { throw new Error(`not implemented`); }
+    storeChanged = (modifiedStore: Store, changed: number) => {
+        this.modified.set(modifiedStore, (this.modified.get(modifiedStore) || 0) | changed);
+        TSXAir.runtime.invalidate(this);
+    };
+
+    afterMount(_ref: Elm) {/** add event listeners */ }
+    afterUnmount() {/** dispose of stuff */ }
+
+    dispose() {
+        for (const comp of Object.values(this.ctx.components)) {
+            comp.dispose();
+        }
+        for (const store of Object.values(this.stores) as Observable[]) {
+            store.$unsubscribe(this.storeChanged);
+        }
+    }
+    hydrate(_preRender: DisplayableData, _target: HTMLElement): void { throw new Error(`not implemented`); }
+    toString(): string { throw new Error(`not implemented`); }
 }
 
 export interface ExpressionDom {

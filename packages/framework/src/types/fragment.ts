@@ -21,12 +21,12 @@ export class Fragment extends Displayable {
         if (!_owner) {
             throw new Error('Invalid fragment: no owner component');
         }
-        super(key, parent, _owner.props, _owner.state, _owner.volatile);
-        // @ts-ignore
-        this.changesBitMap = _owner.changesBitMap;
+        super(key, parent);
+        this.stores = _owner.stores;
+        this.volatile = _owner.volatile;
     }
 
-    public updateView(_changes: number): void {/* */}
+    public updateView(): void {/* */ }
 
     public hydrateExpressions(values: any[], target: HTMLElement) {
         return this.hydrateInternals(values, target, 'X',
@@ -62,7 +62,7 @@ export class Fragment extends Displayable {
 
     }
 
-    private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: (v:any, c:Comment)=>void): void {
+    private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: (v: any, c: Comment) => void): void {
         let expressionIndex = 0;
         let inExpressionString = false;
         const { document, window } = TSXAir.runtime;
@@ -70,7 +70,7 @@ export class Fragment extends Displayable {
         const { NodeFilter } = window;
 
         const comments = document.createNodeIterator(target, NodeFilter.SHOW_COMMENT, {
-            acceptNode:node => {
+            acceptNode: node => {
                 if (inExpressionString) {
                     if (`<!--${node.textContent}-->` === this.comment(expressionIndex, type)) {
                         expressionIndex++;

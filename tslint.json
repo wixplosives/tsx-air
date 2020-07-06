@@ -9,6 +9,7 @@
     "tslint-no-focused-test"
   ],
   "rules": {
+    "member-access": false,
     "no-empty-interface": false,
     "no-focused-test": true,
     "no-bitwise": false,
@@ -18,6 +19,7 @@
       true,
       "ban-single-arg-parens"
     ],
+    "jsx-no-lambda": false,
     "object-literal-sort-keys": false,
     "ordered-imports": false,
     "quotemark": [

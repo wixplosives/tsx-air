@@ -4,9 +4,6 @@ import { Displayable, DisplayableData } from './displayable';
 import { remapChangedBit } from '../runtime/runtime.helpers';
 
 export class VirtualElement<T extends typeof Displayable = any, P extends Displayable = Displayable> implements DisplayableData {
-
-
-
     get fullKey(): string {
         return this.parent ? `${this.parent.fullKey}${this.key}` : this.key || 'NO KEY';
     }
@@ -15,43 +12,44 @@ export class VirtualElement<T extends typeof Displayable = any, P extends Displa
         return Component.is(this.parent) ? this.parent : this.parent?.owner;
     }
 
-    public static component<T extends typeof Component, P extends Displayable>(key: string, type: T, parent: P,
+    static component<T extends typeof Component, P extends Displayable>(key: string, type: T, parent: P,
         changeBitMapping?: Map<number, number>,
-        props: any = {}, state?: any, volatile?: any) {
-        return new VirtualElement(type, props, state, volatile, parent, key, changeBitMapping);
+        props: any = {}) {
+        return new VirtualElement(type as any, props, parent, key, changeBitMapping);
     }
 
-    public static root<T extends typeof Component>(type: T, props: any, state?: any) {
-        return new VirtualElement(type, props, state, undefined, undefined, '$');
+    static root<T extends typeof Component>(type: T, props: any) {
+        return new VirtualElement(type as any, props, undefined, '$');
     }
 
-    public static fragment<T extends typeof Fragment, P extends Displayable>(key: string, type: T, parent: P) {
-        return new VirtualElement(type, parent.props, parent.state, parent.volatile, parent, key);
+    static fragment<T extends typeof Fragment, P extends Displayable>(key: string, type: T, parent: P) {
+        return new VirtualElement(type, parent.stores.props, parent, key);
     }
 
-    public static is(x: any): x is VirtualElement {
+    static is(x: any): x is VirtualElement {
         return x && x instanceof VirtualElement;
     }
+
     private constructor(
         readonly type: T,
         readonly props: any,
-        readonly state?: any,
-        readonly volatile?: any,
         readonly parent?: P,
         readonly key?: string,
         readonly changeBitMapping?: Map<number, number>,
         public changes: number = 0
     ) { }
 
-    public withKey(key: string) {
-        const { type, parent, props, volatile, state, changes, changeBitMapping: changeBitRemapping } = this;
-        return new VirtualElement(type, props, state, volatile, parent, key, changeBitRemapping, changes);
-    }    
-    public withChanges(changes:number) {
-        const { type, parent, props, volatile, state, key, changeBitMapping: changeBitRemapping } = this;
-        return new VirtualElement(type, props, state, volatile, parent, key, changeBitRemapping, remapChangedBit(changes, changeBitRemapping));
+    withKey(key: string) {
+        const { type, parent, props, changes, changeBitMapping: changeBitRemapping } = this;
+        return new VirtualElement(type, props, parent, key, changeBitRemapping, changes);
     }
-    public toString(){
+
+    withChanges(changes: number) {
+        const { type, parent, props, key, changeBitMapping: changeBitRemapping } = this;
+        return new VirtualElement(type, props, parent, key, changeBitRemapping, remapChangedBit(changes, changeBitRemapping));
+    }
+    
+    toString() {
         return `[VirtualElement<${this.type.name}> (key:"${this.key}", parent:${this.parent?.fullKey})]`;
     }
 }
