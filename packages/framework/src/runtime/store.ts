@@ -1,4 +1,4 @@
-import { TSXAir } from '../api/types';
+import { getInstance as $rt } from '../runtime';
 
 type AllowedKeys = Exclude<string, ReservedKeys>;
 type ReservedKeys = keyof CompiledStore & keyof Observable;
@@ -38,7 +38,7 @@ export type StoreData = Record<AllowedKeys, any>;
 type Listener<T = any> = (store: CompiledStore<T>, changed: number) => void;
 
 export function store<T extends StoreData>(initialState: T, instance: any, name: string): Store<T> {
-    const existingStore = TSXAir.runtime.getStore(instance, name);
+    const existingStore = $rt().getStore(instance, name);
     if (existingStore) {
         return existingStore;
     }
@@ -98,6 +98,6 @@ export function store<T extends StoreData>(initialState: T, instance: any, name:
         }
     }) as Store<T>;
     dispatcher.$target = proxy;
-    TSXAir.runtime.registerStore(instance, name, proxy);
+    $rt().registerStore(instance, name, proxy);
     return proxy;
 }

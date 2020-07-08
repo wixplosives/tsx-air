@@ -1,5 +1,5 @@
-import { TSXAir, Component, Fragment } from '..';
-import { Store, Observable } from '../runtime/store';
+import { Store, Observable } from '../store';
+import { getInstance as $rt, Component, Fragment } from '../';
 
 export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
 
@@ -28,7 +28,7 @@ export class Displayable {
         if (Displayable.is(root)) {
             return root.domRoot;
         }
-        const { HTMLElement, Text } = TSXAir.runtime;
+        const { HTMLElement, Text } = $rt();
         if (root instanceof HTMLElement || root instanceof Text) {
             return root;
         }
@@ -46,7 +46,7 @@ export class Displayable {
         components: {}
     };
     parent: Displayable | undefined;
-    stores!: Record<string, Store> & Record<'props', Store>;
+    stores!: Record<string, Store> & Record<'$props', Store>;
     volatile!: any;
     modified: Map<Store, number> = new Map();
 
@@ -54,7 +54,7 @@ export class Displayable {
         readonly key: string,
         parent: Displayable | DisplayableData | undefined,
     ) {
-        this.innerKey = TSXAir.runtime.getUniqueKey();
+        this.innerKey = $rt().getUniqueKey();
         while (parent && !Displayable.is(parent)) {
             parent = parent.parent;
         }
@@ -63,7 +63,7 @@ export class Displayable {
 
     storeChanged = (modifiedStore: Store, changed: number) => {
         this.modified.set(modifiedStore, (this.modified.get(modifiedStore) || 0) | changed);
-        TSXAir.runtime.invalidate(this);
+        $rt().invalidate(this);
     };
 
     afterMount(_ref: Elm) {/** add event listeners */ }

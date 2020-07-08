@@ -1,7 +1,7 @@
 import { Component, TSXAir, ComponentApi } from '../src';
-import { VirtualElement } from '../src/types/virtual.element';
-import { Fragment } from '../src/types/fragment';
-import { RenderTarget } from '../src/types/factory';
+import { VirtualElement } from '../src/runtime/types/virtual.element';
+import { Fragment } from '../src/runtime/types/fragment';
+import { RenderTarget } from '../src/runtime/types/factory';
 import { store } from '../src/runtime/store';
 
 export class CompiledParent extends Component {

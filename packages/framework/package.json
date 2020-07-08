@@ -21,6 +21,7 @@
     "sideEffects": [],
     "files": [
         "dist",
-        "src"
+        "src",
+        "runtime.js"
     ]
 }

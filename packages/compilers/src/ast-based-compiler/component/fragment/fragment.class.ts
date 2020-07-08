@@ -1,19 +1,16 @@
-import { cClass, FileTransformerAPI, cStatic, asAst } from '@tsx-air/compiler-utils';
+import { cClass, FileTransformerAPI, asAst } from '@tsx-air/compiler-utils';
 import { generateUpdateView } from '../update.view';
 import { FragmentData } from './jsx.fragment';
-import ts from 'typescript';
 import { generateVirtualComponents } from './virtual.comp';
 import { generateToString } from './to.string';
 import { generateHydrate } from './hydrate';
+import ts from 'typescript';
 
-export const generateFragmentClass = (fragment: FragmentData, api: FileTransformerAPI) => {
-    const importedFragment = api.ensureImport('Fragment', '@tsx-air/framework');
-    api.ensureImport('Factory', '@tsx-air/framework');
+export const generateFragmentClass = (fragment: FragmentData, _api: FileTransformerAPI) => {
     const frag = cClass(
         fragment.id,
-        importedFragment,
+        asAst(`$rt().Fragment`) as ts.Expression,
         undefined, false, [
-        cStatic('factory', asAst(`new Factory(${fragment.id}, ${fragment.comp.name}.changesBitMap)`) as ts.Expression),
         ...generateUpdateView(fragment),
         generateToString(fragment),
         generateHydrate(fragment),

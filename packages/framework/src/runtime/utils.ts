@@ -1,4 +1,4 @@
-import { Component } from './../types/component';
+import { Component } from './types/component';
 
 export function assignTextContent(field: { textContent: string | null }, value: string) {
     return () => field.textContent = value;

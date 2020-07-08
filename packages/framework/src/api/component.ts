@@ -1,7 +1,5 @@
-import { Component } from '../types';
-import { ValueOf } from '../types/type-utils';
-import {  TSXAir } from './types';
-
+import { Component } from '../runtime/types';
+import { ValueOf } from '../runtime/types/type-utils';
 
 export interface ComponentApi<Props> {
     updateProps: (props: Props) => void;
@@ -9,36 +7,12 @@ export interface ComponentApi<Props> {
 export class TsxComponentApi<Props> {
     constructor(readonly $instance: Component) { }
     public updateProps = (props: Props) => {
-        TSXAir.runtime.update(this.$instance, -1, () => this.$instance.props = props);
+        this.$instance.stores.props.$set(props);
     };
 
     public setProp = (key: keyof Props, value: ValueOf<Props>) =>
-        TSXAir.runtime.update(this.$instance,
-            this.$instance.changesBitMap[`props.${key}`], () =>
-            this.$instance.props[key] = value);
+        this.$instance.stores.props[key] = value;
 
     public getProp = (key: keyof Props) =>
-        this.$instance.props[key];
+         this.$instance.stores.props[key];
 }
-
-// export function render<Props>(component: CompCreator<Props> | typeof Component, props: Props, state?: object, target?: HTMLElement, add: 'append' | 'before' | 'replace' = 'append') {
-//     if (!Component.isType(component)) {
-//         throw new Error(`Invalid component: not compiled as TSXAir`);
-//     }
-//     const comp = TSXAir.runtime.render(VirtualElement.root(component, props, state));
-//     if (target) {
-//         const dom = comp.domRoot;
-//         switch (add) {
-//             case 'append':
-//                 target.append(dom);
-//                 break;
-//             case 'before':
-//                 target.parentNode?.insertBefore(dom, target);
-//                 break;
-//             case 'replace':
-//                 target.parentNode?.insertBefore(dom, target);
-//                 target.remove();
-//         }
-//     }
-//     return new TsComponentApi(comp as Component);
-// }

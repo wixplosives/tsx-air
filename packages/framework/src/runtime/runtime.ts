@@ -1,12 +1,17 @@
 import { RuntimeCycle } from './stats';
 import { updateExpression as _updateExpression, asDomNodes } from './runtime.helpers';
 import isArray from 'lodash/isArray';
-import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from '..';
+import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from './types';
 import { StoreData, Store } from './store';
 
 export class Runtime {
     readonly HTMLElement: typeof HTMLElement;
     readonly Text: typeof Text;
+    readonly Component=Component;
+    readonly Fragment=Fragment;
+    readonly Displayable=Displayable;
+    readonly VirtualElement=VirtualElement;
+    
     $stats = [] as RuntimeCycle[];
 
     readonly document: Document;
@@ -82,7 +87,7 @@ export class Runtime {
             throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
         }
         if (Component.is(parent.ctx.components[key])) {
-            parent.ctx.components[key].stores.props.$set(vElm.props);
+            parent.ctx.components[key].stores.$props.$set(vElm.props);
         }
         return parent.ctx.components[key] || this.render(vElm);
     }

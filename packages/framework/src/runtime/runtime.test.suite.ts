@@ -1,9 +1,8 @@
-import { Runtime } from './runtime';
-import { Displayable, TSXAir, VirtualElement } from '..';
+import { setInstance, Runtime } from '.';
 import { JSDOM } from 'jsdom';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { Component } from '../types';
+import { Component, Displayable, VirtualElement } from './types';
 
 export function testRuntimeApi<P extends typeof Component, C extends typeof Component>(getCompiled: () => [any, any]) {
     describe('interacting with framework runtime (internal API)', () => {
@@ -17,7 +16,7 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
             onNextFrame = [];
             const { window } = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
             runtime = new Runtime(window, (fn: FrameRequestCallback) => (onNextFrame.push(fn), onNextFrame.length));
-            TSXAir.runtime = runtime;
+            setInstance('default', runtime);
             [Parent, Child] = getCompiled();
         });
 

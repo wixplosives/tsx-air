@@ -1,8 +1,8 @@
-import { TSXAir } from '../api/types';
 import { VirtualElement } from './virtual.element';
 import { Displayable } from './displayable';
-import { TsxComponentApi } from '../api/component';
-import { store } from '../runtime/store';
+import { TsxComponentApi } from '../../api/component';
+import { store } from '../store';
+import { getInstance as $rt } from '../';
 
 export class Component extends Displayable {
     static is(x: any): x is Component {
@@ -15,7 +15,7 @@ export class Component extends Displayable {
         if (!Component.isType(component)) {
             throw new Error(`Invalid component: not compiled as TSXAir`);
         }
-        const comp = TSXAir.runtime.render(VirtualElement.root(component, props));
+        const comp = $rt().render(VirtualElement.root(component, props));
         if (target) {
             const dom = comp.domRoot;
             switch (add) {
@@ -35,20 +35,20 @@ export class Component extends Displayable {
 
     constructor(readonly key: string, public parent: Displayable | undefined, props: object) {
         super(key, parent);
-        this.stores = { props: store(props, this, 'props') };
+        this.stores = { $props: store(props, this, '$props') };
         let depth = 0;
         while (parent) {
             depth++;
             parent = parent?.owner;
         }
-        if (depth > TSXAir.runtime.maxDepth) {
-            throw new Error(`Component tree too deep (over ${TSXAir.runtime.maxDepth})
-    This is a component recursion protection - change TSXAir.runtime.maxDepth (or fix your code)`);
+        if (depth > $rt().maxDepth) {
+            throw new Error(`Component tree too deep (over ${$rt().maxDepth})
+    This is a component recursion protection - change $rt().maxDepth (or fix your code)`);
         }
     }
 
     toString(): string {
-        return TSXAir.runtime.toString(this.preRender());
+        return $rt().toString(this.preRender());
     }
 
     preRender(): VirtualElement<any> {
@@ -56,7 +56,7 @@ export class Component extends Displayable {
     }
 
     hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {
-        this.ctx.root = TSXAir.runtime.hydrate(preRendered, target);
+        this.ctx.root = $rt().hydrate(preRendered, target);
     }
 }
 

@@ -2,6 +2,8 @@ import ts from 'typescript';
 import { TsxFile, TsNodeToAirNode, AnalyzerResult } from '../../analyzers/types';
 import { analyze } from '../../analyzers';
 import { cObject, cAccess, cImport, ImportDefinition } from '.';
+import { asCode } from '../..';
+import { uniq, uniqBy } from 'lodash';
 
 
 export interface FileTransformerAPI {
@@ -10,6 +12,7 @@ export interface FileTransformerAPI {
     appendPrivateVar(wantedName: string, expression: ts.Expression): ts.Expression;
     ensureImport(importedName: string, fromModule: string): ts.Expression;
     ensureDefaultImport(localName: string, fromModule: string): ts.Expression;
+    removeImport(fromModule: string): void;
     getAnalyzed(): TsxFile;
     tsNodeToAirNodes<T extends ts.Node>(node: T): Array<TsNodeToAirNode<T>> | undefined;
 }
@@ -19,18 +22,19 @@ const varHolderIdentifier = '__private_tsx_air__';
 const contextMap: WeakMap<ts.SourceFile, FileTransformerAPI> = new WeakMap();
 export const transformerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts.TransformerFactory<ts.SourceFile> = gen => ctx => {
     return (node: ts.SourceFile) => {
-        const appendedNodes: Record<string, ts.Expression> = {};
-        const appendedStatements: ts.Statement[] = [];
-        const prependedStatements: ts.Statement[] = [];
+        const addedPrivateVars: Record<string, ts.Expression> = {};
+        let appendedStatements: ts.Statement[] = [];
+        let prependedStatements: ts.Statement[] = [];
         const addedImports: Record<string, ImportDefinition> = {};
+        const removedImports = new Set<string>();
         let scanRes: AnalyzerResult<TsxFile>;
         const genCtx: FileTransformerAPI = {
             appendPrivateVar(wantedName, exp) {
                 let counter = 0;
-                while (appendedNodes[wantedName + counter]) {
+                while (addedPrivateVars[wantedName + counter]) {
                     counter++;
                 }
-                appendedNodes[wantedName + counter] = exp;
+                addedPrivateVars[wantedName + counter] = exp;
                 return ts.createPropertyAccess(ts.createIdentifier(varHolderIdentifier), ts.createIdentifier(wantedName + counter));
             },
             getAnalyzed() {
@@ -41,9 +45,11 @@ export const transformerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
             },
             appendStatements(...statements: ts.Statement[]) {
                 appendedStatements.push(...statements);
+                appendedStatements = uniqBy(appendedStatements, s => asCode(s));
             },
             prependStatements(...statements: ts.Statement[]) {
                 prependedStatements.push(...statements);
+                prependedStatements = uniqBy(prependedStatements, s => asCode(s));
             },
             ensureImport(importedName, fromModule) {
                 const existingModule = addedImports[fromModule];
@@ -82,6 +88,9 @@ export const transformerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
                     exports: []
                 };
                 return cAccess(localName);
+            },
+            removeImport(fromModule) {
+                removedImports.add(fromModule);
             }
         };
         contextMap.set(node, genCtx);
@@ -90,8 +99,12 @@ export const transformerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
         // fileRes.imports[0].
         const res = ts.visitEachChild(node, gen(ctx), ctx);
         let allStatements = res.statements as any as ts.Statement[];
-        if (Object.keys(appendedNodes).length !== 0) {
-            const varHolder: ts.Statement = ts.createVariableStatement(undefined, [ts.createVariableDeclaration(varHolderIdentifier, undefined, cObject(appendedNodes))]);
+        allStatements = allStatements.filter(s => {
+            return !(ts.isImportDeclaration(s) && removedImports.has(asCode(s.moduleSpecifier).replace(/[\'\"\`]/g, '')));
+        });
+
+        if (Object.keys(addedPrivateVars).length !== 0) {
+            const varHolder: ts.Statement = ts.createVariableStatement(undefined, [ts.createVariableDeclaration(varHolderIdentifier, undefined, cObject(addedPrivateVars))]);
             allStatements = [varHolder].concat(allStatements);
         }
         if (prependedStatements.length) {
