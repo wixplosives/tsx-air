@@ -5,13 +5,13 @@ import { TsxComponentApi } from '../api/component';
 import { store } from '../runtime/store';
 
 export class Component extends Displayable {
-    public static is(x: any): x is Component {
+    static is(x: any): x is Component {
         return x && x instanceof Component;
     }
-    public static isType(x: any): x is typeof Component {
+    static isType(x: any): x is typeof Component {
         return x && x.prototype instanceof Component;
     }
-    public static render<C extends typeof Component>(component: C, props: any, target?: HTMLElement, add?: RenderTarget) {
+    static _render<C extends typeof Component>(component: C, props: any, target?: HTMLElement, add?: RenderTarget) {
         if (!Component.isType(component)) {
             throw new Error(`Invalid component: not compiled as TSXAir`);
         }
@@ -33,7 +33,7 @@ export class Component extends Displayable {
         return new TsxComponentApi(comp as Component);
     }
 
-    constructor(readonly key: string, parent: Displayable | undefined, props: object) {
+    constructor(readonly key: string, public parent: Displayable | undefined, props: object) {
         super(key, parent);
         this.stores = { props: store(props, this, 'props') };
         let depth = 0;
@@ -47,15 +47,15 @@ export class Component extends Displayable {
         }
     }
 
-    public toString(): string {
+    toString(): string {
         return TSXAir.runtime.toString(this.preRender());
     }
 
-    public preRender(): VirtualElement<any> {
+    preRender(): VirtualElement<any> {
         throw new Error(`not implemented`);
     }
 
-    public hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {
+    hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {
         this.ctx.root = TSXAir.runtime.hydrate(preRendered, target);
     }
 }

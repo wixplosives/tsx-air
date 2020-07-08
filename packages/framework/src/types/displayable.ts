@@ -38,7 +38,6 @@ export class Displayable {
     static is(x: any): x is Displayable {
         return x && x instanceof Displayable;
     }
-    readonly changesBitMap!: Record<string, number>;
     readonly innerKey!: string;
     readonly ctx: Ctx = {
         root: null,
@@ -69,7 +68,7 @@ export class Displayable {
 
     afterMount(_ref: Elm) {/** add event listeners */ }
     afterUnmount() {/** dispose of stuff */ }
-
+    
     dispose() {
         for (const comp of Object.values(this.ctx.components)) {
             comp.dispose();

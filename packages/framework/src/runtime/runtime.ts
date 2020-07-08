@@ -1,5 +1,5 @@
 import { RuntimeCycle } from './stats';
-import { updateExpression as _updateExpression, asDomNodes, remapChangedBit } from './runtime.helpers';
+import { updateExpression as _updateExpression, asDomNodes } from './runtime.helpers';
 import isArray from 'lodash/isArray';
 import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from '..';
 import { StoreData, Store } from './store';
@@ -17,7 +17,7 @@ export class Runtime {
 
     hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
     render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
-    private pending = new Map<Displayable, number>();
+    private pending = new Set<Displayable>();
     private viewUpdatePending: boolean = false;
     private hydrating = 0;
     private mockDom!: HTMLElement;
@@ -40,14 +40,17 @@ export class Runtime {
     }
 
     invalidate(comp: Displayable) {
-        this.pending.set(comp, -1);
+        this.pending.add(comp);
+        this.triggerViewUpdate();
     }
 
     registerStore<T extends StoreData>(instance: any, name: string, store: Store<T>) {
         const instanceStores = this.stores.get(instance) || {};
         instanceStores[name] = store;
         if (Component.is(instance)) {
-            instance.stores[name] = store;
+            if (instance.stores) {
+                instance.stores[name] = store;
+            }
             store.$subscribe(instance.storeChanged);
         }
         this.stores.set(instance, instanceStores);
@@ -68,15 +71,18 @@ export class Runtime {
             return x.map(i => this.toString(i)).join('');
         }
         if (VirtualElement.is(x)) {
-            return this.getInstance(x).toString();
+            return this.getUpdatedInstance(x).toString();
         }
         return x?.toString() || '';
     }
 
-    getInstance(vElm: VirtualElement<any>): Displayable {
+    getUpdatedInstance(vElm: VirtualElement<any>): Displayable {
         const { key, parent, owner } = vElm;
         if (!key || !owner || !parent) {
             throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
+        }
+        if (Component.is(parent.ctx.components[key])) {
+            parent.ctx.components[key].stores.props.$set(vElm.props);
         }
         return parent.ctx.components[key] || this.render(vElm);
     }
@@ -136,7 +142,7 @@ export class Runtime {
             }
             return comp;
         }
-        const instance = type.factory.newInstance(vElm.key!, vElm);
+        const instance = new type(vElm.key!, vElm);
         if (!dom) {
             this.mockDom.innerHTML = instance.toString();
             dom = this.mockDom.children[0] as HTMLElement;
@@ -165,32 +171,24 @@ export class Runtime {
         return instance;
     }
 
-    private removeChanges(instance: Displayable) {
-        const r = this.pending.get(instance)! | 0;
-        this.pending.delete(instance);
-        return r;
-    }
-
     private updateView = (_: number) => {
         let depth = 0;
         do {
             depth++;
             const { pending } = this;
-            this.pending = new Map<Displayable, number>();
-            for (let [instance, changes] of pending) {
+            this.pending = new Set<Displayable>();            
+            for (const instance of pending) {
                 if (Component.is(instance)) {
                     this.when = (predicate, action) => {
-                        if (predicate.some(p => changes & instance.changesBitMap[p])) {
+                        if (predicate.some(p => 0)) {
                             action();
                         }
                     };
                     const preRender = instance.preRender();
+                    this.pending.delete(instance);
                     this.when = this.always;
-                    // handle prerender state changes
-                    changes |= this.removeChanges(instance);
-                    preRender.changes = remapChangedBit(changes, preRender.changeBitMapping);
 
-                    const nextRoot = this.getInstance(preRender);
+                    const nextRoot = this.getUpdatedInstance(preRender);
                     const root = instance.ctx.root as Displayable;
                     if (root !== nextRoot) {
                         root.domRoot.parentNode?.insertBefore(nextRoot.domRoot, root.domRoot);
@@ -198,6 +196,7 @@ export class Runtime {
                         instance.ctx.root = nextRoot as Fragment;
                         if (!root.stores.props.keepAlive) {
                             instance.ctx.components[root.key].dispose();
+                            this.pending.delete(instance.ctx.components[root.key]);
                             delete instance.ctx.components[root.key];
                         }
                         instance.ctx.components[nextRoot.key] = nextRoot;
@@ -205,6 +204,8 @@ export class Runtime {
                 } else {
                     (instance as Fragment).updateView();
                 }
+                instance.modified = new Map();
+                this.pending.delete(instance);
             }
         } while (this.pending.size && depth < this.maxDepthPerUpdate);
 

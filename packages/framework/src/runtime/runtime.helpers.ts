@@ -37,17 +37,3 @@ export function asSingleDomNode(value: any) {
     
     return new (TSXAir.runtime.Text)(value);
 }
-
-export function remapChangedBit(changes: number, mapping?: Map<number, number>): number {
-    if (mapping) {
-        let remapped = 0;
-        for (const [ch,pr] of mapping) {
-            if (changes & pr) {
-                remapped |= ch;
-            }
-        }
-        return remapped;
-    } else {
-        return changes;
-    }
-}

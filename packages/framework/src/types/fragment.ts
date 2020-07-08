@@ -24,6 +24,7 @@ export class Fragment extends Displayable {
         super(key, parent);
         this.stores = _owner.stores;
         this.volatile = _owner.volatile;
+        Object.values(this.stores).forEach(store => store.$subscribe(this.storeChanged));
     }
 
     public updateView(): void {/* */ }

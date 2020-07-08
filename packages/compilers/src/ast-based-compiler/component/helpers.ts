@@ -53,6 +53,7 @@ export function getDirectDependencies(comp: CompDefinition, scope: UsedVariables
 
     if (_usedInScope(comp.propsIdentifier)) {
         add(used, { [comp.propsIdentifier!]: scope.read[comp.propsIdentifier!] }, 'props');
+        add(used, { props: scope.read[comp.propsIdentifier!] }, 'stores');
     }
 
     comp.stores.map(c => c.name).filter(_usedInScope).forEach(
@@ -78,6 +79,11 @@ const add = (target: UsedInScope, added: RecursiveMap, prefix: string) => {
             return chain(a).concat(b).uniq().value();
         } else { return; }
     });
+    if (target.props) {
+        const propsIdentifier = Object.keys(target.props)[0];
+        const props = target.props[propsIdentifier];
+        merge(target, { stores: { props } });
+    }
 };
 
 const addAll = (comp: CompDefinition, target: UsedInScope, usedVars: UsedVariables) => {
@@ -137,23 +143,9 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
     return flat;
 }
 
-export function getChangeBitsNames(used: UsedInScope): string[] {
-    const ret: string[] = [];
-    if (used.props) {
-        const p = Object.keys(used.props).find(k => k !== '$refs')!;
-        Object.keys(used.props[p]).forEach(k => ret.push(`props.${k}`));
-    }
+function* getClosureStores(used: UsedInScope) {
     if (used.stores) {
-        for (const [name, store] of Object.entries(used.stores)) {
-            Object.keys(store).forEach(k => ret.push(`${name}.${k}`));
-        }
-    }
-    return ret;
-}
-
-function* getClosureState(used: UsedInScope) {
-    if (used.stores) {
-        yield cConst(destructure(used.stores)!, asAst(`this.state`) as ts.PropertyAccessExpression);
+        yield cConst(destructure(used.stores)!, asAst(`this.stores`) as ts.PropertyAccessExpression);
     }
 }
 
@@ -167,14 +159,7 @@ function* getClosureProps(used: UsedInScope) {
     if (used.props) {
         const propsIdentifier = Object.keys(used.props)[0];
         if (propsIdentifier !== 'props') {
-            yield cConst(
-                ts.createObjectBindingPattern([ts.createBindingElement(
-                    undefined,
-                    ts.createIdentifier('props'),
-                    ts.createIdentifier(propsIdentifier),
-                )]), ts.createThis());
-        } else {
-            yield cConst(destructureNamed(Object.keys(used.props)), ts.createThis());
+            yield cConst(propsIdentifier, ts.createIdentifier('props'));
         }
     }
 }
@@ -199,8 +184,8 @@ export function* addToClosure(used: UsedInScope | string[], includeVolatile: boo
             yield cConst(destructureNamed(used), asAst('this.owner') as ts.Expression);
         }
     } else {
+        yield* getClosureStores(used);
         yield* getClosureProps(used);
-        yield* getClosureState(used);
         if (includeVolatile) {
             yield* getClosureVolatile(used);
         }

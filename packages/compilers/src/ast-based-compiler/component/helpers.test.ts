@@ -19,23 +19,27 @@ describe('ast compiler helpers', () => {
             } = basicPatterns();
             expect(dependantOnVars(Static, Static.aggregatedVariables)).to.eql({});
             expect(dependantOnVars(PropsOnly, PropsOnly.aggregatedVariables)).to.eql({
-                props: { props: { a: {}, b: {} } }
+                props: { props: { a: {}, b: {} } },
+                stores: { props: { a: {}, b: {} } }
             });
             // Partial scope
             expect(dependantOnVars(PropsOnly, PropsOnly.jsxRoots[0].expressions[0].variables)).to.eql({
-                props: { props: { a: {} } }
+                props: { props: { a: {} } },
+                stores: { props: { a: {} } }
             });
             expect(dependantOnVars(StateOnly, StateOnly.aggregatedVariables)).to.eql({
                 stores: { store1: { a: {}, b: {} } }
             });
             expect(dependantOnVars(ProsAndState, ProsAndState.aggregatedVariables)).to.eql({
                 props: { props: { a: {}, b: {} } },
-                stores: { store2: { a: {}, b: {} } }
+                stores: {  props: { a: {}, b: {} }, store2: { a: {}, b: {} } }
             });
             expect(dependantOnVars(DynamicAttributes, DynamicAttributes.aggregatedVariables)).to.eql({
-                props: { props: { a: {} } }
+                props: { props: { a: {} } },
+                stores: { props: { a: {} } }
             });
             expect(dependantOnVars(DynamicAttributesSelfClosing, DynamicAttributesSelfClosing.aggregatedVariables)).to.eql({
+                stores: { props: { a: {} } },
                 props: { props: { a: {} } }
             });
             expect(dependantOnVars(WithVolatile, WithVolatile.aggregatedVariables)).to.deep.contain({
@@ -45,12 +49,14 @@ describe('ast compiler helpers', () => {
         it(`finds dependencies of directly used vars`, () => {
             const { WithVolatile } = basicPatterns();
             expect(dependantOnVars(WithVolatile, WithVolatile.aggregatedVariables)).to.deep.contain({
+                stores: { props: { a: {} } },
                 props: { props: { a: {} } }
             });
         });
         it(`finds variable dependencies via assignment`, () => {
             const { WithVolatile } = basicPatterns();
             expect(withNoRefs(dependantOnVars(WithVolatile, WithVolatile.jsxRoots[0].aggregatedVariables)), `props.a should be included, it's assigned to be the value of b`).to.deep.contain({
+                stores: { props: { a: {} } },
                 props: { props: { a: {} } },
                 volatile: { b: {}, c: {}, d: {} }
             });
@@ -59,7 +65,7 @@ describe('ast compiler helpers', () => {
             const withFunc = functions().WithVolatileFunction;
             expect(dependantOnVars(withFunc, withFunc.jsxRoots[0].aggregatedVariables)).to.eql({
                 volatile: { someFunc: {}, b: {} },
-                stores: { s: { a: {} } },
+                stores: { props: { p: {} }, s: { a: {} } },
                 props: { props: { p: {} } }
             });
         });
