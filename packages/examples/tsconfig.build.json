@@ -12,7 +12,6 @@
         "**/*.test.ts",
         "src/examples/*/**/*",
         "dist/**/*",
-        "**/index.compiled2.ts",
         "node_modules"
     ],
     "include": [
