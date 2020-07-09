@@ -1,6 +1,6 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, setNodeSrc, UsedInScope, cStatic } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, setNodeSrc } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { setupClosure, dependantOnVars } from './helpers';
+import { setupClosure } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
 import { FragmentData } from './fragment/jsx.fragment';
 import { safely } from '@tsx-air/utils';
@@ -73,7 +73,7 @@ function generateMethodBind(func: FuncDefinition) {
     );
 }
 
-const handleWhenFunc = (comp: CompDefinition, node: ts.Node, allowWhenFunc: boolean) => {
+const handleWhenFunc = (node: ts.Node, allowWhenFunc: boolean, whens:{counter:number}) => {
     if (ts.isExpressionStatement(node) &&
         ts.isCallExpression(node.expression)) {
         const call = node.expression;
@@ -84,26 +84,13 @@ const handleWhenFunc = (comp: CompDefinition, node: ts.Node, allowWhenFunc: bool
                     throw new Error(`Invalid "when" statement: must be called with 2 arguments: 
                     when(triggers:any|any[], callback:()=>void)`);
                 }
-                const vars = findUsedVariables(call, n => n === call.arguments[1]);
-                delete vars.read.when;
-                delete vars.accessed.when;
-                // TODO
-                const triggers = getChangeBitsNames(dependantOnVars(comp, vars));
-                return asAst(`when(${JSON.stringify(triggers)}, this.${funcName})`);
+                return asAst(`when(${asCode(call.arguments[0])}, this.${funcName}, this, ${whens.counter++})`);
             } else {
                 throw new Error(`Invalid "when" statement: when should only be used component body (i.e. not in functions)`);
             }
         }
     }
     return undefined;
-};
-
-const getChangeBitsNames = (vars: UsedInScope) => {
-    const used = {} as Record<string, string[]>;
-    for (const [k, v] of Object.entries(vars.stores || {})) {
-        used[k] = Object.keys(v);
-    }
-    return used;
 };
 
 const swapLambdas = (n: ts.Node) => {
@@ -122,11 +109,12 @@ const swapLambdas = (n: ts.Node) => {
 
 export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[], declaredVars?: Set<string>, allowWhenFunc: boolean = false) => {
     declaredVars = declaredVars || new Set<string>();
+    const whens = { counter: 0 };
     const parser = (s: ts.Node, skipArrow?: any) => {
         const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n => {
             return swapVarDeclarations(comp, n, declaredVars!) ||
                 swapLambdas(n) ||
-                handleWhenFunc(comp, n, allowWhenFunc) ||
+                handleWhenFunc(n, allowWhenFunc, whens) ||
                 // swapStateChanges(comp, n) ||
                 handleArrowFunc(parser, n, skipArrow) ||
                 swapVirtualElements(comp, fragments, n);

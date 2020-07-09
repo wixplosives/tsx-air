@@ -13,10 +13,10 @@ export class Runtime {
     maxDepthPerUpdate = 50;
     maxDepth = 100;
 
-    when: (predicate: string[], action: () => void) => void = this.always;
 
     hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
     render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
+    private previousPredicates = new Map<Component, Record<number, any>>();
     private pending = new Set<Displayable>();
     private viewUpdatePending: boolean = false;
     private hydrating = 0;
@@ -37,6 +37,29 @@ export class Runtime {
         if (requestAnimationFrame !== undefined) {
             this.requestAnimationFrame = requestAnimationFrame.bind(globalThis);
         }
+    }
+
+    when(predicate: any, action: () => void, target: Component, id: number) {
+        const previousTargetPredicates = this.previousPredicates.get(target) || {};
+
+        const update = () => {
+            this.previousPredicates.set(target, previousTargetPredicates);
+            previousTargetPredicates[id] = predicate;
+            action();
+        };
+        if (this.previousPredicates.has(target) && id in previousTargetPredicates) {
+            const previous = previousTargetPredicates[id];
+            if (previous === predicate) {
+                return;
+            }
+            if (isArray(previous)) {
+                if (previous.length === predicate.length &&
+                    previous.every((v, i) => v === predicate[i])) {
+                    return;
+                }
+            }
+        }
+        update();
     }
 
     invalidate(comp: Displayable) {
@@ -129,9 +152,6 @@ export class Runtime {
             value: hydrated
         };
     }
-    private always(_: any, action: () => void) {
-        action();
-    }
 
     private renderOrHydrate(vElm: VirtualElement<any>, dom?: HTMLElement): Displayable {
         const { key, props, type, parent } = vElm;
@@ -176,19 +196,10 @@ export class Runtime {
         do {
             depth++;
             const { pending } = this;
-            this.pending = new Set<Displayable>();            
+            this.pending = new Set<Displayable>();
             for (const instance of pending) {
                 if (Component.is(instance)) {
-                    this.when = (predicate, action) => {
-                        // TODO fix predicate
-                        if (predicate.some(p => 0)) {
-                            action();
-                        }
-                    };
                     const preRender = instance.preRender();
-                    this.pending.delete(instance);
-                    this.when = this.always;
-
                     const nextRoot = this.getUpdatedInstance(preRender);
                     const root = instance.ctx.root as Displayable;
                     if (root !== nextRoot) {

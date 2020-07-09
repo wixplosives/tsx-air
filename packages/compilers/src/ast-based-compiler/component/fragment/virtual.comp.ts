@@ -1,7 +1,7 @@
-import { CompDefinition, findUsedVariables, asAst, cGet, JsxComponent } from '@tsx-air/compiler-utils';
+import { CompDefinition, asAst, cGet, JsxComponent } from '@tsx-air/compiler-utils';
 import { FragmentData } from './jsx.fragment';
 import ts, { JsxExpression } from 'typescript';
-import { dependantOnVars, setupClosure } from '../helpers';
+import { setupClosure } from '../helpers';
 import { findJsxComp } from '../function';
 
 export const generateVirtualComponents = (fragment: FragmentData) =>
