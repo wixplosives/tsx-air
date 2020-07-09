@@ -11,34 +11,8 @@ import {
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
-import { VOLATILE, STATE } from '../consts';
 import { merge, chain, defaultsDeep, mergeWith, omit } from 'lodash';
 import isArray from 'lodash/isArray';
-
-export const getGenericMethodParamsByUsedInScope = (used: UsedInScope, includeVolatile = false,
-    deStructure = true) => {
-    const retValue = (usedKeys: RecursiveMap | undefined, name: string) => {
-        if (usedKeys && Object.keys(usedKeys).length) {
-            return deStructure ? destructure(usedKeys) : name;
-        }
-        return undefined;
-    };
-
-    const volatile = includeVolatile ? retValue(used.volatile, VOLATILE) : undefined;
-    const state = retValue(used.stores, STATE);
-    const props = chain(used.props).keys().first().value();
-    return [props, state, volatile];
-};
-
-export const getGenericMethodParams = (
-    comp: CompDefinition,
-    scope: UsedVariables,
-    includeVolatile = false,
-    deStructure = true
-) => {
-    const used = dependantOnVars(comp, scope);
-    return getGenericMethodParamsByUsedInScope(used, includeVolatile, deStructure);
-};
 
 export const compFuncByName = (comp: CompDefinition, name: string) => comp.functions.find(f => f.name === name);
 
@@ -52,7 +26,7 @@ export function getDirectDependencies(comp: CompDefinition, scope: UsedVariables
         add(used, { [v]: scope.accessed[v] }, 'volatile'));
 
     if (_usedInScope(comp.propsIdentifier)) {
-        add(used, { [comp.propsIdentifier!]: scope.read[comp.propsIdentifier!] }, 'props');
+        add(used, { $props: scope.read[comp.propsIdentifier!] }, 'stores');
     }
 
     comp.stores.map(c => c.name).filter(_usedInScope).forEach(
@@ -84,7 +58,7 @@ const addAll = (comp: CompDefinition, target: UsedInScope, usedVars: UsedVariabl
     const merged = defaultsDeep({}, ...Object.values(usedVars));
     for (const [k, v] of Object.entries(merged)) {
         if (k === comp.propsIdentifier) {
-            add(target, { [k]: v as RecursiveMap }, 'props');
+            add(target, { $props: v as RecursiveMap }, 'stores');
         } else {
             if (!comp.stores.some(({ name }) => {
                 if (name === k) {
@@ -137,23 +111,9 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
     return flat;
 }
 
-export function getChangeBitsNames(used: UsedInScope): string[] {
-    const ret: string[] = [];
-    if (used.props) {
-        const p = Object.keys(used.props).find(k => k !== '$refs')!;
-        Object.keys(used.props[p]).forEach(k => ret.push(`props.${k}`));
-    }
+function* getClosureStores(comp: CompDefinition, used: UsedInScope) {
     if (used.stores) {
-        for (const [name, store] of Object.entries(used.stores)) {
-            Object.keys(store).forEach(k => ret.push(`${name}.${k}`));
-        }
-    }
-    return ret;
-}
-
-function* getClosureState(used: UsedInScope) {
-    if (used.stores) {
-        yield cConst(destructure(used.stores)!, asAst(`this.state`) as ts.PropertyAccessExpression);
+        yield cConst(destructure(used.stores, { $props: comp.propsIdentifier })!, asAst(`this.stores`) as ts.PropertyAccessExpression);
     }
 }
 
@@ -163,59 +123,57 @@ function* getClosureVolatile(used: UsedInScope) {
     }
 }
 
-function* getClosureProps(used: UsedInScope) {
-    if (used.props) {
-        const propsIdentifier = Object.keys(used.props)[0];
-        if (propsIdentifier !== 'props') {
-            yield cConst(
-                ts.createObjectBindingPattern([ts.createBindingElement(
-                    undefined,
-                    ts.createIdentifier('props'),
-                    ts.createIdentifier(propsIdentifier),
-                )]), ts.createThis());
+function* getClosureProps(comp: CompDefinition, used: UsedInScope) {
+    if (used?.stores?.$props) {
+        if (comp.propsIdentifier) {
+            yield cConst(comp.propsIdentifier, ts.createIdentifier('this.stores.$props'));
         } else {
-            yield cConst(destructureNamed(Object.keys(used.props)), ts.createThis());
+            throw new Error(`Invalid props usage: props identifier not found`);
         }
     }
 }
 
-export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, includeVolatile = true) {
+export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, unpack = true) {
     const f = ((isArray(scope) ? scope : [scope]) as ts.Node[]).map(s =>
         // @ts-ignore: handle UsedVariables scope
         (s.read && s.accessed)
             ? s
             : findUsedVariables(s));
     const used = merge({ read: {}, accessed: {}, modified: {}, executed: {} }, ...f);
-    yield* addToClosure(getDirectDependencies(comp, used, true), includeVolatile);
-    yield* addToClosure(Object.keys(used.executed).filter(
+    yield* addToClosure(comp, getDirectDependencies(comp, used, true), unpack);
+    yield* addToClosure(comp, Object.keys(used.executed).filter(
         name => comp.functions.some(fn => fn.name === name)
-    ), includeVolatile);
+    ), unpack);
 
 }
 
-export function* addToClosure(used: UsedInScope | string[], includeVolatile: boolean) {
+export function* addToClosure(comp: CompDefinition, used: UsedInScope | string[], unpack: boolean) {
     if (isArray(used)) {
         if (used.length) {
-            yield cConst(destructureNamed(used), asAst('this.owner') as ts.Expression);
+            yield cConst(destructureNamed(used, {}), asAst('this.owner') as ts.Expression);
         }
     } else {
-        yield* getClosureProps(used);
-        yield* getClosureState(used);
-        if (includeVolatile) {
+        if (unpack) {
+            yield* getClosureStores(comp, used);
             yield* getClosureVolatile(used);
+        } else {
+            yield* getClosureProps(comp, used);
         }
     }
 }
 
-const destructureNamed = (keys: string[]) => ts.createObjectBindingPattern(
+const destructureNamed = (keys: string[], rename: Record<string, string | undefined>) => ts.createObjectBindingPattern(
     keys.map(key =>
-        ts.createBindingElement(undefined, undefined, ts.createIdentifier(key), undefined)
+        ts.createBindingElement(undefined,
+            rename[key] ? key : undefined,
+            ts.createIdentifier(rename[key] ? rename[key]! : key),
+            undefined)
     )
 );
 
-const destructure = (map: RecursiveMap) =>
+const destructure = (map: RecursiveMap, rename: Record<string, string | undefined> = {}) =>
     map && Object.keys(map).length
-        ? destructureNamed(Object.keys(map))
+        ? destructureNamed(Object.keys(map), rename)
         : undefined;
 
 const readNsVars = (comp: NodeWithVariables, namespace: string | undefined) => {

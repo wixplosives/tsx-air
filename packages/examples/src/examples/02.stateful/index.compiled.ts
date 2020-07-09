@@ -7,7 +7,7 @@ interface Props {
 export const StatefulComp: CompCreator<Props> = (props: Props) => ({
     props
 });
-StatefulComp.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarget) => {
+StatefulComp.render = (props: Props, target?: HTMLElement, add?: RenderTarget) => {
     const state = {
         a: props.initialState + 'A',
         b: props.initialState + 'B',

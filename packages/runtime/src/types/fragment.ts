@@ -1,7 +1,5 @@
-import { Displayable } from './displayable';
-import { Component } from './component';
-import { TSXAir } from '..';
-import { VirtualElement } from './virtual.element';
+import { Component,VirtualElement, Displayable} from '.';
+import {getInstance as $rt} from '..';
 
 type CommentPlaceholder = 'X' | 'E' | 'C';
 
@@ -21,24 +19,25 @@ export class Fragment extends Displayable {
         if (!_owner) {
             throw new Error('Invalid fragment: no owner component');
         }
-        super(key, parent, _owner.props, _owner.state, _owner.volatile);
-        // @ts-ignore
-        this.changesBitMap = _owner.changesBitMap;
+        super(key, parent);
+        this.stores = _owner.stores;
+        this.volatile = _owner.volatile;
+        Object.values(this.stores).forEach(store => store.$subscribe(this.storeChanged));
     }
 
-    public updateView(_changes: number): void {/* */}
+    public updateView(): void {/* */ }
 
     public hydrateExpressions(values: any[], target: HTMLElement) {
         return this.hydrateInternals(values, target, 'X',
             (v: any, t: Comment) =>
                 this.ctx.expressions.push(
-                    TSXAir.runtime.hydrateExpression(v, t)));
+                    $rt().hydrateExpression(v, t)));
     }
 
     public hydrateComponents(virtualComps: VirtualElement[], target: HTMLElement) {
         this.hydrateInternals(virtualComps, target, 'C',
             (c: VirtualElement, t: Comment) =>
-                TSXAir.runtime.hydrate(c, t.nextElementSibling as HTMLElement));
+                $rt().hydrate(c, t.nextElementSibling as HTMLElement));
     }
 
     public hydrateElements(target: HTMLElement) {
@@ -62,15 +61,15 @@ export class Fragment extends Displayable {
 
     }
 
-    private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: (v:any, c:Comment)=>void): void {
+    private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: (v: any, c: Comment) => void): void {
         let expressionIndex = 0;
         let inExpressionString = false;
-        const { document, window } = TSXAir.runtime;
+        const { document, window } = $rt();
         // @ts-ignore
         const { NodeFilter } = window;
 
         const comments = document.createNodeIterator(target, NodeFilter.SHOW_COMMENT, {
-            acceptNode:node => {
+            acceptNode: (node:any) => {
                 if (inExpressionString) {
                     if (`<!--${node.textContent}-->` === this.comment(expressionIndex, type)) {
                         expressionIndex++;

@@ -1,10 +1,5 @@
-import * as delegate from './api/delegate';
-export * from './api/types';
-export { delegate };
-export { bind } from './api/bind';
-export * from './api/store';
-export { when, always, requestRender } from './api/lifecycle';
-export * from './types';
-export { default as runtime } from './runtime';
-export { utils as runtimeUtils } from './runtime';
 export * from './api/component';
+export { bind } from './api/bind';
+export { store } from './api/store';
+export { when, always, requestRender } from './api/lifecycle';
+export * from './api/types';

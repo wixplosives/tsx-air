@@ -1,7 +1,3 @@
-import { TSXAir } from './types';
-
-export function when(predicate: any | any[], action: () => void) {
-    TSXAir.runtime.when(predicate, action);
-}
+export function when(_predicate: any | any[], _action: () => void) { /* */ }
 export const always = () => true;
 export async function requestRender(): Promise<void> {  /* todo */ }

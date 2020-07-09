@@ -1,8 +1,8 @@
 {
-    "name": "@tsx-air/framework",
+    "name": "@tsx-air/runtime",
     "version": "0.0.1",
     "description": "Standing for the future super awesome TSXAir framework",
-    "repository": "https://github.com/wixplosives/tsx-air/tree/master/packages/framework",
+    "repository": "https://github.com/wixplosives/tsx-air/tree/master/packages/runtime",
     "main": "dist/cjs/index.js",
     "module": "dist/esm/index.js",
     "types": "dist/esm/index.d.ts",
@@ -16,7 +16,7 @@
         "clean": "rimraf ./dist",
         "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\"",
         "prebuild": "yarn clean",
-        "test": "echo No tests"
+        "test": "mocha \"src/**/*.test.ts?(x)\""
     },
     "sideEffects": [],
     "files": [

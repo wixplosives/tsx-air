@@ -2,10 +2,11 @@ import { Analyzer, Import, ImportSpecifierInfo } from './types';
 import ts from 'typescript';
 import { asAnalyzerResult, errorNode, filterResults } from './types.helpers';
 import { scan } from '../ast-utils/scanner';
+import { asCode } from '..';
 
 export const importStatement: Analyzer<Import> = sourceAstNode => {
     if (ts.isImportDeclaration(sourceAstNode)) {
-        const module = sourceAstNode.moduleSpecifier.getText();
+        const module = asCode(sourceAstNode.moduleSpecifier);
         const specifiers = scan(sourceAstNode, importSpecifierStatement);
         const specifiersInfo = filterResults(specifiers);
         let defaultLocalName: string | undefined;
@@ -14,10 +15,10 @@ export const importStatement: Analyzer<Import> = sourceAstNode => {
             const imports = sourceAstNode.importClause;
             const bindings = imports.namedBindings;
             if (sourceAstNode.importClause.name) {
-                defaultLocalName = sourceAstNode.importClause.name.getText();
+                defaultLocalName = asCode(sourceAstNode.importClause.name);
             } 
             if (bindings && ts.isNamespaceImport(bindings)) {
-                nameSpace = bindings.name.getText();
+                nameSpace = asCode(bindings.name);
             }
         }
 
@@ -35,8 +36,8 @@ export const importStatement: Analyzer<Import> = sourceAstNode => {
 
 export const importSpecifierStatement: Analyzer<ImportSpecifierInfo> = sourceAstNode => {
     if (ts.isImportSpecifier(sourceAstNode)) {
-        const importedName = sourceAstNode.propertyName ? sourceAstNode.propertyName.getText() : sourceAstNode.name.getText();
-        const localName = sourceAstNode.name.getText();
+        const importedName = sourceAstNode.propertyName ? asCode(sourceAstNode.propertyName) : asCode(sourceAstNode.name);
+        const localName = asCode(sourceAstNode.name);
         return asAnalyzerResult<ImportSpecifierInfo>({
             kind: 'importSpecifier',
             sourceAstNode,

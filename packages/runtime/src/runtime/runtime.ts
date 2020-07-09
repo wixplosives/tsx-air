@@ -1,32 +1,32 @@
-import { RuntimeCycle } from './stats';
-import { updateExpression as _updateExpression, asDomNodes, remapChangedBit } from './runtime.helpers';
+import { RuntimeCycle } from '../stats';
+import { updateExpression as _updateExpression, asDomNodes } from './runtime.helpers';
 import isArray from 'lodash/isArray';
-import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from '..';
-
-type Mutator = () => any;
+import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from '../types';
+import { StoreData, Store } from '../store';
 
 export class Runtime {
-    public readonly HTMLElement: typeof HTMLElement;
-    public readonly Text: typeof Text;
-    public $stats = [] as RuntimeCycle[];
+    readonly HTMLElement: typeof HTMLElement;
+    readonly Text: typeof Text;
+    $stats = [] as RuntimeCycle[];
 
-    public readonly document: Document;
-    public maxDepthPerUpdate = 50;
-    public maxDepth = 100;
+    readonly document: Document;
+    maxDepthPerUpdate = 50;
+    maxDepth = 100;
 
-    public when: (predicate: string[], action: () => void) => void = this.always;
 
-    public hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
-    public render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
-    private pending = new Map<Displayable, number>();
+    hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
+    render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
+    private previousPredicates = new Map<Component, Record<number, any>>();
+    private pending = new Set<Displayable>();
     private viewUpdatePending: boolean = false;
     private hydrating = 0;
     private mockDom!: HTMLElement;
     private keyCounter = 0 | 0;
+    private stores = new WeakMap<any, Record<string, Store>>();
+
     constructor(
         readonly window: Window = globalThis.window,
         readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = globalThis.requestAnimationFrame
-
     ) {
         this.mockDom = window?.document?.createElement('div');
         this.document = window?.document;
@@ -39,18 +39,57 @@ export class Runtime {
         }
     }
 
-    public update(instance: Displayable, bits: number, mutator: Mutator) {
-        this.addChange(instance, bits);
-        this.triggerViewUpdate();
-        return mutator();
+    when(predicate: any, action: () => void, target: Component, id: number) {
+        const previousTargetPredicates = this.previousPredicates.get(target) || {};
+
+        const update = () => {
+            this.previousPredicates.set(target, previousTargetPredicates);
+            previousTargetPredicates[id] = predicate;
+            action();
+        };
+        if (this.previousPredicates.has(target) && id in previousTargetPredicates) {
+            const previous = previousTargetPredicates[id];
+            if (previous === predicate) {
+                return;
+            }
+            if (isArray(previous)) {
+                if (previous.length === predicate.length &&
+                    previous.every((v, i) => v === predicate[i])) {
+                    return;
+                }
+            }
+        }
+        update();
     }
 
-    public updateExpression(exp: ExpressionDom, value: any) {
+    invalidate(comp: Displayable) {
+        this.pending.add(comp);
+        this.triggerViewUpdate();
+    }
+
+    registerStore<T extends StoreData>(instance: any, name: string, store: Store<T>) {
+        const instanceStores = this.stores.get(instance) || {};
+        instanceStores[name] = store;
+        if (Component.is(instance)) {
+            if (instance.stores) {
+                instance.stores[name] = store;
+            }
+            store.$subscribe(instance.storeChanged);
+        }
+        this.stores.set(instance, instanceStores);
+    }
+
+    getStore(instance: any, name: string) {
+        const instanceStores = this.stores.get(instance);
+        return instanceStores && instanceStores[name];
+    }
+
+    updateExpression(exp: ExpressionDom, value: any) {
         exp.value = value;
         _updateExpression([exp.start as Comment, exp.end as Comment], asDomNodes(value));
     }
 
-    public toString(x: any): string {
+    toString(x: any): string {
         if (isArray(x)) {
             return x.map(i => this.toString(i)).join('');
         }
@@ -60,26 +99,22 @@ export class Runtime {
         return x?.toString() || '';
     }
 
-    public getUpdatedInstance(vElm: VirtualElement<any>): Displayable {
+    getUpdatedInstance(vElm: VirtualElement<any>): Displayable {
         const { key, parent, owner } = vElm;
         if (!key || !owner || !parent) {
             throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
         }
-        if (key in parent.ctx.components) {
-            const instance = parent.ctx.components[key];
-            instance.props = vElm.props;
-            this.addChange(instance, vElm.changes);
-            return instance;
-        } else {
-            return this.render(vElm);
+        if (Component.is(parent.ctx.components[key])) {
+            parent.ctx.components[key].stores.$props.$set(vElm.props);
         }
+        return parent.ctx.components[key] || this.render(vElm);
     }
 
-    public getUniqueKey(prefix = '') {
+    getUniqueKey(prefix = '') {
         return `${prefix}${(this.keyCounter++).toString(36)}`;
     }
 
-    public spreadStyle(styleObj: string | object): string {
+    spreadStyle(styleObj: string | object): string {
         if (typeof styleObj === 'string') {
             return styleObj;
         }
@@ -90,7 +125,7 @@ export class Runtime {
         return style;
     }
 
-    public hydrateExpression(value: any, start: Comment): ExpressionDom {
+    hydrateExpression(value: any, start: Comment): ExpressionDom {
         value = isArray(value) ? value : [value];
         let hydratedDomNode: Node = start;
         const hydrated = value
@@ -102,30 +137,32 @@ export class Runtime {
                 }
                 return i.toString();
             });
-        if (!(hydratedDomNode.nextSibling instanceof
-            // @ts-ignore
-            this.window.Comment)) {
+        if (
+            !(
+                hydratedDomNode.nextSibling instanceof
+                // @ts-ignore
+                this.window.Comment
+            )
+        ) {
             throw new Error(`Hydration error: Expression does not match data. (no ending comment)`);
         }
         return {
-            start, end: hydratedDomNode.nextSibling as Comment,
+            start,
+            end: hydratedDomNode.nextSibling as Comment,
             value: hydrated
         };
     }
-    private always(_: any, action: () => void) {
-        action();
-    }
 
     private renderOrHydrate(vElm: VirtualElement<any>, dom?: HTMLElement): Displayable {
-        const { key, props, state, type, parent } = vElm;
+        const { key, props, type, parent } = vElm;
         if (Component.isType(type)) {
-            const comp = this.hydrateComponent(key!, parent, dom, type, props, state);
+            const comp = this.hydrateComponent(key!, parent, dom, type, props);
             if (vElm.parent && key) {
                 vElm.parent.ctx.components[key] = comp;
             }
             return comp;
         }
-        const instance = type.factory.newInstance(vElm.key!, vElm);
+        const instance = new type(vElm.key!, vElm);
         if (!dom) {
             this.mockDom.innerHTML = instance.toString();
             dom = this.mockDom.children[0] as HTMLElement;
@@ -142,11 +179,10 @@ export class Runtime {
         parent: Displayable | undefined,
         domNode: HTMLElement | undefined,
         type: typeof Component,
-        props: any,
-        state?: any
+        props: any
     ): Comp {
         this.hydrating++;
-        const instance = parent?.ctx.components[key] || type.factory.newInstance(key, { props, state, parent });
+        const instance = (parent?.ctx.components[key] || new type(key, parent, props)) as Comp;
         const preRender = instance.preRender();
         // prerender already expressed in view ny toString
         this.pending.delete(instance);
@@ -155,51 +191,33 @@ export class Runtime {
         return instance;
     }
 
-    private addChange(instance: Displayable, change: number) {
-        const currentChange = (this.pending.get(instance) as number) | change;
-        this.pending.set(instance, currentChange);
-    }
-
-    private removeChanges(instance: Displayable) {
-        const r = (this.pending.get(instance)! | 0);
-        this.pending.delete(instance);
-        return r;
-    }
-
     private updateView = (_: number) => {
         let depth = 0;
         do {
             depth++;
             const { pending } = this;
-            this.pending = new Map<Displayable, number>();
-            for (let [instance, changes] of pending) {
+            this.pending = new Set<Displayable>();
+            for (const instance of pending) {
                 if (Component.is(instance)) {
-                    this.when = (predicate, action) => {
-                        if (predicate.some(p => changes & instance.changesBitMap[p])) {
-                            action();
-                        }
-                    };
                     const preRender = instance.preRender();
-                    this.when = this.always;
-                    // handle prerender state changes 
-                    changes |= this.removeChanges(instance);
-                    preRender.changes = remapChangedBit(changes, preRender.changeBitMapping);
-
                     const nextRoot = this.getUpdatedInstance(preRender);
                     const root = instance.ctx.root as Displayable;
                     if (root !== nextRoot) {
                         root.domRoot.parentNode?.insertBefore(nextRoot.domRoot, root.domRoot);
                         root.domRoot.remove();
                         instance.ctx.root = nextRoot as Fragment;
-                        if (!root.props.keepAlive) {
+                        if (!root.stores.$props.keepAlive) {
                             instance.ctx.components[root.key].dispose();
+                            this.pending.delete(instance.ctx.components[root.key]);
                             delete instance.ctx.components[root.key];
                         }
                         instance.ctx.components[nextRoot.key] = nextRoot;
                     }
                 } else {
-                    (instance as Fragment).updateView(changes);
+                    (instance as Fragment).updateView();
                 }
+                instance.modified = new Map();
+                this.pending.delete(instance);
             }
         } while (this.pending.size && depth < this.maxDepthPerUpdate);
 

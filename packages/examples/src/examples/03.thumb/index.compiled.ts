@@ -7,7 +7,7 @@ interface Props {
 export const Thumb: CompCreator<Props> = (props: Props) => ({
     props
 });
-Thumb.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarget) => {
+Thumb.render = (props: Props, target?: HTMLElement, add?: RenderTarget) => {
     if (!target || add !== 'append') {
         throw new Error('Now supported in this example');
     }

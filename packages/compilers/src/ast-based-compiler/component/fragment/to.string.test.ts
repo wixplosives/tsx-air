@@ -3,19 +3,20 @@ import { CompDefinition, evalAst } from '@tsx-air/compiler-utils';
 import { generateToString } from './to.string';
 import { chaiPlugin } from '@tsx-air/testing';
 import { expect, use } from 'chai';
-import { TSXAir, store, Component } from '@tsx-air/framework';
 import { asFunction } from '../function';
 import sinon, { SinonStub } from 'sinon';
 import { parseFragments, FragmentData } from './jsx.fragment';
 import { identity } from 'lodash';
+import * as runtime from '@tsx-air/runtime';
 use(chaiPlugin);
 
 describe('generateToString', () => {
+    afterEach(runtime.reset);
     let evalContext = {};
     const toStringOf = (comp: CompDefinition, props: any, state: any = {}, volatile: any = {}, scope = {}) => {
         const frag = parseFragments(comp).next().value as FragmentData;
-        const asFunc = evalAst(asFunction(generateToString(frag)), { TSXAir, store, ...evalContext }) as ()=>any;
-        return () => asFunc.apply({ props, state, volatile, ...scope, unique:identity });
+        const asFunc = evalAst(asFunction(generateToString(frag)), { $rt:runtime.getInstance, ...evalContext }) as () => any;
+        return () => asFunc.apply({ stores: { $props:props, ...state }, volatile, ...scope, unique: identity });
     };
     it('generates a toString method based on the used props and state', () => {
         const comps = basicPatterns();
@@ -38,11 +39,12 @@ describe('generateToString', () => {
     describe(`nested components`, () => {
         let stub: SinonStub;
         beforeEach(() => {
-            stub = sinon.stub(TSXAir.runtime, 'toString');
+            const rt = runtime.getInstance();
+            stub = sinon.stub(rt, 'toString');                        
         });
-        it(`uses TSXAir.runtime.toString to evaluate nested components`, () => {
+        it(`uses $rt().toString to evaluate nested components`, () => {
             const { NestedStateless } = basicPatterns();
-            evalContext = { PropsOnly: class PropsOnly extends Component { } };
+            evalContext = { PropsOnly: class PropsOnly extends runtime.Component { } };
             const mockVElm = {};
             const nested = toStringOf(NestedStateless, {
                 a: 'outer'

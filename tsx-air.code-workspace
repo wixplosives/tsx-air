@@ -39,6 +39,9 @@
 		{
 			"name": "playground",
 			"path": "packages/playground"
+		},
+		{
+			"path": "packages/runtime"
 		}
 	],
 	"settings": {
@@ -59,6 +62,9 @@
 			"jsxroot",
 			"pixelmatch",
 			"pngjs",
+			"prebuild",
+			"precompiled",
+			"preloads",
 			"prerender",
 			"quotemark",
 			"sirv",
