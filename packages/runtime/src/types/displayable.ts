@@ -1,5 +1,6 @@
 import { Store, Observable } from '../store';
-import { getInstance as $rt, Component, Fragment } from '../';
+import { Component, Fragment } from '.';
+import {getInstance as $rt} from '..';
 
 export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
 

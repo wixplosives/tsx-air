@@ -18,6 +18,7 @@ export function* generateUpdateView(fragment: FragmentData) {
     if (statements.length) {
         yield cMethod('updateView', [], [
             ...setupClosure(comp, fragment.root.aggregatedVariables),
+            asAst(`const {$props}=this.stores;`) as ts.Statement,
             ...statements]);
     }
 }

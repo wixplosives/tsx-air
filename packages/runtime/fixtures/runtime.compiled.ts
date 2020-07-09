@@ -1,17 +1,14 @@
-import { Component, TSXAir, ComponentApi } from '../src';
-import { VirtualElement } from '../src/runtime/types/virtual.element';
-import { Fragment } from '../src/runtime/types/fragment';
-import { RenderTarget } from '../src/runtime/types/factory';
-import { store } from '../src/runtime/store';
+import { getInstance as $rt, store, Component, Fragment, VirtualElement } from '@tsx-air/runtime';
+import { RenderTarget } from '@tsx-air/framework';
 
 export class CompiledParent extends Component {
     static render(props: any, target?: HTMLElement, add?: RenderTarget) {
-        return Component._render(CompiledParent as any, props, target, add) as ComponentApi<CompiledParent>;
+        return Component._render(CompiledParent as any, props, target, add);
     }
     public preRender(): VirtualElement<any> {
-        const { props } = this.stores;
+        const { $props:props } = this.stores;
         const state = store({ counter: 0 }, this, 'state');
-        
+
         state.counter++;
         if (props.a < 0) {
             return VirtualElement.fragment('0', ParentFrag0, this);
@@ -27,34 +24,34 @@ export class CompiledParent extends Component {
 // tslint:disable:max-classes-per-file
 export class ParentFrag0 extends Fragment {
     public updateView(): void {
-        const { props } = this.stores;
+        const { $props:props } = this.stores;
         if ((this.modified.get(props) || 0) & props.$bits.a) {
-            TSXAir.runtime.updateExpression(this.ctx.expressions[0], props.a);
+            $rt().updateExpression(this.ctx.expressions[0], props.a);
         }
         if ((this.modified.get(props) || 0) & props.$bits.a) {
-            TSXAir.runtime.getUpdatedInstance(this.$comp0);
+            $rt().getUpdatedInstance(this.$comp0);
         }
     }
 
     get $comp0() {
-        const { props } = this.stores;
+        const { $props:props } = this.stores;
         return VirtualElement.component('0', CompiledChild, this,
             { ca: props.a, cb: -props.a });
     }
 
     public hydrate(_: any, target: HTMLElement) {
-        const { props } = this.stores;
+        const { $props:props } = this.stores;
         this.hydrateExpressions([props.a], target);
         this.hydrateComponents([this.$comp0], target);
         this.ctx.root = target;
     }
 
     public toString(): string {
-        const { props } = this.stores;
+        const { $props:props } = this.stores;
         const r = this.unique(`<span><!--C-->${
-            TSXAir.runtime.toString(this.$comp0)
+            $rt().toString(this.$comp0)
             }<!--C--><!--X-->${
-            TSXAir.runtime.toString(props.a)
+            $rt().toString(props.a)
             }<!--X--></span>`);
         return r;
     }
@@ -68,26 +65,26 @@ export class CompiledChild extends Component {
 
 export class ChildFrag0 extends Fragment {
     public updateView(): void {
-        const { props } = this.stores;
+        const { $props:props } = this.stores;
         if ((this.modified.get(props) || 0) & props.$bits.ca) {
-            TSXAir.runtime.updateExpression(this.ctx.expressions[0], props.ca);
+            $rt().updateExpression(this.ctx.expressions[0], props.ca);
         }
         if ((this.modified.get(props) || 0) & props.$bits.cb) {
-            TSXAir.runtime.updateExpression(this.ctx.expressions[1], props.cb);
+            $rt().updateExpression(this.ctx.expressions[1], props.cb);
         }
     }
 
     public hydrate(_: any, target: HTMLElement) {
-        const { props } = this.stores;
+        const { $props:props } = this.stores;
         this.hydrateExpressions([props.ca, props.cb], target);
         this.ctx.root = target;
     }
 
     public toString(): string {
-        const { props } = this.stores;
+        const { $props:props } = this.stores;
         const r = this.unique(`<div><!--X-->${
-            TSXAir.runtime.toString(props.ca)}<!--X--> <!--X-->${
-            TSXAir.runtime.toString(props.cb)}<!--X--></div>`);
+            $rt().toString(props.ca)}<!--X--> <!--X-->${
+            $rt().toString(props.cb)}<!--X--></div>`);
         return r;
     }
 }

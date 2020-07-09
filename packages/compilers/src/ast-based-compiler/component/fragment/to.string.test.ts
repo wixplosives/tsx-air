@@ -7,7 +7,7 @@ import { asFunction } from '../function';
 import sinon, { SinonStub } from 'sinon';
 import { parseFragments, FragmentData } from './jsx.fragment';
 import { identity } from 'lodash';
-import { runtime } from '@tsx-air/framework';
+import * as runtime from '@tsx-air/runtime';
 use(chaiPlugin);
 
 describe('generateToString', () => {

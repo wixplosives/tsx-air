@@ -1,4 +1,4 @@
-import { getInstance as $rt } from '../runtime';
+import { getInstance as $rt } from '.';
 
 type AllowedKeys = Exclude<string, ReservedKeys>;
 type ReservedKeys = keyof CompiledStore & keyof Observable;

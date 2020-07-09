@@ -1,0 +1,17 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "@tsx-air/*": [
+                "node_modules/@tsx-air/*/src"
+            ]
+        }
+    },
+    "exclude": [
+        "**/*.test.ts",
+        "src/runtime/runtime.test.suite.ts"
+    ],
+    "include": [
+        "src/**/*.ts"
+    ]
+}

@@ -1,17 +1,12 @@
-import { RuntimeCycle } from './stats';
+import { RuntimeCycle } from '../stats';
 import { updateExpression as _updateExpression, asDomNodes } from './runtime.helpers';
 import isArray from 'lodash/isArray';
-import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from './types';
-import { StoreData, Store } from './store';
+import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from '../types';
+import { StoreData, Store } from '../store';
 
 export class Runtime {
     readonly HTMLElement: typeof HTMLElement;
     readonly Text: typeof Text;
-    readonly Component=Component;
-    readonly Fragment=Fragment;
-    readonly Displayable=Displayable;
-    readonly VirtualElement=VirtualElement;
-    
     $stats = [] as RuntimeCycle[];
 
     readonly document: Document;
@@ -185,6 +180,7 @@ export class Runtime {
             for (const instance of pending) {
                 if (Component.is(instance)) {
                     this.when = (predicate, action) => {
+                        // TODO fix predicate
                         if (predicate.some(p => 0)) {
                             action();
                         }
@@ -199,7 +195,7 @@ export class Runtime {
                         root.domRoot.parentNode?.insertBefore(nextRoot.domRoot, root.domRoot);
                         root.domRoot.remove();
                         instance.ctx.root = nextRoot as Fragment;
-                        if (!root.stores.props.keepAlive) {
+                        if (!root.stores.$props.keepAlive) {
                             instance.ctx.components[root.key].dispose();
                             this.pending.delete(instance.ctx.components[root.key]);
                             delete instance.ctx.components[root.key];

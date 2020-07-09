@@ -1,15 +1,17 @@
 import { expect } from 'chai';
 import { transformerCompilers } from '.';
-import { testRuntimeApi } from '@tsx-air/framework/src/runtime/runtime.test.suite';
 import { packagePath } from '@tsx-air/utils/packages';
 import { readFileSync } from 'fs';
 import ts from 'typescript';
 import { compilerOptions } from '@tsx-air/compiler-utils';
 import { Script } from 'vm';
-import * as fr from '@tsx-air/framework';
+import * as runtime from '@tsx-air/runtime';
 import { browserifyFiles } from '@tsx-air/testing';
+import { testRuntimeApi } from '@tsx-air/runtime/src/runtime/runtime.test.suite';
 
-describe('compilers', () => {
+
+
+describe.only('compilers', () => {
     it('each compiler should have a unique name', () => {
         const usedNames: Set<string> = new Set();
         for (const { label } of transformerCompilers) {
@@ -25,13 +27,13 @@ describe('compilers', () => {
             let Child: any;
             before(async () => {
                 await browserifyFiles(
-                    packagePath('@tsx-air/framework', 'fixtures'),
+                    packagePath('@tsx-air/runtime', 'fixtures'),
                     packagePath('@tsx-air/compilers', 'tmp'),
                     compiler,
                     'runtime.fixture.tsx',
                     'out.js',
                 );
-                const src = readFileSync(packagePath('@tsx-air/framework', 'fixtures', 'runtime.fixture.tsx'), { encoding: 'utf8' });
+                const src = readFileSync(packagePath('@tsx-air/runtime', 'fixtures', 'runtime.fixture.tsx'), { encoding: 'utf8' });
                 const out = ts.transpileModule(src, {
                     compilerOptions: {
                         ...compilerOptions,
@@ -42,9 +44,10 @@ describe('compilers', () => {
                 }).outputText;
                
                 const exports = { Parent: null, Child: null };
-                const require = () => fr;
+                const require = () => runtime;
                 const script = new Script(out);
-                script.runInNewContext({ require, exports, ...fr });
+                const context = {...runtime, require, exports, $rt:runtime.getInstance};
+                script.runInNewContext(context);
                 Parent = exports.Parent;
                 Child = exports.Child;
             });

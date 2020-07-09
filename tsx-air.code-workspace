@@ -39,6 +39,9 @@
 		{
 			"name": "playground",
 			"path": "packages/playground"
+		},
+		{
+			"path": "packages/runtime"
 		}
 	],
 	"settings": {

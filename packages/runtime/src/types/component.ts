@@ -1,8 +1,8 @@
 import { VirtualElement } from './virtual.element';
 import { Displayable } from './displayable';
-import { TsxComponentApi } from '../../api/component';
 import { store } from '../store';
 import { getInstance as $rt } from '../';
+import { RenderTarget, TsxComponentApi } from '@tsx-air/framework';
 
 export class Component extends Displayable {
     static is(x: any): x is Component {
@@ -60,4 +60,3 @@ export class Component extends Displayable {
     }
 }
 
-type RenderTarget = 'append' | 'before' | 'replace';

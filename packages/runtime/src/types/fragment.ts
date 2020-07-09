@@ -1,7 +1,5 @@
-import { Displayable } from './displayable';
-import { Component } from './component';
-import { VirtualElement } from './virtual.element';
-import { getInstance as $rt } from '../';
+import { Component,VirtualElement, Displayable} from '.';
+import {getInstance as $rt} from '..';
 
 type CommentPlaceholder = 'X' | 'E' | 'C';
 

@@ -9,6 +9,7 @@ import { createCjs, readFileOr, evalModule, writeToFs } from './build.helpers';
 
 export const preloads = {
     '/node_modules/@tsx-air/framework/index.js': import('@tsx-air/framework'),
+    '/node_modules/@tsx-air/runtime/index.js': import('@tsx-air/runtime'),
     '/node_modules/lodash/clamp.js': import('lodash/clamp')
 };
 

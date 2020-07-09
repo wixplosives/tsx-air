@@ -9,7 +9,7 @@ import ts from 'typescript';
 export const generateFragmentClass = (fragment: FragmentData, _api: FileTransformerAPI) => {
     const frag = cClass(
         fragment.id,
-        asAst(`$rt().Fragment`) as ts.Expression,
+        asAst(`Fragment`) as ts.Expression,
         undefined, false, [
         ...generateUpdateView(fragment),
         generateToString(fragment),

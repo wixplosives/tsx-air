@@ -1,4 +1,4 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, setNodeSrc, UsedInScope } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, setNodeSrc, UsedInScope, cStatic } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { setupClosure, dependantOnVars } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
@@ -8,6 +8,7 @@ import { chain, get } from 'lodash';
 
 export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]) {
     assignFunctionNames(comp);
+    yield generateRender(comp);
     yield generatePreRender(comp, fragments);
     for (const func of comp.functions) {
         yield generateMethod(comp, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.arguments);
@@ -19,6 +20,11 @@ export const readFuncName = (func: FuncDefinition) => postAnalysisData.read(func
 export const readNodeFuncName = (func: ts.Node) => postAnalysisData.readByAst(func, 'name')!;
 export const writeFuncName = (func: FuncDefinition, name: string) =>
     postAnalysisData.write(func, 'name', name);
+
+function generateRender(comp: CompDefinition) {
+    return cMethod('render', ['p', 't', 'a'],
+        [asAst(`return Component._render(${comp.name}, p, t, a);`, true) as ts.Statement], true);
+}
 
 function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
     const body = get(comp.sourceAstNode.arguments[0], 'body');

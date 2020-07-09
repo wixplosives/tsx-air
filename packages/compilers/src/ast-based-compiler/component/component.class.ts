@@ -7,12 +7,12 @@ import ts from 'typescript';
 
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
     api.removeImport('@tsx-air/framework');
-    api.ensureImport('runtime', '@tsx-air/framework');
-    api.prependStatements(asAst(`const $rt=runtime.getInstance;`) as ts.Statement);
+    api.ensureImport('getInstance as $rt, store, Component, Fragment, VirtualElement', '@tsx-air/runtime');
+    api.prependStatements(asAst(`const when=(...args)=>$rt().when(...args)`) as ts.Statement);
     const fragments = [...parseFragments(comp)];
     const compClass = cClass(
         comp.name!,
-        asAst(`$rt().Component`) as ts.Expression,
+        asAst(`Component`) as ts.Expression,
         undefined,
         true,
         [
