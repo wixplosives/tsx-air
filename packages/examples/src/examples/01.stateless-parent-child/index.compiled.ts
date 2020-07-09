@@ -7,7 +7,7 @@ interface Props {
 export const ChildComp: CompCreator<Props> = (props: Props) => ({
     props
 });
-ChildComp.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarget) => {
+ChildComp.render = (props: Props, target?: HTMLElement, add?: RenderTarget) => {
     if (!target || add !== 'append') {
         throw new Error('Now supported in this example');
     }
@@ -25,14 +25,14 @@ ChildComp.render = (props: Props, _?: object, target?: HTMLElement, add?: Render
 export const ParentComp: CompCreator<Props> = (props: Props) => ({
     props
 });
-ParentComp.render = (props: Props, _?: object, target?: HTMLElement, add?: RenderTarget) => {
+ParentComp.render = (props: Props, target?: HTMLElement, add?: RenderTarget) => {
     if (!target || add !== 'append') {
         throw new Error('Now supported in this example');
     }
     const parent = document.createElement('div');
     parent.textContent = `Parent: ${props.name}`;
     parent.classList.add('parent');
-    const child = ChildComp.render(props, undefined, parent as HTMLElement, 'append');
+    const child = ChildComp.render(props, parent as HTMLElement, 'append');
     target.append(parent);
     return {
         updateProps: (p: Props) => {

@@ -2,7 +2,7 @@ import { Runtime } from './runtime/runtime';
 import * as utils from './utils';
 export { Runtime, utils };
 export * from './types';
-export { store } from './store';
+export * from './store';
 
 let runTimes: Record<string, Runtime> = {};
 export function getInstance(id = 'default') {
