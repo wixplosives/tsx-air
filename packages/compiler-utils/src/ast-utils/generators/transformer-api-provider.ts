@@ -3,7 +3,7 @@ import { TsxFile, TsNodeToAirNode, AnalyzerResult } from '../../analyzers/types'
 import { analyze } from '../../analyzers';
 import { cObject, cAccess, cImport, ImportDefinition } from '.';
 import { asCode } from '../..';
-import { uniq, uniqBy } from 'lodash';
+import { uniqBy } from 'lodash';
 
 
 export interface FileTransformerAPI {
