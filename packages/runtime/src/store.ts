@@ -1,4 +1,4 @@
-import { getInstance as $rt } from '.';
+import { Runtime } from '.';
 
 type AllowedKeys = Exclude<string, ReservedKeys>;
 type ReservedKeys = keyof CompiledStore & keyof Observable;
@@ -37,8 +37,8 @@ export type Store<T extends StoreData = any> = Observable & CompiledStore & T;
 export type StoreData = Record<AllowedKeys, any>;
 type Listener<T = any> = (store: CompiledStore<T>, changed: number) => void;
 
-export function store<T extends StoreData>(initialState: T, instance: any, name: string): Store<T> {
-    const existingStore = $rt().getStore(instance, name);
+export function store<T extends StoreData>(initialState: T, instance: {$rt:Runtime}, name: string): Store<T> {
+    const existingStore = instance.$rt.getStore(instance, name);
     if (existingStore) {
         return existingStore;
     }
@@ -98,6 +98,6 @@ export function store<T extends StoreData>(initialState: T, instance: any, name:
         }
     }) as Store<T>;
     dispatcher.$target = proxy;
-    $rt().registerStore(instance, name, proxy);
+    instance.$rt.registerStore(instance, name, proxy);
     return proxy;
 }
