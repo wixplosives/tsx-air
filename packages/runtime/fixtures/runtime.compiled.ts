@@ -5,7 +5,7 @@ export class CompiledParent extends Component {
     static render(props: any, target?: HTMLElement, add?: RenderTarget) {
         return Component._render(CompiledParent as any, props, target, add);
     }
-    public preRender(): VirtualElement<any> {
+    public preRender(): VirtualElement {
         const { $props:props } = this.stores;
         const state = store({ counter: 0 }, this, 'state');
 
@@ -58,7 +58,7 @@ export class ParentFrag0 extends Fragment {
 }
 
 export class CompiledChild extends Component {
-    public preRender(): VirtualElement<typeof ChildFrag0> {
+    public preRender(): VirtualElement {
         return VirtualElement.fragment('0', ChildFrag0, this);
     }
 }
