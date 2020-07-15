@@ -1,6 +1,4 @@
-import { Component } from './component';
-import { Fragment } from './fragment';
-import { Displayable, DisplayableData } from './displayable';
+import { Component, DisplayableData, Displayable, Fragment } from '@tsx-air/runtime';
 
 export class VirtualElement implements DisplayableData {
     get fullKey(): string {

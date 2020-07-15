@@ -1,7 +1,4 @@
-import { VirtualElement } from './virtual.element';
-import { Displayable } from './displayable';
-import { store } from '../store';
-import { getInstance, Runtime } from '../';
+import { getInstance, Runtime, store, Displayable, VirtualElement } from '@tsx-air/runtime';
 import { RenderTarget, TsxComponentApi } from '@tsx-air/framework';
 
 export class Component extends Displayable {

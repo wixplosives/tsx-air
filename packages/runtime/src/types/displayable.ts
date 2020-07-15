@@ -1,6 +1,4 @@
-import { Store, Observable } from '../store';
-import { Component, Fragment } from '.';
-import { Runtime } from '..';
+import { Store, Observable, Component, Fragment, Runtime } from '@tsx-air/runtime';
 
 export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
 
@@ -56,7 +54,7 @@ export class Displayable {
     constructor(
         readonly key: string,
         parent: Displayable | DisplayableData | undefined,
-        readonly $rt:Runtime
+        readonly $rt: Runtime
     ) {
         this.innerKey = $rt.getUniqueKey();
         while (parent && !Displayable.is(parent)) {
@@ -72,7 +70,7 @@ export class Displayable {
 
     afterMount(_ref: Elm) {/** add event listeners */ }
     afterUnmount() {/** dispose of stuff */ }
-    
+
     dispose() {
         for (const comp of Object.values(this.ctx.components)) {
             comp.dispose();

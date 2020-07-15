@@ -1,5 +1,4 @@
-import { Component,VirtualElement, Displayable} from '.';
-import {getInstance as $rt, Runtime} from '..';
+import { Component,VirtualElement, Displayable, Runtime} from '@tsx-air/runtime';
 
 type CommentPlaceholder = 'X' | 'E' | 'C';
 
@@ -12,7 +11,7 @@ export class Fragment extends Displayable {
     }
 
     constructor(
-        runtime:Runtime,
+        $rt:Runtime,
         key: string,
         parent: Displayable
     ) {
@@ -20,7 +19,7 @@ export class Fragment extends Displayable {
         if (!_owner) {
             throw new Error('Invalid fragment: no owner component');
         }
-        super(key, parent, runtime);
+        super(key, parent, $rt);
         this.stores = _owner.stores;
         this.volatile = _owner.volatile;
         Object.values(this.stores).forEach(store => store.$subscribe(this.storeChanged));
@@ -32,13 +31,13 @@ export class Fragment extends Displayable {
         return this.hydrateInternals(values, target, 'X',
             (v: any, t: Comment) =>
                 this.ctx.expressions.push(
-                    $rt().hydrateExpression(v, t)));
+                    this.$rt.hydrateExpression(v, t)));
     }
 
     public hydrateComponents(virtualComps: VirtualElement[], target: HTMLElement) {
         this.hydrateInternals(virtualComps, target, 'C',
             (c: VirtualElement, t: Comment) =>
-                $rt().hydrate(c, t.nextElementSibling as HTMLElement));
+                this.$rt.hydrate(c, t.nextElementSibling as HTMLElement));
     }
 
     public hydrateElements(target: HTMLElement) {
@@ -65,7 +64,7 @@ export class Fragment extends Displayable {
     private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: (v: any, c: Comment) => void): void {
         let expressionIndex = 0;
         let inExpressionString = false;
-        const { document, window } = $rt();
+        const { document, window } = this.$rt;
         // @ts-ignore
         const { NodeFilter } = window;
 

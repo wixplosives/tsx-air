@@ -1,4 +1,4 @@
-import { Runtime } from '.';
+import { Runtime } from '@tsx-air/runtime';
 
 type AllowedKeys = Exclude<string, ReservedKeys>;
 type ReservedKeys = keyof CompiledStore & keyof Observable;

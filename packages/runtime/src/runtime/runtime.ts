@@ -1,8 +1,7 @@
 import { RuntimeCycle } from '../stats';
 import { updateExpression as _updateExpression, asDomNodes } from './runtime.helpers';
 import isArray from 'lodash/isArray';
-import { Component, Displayable, Fragment, ExpressionDom, VirtualElement } from '../types';
-import { StoreData, Store } from '../store';
+import { Component, Displayable, Fragment, ExpressionDom, VirtualElement, Store, StoreData } from '@tsx-air/runtime';
 
 export class Runtime {
     readonly HTMLElement: typeof HTMLElement;
@@ -181,7 +180,8 @@ export class Runtime {
         props: any
     ): Comp {
         this.hydrating++;
-        const instance = (parent?.ctx.components[key] || new type(this, key, parent, props)) as Comp;
+        const instance = (parent?.ctx.components[key] ||
+            new type(this as any/** prevents ts package mismatch issue */, key, parent, props)) as Comp;
         const preRender = instance.preRender();
         // prerender already expressed in view ny toString
         this.pending.delete(instance);
