@@ -39,6 +39,8 @@ export class Displayable {
     static is(x: any): x is Displayable {
         return x && x instanceof Displayable;
     }
+
+
     readonly innerKey!: string;
     readonly ctx: Ctx = {
         root: null,

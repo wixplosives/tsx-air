@@ -52,12 +52,11 @@ export class Component extends Displayable {
         return this.$rt.toString(this.preRender());
     }
 
-    preRender(): VirtualElement<any> {
+    preRender(): VirtualElement {
         throw new Error(`not implemented`);
     }
 
-    hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {
+    hydrate(preRendered: VirtualElement, target: HTMLElement): void {
         this.ctx.root = this.$rt.hydrate(preRendered, target);
     }
 }
-

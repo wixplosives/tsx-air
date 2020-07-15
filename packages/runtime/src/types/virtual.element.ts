@@ -2,7 +2,7 @@ import { Component } from './component';
 import { Fragment } from './fragment';
 import { Displayable, DisplayableData } from './displayable';
 
-export class VirtualElement<T extends typeof Displayable = any, P extends Displayable = Displayable> implements DisplayableData {
+export class VirtualElement implements DisplayableData {
     get fullKey(): string {
         return this.parent ? `${this.parent.fullKey}${this.key}` : this.key || 'NO KEY';
     }
@@ -11,9 +11,9 @@ export class VirtualElement<T extends typeof Displayable = any, P extends Displa
         return Component.is(this.parent) ? this.parent : this.parent?.owner;
     }
 
-    static component<T extends typeof Component, P extends Displayable>(key: string, type: T, parent: P,
+    static component(key: string, type: typeof Component, parent: Displayable,
         props: any = {}) {
-        return new VirtualElement(type as any, props, parent, key);
+        return new VirtualElement(type, props, parent, key);
     }
 
     static root<T extends typeof Component>(type: T, props: any) {
@@ -29,9 +29,9 @@ export class VirtualElement<T extends typeof Displayable = any, P extends Displa
     }
 
     private constructor(
-        readonly type: T,
+        readonly type: any,
         readonly props: any,
-        readonly parent?: P,
+        readonly parent?: Displayable,
         readonly key?: string,
     ) { }
 

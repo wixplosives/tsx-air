@@ -13,9 +13,8 @@ export class Runtime {
     maxDepthPerUpdate = 50;
     maxDepth = 100;
 
-
-    hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
-    render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
+    hydrate = this.renderOrHydrate as (vElm: VirtualElement, dom: HTMLElement) => Displayable;
+    render = this.renderOrHydrate as (vElm: VirtualElement) => Displayable;
     private previousPredicates = new Map<Component, Record<number, any>>();
     private pending = new Set<Displayable>();
     private viewUpdatePending: boolean = false;
@@ -99,7 +98,7 @@ export class Runtime {
         return x?.toString() || '';
     }
 
-    getUpdatedInstance(vElm: VirtualElement<any>): Displayable {
+    getUpdatedInstance(vElm: VirtualElement): Displayable {
         const { key, parent, owner } = vElm;
         if (!key || !owner || !parent) {
             throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
@@ -153,7 +152,7 @@ export class Runtime {
         };
     }
 
-    private renderOrHydrate(vElm: VirtualElement<any>, dom?: HTMLElement): Displayable {
+    private renderOrHydrate(vElm: VirtualElement, dom?: HTMLElement): Displayable {
         const { key, props, type, parent } = vElm;
         if (Component.isType(type)) {
             const comp = this.hydrateComponent(key!, parent, dom, type, props);
