@@ -1,4 +1,4 @@
-import { getInstance, Runtime, store, Displayable, VirtualElement } from '@tsx-air/runtime';
+import { Displayable, VirtualElement, getInstance, Runtime, store } from '@tsx-air/runtime';
 import { RenderTarget, TsxComponentApi } from '@tsx-air/framework';
 
 export class Component extends Displayable {
@@ -31,7 +31,7 @@ export class Component extends Displayable {
         return new TsxComponentApi(comp as Component);
     }
 
-    constructor(runtime:Runtime, readonly key: string, public parent: Displayable | undefined, props: object) {
+    constructor(runtime: Runtime, readonly key: string, public parent: Displayable | undefined, props: object) {
         super(key, parent, runtime);
         this.stores = { $props: store(props, this, '$props') };
         let depth = 0;

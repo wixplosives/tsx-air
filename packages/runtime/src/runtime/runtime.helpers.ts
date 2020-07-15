@@ -1,6 +1,5 @@
 import isArray from 'lodash/isArray';
-import { Displayable, VirtualElement } from '../types';
-import { getInstance } from '..';
+import { getInstance, Displayable, VirtualElement } from '@tsx-air/runtime';
 
 export function updateExpression(expMarkers: Comment[], values: IterableIterator<Text | HTMLElement>) {
     let first!: Node;
