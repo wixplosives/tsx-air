@@ -162,7 +162,7 @@ export class Runtime {
             }
             return comp;
         }
-        const instance = new type(vElm.key!, vElm);
+        const instance = new type(this, vElm.key!, vElm);
         if (!dom) {
             this.mockDom.innerHTML = instance.toString();
             dom = this.mockDom.children[0] as HTMLElement;
@@ -182,7 +182,7 @@ export class Runtime {
         props: any
     ): Comp {
         this.hydrating++;
-        const instance = (parent?.ctx.components[key] || new type(key, parent, props)) as Comp;
+        const instance = (parent?.ctx.components[key] || new type(this, key, parent, props)) as Comp;
         const preRender = instance.preRender();
         // prerender already expressed in view ny toString
         this.pending.delete(instance);

@@ -1,5 +1,5 @@
 import { Component,VirtualElement, Displayable} from '.';
-import {getInstance as $rt} from '..';
+import {getInstance as $rt, Runtime} from '..';
 
 type CommentPlaceholder = 'X' | 'E' | 'C';
 
@@ -12,6 +12,7 @@ export class Fragment extends Displayable {
     }
 
     constructor(
+        runtime:Runtime,
         key: string,
         parent: Displayable
     ) {
@@ -19,7 +20,7 @@ export class Fragment extends Displayable {
         if (!_owner) {
             throw new Error('Invalid fragment: no owner component');
         }
-        super(key, parent);
+        super(key, parent, runtime);
         this.stores = _owner.stores;
         this.volatile = _owner.volatile;
         Object.values(this.stores).forEach(store => store.$subscribe(this.storeChanged));
