@@ -21,7 +21,7 @@ export class VirtualElement<T extends typeof Displayable = any, P extends Displa
     }
 
     static fragment<T extends typeof Fragment, P extends Displayable>(key: string, type: T, parent: P) {
-        return new VirtualElement(type, parent.stores.props, parent, key);
+        return new VirtualElement(type as any, parent.stores.props, parent, key);
     }
 
     static is(x: any): x is VirtualElement {
