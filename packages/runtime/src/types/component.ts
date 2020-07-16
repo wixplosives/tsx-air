@@ -1,8 +1,8 @@
 import { VirtualElement } from './virtual.element';
 import { Displayable } from './displayable';
 import { store } from '../store';
-import { getInstance as $rt } from '../';
-import { RenderTarget, TsxComponentApi } from '@tsx-air/framework';
+import { Runtime } from '../';
+import { RenderTarget, TsxComponentApi } from '../api/component';
 
 export class Component extends Displayable {
     static is(x: any): x is Component {
@@ -11,11 +11,11 @@ export class Component extends Displayable {
     static isType(x: any): x is typeof Component {
         return x && x.prototype instanceof Component;
     }
-    static _render<C extends typeof Component>(component: C, props: any, target?: HTMLElement, add?: RenderTarget) {
+    static _render<C extends typeof Component>(runtime:Runtime, component: C, props: any, target?: HTMLElement, add?: RenderTarget) {
         if (!Component.isType(component)) {
             throw new Error(`Invalid component: not compiled as TSXAir`);
         }
-        const comp = $rt().render(VirtualElement.root(component, props));
+        const comp = runtime.render(VirtualElement.root(component, props));
         if (target) {
             const dom = comp.domRoot;
             switch (add) {
@@ -33,22 +33,22 @@ export class Component extends Displayable {
         return new TsxComponentApi(comp as Component);
     }
 
-    constructor(readonly key: string, public parent: Displayable | undefined, props: object) {
-        super(key, parent);
+    constructor(readonly key: string, public parent: Displayable | undefined, props: object, runtime:Runtime) {
+        super(key, parent, runtime);
         this.stores = { $props: store(props, this, '$props') };
         let depth = 0;
         while (parent) {
             depth++;
             parent = parent?.owner;
         }
-        if (depth > $rt().maxDepth) {
-            throw new Error(`Component tree too deep (over ${$rt().maxDepth})
-    This is a component recursion protection - change $rt().maxDepth (or fix your code)`);
+        if (depth > runtime.maxDepth) {
+            throw new Error(`Component tree too deep (over ${runtime.maxDepth})
+    This is a component recursion protection - change runtime.maxDepth (or fix your code)`);
         }
     }
 
     toString(): string {
-        return $rt().toString(this.preRender());
+        return this.$rt.toString(this.preRender());
     }
 
     preRender(): VirtualElement<any> {
@@ -56,7 +56,6 @@ export class Component extends Displayable {
     }
 
     hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {
-        this.ctx.root = $rt().hydrate(preRendered, target);
+        this.ctx.root = this.$rt.hydrate(preRendered, target);
     }
 }
-

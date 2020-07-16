@@ -68,7 +68,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
             const tag = asCode(src.tagName);
             if (isComponentTag(tag)) {
                 add('<!--C-->');
-                const exp = asAst(`$rt().toString(${asCode(n)})`) as ts.Expression;
+                const exp = asAst(`this.$rt.toString(${asCode(n)})`) as ts.Expression;
                 // @ts-ignore
                 exp.src = src;
                 add({ exp });
@@ -89,7 +89,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
                                     add('="');
                                     if (initializer.expression) {
                                         if (attrName === 'style') {
-                                            add({ exp: astTemplate(`$rt().spreadStyle(exp)`, { exp: initializer.expression }) as any as ts.Expression });
+                                            add({ exp: astTemplate(`this.$rt.spreadStyle(exp)`, { exp: initializer.expression }) as any as ts.Expression });
                                         } else {
                                             add({ exp: initializer.expression });
                                         }
@@ -113,7 +113,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
         }
         if (ts.isJsxExpression(n) && !ts.isJsxAttribute(n.parent) && n.expression) {
             add('<!--X-->');
-            add({ exp: asAst(`$rt().toString(${asCode(n.expression)})`) as ts.Expression });
+            add({ exp: asAst(`this.$rt.toString(${asCode(n.expression)})`) as ts.Expression });
             add('<!--X-->');
             return ts.createTrue();
         }

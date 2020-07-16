@@ -1,4 +1,4 @@
-import { getInstance as $rt } from '.';
+import { getInstance as $rt, Runtime } from '.';
 
 type AllowedKeys = Exclude<string, ReservedKeys>;
 type ReservedKeys = keyof CompiledStore & keyof Observable;
@@ -31,15 +31,17 @@ export interface CompiledStore<T extends StoreData = any> {
         [key in keyof T]: number;
     };
     $set: (p: StoreData) => void;
+    $readBits: number;
 }
 
 export type Store<T extends StoreData = any> = Observable & CompiledStore & T;
 export type StoreData = Record<AllowedKeys, any>;
 type Listener<T = any> = (store: CompiledStore<T>, changed: number) => void;
 
-export function store<T extends StoreData>(initialState: T, instance: any, name: string): Store<T> {
-    const existingStore = $rt().getStore(instance, name);
+export function store<T extends StoreData>(initialState: T, instance: {$rt:Runtime}, name: string): Store<T> {
+    const existingStore = instance.$rt.getStore(instance, name);
     if (existingStore) {
+        existingStore.$readBits = 0;
         return existingStore;
     }
     let bit = 0;
@@ -47,12 +49,15 @@ export function store<T extends StoreData>(initialState: T, instance: any, name:
     for (const [key] of Object.entries(initialState)) {
         $bits[key] = 1 << bit++;
     }
+    let $readBits = 0;
     const dispatcher = new Dispatcher();
     const proxy = new Proxy(initialState, {
         get: (t: T, p: keyof Store<T>) => {
             switch (p) {
                 case '$bits':
                     return $bits;
+                case '$readBits':
+                    return $readBits;
                 case '$subscribe':
                     return dispatcher.$subscribe;
                 case '$unsubscribe':
@@ -82,19 +87,26 @@ export function store<T extends StoreData>(initialState: T, instance: any, name:
                         dispatcher.$dispatch(changes);
                     };
                 default:
+                    $readBits |= $bits[p as string];
                     return t[p];
             }
         },
         set: (t: T, p: keyof Store<T>, value: any) => {
-            if (p in t) {
-                if (t[p] !== value) {
-                    t[p] = value;
-                    dispatcher.$dispatch($bits[p as string]);
-                }
-            } else {
-                throw new Error('Invalid store property: only properties that were defined in initialState may be changed');
+            switch (p) {
+                case '$readBits':
+                    $readBits = value;
+                    return true;
+                default:
+                    if (p in t) {
+                        if (t[p] !== value) {
+                            t[p] = value;
+                            dispatcher.$dispatch($bits[p as string]);
+                        }
+                    } else {
+                        throw new Error('Invalid store property: only properties that were defined in initialState may be changed');
+                    }
+                    return true;
             }
-            return true;
         }
     }) as Store<T>;
     dispatcher.$target = proxy;
