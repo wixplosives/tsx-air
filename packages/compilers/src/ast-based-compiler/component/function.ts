@@ -136,10 +136,6 @@ function handleArrowFunc(parser: (n: ts.Node, skipArrow: ts.Node) => ts.Node, n:
     return undefined;
 }
 
-function varsToPropsAccess(comp: CompDefinition) {
-    
-}
-
 export function swapVirtualElements(comp: CompDefinition, fragments: FragmentData[], n: ts.Node, allowNonFrags = false): ts.Expression | undefined {
     if (ts.isParenthesizedExpression(n)) {
         return swapVirtualElements(comp, fragments, n.expression);
