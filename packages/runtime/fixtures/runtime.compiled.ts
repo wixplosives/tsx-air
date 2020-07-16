@@ -1,9 +1,9 @@
-import { getInstance as $rt, store, Component, Fragment, VirtualElement } from '@tsx-air/runtime';
+import { getInstance, store, Component, Fragment, VirtualElement } from '@tsx-air/runtime';
 import { RenderTarget } from '@tsx-air/framework';
 
 export class CompiledParent extends Component {
     static render(props: any, target?: HTMLElement, add?: RenderTarget) {
-        return Component._render(CompiledParent as any, props, target, add);
+        return Component._render(getInstance(), CompiledParent as any, props, target, add);
     }
     public preRender(): VirtualElement<any> {
         const { $props:props } = this.stores;
@@ -26,10 +26,10 @@ export class ParentFrag0 extends Fragment {
     public updateView(): void {
         const { $props:props } = this.stores;
         if ((this.modified.get(props) || 0) & props.$bits.a) {
-            $rt().updateExpression(this.ctx.expressions[0], props.a);
+            this.$rt.updateExpression(this.ctx.expressions[0], props.a);
         }
         if ((this.modified.get(props) || 0) & props.$bits.a) {
-            $rt().getUpdatedInstance(this.$comp0);
+            this.$rt.getUpdatedInstance(this.$comp0);
         }
     }
 
@@ -49,9 +49,9 @@ export class ParentFrag0 extends Fragment {
     public toString(): string {
         const { $props:props } = this.stores;
         const r = this.unique(`<span><!--C-->${
-            $rt().toString(this.$comp0)
+            this.$rt.toString(this.$comp0)
             }<!--C--><!--X-->${
-            $rt().toString(props.a)
+            this.$rt.toString(props.a)
             }<!--X--></span>`);
         return r;
     }
@@ -67,10 +67,10 @@ export class ChildFrag0 extends Fragment {
     public updateView(): void {
         const { $props:props } = this.stores;
         if ((this.modified.get(props) || 0) & props.$bits.ca) {
-            $rt().updateExpression(this.ctx.expressions[0], props.ca);
+            this.$rt.updateExpression(this.ctx.expressions[0], props.ca);
         }
         if ((this.modified.get(props) || 0) & props.$bits.cb) {
-            $rt().updateExpression(this.ctx.expressions[1], props.cb);
+            this.$rt.updateExpression(this.ctx.expressions[1], props.cb);
         }
     }
 
@@ -83,8 +83,8 @@ export class ChildFrag0 extends Fragment {
     public toString(): string {
         const { $props:props } = this.stores;
         const r = this.unique(`<div><!--X-->${
-            $rt().toString(props.ca)}<!--X--> <!--X-->${
-            $rt().toString(props.cb)}<!--X--></div>`);
+            this.$rt.toString(props.ca)}<!--X--> <!--X-->${
+            this.$rt.toString(props.cb)}<!--X--></div>`);
         return r;
     }
 }

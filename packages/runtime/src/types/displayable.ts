@@ -1,6 +1,6 @@
 import { Store, Observable } from '../store';
 import { Component, Fragment } from '.';
-import {getInstance as $rt} from '..';
+import { Runtime } from '..';
 
 export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
 
@@ -29,7 +29,7 @@ export class Displayable {
         if (Displayable.is(root)) {
             return root.domRoot;
         }
-        const { HTMLElement, Text } = $rt();
+        const { HTMLElement, Text } = this.$rt;
         if (root instanceof HTMLElement || root instanceof Text) {
             return root;
         }
@@ -54,8 +54,9 @@ export class Displayable {
     constructor(
         readonly key: string,
         parent: Displayable | DisplayableData | undefined,
+        readonly $rt: Runtime
     ) {
-        this.innerKey = $rt().getUniqueKey();
+        this.innerKey = this.$rt.getUniqueKey();
         while (parent && !Displayable.is(parent)) {
             parent = parent.parent;
         }
@@ -64,12 +65,12 @@ export class Displayable {
 
     storeChanged = (modifiedStore: Store, changed: number) => {
         this.modified.set(modifiedStore, (this.modified.get(modifiedStore) || 0) | changed);
-        $rt().invalidate(this);
+        this.$rt.invalidate(this);
     };
 
     afterMount(_ref: Elm) {/** add event listeners */ }
     afterUnmount() {/** dispose of stuff */ }
-    
+
     dispose() {
         for (const comp of Object.values(this.ctx.components)) {
             comp.dispose();

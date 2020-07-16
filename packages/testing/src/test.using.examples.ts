@@ -51,7 +51,7 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                             api.server.addStaticRoot(paths.temp),
                         ]));
                         after(function () {
-                            if (this.test?.parent?.tests.every(t => t.isPassed())) {
+                            if (this.test?.parent?.tests.every(t => t.isPassed()) && !process.env.DEBUG) {
                                 rimraf(paths.temp, () => null);
                             }
                         });

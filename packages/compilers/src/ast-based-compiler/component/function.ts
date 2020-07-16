@@ -23,7 +23,7 @@ export const writeFuncName = (func: FuncDefinition, name: string) =>
 
 function generateRender(comp: CompDefinition) {
     return cMethod('render', ['p', 't', 'a'],
-        [asAst(`return Component._render(${comp.name}, p, t, a);`, true) as ts.Statement], true);
+        [asAst(`return Component._render(getInstance(), ${comp.name}, p, t, a);`, true) as ts.Statement], true);
 }
 
 function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
