@@ -2,7 +2,7 @@ import { VirtualElement } from './virtual.element';
 import { Displayable } from './displayable';
 import { store } from '../store';
 import { Runtime } from '../';
-import { RenderTarget, TsxComponentApi } from '@tsx-air/framework';
+import { RenderTarget, TsxComponentApi } from '../api/component';
 
 export class Component extends Displayable {
     static is(x: any): x is Component {
@@ -59,4 +59,3 @@ export class Component extends Displayable {
         this.ctx.root = this.$rt.hydrate(preRendered, target);
     }
 }
-

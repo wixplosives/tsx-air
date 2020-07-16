@@ -73,7 +73,7 @@ function generateMethodBind(func: FuncDefinition) {
     );
 }
 
-const handleWhenFunc = (node: ts.Node, allowWhenFunc: boolean, whens:{counter:number}) => {
+const handleWhenFunc = (node: ts.Node, allowWhenFunc: boolean, whens: { counter: number }) => {
     if (ts.isExpressionStatement(node) &&
         ts.isCallExpression(node.expression)) {
         const call = node.expression;
@@ -134,6 +134,10 @@ function handleArrowFunc(parser: (n: ts.Node, skipArrow: ts.Node) => ts.Node, n:
         );
     }
     return undefined;
+}
+
+function varsToPropsAccess(comp: CompDefinition) {
+    
 }
 
 export function swapVirtualElements(comp: CompDefinition, fragments: FragmentData[], n: ts.Node, allowNonFrags = false): ts.Expression | undefined {

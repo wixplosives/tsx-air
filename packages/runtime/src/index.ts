@@ -3,6 +3,7 @@ import * as utils from './utils';
 export { Runtime, utils };
 export * from './types';
 export * from './store';
+export * from './api/component';
 
 let runTimes: Record<string, Runtime> = {};
 export function getInstance(id = 'default') {

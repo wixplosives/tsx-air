@@ -168,6 +168,7 @@ export class Runtime {
             dom = this.mockDom.children[0] as HTMLElement;
         }
         instance.hydrate(vElm, dom);
+        instance.updateReadBits();
         if (vElm.parent && key) {
             vElm.parent.ctx.components[key] = instance;
         }
@@ -184,6 +185,7 @@ export class Runtime {
         this.hydrating++;
         const instance = (parent?.ctx.components[key] || new type(key, parent, props, this)) as Comp;
         const preRender = instance.preRender();
+        instance.updateReadBits();
         // prerender already expressed in view ny toString
         this.pending.delete(instance);
         instance.ctx.root = this.renderOrHydrate(preRender, domNode);
@@ -200,6 +202,8 @@ export class Runtime {
             for (const instance of pending) {
                 if (Component.is(instance)) {
                     const preRender = instance.preRender();
+                    instance.updateReadBits();
+
                     const nextRoot = this.getUpdatedInstance(preRender);
                     const root = instance.ctx.root as Displayable;
                     if (root !== nextRoot) {

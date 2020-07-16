@@ -1,14 +1,11 @@
 import { IntrinsicElements as IntrinsicElementsImported } from './dom';
-import { ComponentApi } from './component';
+import { ComponentApi, RenderTarget } from './component';
 
 export interface TsxAirNode<PROPS> {
     props: PROPS;
 }
 
 export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props> | CompCreator<Props> | CompCreator<any> | Array<CompCreator<any>> | HTMLElement | Array<TsxAirChild<Props>>;
-
-// This interface serves as a component definition in pre-compiled code
-export type RenderTarget = 'append' | 'before' | 'replace';
 
 export interface CompCreator<Props> {
     (props: Props): TsxAirNode<Props>;

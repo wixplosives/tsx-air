@@ -50,6 +50,7 @@ export class Displayable {
     stores!: Record<string, Store> & Record<'$props', Store>;
     volatile!: any;
     modified: Map<Store, number> = new Map();
+    readBits: Map<Store, number> = new Map();
 
     constructor(
         readonly key: string,
@@ -66,11 +67,18 @@ export class Displayable {
     storeChanged = (modifiedStore: Store, changed: number) => {
         this.modified.set(modifiedStore, (this.modified.get(modifiedStore) || 0) | changed);
         this.$rt.invalidate(this);
+        // TODO enable this 
+        // if ((this.readBits.get(modifiedStore) || 0) & changed) {
+        //     this.$rt.invalidate(this);
+        // }
     };
-
+    updateReadBits() {
+        for (const store of Object.values(this.stores)) {
+            this.readBits.set(store, store.$readBits);
+        }
+    }
     afterMount(_ref: Elm) {/** add event listeners */ }
     afterUnmount() {/** dispose of stuff */ }
-
     dispose() {
         for (const comp of Object.values(this.ctx.components)) {
             comp.dispose();
