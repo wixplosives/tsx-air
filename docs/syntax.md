@@ -90,7 +90,7 @@ export const ImagePreloader = TSXAir((props: { url: string}) => {
 ```tsx
 const Memo = TSXAir((props: { digits: number}) => {
     let pi = 3;
-    when(() => { pi = calcPi(digits) });
+    when(() => { pi = calcPi(props.digits) });
     return <div>{pi}</div>;
 });
 ```
