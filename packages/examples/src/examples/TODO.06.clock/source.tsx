@@ -1,4 +1,4 @@
-import { TSXAir, store, when, requestRender } from '../../framework';
+import { TSXAir, store, when,  invalidate } from '@tsx-air/framework';
 
 // exported to keep the example code compact 
 export interface AnimatedDiv {
@@ -28,12 +28,12 @@ export const Digit = TSXAir(async (props: { value: string; lastUpdate: any }) =>
             current.className = 'no-transition exit';
             next.className = 'no-transition';
             // current.className = 'exit';
-            await requestRender();
+            await invalidate();
 
             current.className = '';
             next.className = 'waiting';
             current.$textContent = next.$textContent;
-            await requestRender();
+            await invalidate();
 
             if (pendingValue !== null) {
                 next._isAnimating = current._isAnimating = true;
