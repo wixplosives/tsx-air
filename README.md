@@ -43,7 +43,7 @@ You can change compilers to compare the generated code with native implementatio
 
 The examples available at the playground are used to test the compiler (i.e that the compiled code behaves and performs as the native code)
 
-The list of tested examples can be [here](src/examples/index.ts)
+The list of tested examples can be [here](packages/examples/src/examples/index.ts)
 
 ### CLI (under construction)
 in package `browserify` use `yarn compile`
