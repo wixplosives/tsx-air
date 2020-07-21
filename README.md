@@ -12,10 +12,15 @@
 - Supports multiple concurrent runtime versions
 
 ## Wh Questions
+
 [Why? (Background)](docs/background.md)
+
 [What? (Goals)](docs/goals.md)
+
 [Who? (Advisory board)](docs/advisory.board/advisory.board.md)
+
 [Ha? (Original Proposal)](docs/original.proposal.md)
+
 [How (Syntax)](doc/syntax.md)
 
 ## Getting started
