@@ -1,48 +1,53 @@
-# tsx-air [<-- insert better name here]
+# Welcome to TsxAir
 
 [![Build Status](https://travis-ci.com/wixplosives/tsx-air.svg?branch=master)](https://travis-ci.com/wixplosives/tsx-air)
 
-Thoughts on a new system of rendering
+## TsxAir is a highly optimized frontend framework and compiler
+- Code is written in functional Jsx/Tsx, similar to React FunctionalComponent.
+- Most of the heavy lifting is done in build time, making the VDom/Reconciliation minimal or redundant.
+- Minimal (~ 1-10k) runtime framework code
+- Highly reactive: synchronous data updates, an optional 1 frame delay in DOM update @60 FPS
+- Minimal changes to developer code
+- SSR, TypeScript and standalone components from day 0
+- Supports multiple concurrent runtime versions
 
-## Motivation
-Existing view rendering frameworks such as React, Vue, Angular etc relay on virtual DOM and other runtime solution that run large amounts of code. <br/>
-Much of that can be replaced by buildtime optimization, coupled with a lean, granular runtime environment.
-The ideal replacement will have:
-- Tiny runtime
-- Output that closely resembles the input code
-- TypeScript support
-- Familiar **declarative** syntax (Ideally TSX)
-- SSR optimization
-- Node specific optimization at build time (Example: component with fixed props can be streamlined to its output value, the logic is not required as the input can't change)
+## Wh Questions
 
-## Design principals
-### Support existing toolset and Typescript in particular
-apart from adding a tsConfig compilation transformer the user can use his normal build with no additional build steps
+[Why? (Background)](docs/background.md)
 
-### Create Imperative and readable code
-imperative code is much faster, but readability matters
-[We should discuss this]
+[What? (Goals)](docs/goals.md)
 
-### optimize per entry point in the build
-data that is not changed in the client.
-components that are not recreated
+[Who? (Advisory board)](docs/advisory.board/advisory.board.md)
 
-all can result in massive amounts of the code that are unneeded
+[Ha? (Original Proposal)](docs/original.proposal.md)
 
-## Way Forward
-Currently we're looking into the following alternatives:
-- Create a new framework [See TSX-Air proposal](docs/tsx-air.md):
-  + Describe usecases (input and transpiled output)
-  + Create a minimal runtime for the suggested output
-  + Write a transpiler
-  + Open source transpile and engage with dev community
-- Modify an existing framework to meet the needs described in this document:
-  + Look into candidates
-  + Analyse gaps ([See analysis of Svelte](docs/svelte.md))
-  + Propose solutions
-  + Write an MVP / Partial solution, Ideally as an open source, community engaged effort
-  + Develope a full solution, tooling etc. and push it as the next version of selected framework
-  + Commitment to the selected framework:
-    * Taking a leadership role in the community
-    * Promoting the popularity and community adoption
-    * Provide long term support and contribution to the codebase
+[How (Syntax)](doc/syntax.md)
+
+## Getting started
+### Prerequisite
+- Git
+- Yarn
+- NodeJs
+`git clone https://github.com/wixplosives/tsx-air.git`
+(for ssh lovers: `git@github.com:wixplosives/tsx-air.git`)
+
+### Running Local Playground 
+`yarn start`
+
+The playground is where you can edit interactive examples showcasing the syntax and features. 
+You can change compilers to compare the generated code with native implementation
+
+
+### Testing
+`yarn test` or `DEBUG=true yarn test`
+
+The examples available at the playground are used to test the compiler (i.e that the compiled code behaves and performs as the native code)
+
+The list of tested examples can be [here](packages/examples/src/examples/index.ts)
+
+### CLI (under construction)
+in package `browserify` use `yarn compile`
+
+## Project Structure
+- The project is organized in [packages as a monorepo](https://github.com/wixplosives/sample-monorepo)
+- Code execution is using NodeJs (14.5+) with [ts-tools](https://github.com/AviVahl/ts-tools)

@@ -60,6 +60,7 @@
 			"downlevel",
 			"extendz",
 			"jsxroot",
+			"performant",
 			"pixelmatch",
 			"pngjs",
 			"prebuild",

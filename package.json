@@ -4,6 +4,9 @@
   "workspaces": [
     "packages/*"
   ],
+  "engines": {
+    "node": "^12.18.2"
+  },
   "scripts": {
     "clean": "yarn rimraf packages/*/tmp; yarn rimraf packages/*/.tmp; lerna run clean --stream",
     "build": "lerna run build --stream",
