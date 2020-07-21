@@ -34,9 +34,8 @@
 ### Running Local Playground 
 `yarn start`
 
-The playground is where you can edit interactive examples showcasing the syntax and features. 
-You can change compilers to compare the generated code with native implementation
-
+The playground is where you can edit interactive [examples](packages/examples/src) [showcasing the syntax and features](docs/syntax.md). 
+You can change compilers to compare the generated code with native implementation.
 
 ### Testing
 `yarn test` or `DEBUG=true yarn test`
