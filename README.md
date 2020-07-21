@@ -11,12 +11,27 @@
 - SSR, TypeScript and standalone components from day 0
 - Supports multiple concurrent runtime versions
 
+## [Syntax Code Sample](docs/syntax.md)
+```tsx
+import { TSXAir, store } from '@tsx-air/framework';
+export const ClickBait = TSXAir((p:{initial:number}) => {
+    // will not change when p.initial changes
+    const state = store({ counter: p.count });
+    const onClickA = () => state.counter++;
+    return <div onClick={onClick}>
+        click count: {state.count}        
+        initial: {/* will change with p.initial */props.initial}    
+    </div>;
+});
+```
+
 ## Wh Questions
-[Why? (Background)](docs/background.md)
-[What? (Goals)](docs/goals.md)
-[Who? (Advisory board)](docs/advisory.board/advisory.board.md)
-[Ha? (Original Proposal)](docs/original.proposal.md)
-[How (Syntax)](doc/syntax.md)
+
+- [Why? (Background)](docs/background.md)
+- [What? (Goals)](docs/goals.md)
+- [Who? (Advisory board)](docs/advisory.board/advisory.board.md)
+- [Ha? (Original Proposal)](docs/original.proposal.md)
+- [How (Syntax)](docs/syntax.md)
 
 ## Getting started
 ### Prerequisite
@@ -27,14 +42,17 @@
 (for ssh lovers: `git@github.com:wixplosives/tsx-air.git`)
 
 ### Running Local Playground 
-The playground is where you can edit interactive examples showcasing the syntax and features. 
-You can change compilers to compare the generated code with native implementation
 `yarn start`
 
+The playground is where you can edit interactive examples [showcasing the syntax and features](docs/syntax.md). 
+You can change compilers to compare the generated code with native implementation.
+
 ### Testing
-The examples available at the playground are used to test the compiler (i.e that the compiled code behaves and performs as the native code)
 `yarn test` or `DEBUG=true yarn test`
-The list of tested examples can be [here](src/examples/index.ts)
+
+The examples available at the playground are used to test the compiler (i.e that the compiled code behaves and performs as the native code)
+
+The list of tested examples can be [here](packages/examples/src/examples/index.ts)
 
 ### CLI (under construction)
 in package `browserify` use `yarn compile`
