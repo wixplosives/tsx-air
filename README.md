@@ -32,13 +32,17 @@
 (for ssh lovers: `git@github.com:wixplosives/tsx-air.git`)
 
 ### Running Local Playground 
-The playground is where you can edit interactive examples showcasing the syntax and features. 
-You can change compilers to compare the generated code with native implementation
 `yarn start`
 
+The playground is where you can edit interactive examples showcasing the syntax and features. 
+You can change compilers to compare the generated code with native implementation
+
+
 ### Testing
-The examples available at the playground are used to test the compiler (i.e that the compiled code behaves and performs as the native code)
 `yarn test` or `DEBUG=true yarn test`
+
+The examples available at the playground are used to test the compiler (i.e that the compiled code behaves and performs as the native code)
+
 The list of tested examples can be [here](src/examples/index.ts)
 
 ### CLI (under construction)
