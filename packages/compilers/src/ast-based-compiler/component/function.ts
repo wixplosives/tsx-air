@@ -23,7 +23,7 @@ export const writeFuncName = (func: FuncDefinition, name: string) =>
 
 function generateRender(comp: CompDefinition) {
     return cMethod('render', ['p', 't', 'a'],
-        [asAst(`return Component._render(${comp.name}, p, t, a);`, true) as ts.Statement], true);
+        [asAst(`return Component._render(getInstance(), ${comp.name}, p, t, a);`, true) as ts.Statement], true);
 }
 
 function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
@@ -73,7 +73,7 @@ function generateMethodBind(func: FuncDefinition) {
     );
 }
 
-const handleWhenFunc = (node: ts.Node, allowWhenFunc: boolean, whens:{counter:number}) => {
+const handleWhenFunc = (node: ts.Node, allowWhenFunc: boolean, whens: { counter: number }) => {
     if (ts.isExpressionStatement(node) &&
         ts.isCallExpression(node.expression)) {
         const call = node.expression;
