@@ -21,7 +21,7 @@
 
 [Ha? (Original Proposal)](docs/original.proposal.md)
 
-[How (Syntax)](doc/syntax.md)
+[How (Syntax)](docs/syntax.md)
 
 ## Getting started
 ### Prerequisite
