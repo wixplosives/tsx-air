@@ -11,7 +11,8 @@
 ### Advisors
 - Shahar Talmi
 - Avi Marcus
-- Eliran
+- Eliran Hezkia
+- Ofir Dagan
 
 ### Contributors
 - Nadav Avrahami
