@@ -23,9 +23,11 @@
 
 ### Kickoff (25/6/2020)
 The project was presented to the advisory board and others, who raised the following points:
+- Svelte has a nice feature of adding DOM expressions as comments
 - Testing compilation of existing Wix components 
 - Using React tests
 - Switching to Babel (instead of TS) for compilation
+- Compiler plugins
 
 ### The state of state (23/7/2020)
 #### Discussion point: state changes in user code
