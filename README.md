@@ -17,10 +17,9 @@ import { TSXAir, store } from '@tsx-air/framework';
 export const ClickBait = TSXAir((p:{initial:number}) => {
     // will not change when p.initial changes
     const state = store({ counter: p.count });
-    const onClickA = () => state.counter++;
-    return <div onClick={onClick}>
-        click count: {state.count}        
-        initial: {/* will change with p.initial */props.initial}    
+    return <div onClick={/* Lambdas are all good */() => state.counter++}>
+        click count: {/* will only change on click */ state.count}        
+        initial: {/* will change with p.initial */ props.initial}    
     </div>;
 });
 ```
