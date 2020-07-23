@@ -41,7 +41,7 @@ function generateExpUpdates(statements: ts.Statement[],  fragment: FragmentData)
         }
     };
     jsxExp(fragment).forEach((exp, i) =>
-        addUpdate(exp, `this.$rt.updateExpression(this.ctx.expressions[${i}], ${asCode(toFragSafe(comp, fragments, exp))})`)
+        addUpdate(exp, `this.$rt.updateExpression(this.ctx.expressions[${i}], ${toFragSafe(comp, fragments, exp)})`)
     );
     fragment.root.components.forEach(childComp =>
         addUpdate(childComp, `this.$rt.getUpdatedInstance(this.${

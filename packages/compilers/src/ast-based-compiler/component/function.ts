@@ -124,8 +124,8 @@ export const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[],
     return parser;
 };
 
-export const toFragSafe = (comp: CompDefinition, fragments: FragmentData[], exp: JsxExpression, allowNonFrags = false): ts.Expression =>
-    cloneDeep(exp.sourceAstNode.expression!, undefined, n => swapVirtualElements(comp, fragments, n, allowNonFrags)) as ts.Expression;
+export const toFragSafe = (comp: CompDefinition, fragments: FragmentData[], exp: JsxExpression): string =>
+    asCode(cloneDeep(exp.sourceAstNode.expression!, undefined, n => swapVirtualElements(comp, fragments, n)) as ts.Expression);
 
 function handleArrowFunc(parser: (n: ts.Node, skipArrow: ts.Node) => ts.Node, n: ts.Node, skipArrow?: ts.Node) {
     if (n !== skipArrow && n.parent && ts.isArrowFunction(n.parent)) {
@@ -151,7 +151,12 @@ export function swapVirtualElements(comp: CompDefinition, fragments: FragmentDat
                 return setNodeSrc(ret, n);
             }
         } else {
-            const ret = asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this)`) as ts.Expression;
+            const p = `{
+                ${frag.root.expressions.map(e => `${JSON.stringify(e.expression)}:${
+                toFragSafe(comp, fragments, e)}`).join(',')}
+            }`;
+
+            const ret = asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this, ${p})`) as ts.Expression;
             return setNodeSrc(ret, n);
         }
     }

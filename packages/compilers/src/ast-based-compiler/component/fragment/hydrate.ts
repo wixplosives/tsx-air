@@ -13,7 +13,7 @@ export function generateHydrate(fragment: FragmentData) {
 
     const jsxExp = fragment.root.expressions.filter(e => !isAttribute(e));
     const dynamicAttributes = fragment.root.expressions.filter(isAttribute);
-    const expValues = jsxExp.map(exp => asCode(toFragSafe(comp, fragments, exp)));
+    const expValues = jsxExp.map(exp => toFragSafe(comp, fragments, exp));
     const comps = fragment.root.components.map((c, i) => `this.$${c.name}${i}`);
     const bindings: ts.Statement[] = [];
     if (expValues.length) {
