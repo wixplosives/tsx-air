@@ -29,7 +29,7 @@ The project was presented to the advisory board and others, who raised the follo
 - Switching to Babel (instead of TS) for compilation
 - Compiler plugins
 
-### The state of state (23/7/2020)
+### The state of state (23/7/2020 moved to 30/7/2020)
 #### Discussion point: state changes in user code
 Consider the following code, in which the variables are volatile:
 ```tsx
