@@ -17,7 +17,7 @@ export class Runtime {
     hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
     render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
     private previousPredicates = new Map<Component, Record<number, any>>();
-    private pending = new Set<Displayable>();
+    private pending = new Set<Component>();
     private viewUpdatePending: boolean = false;
     private hydrating = 0;
     private mockDom!: HTMLElement;
@@ -45,7 +45,7 @@ export class Runtime {
         const update = () => {
             this.previousPredicates.set(target, previousTargetPredicates);
             previousTargetPredicates[id] = predicate;
-            action();
+            return action();
         };
         if (this.previousPredicates.has(target) && id in previousTargetPredicates) {
             const previous = previousTargetPredicates[id];
@@ -59,12 +59,17 @@ export class Runtime {
                 }
             }
         }
-        update();
+        return update();
     }
 
-    invalidate(comp: Displayable) {
-        this.pending.add(comp);
-        this.triggerViewUpdate();
+    invalidate(instance: Displayable) {
+        if (Component.is(instance)) {
+            this.pending.add(instance);
+            this.triggerViewUpdate();
+        } else {
+            (instance as Fragment).updateView();
+            instance.modified = new Map();
+        }
     }
 
     registerStore<T extends StoreData>(instance: any, name: string, store: Store<T>) {
@@ -198,27 +203,22 @@ export class Runtime {
         do {
             depth++;
             const { pending } = this;
-            this.pending = new Set<Displayable>();
+            this.pending = new Set<Component>();
             for (const instance of pending) {
-                if (Component.is(instance)) {
-                    const preRender = instance.preRender();
-                    instance.updateReadBits();
+                const preRender = instance.preRender();
+                instance.updateReadBits();
 
-                    const nextRoot = this.getUpdatedInstance(preRender);
-                    const root = instance.ctx.root as Displayable;
-                    if (root !== nextRoot) {
-                        root.domRoot.parentNode?.insertBefore(nextRoot.domRoot, root.domRoot);
-                        root.domRoot.remove();
-                        instance.ctx.root = nextRoot as Fragment;
-                        if (!root.stores.$props.keepAlive) {
-                            instance.ctx.components[root.key].dispose();
-                            this.pending.delete(instance.ctx.components[root.key]);
-                            delete instance.ctx.components[root.key];
-                        }
-                        instance.ctx.components[nextRoot.key] = nextRoot;
+                const nextRoot = this.getUpdatedInstance(preRender);
+                const root = instance.ctx.root as Displayable;
+                if (root !== nextRoot) {
+                    root.domRoot.parentNode?.insertBefore(nextRoot.domRoot, root.domRoot);
+                    root.domRoot.remove();
+                    instance.ctx.root = nextRoot as Fragment;
+                    if (!root.stores.$props.keepAlive) {
+                        instance.ctx.components[root.key].dispose();
+                        delete instance.ctx.components[root.key];
                     }
-                } else {
-                    (instance as Fragment).updateView();
+                    instance.ctx.components[nextRoot.key] = nextRoot;
                 }
                 instance.modified = new Map();
                 this.pending.delete(instance);
