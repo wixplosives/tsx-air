@@ -1,4 +1,4 @@
-import { cMethod, astTemplate, cloneDeep, asCode, asAst, Modifier } from '@tsx-air/compiler-utils';
+import { cMethod, astTemplate, cloneDeep, asCode, asAst, Modifier, getNodeSrc, setNodeSrc } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { swapVirtualElements } from '../function';
 import { FragmentData } from './jsx.fragment';
@@ -68,14 +68,12 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
 
     const visitor = (n: ts.Node) => {
         // @ts-ignore
-        const src = n?.src || n;
+        const src = getNodeSrc(n);
         if (ts.isJsxOpeningElement(src) || ts.isJsxSelfClosingElement(src)) {
             const tag = asCode(src.tagName);
             if (isComponentTag(tag)) {
                 add('<!--C-->');
-                const exp = asAst(`$rt.toString(${asCode(n)})`) as ts.Expression;
-                // @ts-ignore
-                exp.src = src;
+                const exp = setNodeSrc(asAst(`$rt.toString(${asCode(n)})`), src) as ts.Expression;
                 add({ exp });
                 add('<!--C-->');
                 return ts.createTrue();
@@ -118,11 +116,11 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
         }
         if (ts.isJsxExpression(n) && !ts.isJsxAttribute(n.parent) && n.expression) {
             add('<!--X-->');
-            add({ exp: asAst(`$rt.toString(${prop((n.src || n).expression)})`) as ts.Expression });
+            add({ exp: asAst(`$rt.toString(${prop(getNodeSrc(n).expression!)})`) as ts.Expression });
             add('<!--X-->');
             return ts.createTrue();
         }
-        if (ts.isJsxClosingElement(n)) {
+        if (ts.isJsxClosingElement(src)) {
             const tag = asCode(src.tagName);
             if (!isComponentTag(tag)) {
                 add(`</${tag}>`);

@@ -1,4 +1,4 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, setNodeSrc, isJsxExpression } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, setNodeSrc, isJsxExpression, getNodeSrc } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { setupClosure } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
@@ -143,7 +143,7 @@ export function swapVirtualElements(comp: CompDefinition, fragments: FragmentDat
     }
     if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) {
         const frag = safely(
-            () => fragments.find(f => f.root.sourceAstNode === ((n as any)?.src || n)),
+            () => fragments.find(f => f.root.sourceAstNode === getNodeSrc(n)),
             `Unidentified Fragment Instance`, f => allowNonFrags || f)!;
         if (!frag || frag.isComponent) {
             const [i, c] = findJsxComp(comp, n);
@@ -177,7 +177,7 @@ export const findJsxComp = (comp: CompDefinition, node: ts.Node): [-1, null] | [
     let compIndex = 0;
     for (const root of comp.jsxRoots) {
         for (const c of root.components) {
-            if (c.sourceAstNode === ((node as any)?.src || node)) {
+            if (c.sourceAstNode === getNodeSrc(node)) {
                 return [compIndex, c];
             }
             compIndex++;

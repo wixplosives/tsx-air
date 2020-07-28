@@ -90,21 +90,7 @@ export class Runtime {
     }
 
     updateExpression(exp: ExpressionDom, value: any) {
-        exp.value = value;
-        const attr = exp.attribute;
-        if (attr) {
-            if (!attr.startsWith('on')) {
-                if (attr === 'style') {
-                    const eml = exp.start.nextElementSibling!;
-                    if (attr === 'style') {
-                        value = this.spreadStyle(value);
-                    }
-                    eml.setAttribute(attr, value);
-                }
-            }
-        } else {
-            _updateExpression([exp.start as Comment, exp.end as Comment], asDomNodes(value));
-        }
+        _updateExpression([exp.start as Comment, exp.end as Comment], asDomNodes(value));
     }
 
     toString(x: any): string {
