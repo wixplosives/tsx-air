@@ -15,7 +15,7 @@ export interface DisplayableData {
     props: any;
     parent?: Displayable;
 }
-export class Displayable {
+export class Displayable implements DisplayableData{
 
     get fullKey(): string {
         return this.parent ? `${this.parent.fullKey}${this.key}` : this.key;
@@ -34,6 +34,9 @@ export class Displayable {
             return root;
         }
         throw new Error(`Invalid Displayable: root is not a Displayable/HTMLElement`);
+    }
+    get props(){
+        return this.stores.$props;
     }
 
     static is(x: any): x is Displayable {
@@ -54,7 +57,7 @@ export class Displayable {
 
     constructor(
         readonly key: string,
-        parent: Displayable | DisplayableData | undefined,
+        parent: DisplayableData | undefined,
         readonly $rt: Runtime
     ) {
         this.innerKey = this.$rt.getUniqueKey();

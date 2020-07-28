@@ -1,6 +1,7 @@
 import { Component } from './component';
 import { Fragment } from './fragment';
 import { Displayable, DisplayableData } from './displayable';
+import { StoreData } from '../store';
 
 export class VirtualElement<T extends typeof Displayable = any, P extends Displayable = Displayable> implements DisplayableData {
     get fullKey(): string {
@@ -20,8 +21,8 @@ export class VirtualElement<T extends typeof Displayable = any, P extends Displa
         return new VirtualElement(type as any, props, undefined, '$');
     }
 
-    static fragment<T extends typeof Fragment, P extends Displayable>(key: string, type: T, parent: P) {
-        return new VirtualElement(type, parent.stores.props, parent, key);
+    static fragment<T extends typeof Fragment, P extends Displayable>(key: string, type: T, parent: P, expressions:StoreData) {
+        return new VirtualElement(type, expressions, parent, key);
     }
 
     static is(x: any): x is VirtualElement {

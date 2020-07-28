@@ -5,10 +5,10 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "framework",
+            "name": "runtime",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
-                "packages/framework/**/*.test.ts?(x)",
+                "packages/runtime/**/*.test.ts?(x)",
                 "--timeout",
                 "99999999"
             ],

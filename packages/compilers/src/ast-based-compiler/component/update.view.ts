@@ -1,4 +1,3 @@
-import { dependantOnVars, setupClosure } from './helpers';
 import ts from 'typescript';
 import {
     JsxExpression,
@@ -6,54 +5,48 @@ import {
     cMethod,
     asAst,
     JsxComponent,
+    isJsxComponent,
 } from '@tsx-air/compiler-utils';
 import { FragmentData } from './fragment/jsx.fragment';
 import { getVComp } from './fragment/virtual.comp';
-import { toFragSafe } from './function';
+import { propsAndRtFromInstance, prop, toCanonicalString } from './fragment/common';
 
 export function* generateUpdateView(fragment: FragmentData) {
-    const { comp } = fragment;
     const statements: ts.Statement[] = [];
     generateExpUpdates(statements, fragment);
     if (statements.length) {
         yield cMethod('updateView', [], [
-            ...setupClosure(comp, fragment.root.aggregatedVariables),
-            asAst(`const {$props}=this.stores;`) as ts.Statement,
+            propsAndRtFromInstance,
+            asAst(`const {$bits}=$props;`) as ts.Statement,
+            asAst(`const $mod=this.modified.get($props)||0;`) as ts.Statement,
             ...statements]);
     }
 }
 
-function generateExpUpdates(statements: ts.Statement[],  fragment: FragmentData) {
-    const { comp, allFragments: fragments } = fragment;
+function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) {
+    const { comp } = fragment;
     const addUpdate = (exp: JsxExpression | JsxComponent, setStatement: string) => {
-        const dependencies = dependantOnVars(comp, exp.aggregatedVariables);
-        if (dependencies.stores) {
-            const stores = Object.keys(dependencies.stores);
-            const conditions: string[] = [];
-            for (const storeName of stores) {
-                const bits = Object.keys(dependencies.stores[storeName]).map(d => `${storeName}.$bits['${d}']`);
-                conditions.push(`(this.modified.get(${storeName}) & (${bits.join('|')}))`);
-            }
+        if (!isJsxComponent(exp)) {
             statements.push(
-                ts.createIf(asAst(conditions.join('||')) as ts.Expression,
+                ts.createIf(asAst(`($mod & $bits[${toCanonicalString(exp.expression)}])`) as ts.Expression,
                     asAst(setStatement) as ts.Statement
                 ));
         }
     };
     jsxExp(fragment).forEach((exp, i) =>
-        addUpdate(exp, `this.$rt.updateExpression(this.ctx.expressions[${i}], ${toFragSafe(comp, fragments, exp)})`)
+        addUpdate(exp, `$rt.updateExpression(this.ctx.expressions[${i}], ${prop(exp.expression)})`)
     );
     fragment.root.components.forEach(childComp =>
-        addUpdate(childComp, `this.$rt.getUpdatedInstance(this.${
-            getVComp(comp, childComp).name})`)
+        statements.push(asAst(`$rt.getUpdatedInstance(this.${
+            getVComp(comp, childComp).name})`) as ts.Statement)
     );
     for (const [exp, elmIndex] of dynamicAttrs(fragment)) {
         const attr = exp.sourceAstNode.parent as ts.JsxAttribute;
         const name = asCode(attr.name);
         if (!name.startsWith('on')) {
-            let attrValue = exp.expression;
+            let attrValue = prop(exp.expression);
             if (name === 'style') {
-                attrValue = `this.$rt.spreadStyle(${attrValue})`;
+                attrValue = `$rt.spreadStyle(${attrValue})`;
             }
             addUpdate(exp, `this.ctx.elements[${elmIndex}].setAttribute('${name}', ${attrValue});`);
         }

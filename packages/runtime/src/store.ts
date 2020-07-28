@@ -38,7 +38,7 @@ export type Store<T extends StoreData = any> = Observable & CompiledStore & T;
 export type StoreData = Record<AllowedKeys, any>;
 type Listener<T = any> = (store: CompiledStore<T>, changed: number) => void;
 
-export function store<T extends StoreData>(initialState: T, instance: {$rt:Runtime}, name: string): Store<T> {
+export function store<T extends StoreData>(initialState: T, instance: { $rt: Runtime }, name: string): Store<T> {
     const existingStore = instance.$rt.getStore(instance, name);
     if (existingStore) {
         existingStore.$readBits = 0;

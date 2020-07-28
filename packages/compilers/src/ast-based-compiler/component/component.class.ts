@@ -17,7 +17,7 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
         [
             ...generateMethods(comp, fragments),
             ...fragments.filter(f => f.isComponent)
-                .map(c => generateVirtualComponents(c)[0]),
+                .map(c => generateVirtualComponents(c, true)[0]),
         ]
     );
 

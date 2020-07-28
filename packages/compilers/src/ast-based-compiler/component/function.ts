@@ -1,10 +1,11 @@
-import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, setNodeSrc } from '@tsx-air/compiler-utils';
+import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, setNodeSrc, isJsxExpression } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { setupClosure } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
 import { FragmentData } from './fragment/jsx.fragment';
 import { safely } from '@tsx-air/utils';
 import { chain, get } from 'lodash';
+import { toCanonicalString } from './fragment/common';
 
 export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]) {
     assignFunctionNames(comp);
@@ -151,10 +152,19 @@ export function swapVirtualElements(comp: CompDefinition, fragments: FragmentDat
                 return setNodeSrc(ret, n);
             }
         } else {
-            const p = `{
-                ${frag.root.expressions.map(e => `${JSON.stringify(e.expression)}:${
-                toFragSafe(comp, fragments, e)}`).join(',')}
-            }`;
+            const propsMap = new Map<string, string>();
+            frag.root.expressions.forEach(e =>
+                propsMap.set(e.expression, toFragSafe(comp, fragments, e)));
+            frag.root.components.forEach(c =>
+                c.props.forEach(({ value }) => {
+                    if (isJsxExpression(value)) {
+                        propsMap.set(value.expression, toFragSafe(comp, fragments, value));
+                    }
+                })
+            );
+            const p = `{${[...propsMap.entries()].map(([k, v]) =>
+                `${toCanonicalString(k)}:${v}`
+            ).join(',')}}`;
 
             const ret = asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this, ${p})`) as ts.Expression;
             return setNodeSrc(ret, n);
