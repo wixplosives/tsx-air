@@ -34,33 +34,6 @@ describe('generateToString', () => {
             .to.equal(`<div><!--X-->volatile<!--X--></div>`);
     });
 
-    describe(`nested components`, () => {
-        let stub: SinonStub;
-        beforeEach(() => {
-            const rt = runtime.getInstance();
-            stub = sinon.stub(rt, 'toString');
-        });
-        it(`uses $rt().toString to evaluate nested components`, () => {
-            const { NestedStateless } = basicPatterns();
-            evalContext = { PropsOnly: class PropsOnly extends runtime.Component { } };
-            const mockVElm = {};
-            const nested = toStringOf(NestedStateless, {
-                a: 'outer'
-            }, {
-                $PropsOnly0: mockVElm
-            });
-
-            stub.callsFake((x: any) => {
-                expect(x).to.eql(mockVElm);
-                return `MockVirtualComponent`;
-            });
-            expect(nested()).to.be.eql(`<div><!--C-->MockVirtualComponent<!--C--></div>`);
-        });
-        afterEach(() => {
-            stub.restore();
-        });
-    });
-
     it(`removes event listeners`, () => {
         const { EventListener } = basicPatterns();
         const withEvent = toStringOf(EventListener, {});

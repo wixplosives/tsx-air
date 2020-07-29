@@ -11,7 +11,7 @@ export class CompiledParent extends Component {
 
         state.counter++;
         if (props.a < 0) {
-            return VirtualElement.fragment('0', ParentFrag0, this, { 'props.a': props.a });
+            return VirtualElement.fragment('0', ParentFrag0, this, { 'props.a': props.a, '-props.a': -props.a });
         }
         if (props.a < 5) {
             return VirtualElement.component('1', CompiledParent, this, { a: props.a + 1 });
@@ -42,8 +42,8 @@ export class ParentFrag0 extends Fragment {
     }
 
     public hydrate(_: any, target: HTMLElement) {
-        const { $props: props } = this.stores;
-        this.hydrateExpressions([props.a], target);
+        const { $props } = this.stores;
+        this.hydrateExpressions([$props['props.a']], target);
         this.hydrateComponents([this.$comp0], target);
         this.ctx.root = target;
     }
@@ -61,7 +61,8 @@ export class ParentFrag0 extends Fragment {
 
 export class CompiledChild extends Component {
     public preRender(): VirtualElement<typeof ChildFrag0> {
-        return VirtualElement.fragment('0', ChildFrag0, this, {});
+        const { $props: props } = this.stores;
+        return VirtualElement.fragment('0', ChildFrag0, this, { 'props.ca': props.ca, 'props.cb': props.cb });
     }
 }
 

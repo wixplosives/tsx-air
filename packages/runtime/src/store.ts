@@ -1,4 +1,4 @@
-import { getInstance as $rt, Runtime } from '.';
+import { Runtime } from '.';
 
 type AllowedKeys = Exclude<string, ReservedKeys>;
 type ReservedKeys = keyof CompiledStore & keyof Observable;
@@ -41,7 +41,6 @@ type Listener<T = any> = (store: CompiledStore<T>, changed: number) => void;
 export function store<T extends StoreData>(initialState: T, instance: { $rt: Runtime }, name: string): Store<T> {
     const existingStore = instance.$rt.getStore(instance, name);
     if (existingStore) {
-        existingStore.$readBits = 0;
         return existingStore;
     }
     let bit = 0;
@@ -49,15 +48,12 @@ export function store<T extends StoreData>(initialState: T, instance: { $rt: Run
     for (const [key] of Object.entries(initialState)) {
         $bits[key] = 1 << bit++;
     }
-    let $readBits = 0;
     const dispatcher = new Dispatcher();
     const proxy = new Proxy(initialState, {
         get: (t: T, p: keyof Store<T>) => {
             switch (p) {
                 case '$bits':
                     return $bits;
-                case '$readBits':
-                    return $readBits;
                 case '$subscribe':
                     return dispatcher.$subscribe;
                 case '$unsubscribe':
@@ -87,15 +83,11 @@ export function store<T extends StoreData>(initialState: T, instance: { $rt: Run
                         dispatcher.$dispatch(changes);
                     };
                 default:
-                    $readBits |= $bits[p as string];
                     return t[p];
             }
         },
         set: (t: T, p: keyof Store<T>, value: any) => {
             switch (p) {
-                case '$readBits':
-                    $readBits = value;
-                    return true;
                 default:
                     if (p in t) {
                         if (t[p] !== value) {
@@ -110,6 +102,6 @@ export function store<T extends StoreData>(initialState: T, instance: { $rt: Run
         }
     }) as Store<T>;
     dispatcher.$target = proxy;
-    $rt().registerStore(instance, name, proxy);
+    instance.$rt.registerStore(instance, name, proxy);
     return proxy;
 }
