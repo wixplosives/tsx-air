@@ -9,8 +9,6 @@ import * as runtime from '@tsx-air/runtime';
 import { browserifyFiles } from '@tsx-air/testing';
 import { testRuntimeApi } from '@tsx-air/runtime/src/runtime/runtime.test.suite';
 
-
-
 describe('compilers', () => {
     it('each compiler should have a unique name', () => {
         const usedNames: Set<string> = new Set();

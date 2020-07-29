@@ -6,10 +6,10 @@ interface ClonedNode extends ts.Node {
     src: ts.Node;
 }
 export const setNodeSrc = <T extends ts.Node>(node: T, src: ts.Node) => {
-    (node as ts.Node as ClonedNode).src = getNodeSrc(src);
+    (node as ts.Node as ClonedNode).src = src;
     return node;
 };
-export const getNodeSrc = (node: ts.Node) => (node as ClonedNode)?.src || node;
+export const getNodeSrc = <T extends ts.Node>(node: T) => ((node as any)?.src || node) as T;
 
 const excludeKeys = new Set(['nextContainer', 'src']);
 
@@ -19,8 +19,7 @@ export function cloneDeep<T extends ts.Node, S extends ts.Node>(node: T, parent:
 export function cloneDeep<T extends ts.Node, S>(node: T, parent?: ts.Node, modifier?: Modifier<S>): T | S {
     const mod = modifier && modifier(node, parent!);
     if (mod) {
-        (mod as any).src = node;
-        return mod as S;
+        return setNodeSrc(mod, getNodeSrc(node)) as S;
     }
 
     let clone;
@@ -43,11 +42,8 @@ export function cloneDeep<T extends ts.Node, S>(node: T, parent?: ts.Node, modif
         }
         clone[key] = node[key];
     }
-    (clone as any).src =
-        // @ts-ignore
-        node?.src
-        || node;
-    return clone;
+    
+    return setNodeSrc(clone, getNodeSrc(node));
 }
 
 function createSynthesizedNode(like: ts.Node) {

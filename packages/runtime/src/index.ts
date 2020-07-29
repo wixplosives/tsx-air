@@ -1,5 +1,6 @@
 import { Runtime } from './runtime/runtime';
 import * as utils from './utils';
+import { Component } from './types';
 export { Runtime, utils };
 export * from './types';
 export * from './store';
@@ -20,3 +21,5 @@ export function setInstance(id: string, instance: Runtime) {
 export function reset() {
     runTimes = {};
 }
+
+export const when = (predicate:any, action:()=>any, target:Component, id:number) => target.$rt.when(predicate, action, target, id);

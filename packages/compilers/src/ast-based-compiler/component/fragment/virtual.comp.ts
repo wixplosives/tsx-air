@@ -1,11 +1,12 @@
-import { CompDefinition, asAst, cGet, JsxComponent } from '@tsx-air/compiler-utils';
+import { CompDefinition, asAst, cGet, JsxComponent, isJsxExpression } from '@tsx-air/compiler-utils';
 import { FragmentData } from './jsx.fragment';
-import ts, { JsxExpression } from 'typescript';
+import ts from 'typescript';
 import { setupClosure } from '../helpers';
 import { findJsxComp } from '../function';
+import {  prop, propsFromInstance } from './common';
 
-export const generateVirtualComponents = (fragment: FragmentData) =>
-    fragment.root.components.map(generateVCMethod(fragment.comp));
+export const generateVirtualComponents = (fragment: FragmentData, componentMode: boolean) =>
+    fragment.root.components.map(generateVCMethod(fragment.comp, componentMode));
 
 export const getVComp = (comp: CompDefinition, jsxComp: JsxComponent) => {
     const [index] = findJsxComp(comp, jsxComp.sourceAstNode);
@@ -15,20 +16,23 @@ export const getVComp = (comp: CompDefinition, jsxComp: JsxComponent) => {
     };
 };
 
-const generateVCMethod = (comp: CompDefinition) =>
+const generateVCMethod = (comp: CompDefinition, componentMode: boolean) =>
     (jsxComp: JsxComponent) => {
         const { name, index } = getVComp(comp, jsxComp);
+        
         return cGet(name, [
-            ...setupClosure(comp, jsxComp.aggregatedVariables),
+            ...(componentMode
+                ? setupClosure(comp, jsxComp.aggregatedVariables)
+                : [propsFromInstance]),
             ts.createReturn(
                 asAst(`VirtualElement.component('${index}', ${jsxComp.name
-                    }, this, ${propsAsObj(jsxComp)})`
+                    }, this, ${propsAsObj(jsxComp, componentMode)})`
                 ) as ts.Expression
             )]
         );
     };
 
-const propsAsObj = (jsxComp: JsxComponent) => `{${jsxComp.props.map(p => p.name + ':' +
-    // @ts-ignore
-    ((p.value as JsxExpression)?.expression
-        || p.value)).join(',')}}`;
+const propsAsObj = (jsxComp: JsxComponent, componentMode: boolean) => `{${jsxComp.props.map(p => {
+    const val = (isJsxExpression(p.value) ? p.value.expression : p.value) as string;
+    return `${p.name} : ${componentMode ? val : prop(val)}`;
+}).join(',')}}`;
