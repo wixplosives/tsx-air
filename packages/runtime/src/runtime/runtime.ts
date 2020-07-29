@@ -90,7 +90,6 @@ export class Runtime {
     }
 
     updateExpression(exp: ExpressionDom, value: any) {
-        exp.value = value;
         _updateExpression([exp.start as Comment, exp.end as Comment], asDomNodes(value));
     }
 
@@ -109,7 +108,7 @@ export class Runtime {
         if (!key || !owner || !parent) {
             throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
         }
-        if (Component.is(parent.ctx.components[key])) {
+        if (parent.ctx.components[key]) {
             parent.ctx.components[key].stores.$props.$set(vElm.props);
         }
         return parent.ctx.components[key] || this.render(vElm);
@@ -173,7 +172,6 @@ export class Runtime {
             dom = this.mockDom.children[0] as HTMLElement;
         }
         instance.hydrate(vElm, dom);
-        instance.updateReadBits();
         if (vElm.parent && key) {
             vElm.parent.ctx.components[key] = instance;
         }
@@ -190,7 +188,6 @@ export class Runtime {
         this.hydrating++;
         const instance = (parent?.ctx.components[key] || new type(key, parent, props, this)) as Comp;
         const preRender = instance.preRender();
-        instance.updateReadBits();
         // prerender already expressed in view ny toString
         this.pending.delete(instance);
         instance.ctx.root = this.renderOrHydrate(preRender, domNode);
@@ -206,8 +203,6 @@ export class Runtime {
             this.pending = new Set<Component>();
             for (const instance of pending) {
                 const preRender = instance.preRender();
-                instance.updateReadBits();
-
                 const nextRoot = this.getUpdatedInstance(preRender);
                 const root = instance.ctx.root as Displayable;
                 if (root !== nextRoot) {

@@ -111,53 +111,52 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
     return flat;
 }
 
-function* getClosureStores(comp: CompDefinition, used: UsedInScope) {
+function* getClosureStores(comp: CompDefinition, used: UsedInScope, storesTarget:string) {
     if (used.stores) {
-        yield cConst(destructure(used.stores, { $props: comp.propsIdentifier })!, asAst(`this.stores`) as ts.PropertyAccessExpression);
+        yield cConst(destructure(used.stores, { $props: comp.propsIdentifier })!, asAst(`${storesTarget}.stores`) as ts.PropertyAccessExpression);
     }
 }
 
-function* getClosureVolatile(used: UsedInScope) {
+function* getClosureVolatile(used: UsedInScope, storesTarget:string) {
     if (used.volatile) {
-        yield cLet(destructure(used.volatile)!, asAst(`this.volatile`) as ts.PropertyAccessExpression);
+        yield cLet(destructure(used.volatile)!, asAst(`${storesTarget}.volatile`) as ts.PropertyAccessExpression);
     }
 }
 
-function* getClosureProps(comp: CompDefinition, used: UsedInScope) {
+function* getClosureProps(comp: CompDefinition, used: UsedInScope, storesTarget:string) {
     if (used?.stores?.$props) {
         if (comp.propsIdentifier) {
-            yield cConst(comp.propsIdentifier, ts.createIdentifier('this.stores.$props'));
+            yield cConst(comp.propsIdentifier, ts.createIdentifier(`${storesTarget}.stores.$props`));
         } else {
             throw new Error(`Invalid props usage: props identifier not found`);
         }
     }
 }
 
-export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, unpack = true) {
+export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, unpack = true, storesTarget='this') {
     const f = ((isArray(scope) ? scope : [scope]) as ts.Node[]).map(s =>
         // @ts-ignore: handle UsedVariables scope
         (s.read && s.accessed)
             ? s
             : findUsedVariables(s));
     const used = merge({ read: {}, accessed: {}, modified: {}, executed: {} }, ...f);
-    yield* addToClosure(comp, getDirectDependencies(comp, used, true), unpack);
+    yield* addToClosure(comp, getDirectDependencies(comp, used, true), unpack, storesTarget);
     yield* addToClosure(comp, Object.keys(used.executed).filter(
         name => comp.functions.some(fn => fn.name === name)
-    ), unpack);
-
+    ), unpack, storesTarget);
 }
 
-export function* addToClosure(comp: CompDefinition, used: UsedInScope | string[], unpack: boolean) {
+export function* addToClosure(comp: CompDefinition, used: UsedInScope | string[], unpack: boolean, storesTarget:string) {
     if (isArray(used)) {
         if (used.length) {
             yield cConst(destructureNamed(used, {}), asAst('this.owner') as ts.Expression);
         }
     } else {
         if (unpack) {
-            yield* getClosureStores(comp, used);
-            yield* getClosureVolatile(used);
+            yield* getClosureStores(comp, used, storesTarget);
+            yield* getClosureVolatile(used, storesTarget);
         } else {
-            yield* getClosureProps(comp, used);
+            yield* getClosureProps(comp, used, storesTarget);
         }
     }
 }

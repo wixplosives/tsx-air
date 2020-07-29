@@ -14,7 +14,7 @@ export const generateFragmentClass = (fragment: FragmentData, _api: FileTransfor
         ...generateUpdateView(fragment),
         generateToString(fragment),
         generateHydrate(fragment),
-        ...generateVirtualComponents(fragment),
+        ...generateVirtualComponents(fragment, false),
     ]);
     return frag;
 };

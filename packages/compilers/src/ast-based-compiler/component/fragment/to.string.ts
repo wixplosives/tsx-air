@@ -1,18 +1,10 @@
-import { setupClosure } from '../helpers';
-import {
-    cMethod,
-    astTemplate,
-    cloneDeep,
-    asCode,
-    asAst,
-    Modifier,
-} from '@tsx-air/compiler-utils';
+import { cMethod, astTemplate, cloneDeep, asCode, asAst, Modifier, getNodeSrc, setNodeSrc } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { swapVirtualElements } from '../function';
 import { FragmentData } from './jsx.fragment';
 import last from 'lodash/last';
 import { isComponentTag } from '@tsx-air/utils';
-import { merge } from 'lodash';
+import { propsAndRtFromInstance, prop } from './common';
 
 
 export const generateToString = (fragment: FragmentData) => {
@@ -27,6 +19,20 @@ export const generateToString = (fragment: FragmentData) => {
                 if (ts.isJsxAttributes(n) && n.properties.some(
                     a => ts.isJsxAttribute(a)
                         && a.initializer && ts.isJsxExpression(a.initializer))) {
+                    return ts.createJsxAttributes(n.properties.map(p =>
+                        ts.isJsxAttribute(p) && p.initializer &&
+                            ts.isJsxExpression(p.initializer) && p.initializer.expression && ts.isLiteralExpression(p.initializer.expression)
+                            ? ts.createJsxAttribute(p.name, ts.createStringLiteral(
+                                JSON.parse(asCode(p.initializer.expression))))
+                            : cloneDeep(p)),
+                    );
+                }
+                return undefined;
+            },
+            (n: ts.Node) => {
+                if (ts.isJsxAttributes(n) && n.properties.some(
+                    a => ts.isJsxAttribute(a)
+                        && a.initializer && ts.isJsxExpression(a.initializer))) {
                     return ts.createJsxAttributes([...n.properties.map(p => cloneDeep(p)),
                     ts.createJsxAttribute(ts.createIdentifier('x-da'), ts.createStringLiteral('!'))]);
                 }
@@ -34,9 +40,8 @@ export const generateToString = (fragment: FragmentData) => {
             }
         ]);
 
-    const vars = merge({}, ...fragment.root.expressions.map(e => e.aggregatedVariables));
     return cMethod('toString', [], [
-        ...setupClosure(comp, vars, true),
+        propsAndRtFromInstance,
         ts.createReturn(
             astTemplate(`this.unique(template)`, { template }) as any as ts.Expression
         )]);
@@ -63,14 +68,12 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
 
     const visitor = (n: ts.Node) => {
         // @ts-ignore
-        const src = n?.src || n;
+        const src = getNodeSrc(n);
         if (ts.isJsxOpeningElement(src) || ts.isJsxSelfClosingElement(src)) {
             const tag = asCode(src.tagName);
             if (isComponentTag(tag)) {
                 add('<!--C-->');
-                const exp = asAst(`this.$rt.toString(${asCode(n)})`) as ts.Expression;
-                // @ts-ignore
-                exp.src = src;
+                const exp = setNodeSrc(asAst(`$rt.toString(${asCode(n)})`), src) as ts.Expression;
                 add({ exp });
                 add('<!--C-->');
                 return ts.createTrue();
@@ -89,9 +92,9 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
                                     add('="');
                                     if (initializer.expression) {
                                         if (attrName === 'style') {
-                                            add({ exp: astTemplate(`this.$rt.spreadStyle(exp)`, { exp: initializer.expression }) as any as ts.Expression });
+                                            add({ exp: asAst(`$rt.spreadStyle(${prop(initializer.expression)})`) as any as ts.Expression });
                                         } else {
-                                            add({ exp: initializer.expression });
+                                            add({ exp: asAst(prop(initializer.expression)) as ts.Expression });
                                         }
                                     }
                                     add('"');
@@ -113,11 +116,11 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
         }
         if (ts.isJsxExpression(n) && !ts.isJsxAttribute(n.parent) && n.expression) {
             add('<!--X-->');
-            add({ exp: asAst(`this.$rt.toString(${asCode(n.expression)})`) as ts.Expression });
+            add({ exp: asAst(`$rt.toString(${prop(getNodeSrc(n).expression!)})`) as ts.Expression });
             add('<!--X-->');
             return ts.createTrue();
         }
-        if (ts.isJsxClosingElement(n)) {
+        if (ts.isJsxClosingElement(src)) {
             const tag = asCode(src.tagName);
             if (!isComponentTag(tag)) {
                 add(`</${tag}>`);
