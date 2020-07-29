@@ -88,9 +88,10 @@ export const ImagePreloader = TSXAir((props: { url: string}) => {
 ```
 - As **memo**:
 ```tsx
-const Memo = TSXAir((props: { digits: number}) => {
-    let pi = 3;
-    when(() => { pi = calcPi(props.digits) });
-    return <div>{pi}</div>;
+const Memo = TSXAir((props: { digits: number, title:string}) => {
+    // will be evalutated only when props.digits change
+    let pi = when(() => calcPi(props.digits));
+    // will be updated when either props.digits OR props.title change
+    return <div>{title}{pi}</div>;
 });
 ```
