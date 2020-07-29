@@ -12,7 +12,7 @@ export const prop = (value: string | ts.Node) => {
     return `$props[${toCanonicalString(value)}]`;
 };
 
-export const toCanonicalString = (str: string) => JSON.stringify(str.replace(/"/g, "'").replace(/\s+/g,' '));
+export const toCanonicalString = (str: string) => JSON.stringify(str.replace(/"/g, "'").replace(/\s+/g,''));
 
 export const usedProps = (exp: JsxComponent) => {
     const read = [];

@@ -153,8 +153,17 @@ export function swapVirtualElements(comp: CompDefinition, fragments: FragmentDat
             }
         } else {
             const propsMap = new Map<string, string>();
-            frag.root.expressions.forEach(e =>
-                propsMap.set(e.expression, toFragSafe(comp, fragments, e)));
+            const childExpression = new Set<JsxExpression>();
+            frag.root.expressions.forEach(e => {
+                e.jsxRoots.forEach(r =>
+                    r.expressions.forEach(ex => childExpression.add(ex))
+                );
+                if (!childExpression.has(e)) {
+                    propsMap.set(e.expression, toFragSafe(comp, fragments, e));
+                }
+            });
+            childExpression.forEach(ch => propsMap.delete(ch.expression));
+
             frag.root.components.forEach(c =>
                 c.props.forEach(({ value }) => {
                     if (isJsxExpression(value)) {

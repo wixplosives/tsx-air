@@ -402,6 +402,7 @@ export interface HTMLAttributes<T extends HTMLElement> extends AriaAttributes, D
     contextMenu?: string;
     dir?: string;
     draggable?: boolean;
+    disabled?:boolean;
     hidden?: boolean;
     id?: string;
     lang?: string;

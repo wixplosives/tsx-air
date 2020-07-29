@@ -6,7 +6,7 @@
 
 .gallery>div {
     width: 20em;
-    height: 30em;
+    height: 10em;
     background-color: whitesmoke;
     border: tomato 1px solid;
     padding: 0.5em;
@@ -15,4 +15,6 @@
 
 .gallery img {
     object-fit: cover;
+    width: 100%;
+    height: 100%;
 }

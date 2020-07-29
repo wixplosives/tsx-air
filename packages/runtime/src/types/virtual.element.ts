@@ -34,7 +34,11 @@ export class VirtualElement<T extends typeof Displayable = any, P extends Displa
         readonly props: any,
         readonly parent?: P,
         readonly key?: string,
-    ) { }
+    ) { 
+        if (props?.key) {
+            this.key = `${this.key}[${props.key}]`;
+        }
+    }
 
     withKey(key: string) {
         const { type, parent, props } = this;
