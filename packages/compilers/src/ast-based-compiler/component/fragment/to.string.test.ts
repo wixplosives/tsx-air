@@ -4,7 +4,6 @@ import { generateToString } from './to.string';
 import { chaiPlugin } from '@tsx-air/testing';
 import { expect, use } from 'chai';
 import { asFunction } from '../function';
-import sinon, { SinonStub } from 'sinon';
 import { parseFragments, FragmentData } from './jsx.fragment';
 import { identity } from 'lodash';
 import * as runtime from '@tsx-air/runtime';
@@ -12,10 +11,9 @@ use(chaiPlugin);
 
 describe('generateToString', () => {
     afterEach(runtime.reset);
-    let evalContext = {};
     const toStringOf = (comp: CompDefinition, props: any, scope = {}) => {
         const frag = parseFragments(comp).next().value as FragmentData;
-        const asFunc = evalAst(asFunction(generateToString(frag)), { ...evalContext }) as () => any;
+        const asFunc = evalAst(asFunction(generateToString(frag))) as () => any;
         return () => asFunc.apply({ $rt: runtime.getInstance(), stores: { $props: props }, ...scope, unique: identity });
     };
     it('generates a toString method based on the used props and state', () => {
