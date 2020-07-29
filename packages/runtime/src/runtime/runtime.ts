@@ -13,7 +13,6 @@ export class Runtime {
     maxDepthPerUpdate = 50;
     maxDepth = 100;
 
-
     hydrate = this.renderOrHydrate as (vElm: VirtualElement<any>, dom: HTMLElement) => Displayable;
     render = this.renderOrHydrate as (vElm: VirtualElement<any>) => Displayable;
     private previousPredicates = new Map<Component, Record<number, any>>();
@@ -25,11 +24,11 @@ export class Runtime {
     private stores = new WeakMap<any, Record<string, Store>>();
 
     constructor(
-        readonly window: Window = globalThis.window,
+        readonly window: Window = globalThis.window!,
         readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = globalThis.requestAnimationFrame
     ) {
-        this.mockDom = window?.document?.createElement('div');
-        this.document = window?.document;
+        this.mockDom = window.document.createElement('div');
+        this.document = window.document;
         // @ts-ignore
         this.HTMLElement = window?.HTMLElement;
         // @ts-ignore
