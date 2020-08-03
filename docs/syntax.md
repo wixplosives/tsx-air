@@ -66,7 +66,7 @@ const  = TSXAir(() => {
 There are 4 ways to trigger a render:
 - Changes to component properties
 - Changes to a store defined in the component
-- Changes to a [when](# Using "memo":)/memo dependency
+- Changes to a [when](# Using "memo":) /memo dependency
 - Calling `invalidate`
 
 ## Using "when"
