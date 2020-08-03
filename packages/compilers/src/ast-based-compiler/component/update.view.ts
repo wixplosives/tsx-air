@@ -1,15 +1,11 @@
 import ts from 'typescript';
 import {
-    JsxExpression,
-    asCode,
-    cMethod,
-    asAst,
-    JsxComponent,
-    isJsxComponent,
+    JsxExpression, asCode, cMethod, asAst, JsxComponent, isJsxComponent
 } from '@tsx-air/compiler-utils';
 import { FragmentData } from './fragment/jsx.fragment';
 import { getVComp } from './fragment/virtual.comp';
 import { propsAndRtFromInstance, prop, toCanonicalString } from './fragment/common';
+import { jsxExp, dynamicAttributes, attrElement } from './helpers';
 
 export function* generateUpdateView(fragment: FragmentData) {
     const statements: ts.Statement[] = [];
@@ -40,7 +36,7 @@ function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) 
         statements.push(asAst(`$rt.getUpdatedInstance(this.${
             getVComp(comp, childComp).name})`) as ts.Statement)
     );
-    for (const [exp, elmIndex] of dynamicAttrs(fragment)) {
+    for (const [exp, elmIndex] of elementsWithDynamicAttr(fragment)) {
         const attr = exp.sourceAstNode.parent as ts.JsxAttribute;
         const name = asCode(attr.name);
         if (!name.startsWith('on')) {
@@ -53,18 +49,14 @@ function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) 
     }
 }
 
-const isAttribute = (exp: JsxExpression) =>
-    ts.isJsxAttribute(exp.sourceAstNode.parent);
-
-const jsxExp = (fragment: FragmentData) => fragment.root.expressions.filter(e => !isAttribute(e));
-const dynamicAttrs = (fragment: FragmentData) => {
+const elementsWithDynamicAttr = (fragment: FragmentData) => {
     const elms = new Set();
     const map = new Map<JsxExpression, number>();
-    fragment.root.expressions
-        .filter(e => isAttribute(e))
+    dynamicAttributes(fragment)
         .forEach(a => {
-            elms.add(a.sourceAstNode.parent.parent.parent);
+            elms.add(attrElement(a));
             map.set(a, elms.size - 1);
         });
     return map;
 };
+

@@ -1,14 +1,13 @@
-import { cMethod, asAst, JsxExpression, asCode } from '@tsx-air/compiler-utils';
+import { cMethod, asAst, asCode } from '@tsx-air/compiler-utils';
 import { FragmentData } from './jsx.fragment';
 import ts from 'typescript';
-import { setupClosure } from '../helpers';
+import { setupClosure, jsxExp, dynamicAttributes, attrElement } from '../helpers';
 import { uniqBy } from 'lodash';
 import { tagHandlersUsed } from '../event.handlers';
 import { readFuncName } from '../function';
 import { prop, propsFromInstance } from './common';
 
 export function generateHydrate(fragment: FragmentData) {
-
     const bindings: ts.Statement[] = [];
 
     hydrateExpressions(bindings, fragment);
@@ -16,18 +15,16 @@ export function generateHydrate(fragment: FragmentData) {
     hydrateElements(bindings, fragment);
 
     return cMethod('hydrate', ['_', 't'], [
-        ...setupClosure(fragment.comp, bindings, true, 'this.owner'),
+        ...setupClosure(fragment.comp, bindings, false, 'this.owner'),
         propsFromInstance,
         ...bindings,
         asAst('this.ctx.root=t') as ts.Statement
     ]);
 }
 
-const isAttribute = (exp: JsxExpression) => ts.isJsxAttribute(exp.sourceAstNode.parent);
 
 function hydrateExpressions(bindings: ts.Statement[], fragment: FragmentData) {
-    const jsxExp = fragment.root.expressions.filter(e => !isAttribute(e));
-    const expValues = jsxExp.map(exp => prop(exp.expression));
+    const expValues = jsxExp(fragment).map(exp => prop(exp.expression));
     if (expValues.length) {
         const values = `[${expValues.join(',')}]`;
         bindings.push(asAst(`this.hydrateExpressions(${values}, t);`) as ts.Statement);
@@ -41,15 +38,14 @@ function hydrateComponents(bindings: ts.Statement[], fragment: FragmentData) {
 }
 
 function hydrateElements(bindings: ts.Statement[], fragment: FragmentData) {
-    const dynamicAttributes = fragment.root.expressions.filter(isAttribute);
-    if (dynamicAttributes.length) {
+    const attrs = dynamicAttributes(fragment);
+    if (attrs.length) {
         bindings.push(asAst(`this.hydrateElements(t);`) as ts.Statement);
 
-        const jsxElm = (d: JsxExpression) => d.sourceAstNode.parent.parent.parent as ts.JsxOpeningLikeElement;
-        const elementsInCtx = uniqBy(dynamicAttributes, jsxElm).map(jsxElm);
+        const elementsInCtx = uniqBy(attrs, attrElement).map(attrElement);
 
         processRefs(bindings, elementsInCtx);
-        processHandlers(bindings, fragment, elementsInCtx, jsxElm);
+        processHandlers(bindings, fragment, elementsInCtx, attrElement);
     }
 }
 

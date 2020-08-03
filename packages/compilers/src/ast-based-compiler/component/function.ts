@@ -1,6 +1,6 @@
 import { findUsedVariables, CompDefinition, FuncDefinition, cloneDeep, cMethod, asCode, cProperty, asAst, cFunction, JsxComponent, JsxExpression, setNodeSrc, isJsxExpression, getNodeSrc } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { setupClosure } from './helpers';
+import { setupClosure, getDirectExpressions } from './helpers';
 import { postAnalysisData } from '../../common/post.analysis.data';
 import { FragmentData } from './fragment/jsx.fragment';
 import { safely } from '@tsx-air/utils';
@@ -34,7 +34,7 @@ function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
         ...addNamedFunctions(comp),
         ...parseStatements(comp, statements, fragments, true)
     ];
-    return asMethod(comp, 'preRender', [], modified, false);
+    return asMethod(comp, 'preRender', [], modified, true);
 }
 
 function assignFunctionNames(comp: CompDefinition) {
@@ -153,17 +153,9 @@ export function swapVirtualElements(comp: CompDefinition, fragments: FragmentDat
             }
         } else {
             const propsMap = new Map<string, string>();
-            const childExpression = new Set<JsxExpression>();
-            frag.root.expressions.forEach(e => {
-                e.jsxRoots.forEach(r =>
-                    r.expressions.forEach(ex => childExpression.add(ex))
-                );
-                if (!childExpression.has(e)) {
-                    propsMap.set(e.expression, toFragSafe(comp, fragments, e));
-                }
-            });
-            childExpression.forEach(ch => propsMap.delete(ch.expression));
-
+            getDirectExpressions(frag.root)
+            
+            .forEach(e => propsMap.set(e.expression, toFragSafe(comp, fragments, e)));
             frag.root.components.forEach(c =>
                 c.props.forEach(({ value }) => {
                     if (isJsxExpression(value)) {
@@ -201,8 +193,8 @@ function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragm
     return asMethod(comp, name, args, modified);
 }
 
-const asMethod = (comp: CompDefinition, name: string, args: string[], statements: ts.Statement[], unpack = true) => cMethod(name, args, [
-    ...setupClosure(comp, statements, unpack),
+const asMethod = (comp: CompDefinition, name: string, args: string[], statements: ts.Statement[], isPreRender = false) => cMethod(name, args, [
+    ...setupClosure(comp, statements, isPreRender),
     ...statements]);
 
 
