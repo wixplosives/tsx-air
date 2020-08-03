@@ -128,11 +128,13 @@ const GoogleMaps = TSXAir(()=>{
 
 ### afterUpdate
 ```tsx
-const Memo = TSXAir(() => {
-    // will be evalutated only when props.digits change
-    let pi = memo(() => calcPi(props.digits));
-    // will be updated when either props.digits OR props.title change
-    return <div>{title}{pi}</div>;
+const InfiniteMeasure = TSXAir(() => {
+    const state = store({area:0, ref:{} as RefHolder<HTMLDivElement>});   
+    afterDomUpdate([], ()=>{
+        const {width, height} = state.ref.element!.getClientRects()[0];
+        state.area = width * height;
+    });
+    return <div ref={state.ref}>{state.area}</div>;
 });
 ```
 
