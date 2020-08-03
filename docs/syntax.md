@@ -63,30 +63,32 @@ const  = TSXAir(() => {
 
 ## Triggering Rendering
 
-There are 3 ways to trigger a render of a component:
+There are 4 ways to trigger a render:
 - Changes to component properties
 - Changes to a store defined in the component
-- Changes to a `when` dependency
+- Changes to a when/memo dependency
 - Calling `invalidate`
 
 ## Using "when"
-`when` is a TSXAir api that re-renders the component and runs a function when some dependencies change. 
-`when` may be used in a number of ways:
-- As **a trigger** for indirect changes: 
+`when` is a TSXAir api that re-renders the component and runs a function when some dependencies change.
 ```tsx
-export const ImagePreloader = TSXAir((props: { url: string}) => {
-    const state = store({ imageLoaded: false});
+export const ImagePreloader = TSXAir((props: { url: string }) => {
+    const state = store({ imageLoaded: false, history:[props.url]});
     // when props.url changes, set state.imageLoaded to false
     when(props.url, () => { state.imageLoaded = false; });
 
+    // when props.url changes, update history (the depenecies are implied)
+    when(() => { state.history = [props.url, ...state.history] });
+    
     return <div className="thumb" >
+        <div className="history">{history.join(', ')}</div>
         {state.imageLoaded ? '' : <div className="preloader" />}
         <img src={props.url} onLoad={() => state.imageLoaded = true} 
             style={{ display: state.imageLoaded ? 'block' : 'none' }} />
     </div>;
 });
 ```
-- As **memo**:
+## Using "memo":
 ```tsx
 const Memo = TSXAir((props: { digits: number, title:string}) => {
     // will be evalutated only when props.digits change
