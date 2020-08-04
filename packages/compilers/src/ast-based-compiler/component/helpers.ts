@@ -140,7 +140,7 @@ function* getClosureProps(comp: CompDefinition, used: UsedInScope, storesTarget:
 export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, isPreRender = false, storesTarget = 'this') {
     const f = ((isArray(scope) ? scope : [scope]) as ts.Node[]).map(s =>
         // @ts-ignore: handle UsedVariables scope
-        (s.read && s.modified)
+        (s.read && s.accessed)
             ? s
             : findUsedVariables(s));
     const used = merge({ read: {}, accessed: {}, modified: {}, executed: {} }, ...f);

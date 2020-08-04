@@ -1,6 +1,6 @@
 import { Component, VirtualElement, Displayable } from '.';
 import { Runtime } from '..';
-import { store } from '../store';
+import { store } from '../stores/store';
 
 type CommentPlaceholder = 'X' | 'E' | 'C';
 
@@ -32,13 +32,13 @@ export class Fragment extends Displayable {
         return this.hydrateInternals(values, target, 'X',
             (v: any, t: Comment) =>
                 this.ctx.expressions.push(
-                    this.$rt.hydrateExpression(v, t)));
+                    this.$rt.renderer.hydrateExpression(v, t)));
     }
 
     public hydrateComponents(virtualComps: VirtualElement[], target: HTMLElement) {
         this.hydrateInternals(virtualComps, target, 'C',
             (c: VirtualElement, t: Comment) =>
-                this.$rt.hydrate(c, t.nextElementSibling as HTMLElement));
+                this.$rt.renderer.hydrate(c, t.nextElementSibling as HTMLElement));
     }
 
     public hydrateElements(target: HTMLElement) {

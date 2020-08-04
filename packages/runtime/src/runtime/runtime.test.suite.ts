@@ -22,29 +22,29 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
 
         describe('render', () => {
             it(`returns an instance with populated DOM`, () => {
-                const instance = runtime.render(VirtualElement.root(Child, { ca: 1, cb: -1 }));
+                const instance = runtime.renderer.render(VirtualElement.root(Child, { ca: 1, cb: -1 }));
                 expect(domOf(instance)).to.eql(`<div><!--$0X0-->1<!--$0X0--> <!--$0X1-->-1<!--$0X1--></div>`);
             });
             it(`renders child components`, () => {
-                const instance = runtime.render(VirtualElement.root(Parent, { a: 10 }));
+                const instance = runtime.renderer.render(VirtualElement.root(Parent, { a: 10 }));
                 expect(domOf(instance)).to.eql(`<div><!--$20X0-->10<!--$20X0--> <!--$20X1-->1<!--$20X1--></div>`);
             });
             it(`runs the user code, conditionally returning a fragments`, () => {
-                const instance = runtime.render(VirtualElement.root(Parent, { a: -1 }));
+                const instance = runtime.renderer.render(VirtualElement.root(Parent, { a: -1 }));
                 expect(domOf(instance)).to.eql(
                     `<span><!--$0C0--><div><!--$000X0-->-1<!--$000X0--> <!--$000X1-->1<!--$000X1--></div><!--$0C0--><!--$0X0-->-1<!--$0X0--></span>`);
             });
             it(`handles valid recursive output`, () => {
-                const instance = runtime.render(VirtualElement.root(Parent, { a: 0 }));
+                const instance = runtime.renderer.render(VirtualElement.root(Parent, { a: 0 }));
                 expect(domOf(instance)).to.eql(`<div><!--$1111120X0-->5<!--$1111120X0--> <!--$1111120X1-->1<!--$1111120X1--></div>`);
             });
             it(`throws when components tree depth is over runtime.maxDepth`, () => {
-                runtime.maxDepth = 3;
-                expect(() => runtime.render(VirtualElement.root(Parent, { a: 0 })))
+                runtime.renderer.maxDepth = 3;
+                expect(() => runtime.renderer.render(VirtualElement.root(Parent, { a: 0 })))
                     .to.throw(/Component tree too deep/);
             });
             it(`doesn't request another animation frame`, () => {
-                runtime.render(VirtualElement.root(Parent, { a: 10 }));
+                runtime.renderer.render(VirtualElement.root(Parent, { a: 10 }));
                 expect(onNextFrame).to.have.length(0);
             });
         });
@@ -52,7 +52,7 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
         describe('updating existing components', () => {
             let instance: Component;
             beforeEach(() => {
-                instance = runtime.render(VirtualElement.root(Parent, { a: 10 })) as Component;
+                instance = runtime.renderer.render(VirtualElement.root(Parent, { a: 10 })) as Component;
             });
 
             it(`changes the view on the next animation frame`, () => {
@@ -70,8 +70,8 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
             });
 
             it(`changes the view over a few frames if maxDepthPerUpdate is excised`, () => {
-                instance = runtime.render(VirtualElement.root(Parent, { a: 0 })) as Component;
-                runtime.maxDepthPerUpdate = 3;
+                instance = runtime.renderer.render(VirtualElement.root(Parent, { a: 0 })) as Component;
+                runtime.renderer.maxDepthPerUpdate = 3;
                 instance.stores.$props.a = 1;
                 expect(onNextFrame).to.have.length(1);
                 onNextFrame[0](0);

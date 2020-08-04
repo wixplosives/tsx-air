@@ -1,45 +1,10 @@
-import { Runtime } from '.';
-
-type AllowedKeys = Exclude<string, ReservedKeys>;
-type ReservedKeys = keyof CompiledStore & keyof Observable;
-
-export interface Observable {
-    $subscribe: (cb: Listener) => void;
-    $unsubscribe: (cb: Listener) => void;
-}
-
-class Dispatcher implements Observable {
-    $listeners = new Set<Listener>();
-    $target: any;
-    $subscribe = (cb: Listener) => {
-        if (cb) {
-            this.$listeners.add(cb);
-        }
-    };
-    $unsubscribe = (cb: Listener) => {
-        this.$listeners.delete(cb);
-    };
-    $dispatch(change: number) {
-        for (const listener of this.$listeners) {
-            listener(this.$target, change);
-        }
-    }
-}
-
-export interface CompiledStore<T extends StoreData = any> {
-    $bits: {
-        [key in keyof T]: number;
-    };
-    $set: (p: StoreData) => void;
-    $readBits: number;
-}
-
-export type Store<T extends StoreData = any> = Observable & CompiledStore & T;
-export type StoreData = Record<AllowedKeys, any>;
-type Listener<T = any> = (store: CompiledStore<T>, changed: number) => void;
+import { StoreData, Store } from './types';
+import { Dispatcher } from './dispatcher';
+import { Runtime } from '..';
 
 export function store<T extends StoreData>(initialState: T, instance: { $rt: Runtime }, name: string): Store<T> {
-    const existingStore = instance.$rt.getStore(instance, name);
+    const {$rt:{stores}} = instance;
+    const existingStore = stores.getStore(instance, name);
     if (existingStore) {
         return existingStore;
     }
@@ -102,6 +67,6 @@ export function store<T extends StoreData>(initialState: T, instance: { $rt: Run
         }
     }) as Store<T>;
     dispatcher.$target = proxy;
-    instance.$rt.registerStore(instance, name, proxy);
+    stores.registerStore(instance, name, proxy);
     return proxy;
 }

@@ -1,7 +1,7 @@
 import { Component } from './component';
 import { Fragment } from './fragment';
 import { Displayable, DisplayableData } from './displayable';
-import { StoreData } from '../store';
+import { StoreData } from '../stores/store';
 
 export class VirtualElement<T extends typeof Displayable = any, P extends Displayable = Displayable> implements DisplayableData {
     get fullKey(): string {
