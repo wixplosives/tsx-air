@@ -60,17 +60,15 @@ const  = TSXAir(() => {
 
 ## Triggering Rendering
 
-There are 4 ways to trigger a render:
+There are 3 ways to trigger a render:
 - Changes to component properties
 - Changes to a store defined in the component
-- Changes to a [when](#using-when)/[memo](#using-memo) dependency
 - Calling `invalidate`
 
 ## "when" and "memo"
-`when` and `memo` define actions that are re-evaluated when their dependencies change.
-The dependencies can be defined or, if not specified inferred from the action code.
+`when` and `memo` allow running parts of the component logic only when a specific dependency has changed.
 ### Diffrences between when and memo:
-- a `when` action may return an "undo" function that will be called before the action is called again
+- a `when` action may return an "undo" function that will be called before the action is called again ( due to dependency change ) and when the component is about to be unmounted
 ```tsx
 when(() => { 
     const update = ()=>{ /* do something...*/};
@@ -81,7 +79,7 @@ when(() => {
 ```
 - `memo` returns the returned value
 ```tsx
-let pi = when(() => calcPi(props.digits));
+let pi = memo(() => calcPi(props.digits));
 ```
 - a `when` action may update a store
 ```tsx
@@ -139,7 +137,10 @@ const InfiniteMeasure = TSXAir(() => {
 ```
 
 ### beforeUnmount
+
 ```tsx
+// @omry, this is an example of why you want to return a dispose function from afterMount
+// will save the extra render in this implementation  ( caused by saving the interval )
 const Clock = TSXAir(() => {
     const state = store({time:'', intervalId:-1});   
     afterMount(()=>{
