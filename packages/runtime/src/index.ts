@@ -21,8 +21,8 @@ export function reset() {
     runTimes = {};
 }
 
-export const when = (predicate: any, action: () => any, target: Component, id: number) => target.$rt.componentServices.when(predicate, action, target, id);
-export const memo = (predicate: any, action: () => any, target: Component, id: number) => target.$rt.componentServices.memo(predicate, action, target, id);
+export const when = (predicate: any, action: () => any, target: Component, id: number) => target.$rt.api.when(predicate, action, target, id);
+export const memo = (predicate: any, action: () => any, target: Component, id: number) => target.$rt.api.memo(predicate, action, target, id);
 export const invalidate = (target: Displayable) => target.$rt.renderer.invalidate(Component.is(target) ? target : target.owner!);
 // export const afterMount = (action:(rootRef: HTMLElement)=>void, target:Component) => target.$rt.when(predicate, action, target, id);
 // export function beforeUnmount(action: (rootRef: HTMLElement) => void, target:Component) {/* */}

@@ -44,7 +44,7 @@ export class Component extends Displayable {
         const {renderer:{maxDepth}} = this.$rt;
         if (depth > maxDepth) {
             throw new Error(`Component tree too deep (over ${maxDepth})
-    This is a component recursion protection - change runtime.maxDepth (or fix your code)`);
+    This is a component recursion protection - change runtime.renderer.maxDepth (or fix your code)`);
         }
     }
 

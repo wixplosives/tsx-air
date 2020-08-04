@@ -24,14 +24,14 @@ export class CompiledParent extends Component {
 // tslint:disable:max-classes-per-file
 export class ParentFrag0 extends Fragment {
     public updateView(): void {
-        const { $rt:{renderer:{updateExpression, getUpdatedInstance}}, stores:{$props} } = this;
+        const { $rt: { updater }, stores: { $props } } = this;
         const { $bits } = $props;
         const mod = this.modified.get($props) || 0;
 
         if (mod & $bits['props.a']) {
-            updateExpression(this.ctx.expressions[0], $props['props.a']);
+            updater.updateExpression(this.ctx.expressions[0], $props['props.a']);
         }
-        getUpdatedInstance(this.$comp0);
+        updater.getUpdatedInstance(this.$comp0);
     }
 
     get $comp0() {
@@ -48,12 +48,12 @@ export class ParentFrag0 extends Fragment {
     }
 
     public toString(): string {
-        const { stores:{$props}, $rt:{renderer:{toString}} } = this;
+        const { stores: { $props }, $rt: { renderer: { toString } } } = this;
 
         const r = this.unique(`<span><!--C-->${
-                toString(this.$comp0)
+            toString(this.$comp0)
             }<!--C--><!--X-->${
-                toString($props['props.a'])
+            toString($props['props.a'])
             }<!--X--></span>`);
         return r;
     }
@@ -68,7 +68,7 @@ export class CompiledChild extends Component {
 
 export class ChildFrag0 extends Fragment {
     public updateView(): void {
-        const { $rt:{renderer:{updateExpression}}, stores:{$props} } = this;
+        const { $rt: { updater: { updateExpression } }, stores: { $props } } = this;
         const { $bits } = $props;
         const mod = this.modified.get($props) || 0;
 
@@ -87,7 +87,7 @@ export class ChildFrag0 extends Fragment {
     }
 
     public toString(): string {
-        const { $rt:{renderer:{toString}}, stores:{$props} } = this;
+        const { $rt: { renderer: { toString } }, stores: { $props } } = this;
         const r = this.unique(`<div><!--X-->${
             toString($props['props.ca'])}<!--X--> <!--X-->${
             toString($props['props.cb'])}<!--X--></div>`);

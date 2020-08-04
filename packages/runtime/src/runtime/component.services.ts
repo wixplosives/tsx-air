@@ -1,4 +1,4 @@
-import { Component, VirtualElement, ExpressionDom, Runtime } from '..';
+import { Component, Runtime } from '..';
 import isArray from 'lodash/isArray';
 
 export class ComponentServices {
@@ -12,8 +12,6 @@ export class ComponentServices {
 
     memo = (predicate: any, action: () => void, target: Component, id: number) =>
         this.doIfPredicate(predicate, action, target, id, false);
-
-
 
     private doIfPredicate(predicate: any, action: () => void, target: Component, id: number, useUndo: boolean) {
         const previousTargetPredicates = this.previousPredicates.get(target) || {};

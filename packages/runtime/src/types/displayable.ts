@@ -66,7 +66,7 @@ export class Displayable implements DisplayableData{
 
     storeChanged = (modifiedStore: Store, changed: number) => {
         this.modified.set(modifiedStore, (this.modified.get(modifiedStore) || 0) | changed);
-        this.$rt.renderer.invalidate(this);
+        this.$rt.updater.invalidate(this);
     };
     afterMount(_ref: Elm) {/** add event listeners */ }
     afterUnmount() {/** dispose of stuff */ }

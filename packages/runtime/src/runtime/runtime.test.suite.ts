@@ -71,7 +71,7 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
 
             it(`changes the view over a few frames if maxDepthPerUpdate is excised`, () => {
                 instance = runtime.renderer.render(VirtualElement.root(Parent, { a: 0 })) as Component;
-                runtime.renderer.maxDepthPerUpdate = 3;
+                runtime.updater.maxDepthPerUpdate = 3;
                 instance.stores.$props.a = 1;
                 expect(onNextFrame).to.have.length(1);
                 onNextFrame[0](0);

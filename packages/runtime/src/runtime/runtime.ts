@@ -1,17 +1,20 @@
 import { Renderer } from './renderer';
 import { ComponentServices } from './component.services';
 import { StoresRegistry } from '../stores/stores.registry';
+import { ViewUpdater } from './view.updater';
 
 export class Runtime {
-    readonly renderer: Renderer;
-    readonly componentServices: ComponentServices;
+    readonly renderer = new Renderer(this);
+    readonly api = new ComponentServices(this);
+    readonly updater = new ViewUpdater(this);
     readonly stores = new StoresRegistry();
-    
+
     readonly document: Document;
     readonly mockDom: HTMLElement;
     readonly HTMLElement: typeof HTMLElement;
     readonly Text: typeof Text;
-    readonly Comment:typeof Comment;
+    readonly Comment: typeof Comment;
+   
 
     constructor(
         readonly window: Window = globalThis.window!,
@@ -25,7 +28,5 @@ export class Runtime {
         // @ts-ignore
         this.Comment = window.Comment;
         this.mockDom = window.document.createElement('div');
-        this.renderer = new Renderer(this);
-        this.componentServices = new ComponentServices(this);
     }
 }
