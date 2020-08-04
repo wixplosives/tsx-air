@@ -14,11 +14,11 @@ export class Runtime {
     readonly HTMLElement: typeof HTMLElement;
     readonly Text: typeof Text;
     readonly Comment: typeof Comment;
-   
+
 
     constructor(
         readonly window: Window = globalThis.window!,
-        readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = globalThis.requestAnimationFrame,
+        readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = cb => globalThis.requestAnimationFrame(cb),
     ) {
         this.document = window.document;
         // @ts-ignore

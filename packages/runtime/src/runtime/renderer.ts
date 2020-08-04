@@ -59,7 +59,7 @@ export class Renderer {
 
 
 
-    private spreadStyle(styleObj: string | object): string {
+    spreadStyle(styleObj: string | object): string {
         if (typeof styleObj === 'string') {
             return styleObj;
         }

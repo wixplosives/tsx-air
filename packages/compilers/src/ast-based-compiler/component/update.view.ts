@@ -30,10 +30,10 @@ function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) 
         }
     };
     jsxExp(fragment).forEach((exp, i) =>
-        addUpdate(exp, `$rt.updateExpression(this.ctx.expressions[${i}], ${prop(exp.expression)})`)
+        addUpdate(exp, `$up.updateExpression(this.ctx.expressions[${i}], ${prop(exp.expression)})`)
     );
     fragment.root.components.forEach(childComp =>
-        statements.push(asAst(`$rt.getUpdatedInstance(this.${
+        statements.push(asAst(`$up.getUpdatedInstance(this.${
             getVComp(comp, childComp).name})`) as ts.Statement)
     );
     for (const [exp, elmIndex] of elementsWithDynamicAttr(fragment)) {
@@ -42,7 +42,7 @@ function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) 
         if (!name.startsWith('on')) {
             let attrValue = prop(exp.expression);
             if (name === 'style') {
-                attrValue = `$rt.spreadStyle(${attrValue})`;
+                attrValue = `$rn.spreadStyle(${attrValue})`;
             }
             addUpdate(exp, `this.ctx.elements[${elmIndex}].setAttribute('${name}', ${attrValue});`);
         }

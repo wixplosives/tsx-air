@@ -75,7 +75,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
             const tag = asCode(src.tagName);
             if (isComponentTag(tag)) {
                 add('<!--C-->');
-                const exp = setNodeSrc(asAst(`toString(${asCode(n)})`), src) as ts.Expression;
+                const exp = setNodeSrc(asAst(`$rn.toString(${asCode(n)})`), src) as ts.Expression;
                 add({ exp });
                 add('<!--C-->');
                 return ts.createTrue();
@@ -86,10 +86,16 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
                     if (!ts.isJsxAttribute(attr)) { throw new Error('Invalid attribute'); }
                     const { name, initializer } = attr;
                     let attrName = asCode(name);
+                    attrName = attrName === 'className' ? 'class' : attrName;
                     if (!/on[A-Z].*|ref|key/.test(attrName)) {
                         if (initializer && ts.isJsxExpression(initializer)) {
-                            attrName = attrName === 'className' ? 'class' : attrName;
-                            add({exp: asAst(`attr('${attrName}',  ${prop(initializer.expression!)})`) as ts.Expression});
+                            add(' ');
+                            add({exp: asAst(`$rn.attr("${attrName}",  ${prop(initializer.expression!)})`) as ts.Expression});
+                        } else {
+                            add(` ${attrName}`);
+                            if (initializer) {
+                                add(`=${asCode(initializer)}`);
+                            }
                         }
                     }
                 });
@@ -101,7 +107,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
         }
         if (ts.isJsxExpression(n) && !ts.isJsxAttribute(n.parent) && n.expression) {
             add('<!--X-->');
-            add({ exp: asAst(`toString(${prop(getNodeSrc(n).expression!)})`) as ts.Expression });
+            add({ exp: asAst(`$rn.toString(${prop(getNodeSrc(n).expression!)})`) as ts.Expression });
             add('<!--X-->');
             return ts.createTrue();
         }
