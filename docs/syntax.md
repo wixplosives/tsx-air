@@ -124,13 +124,15 @@ const GoogleMaps = TSXAir(()=>{
 });
 ```
 
-### afterUpdate
+### afterDomUpdate
 ```tsx
 const InfiniteMeasure = TSXAir(() => {
     const state = store({area:0, ref:{} as RefHolder<HTMLDivElement>});   
-    afterDomUpdate([], ()=>{
-        const {width, height} = state.ref.element!.getClientRects()[0];
-        state.area = width * height;
+    afterDomUpdate([], (consecutiveUpdatedFrames)=>{
+        if (consecutiveUpdatedFrames < 10) {
+            const {width, height} = state.ref.element!.getClientRects()[0];
+            state.area = width * height;
+        }
     });
     return <div ref={state.ref}>{state.area}</div>;
 });
