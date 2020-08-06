@@ -1,2 +1,2 @@
-export { browserify, BrowserifyOptions } from './browserify';
+export { build, BuildOptions } from './build';
 export * from './compile';

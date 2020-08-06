@@ -9,7 +9,7 @@ import { packagePath } from '@tsx-air/utils/packages';
 import { Compiler } from '@tsx-air/types';
 import { asJsX } from '@tsx-air/utils';
 
-export interface BrowserifyOptions {
+export interface BuildOptions {
     base: string;
     entry: string;
     output: string;
@@ -18,9 +18,9 @@ export interface BrowserifyOptions {
     compiler: Compiler;
 }
 
-export const browserifyPath = packagePath('@tsx-air/browserify');
+const builderPath = packagePath('@tsx-air/builder');
 
-export async function browserify(options: BrowserifyOptions): Promise<string> {
+export async function build(options: BuildOptions): Promise<string> {
     const { base, entry, output,
         debug = false, configFilePath } = options;
     const outDir = dirname(output);
@@ -57,7 +57,7 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
         resolve: {
             extensions: ['.tsx', '.ts', '.js', '.jsx', '.json'],
             plugins: [new TsconfigPathsPlugin({
-                configFile: join(browserifyPath, '..', '..', 'tsconfig.json')
+                configFile: join(builderPath, '..', '..', 'tsconfig.json')
             })]
         },
         performance: {
@@ -70,11 +70,9 @@ export async function browserify(options: BrowserifyOptions): Promise<string> {
     // @ts-ignore
     const readFile = promisify(wp.outputFileSystem.readFile);
     const run = promisify(wp.run.bind(wp));
-    // await baseRsConfig;
-    // await tsConfig;
     const res = await run();
     if (res.hasErrors()) {
-        throw new Error(`Error browserifying ${join(base, entry)}
+        throw new Error(`Error building ${join(base, entry)}
         ${ res.toString()} `);
     }
     return (await readFile(output)).toString();

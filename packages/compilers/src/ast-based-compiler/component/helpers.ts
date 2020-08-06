@@ -36,7 +36,6 @@ export function getDirectDependencies(comp: CompDefinition, scope: UsedVariables
     comp.stores.map(c => c.name).filter(_usedInScope).forEach(
         name => add(used, { [name]: scope.accessed[name] }, 'stores')
     );
-
     return used;
 }
 type U<T> = UsedInScope<T> | UsedVariables<T> | RecursiveMap<T>;
@@ -209,8 +208,25 @@ export function getDirectExpressions(root: JsxRoot) {
     return root.expressions.filter(e => directExp.has(e.expression));
 }
 
-export const isAttribute = (exp: JsxExpression) => ts.isJsxAttribute(exp.sourceAstNode.parent);
+export function getRecursiveMapPaths(map: RecursiveMap) {
+    const res: string[] = [];
+    const dfs = (r: RecursiveMap, prefix = '') => {
+        let count = 0;
+        for (const [key, value] of Object.entries(r)) {
+            if (key !== '$refs') {
+                count++;
+                dfs(value, prefix ? `${prefix}.${key}` : key);
+            }
+        }
+        if (count === 0 && prefix !== '') {
+            res.push(prefix);
+        }
+    };
+    dfs(map);
+    return res;
+}
 
+export const isAttribute = (exp: JsxExpression) => ts.isJsxAttribute(exp.sourceAstNode.parent);
 export const jsxExp = (fragment: FragmentData) => getDirectExpressions(fragment.root).filter(e => !isAttribute(e));
 export const dynamicAttributes = (fragment: FragmentData) => getDirectExpressions(fragment.root).filter(isAttribute);
 export const attrElement = (attr: JsxExpression) => attr.sourceAstNode.parent.parent.parent as ts.JsxOpeningLikeElement;

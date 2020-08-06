@@ -9,18 +9,17 @@ export const Gallery = TSXAir((props:{baseUrl:string}) => {
             {dataId:3, src:'weird.jpg'}
         ]
     });
-    const deleteButton = (imgName: string) => {
-        const t = imgName;
-        return <button onClick={
-            () => state.images = state.images.filter(i => i.src !== t)
-        } disabled={state.images.length < 2}>Remove</button>;
-    };
+    // const deleteButton = (imgName: string) => {
+    //     return <button onClick={
+    //         () => state.images = state.images.filter(i => i.src !== imgName)
+    //     } disabled={state.images.length < 2}>Remove</button>;
+    // };
  
     return <div className="gallery">
         {state.images.map((img,i) => <div key={img.dataId + ''}>
             <img src={`/${props.baseUrl}/${img.src}`} 
              title={`image ${i+1}/${state.images.length}`} />
-            {deleteButton(img.src)}
+            {/* {deleteButton(img.src)} */}
         </div>)}
     </div>;
 });

@@ -1,6 +1,6 @@
 import { cMethod, astTemplate, cloneDeep, asCode, asAst, Modifier, getNodeSrc, setNodeSrc } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { swapVirtualElements } from '../function';
+import { swapVirtualElements } from '../functions';
 import { FragmentData } from './jsx.fragment';
 import last from 'lodash/last';
 import { isComponentTag } from '@tsx-air/utils';

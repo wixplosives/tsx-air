@@ -59,7 +59,6 @@ export class Fragment extends Displayable {
                 '<!--X-->', (i: number) => this.comment(i, 'X')),
             '<!--C-->', (i: number) => this.comment(i, 'C'))
             .replace(/x-da="!"/g, `x-da="${this.fullKey}"`);
-
     }
 
     private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: (v: any, c: Comment) => void): void {

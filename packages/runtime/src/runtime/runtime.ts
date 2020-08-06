@@ -15,14 +15,13 @@ export class Runtime {
     readonly Text: typeof Text;
     readonly Comment: typeof Comment;
 
-
     constructor(
         readonly window: Window = globalThis.window!,
         readonly requestAnimationFrame: (callback: FrameRequestCallback) => any = cb => globalThis.requestAnimationFrame(cb),
     ) {
         this.document = window.document;
         // @ts-ignore
-        this.HTMLElement = window?.HTMLElement;
+        this.HTMLElement = window.HTMLElement;
         // @ts-ignore
         this.Text = window.Text;
         // @ts-ignore

@@ -1,17 +1,17 @@
 import { expect } from 'chai';
 import fixtures from '../fixtures';
-import { browserify } from './browserify';
-import ts, { visitEachChild } from 'typescript';
+import { build } from './build';
+import ts from 'typescript';
 import { execute, createMockpiler } from '@tsx-air/testing';
 import rimraf from 'rimraf';
 import { nodeFs } from '@file-services/node';
 import { packagePath } from '@tsx-air/utils/packages';
 
-describe('browserify', () => {
+describe('builder', () => {
     let tmp: string;
 
     it('should package simple.ts into a single js file', async () => {
-        const built = await browserify({
+        const built = await build({
             base: fixtures,
             entry: 'simple.ts',
             output: nodeFs.join(tmp, 'bundle.js'),
@@ -21,7 +21,7 @@ describe('browserify', () => {
     });
 
     it('should use the tsconfig provided', async () => {
-        const built = await browserify({
+        const built = await build({
             base: fixtures,
             entry: 'simple.ts',
             output: nodeFs.join(tmp, 'bundle.js'),
@@ -31,7 +31,7 @@ describe('browserify', () => {
     });
 
     it('should package with.imports.ts into a single js file', async () => {
-        const built = await browserify({
+        const built = await build({
             base: fixtures,
             entry: 'with.imports.ts',
             output: nodeFs.join(tmp, 'bundle.js'),
@@ -46,7 +46,7 @@ describe('browserify', () => {
     });
 
     it('copies all .compiled files to the target folder', async () => {
-        await browserify({
+        await build({
             base: fixtures,
             entry: 'with.imports.ts',
             output: nodeFs.join(tmp, 'bundle.js'),
@@ -56,7 +56,7 @@ describe('browserify', () => {
     });
 
     it('should package import.examples.ts into a single js file', async () => {
-        const built = await browserify({
+        const built = await build({
             base: fixtures,
             entry: 'import.examples.ts',
             configFilePath: nodeFs.join(fixtures, 'tsconfig.json'),
@@ -70,7 +70,7 @@ describe('browserify', () => {
     });
 
     it('should transform the sources', async () => {
-        const built = await browserify({
+        const built = await build({
             base: fixtures,
             entry: 'simple.ts',
             output: nodeFs.join(fixtures, '..', 'tmp', 'bundle.js'),
@@ -83,9 +83,9 @@ describe('browserify', () => {
                             if (ts.isIdentifier(n) && n.text === 'wasExported') {
                                 return ts.createIdentifier('wasTransformed');
                             }
-                            return visitEachChild(n, visitor, ctx);
+                            return ts.visitEachChild(n, visitor, ctx);
                         };
-                        return visitEachChild(node, visitor, ctx);
+                        return ts.visitEachChild(node, visitor, ctx);
                     }]
                 }
             }
@@ -95,7 +95,7 @@ describe('browserify', () => {
 
 
     beforeEach(function () {
-        tmp = packagePath('@tsx-air/browserify', 'tmp', this.currentTest!.title);
+        tmp = packagePath('@tsx-air/builder', 'tmp', this.currentTest!.title);
     });
     afterEach(function (done) {
         this.test?.isPassed() ? rimraf(tmp, done) : done();

@@ -7,13 +7,13 @@ export class ComponentServices {
 
     constructor(readonly runtime: Runtime) { }
 
-    when = (predicate: any, action: () => void, target: Component, id: number) =>
-        this.doIfPredicate(predicate, action, target, id, true);
+    when = (target: Component, id: number, action: () => void, predicate: any) =>
+        this.doIfPredicate(target, id,  action,predicate,  true);
 
-    memo = (predicate: any, action: () => void, target: Component, id: number) =>
-        this.doIfPredicate(predicate, action, target, id, false);
+    memo = (target: Component, id: number, action: () => void, predicate: any) =>
+        this.doIfPredicate(target, id,  action,predicate,  false);
 
-    private doIfPredicate(predicate: any, action: () => void, target: Component, id: number, useUndo: boolean) {
+    private doIfPredicate(target: Component, id: number, action: () => void, predicate: any, useUndo: boolean) {
         const previousTargetPredicates = this.previousPredicates.get(target) || {};
         const previousTargetValue = this.previousValue.get(target) || {};
         const ret = () => useUndo ? void (0) : previousTargetValue[id];
@@ -21,7 +21,7 @@ export class ComponentServices {
         const update = () => {
             this.previousPredicates.set(target, previousTargetPredicates);
             previousTargetPredicates[id] = predicate;
-            return previousTargetValue[id] = action();
+            previousTargetValue[id] = action();
         };
 
         if (this.previousPredicates.has(target) && id in previousTargetPredicates) {
@@ -36,9 +36,10 @@ export class ComponentServices {
                 }
             }
         }
-        if (useUndo && ret()) {
-            ret()();
+        if (useUndo && previousTargetValue[id]) {
+            previousTargetValue[id]();
         }
-        return update();
+        update();
+        return ret();
     }
 }

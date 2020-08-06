@@ -4,7 +4,7 @@ import ts from 'typescript';
 import { setupClosure, jsxExp, dynamicAttributes, attrElement } from '../helpers';
 import { uniqBy } from 'lodash';
 import { tagHandlersUsed } from '../event.handlers';
-import { readFuncName } from '../function';
+import { readFuncName } from '../functions/function';
 import { prop, propsFromInstance } from './common';
 
 export function generateHydrate(fragment: FragmentData) {

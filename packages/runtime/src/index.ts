@@ -21,9 +21,11 @@ export function reset() {
     runTimes = {};
 }
 
-export const when = (predicate: any, action: () => any, target: Component, id: number) => target.$rt.api.when(predicate, action, target, id);
-export const memo = (predicate: any, action: () => any, target: Component, id: number) => target.$rt.api.memo(predicate, action, target, id);
-export const invalidate = (target: Displayable) => target.$rt.renderer.invalidate(Component.is(target) ? target : target.owner!);
+// @ts-ignore
+export const when = (target: Component, id: number, action: () => any, predicate: any[]) => target.$rt.api.when(target, id, action, predicate);
+// @ts-ignore
+export const memo = (target: Component, id: number, action: () => any, predicate: any[]) => target.$rt.api.memo(target, id, action, predicate);
+export const invalidate = (target: Displayable) => target.$rt.updater.invalidate(Component.is(target) ? target : target.owner!);
 // export const afterMount = (action:(rootRef: HTMLElement)=>void, target:Component) => target.$rt.when(predicate, action, target, id);
 // export function beforeUnmount(action: (rootRef: HTMLElement) => void, target:Component) {/* */}
 // export function afterDomUpdate(predicate:any, action: () => void) {/* */}

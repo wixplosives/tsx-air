@@ -1,4 +1,4 @@
-import { importedTsx } from './../fixtures/local.imports/b';
+import { importedTsx } from '../fixtures/local.imports/b';
 import ts from 'typescript';
 import { tsKindInverse, asCode, printAstFullText } from '@tsx-air/compiler-utils';
 // @ts-ignore
@@ -45,7 +45,7 @@ export const getNodeParams = (node: ts.Node, fileName: string) => {
 };
 
 const filePath = (file: string, from?: string) => {
-    const base = packagePath('@tsx-air/browserify', '..', '..');
+    const base = packagePath('@tsx-air/builder', '..', '..');
     if (file.startsWith('.')) {
         const fileAbsPath = nodeFs.resolve(from || process.cwd(), file);
         return nodeFs.relative(base, fileAbsPath);

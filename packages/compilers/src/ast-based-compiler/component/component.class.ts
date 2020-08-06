@@ -1,5 +1,5 @@
 import { cClass, FileTransformerAPI, CompDefinition, asAst } from '@tsx-air/compiler-utils';
-import { generateMethods } from './function';
+import { generateMethods } from './functions/function';
 import { generateFragments } from './fragment';
 import { parseFragments } from './fragment/jsx.fragment';
 import { generateVirtualComponents } from './fragment/virtual.comp';
@@ -7,7 +7,7 @@ import ts from 'typescript';
 
 export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
     api.removeImport('@tsx-air/framework');
-    api.ensureImport('getInstance, when, store, Component, Fragment, VirtualElement', '@tsx-air/runtime');
+    api.ensureImport('getInstance, when, memo, store, Component, Fragment, VirtualElement', '@tsx-air/runtime');
     const fragments = [...parseFragments(comp)];
     const compClass = cClass(
         comp.name!,

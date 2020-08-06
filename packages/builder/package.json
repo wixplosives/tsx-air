@@ -1,5 +1,5 @@
 {
-    "name": "@tsx-air/browserify",
+    "name": "@tsx-air/builder",
     "main": "dist/cjs/index.js",
     "module": "dist/esm/index.js",
     "types": "dist/esm/index.d.ts",
