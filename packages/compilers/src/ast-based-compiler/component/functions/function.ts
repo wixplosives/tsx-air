@@ -33,7 +33,7 @@ function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
 
 function parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments: FragmentData[], isPreRender: boolean) {
     const declaredVars = new Set<string>();
-    const parser = toTsxCompatible(comp, fragments, declaredVars, isPreRender);
+    const {parser} = createCompScriptTransformCtx(comp, fragments, declaredVars, isPreRender);
     const parsed = statements.map(parser);
     if (isPreRender) {
         if (declaredVars.size) {
@@ -52,20 +52,33 @@ function generateMethodBind(func: FuncDefinition) {
     );
 }
 
-const toTsxCompatible = (comp: CompDefinition, fragments: FragmentData[], declaredVars?: Set<string>, allowWhenFunc: boolean = false) => {
+export interface CompScriptTransformCtx {
+    apiCalls: number;
+    comp: CompDefinition;
+    allowLifeCycleApiCalls:boolean;
+    fragments: FragmentData[];
+    declaredVars: Set<string>;
+    parser: (s: ts.Node, skipArrow?: any) => ts.Statement;
+}
+
+const createCompScriptTransformCtx = (comp: CompDefinition, fragments: FragmentData[], declaredVars?: Set<string>, allowLifeCycleApiCalls: boolean = false) => {
     declaredVars = declaredVars || new Set<string>();
-    const apiCalls = { counter: 0 };
-    const parser = (s: ts.Node, skipArrow?: any) => {
-        const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n => {
-            return swapVarDeclarations(comp, n, declaredVars!) ||
-                swapLambdas(n) ||
-                enrichLifeCycleApiFunc(n, allowWhenFunc, apiCalls) ||
-                handleArrowFunc(parser, n, skipArrow) ||
-                swapVirtualElements(comp, fragments, n);
-        }) as ts.Statement;
-        return ret;
+    const ctx:CompScriptTransformCtx = { 
+        allowLifeCycleApiCalls,
+        apiCalls: 0,
+        comp, fragments, declaredVars:declaredVars!,
+        parser: (s: ts.Node, skipArrow?: any) => {
+            const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n => {
+                return swapVarDeclarations(ctx, n) ||
+                    swapLambdas(n) ||
+                    enrichLifeCycleApiFunc(ctx, n) ||
+                    handleArrowFunc(ctx, n, skipArrow) ||
+                    swapVirtualElements(ctx, n);
+            }) as ts.Statement;
+            return ret;
+        }
     };
-    return parser;
+    return ctx;
 };
 
 function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragments: FragmentData[], args: string[]) {

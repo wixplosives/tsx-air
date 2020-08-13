@@ -2,15 +2,16 @@ import ts from 'typescript';
 import { CompDefinition, isJsxExpression, asCode, getNodeSrc, asAst, setNodeSrc, cloneDeep, findUsedVariables, JsxExpression } from '@tsx-air/compiler-utils';
 import { safely } from '@tsx-air/utils';
 import { getDirectExpressions, getRecursiveMapPaths } from '../helpers';
-import { FragmentData } from '../fragment/jsx.fragment';
 import { toCanonicalString } from '../fragment/common';
 import { chain } from 'lodash';
 import { findJsxComp } from '../fragment/virtual.comp';
 import { readNodeFuncName } from './names';
+import { CompScriptTransformCtx } from '.';
 
-export function swapVirtualElements(comp: CompDefinition, fragments: FragmentData[], n: ts.Node, allowNonFrags = false): ts.Expression | undefined {
+export function swapVirtualElements(ctx:CompScriptTransformCtx, n: ts.Node, allowNonFrags = false): ts.Expression | undefined {
+    const {comp, fragments} = ctx;
     if (ts.isParenthesizedExpression(n)) {
-        return swapVirtualElements(comp, fragments, n.expression);
+        return swapVirtualElements(ctx, n.expression);
     }
     if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) {
         const frag = safely(
@@ -25,11 +26,11 @@ export function swapVirtualElements(comp: CompDefinition, fragments: FragmentDat
         } else {
             const propsMap = new Map<string, string>();
             getDirectExpressions(frag.root)
-                .forEach(e => propsMap.set(e.expression, toFragSafe(comp, fragments, e)));
+                .forEach(e => propsMap.set(e.expression, toFragSafe(ctx, e)));
             frag.root.components.forEach(c =>
                 c.props.forEach(({ value }) => {
                     if (isJsxExpression(value)) {
-                        propsMap.set(value.expression, toFragSafe(comp, fragments, value));
+                        propsMap.set(value.expression, toFragSafe(ctx, value));
                     }
                 })
             );
@@ -44,7 +45,7 @@ export function swapVirtualElements(comp: CompDefinition, fragments: FragmentDat
     return undefined;
 }
 
-export function swapVarDeclarations(comp: CompDefinition, n: ts.Node, declaredVars: Set<string>) {
+export function swapVarDeclarations({ comp, declaredVars }: CompScriptTransformCtx, n: ts.Node) {
     if (ts.isVariableStatement(n)) {
         const declarations = chain(n.declarationList.declarations)
             .filter(declaration => !isFunc(declaration))
@@ -108,7 +109,7 @@ function isStoreDefinition(comp: CompDefinition, node: ts.Statement | ts.Variabl
     return false;
 }
 
-export const enrichLifeCycleApiFunc = (node: ts.Node, allowLifeCycleApiCalls: boolean, apiIndex: { counter: number }) => {
+export const enrichLifeCycleApiFunc = (ctx: CompScriptTransformCtx, node: ts.Node) => {
     const lifeCycleFuncsWithFilter = new Set(['when', 'memo', 'afterDomUpdate']);
     const lifeCycleFuncsWithoutFilter = new Set(['afterMount', 'beforeUnmount']);
 
@@ -117,10 +118,10 @@ export const enrichLifeCycleApiFunc = (node: ts.Node, allowLifeCycleApiCalls: bo
         const call = node.expression;
         const apiCall = asCode(call.expression);
         if (lifeCycleFuncsWithFilter.has(apiCall) || lifeCycleFuncsWithoutFilter.has(apiCall)) {
-            if (allowLifeCycleApiCalls) {
+            if (ctx.allowLifeCycleApiCalls) {
                 const actionIsFirstArg = !!readNodeFuncName(call.arguments[0]);
                 const actionName = readNodeFuncName(call.arguments[actionIsFirstArg ? 0 : 1]);
-                const params = [`this`, apiIndex.counter++, `this.${actionName}`,];
+                const params = [`this`, ctx.apiCalls++, `this.${actionName}`,];
                 if (lifeCycleFuncsWithFilter.has(apiCall)) {
                     const dependencies = actionIsFirstArg
                         ? `[${
@@ -159,14 +160,14 @@ export const swapLambdas = (n: ts.Node) => {
     return undefined;
 };
 
-export const toFragSafe = (comp: CompDefinition, fragments: FragmentData[], exp: JsxExpression): string =>
-    asCode(cloneDeep(exp.sourceAstNode.expression!, undefined, n => swapVirtualElements(comp, fragments, n)) as ts.Expression);
+export const toFragSafe = (ctx:CompScriptTransformCtx, exp: JsxExpression): string =>
+    asCode(cloneDeep(exp.sourceAstNode.expression!, undefined, n => swapVirtualElements(ctx, n)) as ts.Expression);
 
 
-export function handleArrowFunc(parser: (n: ts.Node, skipArrow: ts.Node) => ts.Node, n: ts.Node, skipArrow?: ts.Node) {
+export function handleArrowFunc({ parser }: CompScriptTransformCtx, n: ts.Node, skipArrow?: ts.Node) {
     if (n !== skipArrow && n.parent && ts.isArrowFunction(n.parent)) {
         return ts.createReturn(
-            parser(n, n) as ts.Expression
+            parser(n, n) as any
         );
     }
     return undefined;
