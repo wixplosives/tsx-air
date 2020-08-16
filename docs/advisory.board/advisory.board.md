@@ -50,3 +50,17 @@ const StateDilemma = TSXAir(() => {
 Should this be allowed? what should the output be? what should the output be after a click?
 #### Discussion point: cloneElement
 Do we need it? what should the priority be?
+#### Discussion point: refs
+Which version do you prefer?
+```tsx
+    // The no automagic
+    const refs = store({a:{element:undefined}});
+    return <div ref={refs.a} />
+```
+Or
+```tsx
+    // The compactifier
+    const refs = store({a:undefined});
+    return <div ref={refs.a} />
+```
+
