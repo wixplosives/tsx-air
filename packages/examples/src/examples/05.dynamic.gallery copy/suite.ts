@@ -1,5 +1,5 @@
-import { ExampleSuiteApi, Features, feature } from '../07.dark.fader/node_modules/@tsx-air/types';
-import { htmlMatch } from '../07.dark.fader/node_modules/@tsx-air/testing';
+import { ExampleSuiteApi, Features, feature } from '../TODO.07.dark.fader/node_modules/@tsx-air/types';
+import { htmlMatch } from '../TODO.07.dark.fader/node_modules/@tsx-air/testing';
 import { expect } from 'chai';
 
 export const features: Features = [

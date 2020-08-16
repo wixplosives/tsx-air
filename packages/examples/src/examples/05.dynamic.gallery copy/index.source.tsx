@@ -1,4 +1,4 @@
-import { TSXAir, store } from '../07.dark.fader/node_modules/@tsx-air/framework';
+import { TSXAir, store } from '../TODO.07.dark.fader/node_modules/@tsx-air/framework';
 
 export const Gallery = TSXAir((props:{baseUrl:string}) => {
     const state = store({
