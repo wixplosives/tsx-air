@@ -4,7 +4,7 @@ import { setupClosure } from '../helpers';
 import { FragmentData } from '../fragment/jsx.fragment';
 import { get } from 'lodash';
 import { assignFunctionNames, readFuncName, addNamedFunctions, namedFuncs } from './names';
-import { swapVarDeclarations, swapVirtualElements, enrichLifeCycleApiFunc, swapLambdas, handleArrowFunc } from './swappers';
+import { swapVirtualElements, enrichLifeCycleApiFunc, swapLambdas, handleArrowFunc } from './swappers';
 
 export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]) {
     assignFunctionNames(comp);
@@ -33,7 +33,7 @@ function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
 
 function parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments: FragmentData[], isPreRender: boolean) {
     const declaredVars = new Set<string>();
-    const {parser} = createCompScriptTransformCtx(comp, fragments, declaredVars, isPreRender);
+    const { parser } = createCompScriptTransformCtx(comp, fragments, declaredVars, isPreRender);
     const parsed = statements.map(parser);
     if (isPreRender) {
         if (declaredVars.size) {
@@ -55,7 +55,7 @@ function generateMethodBind(func: FuncDefinition) {
 export interface CompScriptTransformCtx {
     apiCalls: number;
     comp: CompDefinition;
-    allowLifeCycleApiCalls:boolean;
+    allowLifeCycleApiCalls: boolean;
     fragments: FragmentData[];
     declaredVars: Set<string>;
     parser: (s: ts.Node, skipArrow?: any) => ts.Statement;
@@ -63,14 +63,15 @@ export interface CompScriptTransformCtx {
 
 const createCompScriptTransformCtx = (comp: CompDefinition, fragments: FragmentData[], declaredVars?: Set<string>, allowLifeCycleApiCalls: boolean = false) => {
     declaredVars = declaredVars || new Set<string>();
-    const ctx:CompScriptTransformCtx = { 
+    const ctx: CompScriptTransformCtx = {
         allowLifeCycleApiCalls,
         apiCalls: 0,
-        comp, fragments, declaredVars:declaredVars!,
+        comp, fragments, declaredVars: declaredVars!,
         parser: (s: ts.Node, skipArrow?: any) => {
             const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n => {
-                return swapVarDeclarations(ctx, n) ||
-                    swapLambdas(n) ||
+
+                // swapVarDeclarations(ctx, n) ||
+                return swapLambdas(n) ||
                     enrichLifeCycleApiFunc(ctx, n) ||
                     handleArrowFunc(ctx, n, skipArrow) ||
                     swapVirtualElements(ctx, n);

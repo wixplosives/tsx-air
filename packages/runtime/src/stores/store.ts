@@ -2,9 +2,9 @@ import { StoreData, Store } from './types';
 import { Dispatcher } from './dispatcher';
 import { Runtime } from '..';
 
-export function store<T extends StoreData>(initialState: T, instance: { $rt: Runtime }, name: string): Store<T> {
+export function store<T extends StoreData>(instance: { $rt: Runtime }, id: string, initialState: T): Store<T> {
     const {$rt:{stores}} = instance;
-    const existingStore = stores.getStore(instance, name);
+    const existingStore = stores.getStore(instance, id);
     if (existingStore) {
         return existingStore;
     }
@@ -67,6 +67,6 @@ export function store<T extends StoreData>(initialState: T, instance: { $rt: Run
         }
     }) as Store<T>;
     dispatcher.$target = proxy;
-    stores.registerStore(instance, name, proxy);
+    stores.registerStore(instance, id, proxy);
     return proxy;
 }

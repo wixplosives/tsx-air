@@ -22,7 +22,7 @@ export class Fragment extends Displayable {
             throw new Error('Invalid fragment: no owner component');
         }
         super(key, parent, runtime);
-        this.stores = {$props: store(parent.props, this, '$props')};
+        this.stores = { $props: store(this, '$props', parent.props) };
         this.stores.$props.$subscribe(this.storeChanged);
     }
 

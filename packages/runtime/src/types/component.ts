@@ -35,7 +35,7 @@ export class Component extends Displayable {
 
     constructor(readonly key: string, public parent: Displayable | undefined, props: object, runtime:Runtime) {
         super(key, parent, runtime);
-        this.stores = { $props: store(props, this, '$props') };
+        this.stores = { $props: store(this, '$props', props) };
         let depth = 0;
         while (parent) {
             depth++;
