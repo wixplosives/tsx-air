@@ -4,7 +4,7 @@ import { setupClosure } from '../helpers';
 import { FragmentData } from '../fragment/jsx.fragment';
 import { get } from 'lodash';
 import { assignFunctionNames, readFuncName, addNamedFunctions, namedFuncs } from './names';
-import { swapVirtualElements, enrichLifeCycleApiFunc, swapLambdas, handleArrowFunc } from './swappers';
+import { swapVirtualElements, enrichLifeCycleApiFunc, swapLambdas, handleArrowFunc, swapVarDeclarations } from './swappers';
 
 export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]) {
     assignFunctionNames(comp);
@@ -68,14 +68,13 @@ const createCompScriptTransformCtx = (comp: CompDefinition, fragments: FragmentD
         apiCalls: 0,
         comp, fragments, declaredVars: declaredVars!,
         parser: (s: ts.Node, skipArrow?: any) => {
-            const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n => {
-
-                // swapVarDeclarations(ctx, n) ||
-                return swapLambdas(n) ||
-                    enrichLifeCycleApiFunc(ctx, n) ||
-                    handleArrowFunc(ctx, n, skipArrow) ||
-                    swapVirtualElements(ctx, n);
-            }) as ts.Statement;
+            const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n =>
+                swapVarDeclarations(ctx, n) ||
+                swapLambdas(n) ||
+                enrichLifeCycleApiFunc(ctx, n) ||
+                handleArrowFunc(ctx, n, skipArrow) ||
+                swapVirtualElements(ctx, n)
+            ) as ts.Statement;
             return ret;
         }
     };

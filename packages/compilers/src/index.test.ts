@@ -6,7 +6,7 @@ import { testRuntimeApi } from '@tsx-air/runtime/src/runtime/runtime.test.suite'
 import { compileAndEval } from '@tsx-air/builder';
 import { buildTestFiles } from '@tsx-air/testing';
 
-describe('compilers', () => {
+describe.only('compilers', () => {
     it('each compiler should have a unique name', () => {
         const usedNames: Set<string> = new Set();
         for (const { label } of transformerCompilers) {
