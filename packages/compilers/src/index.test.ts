@@ -3,7 +3,8 @@ import { transformerCompilers } from '.';
 import { packagePath } from '@tsx-air/utils/packages';
 import { readFileSync } from 'fs';
 import { testRuntimeApi } from '@tsx-air/runtime/src/runtime/runtime.test.suite';
-import { compileAndEval } from '@tsx-air/builder/src';
+import { compileAndEval } from '@tsx-air/builder';
+import { buildTestFiles } from '@tsx-air/testing';
 
 describe('compilers', () => {
     it('each compiler should have a unique name', () => {
@@ -20,13 +21,13 @@ describe('compilers', () => {
             let Parent: any;
             let Child: any;
             before(async () => {
-                // await buildTestFiles(
-                //     packagePath('@tsx-air/runtime', 'fixtures'),
-                //     packagePath('@tsx-air/compilers', 'tmp'),
-                //     compiler,
-                //     'runtime.fixture.tsx',
-                //     'out.js',
-                // );
+                buildTestFiles(
+                    packagePath('@tsx-air/runtime', 'fixtures'),
+                    packagePath('@tsx-air/compilers', 'tmp'),
+                    compiler,
+                    'runtime.fixture.tsx',
+                    'out.js',
+                );
 
                 const exports = compileAndEval(
                     readFileSync(packagePath('@tsx-air/runtime', 'fixtures', 'runtime.fixture.tsx'), { encoding: 'utf8' }),

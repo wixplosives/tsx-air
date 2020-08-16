@@ -1,13 +1,18 @@
 import ts from 'typescript';
-import { isJsxExpression, asCode, getNodeSrc, asAst, setNodeSrc, cloneDeep, findUsedVariables, JsxExpression } from '@tsx-air/compiler-utils';
+import { isJsxExpression, asCode, getNodeSrc, asAst, setNodeSrc, cloneDeep, findUsedVariables, JsxExpression, CompDefinition } from '@tsx-air/compiler-utils';
 import { safely } from '@tsx-air/utils';
 import { getDirectExpressions, getRecursiveMapPaths } from '../helpers';
 import { toCanonicalString } from '../fragment/common';
 import { findJsxComp } from '../fragment/virtual.comp';
 import { readNodeFuncName } from './names';
 import { CompScriptTransformCtx } from '.';
+import { FragmentData } from '../fragment/jsx.fragment';
 
-export function swapVirtualElements(ctx: CompScriptTransformCtx, n: ts.Node, allowNonFrags = false): ts.Expression | undefined {
+interface SVElemCtx {
+    comp: CompDefinition;
+    fragments: FragmentData[];
+}
+export function swapVirtualElements(ctx: SVElemCtx, n: ts.Node, allowNonFrags = false): ts.Expression | undefined {
     const { comp, fragments } = ctx;
     if (ts.isParenthesizedExpression(n)) {
         return swapVirtualElements(ctx, n.expression);
@@ -101,7 +106,7 @@ export const swapLambdas = (n: ts.Node) => {
     return undefined;
 };
 
-export const toFragSafe = (ctx: CompScriptTransformCtx, exp: JsxExpression): string =>
+export const toFragSafe = (ctx: SVElemCtx, exp: JsxExpression): string =>
     asCode(cloneDeep(exp.sourceAstNode.expression!, undefined, n => swapVirtualElements(ctx, n)) as ts.Expression);
 
 
@@ -113,5 +118,3 @@ export function handleArrowFunc({ parser }: CompScriptTransformCtx, n: ts.Node, 
     }
     return undefined;
 }
-
-
