@@ -10,7 +10,6 @@ import {
     asAst,
     JsxRoot,
     JsxExpression,
-    JsxAttribute
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
