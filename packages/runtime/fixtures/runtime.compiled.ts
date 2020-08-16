@@ -7,7 +7,7 @@ export class CompiledParent extends Component {
     }
     public preRender(): VirtualElement<any> {
         const { $props: props } = this.stores;
-        const state = store({ counter: 0 }, this, 'state');
+        const state = store(this, 'state', { counter: 0 });
 
         state.counter++;
         if (props.a < 0) {

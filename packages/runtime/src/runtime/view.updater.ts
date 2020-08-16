@@ -87,7 +87,6 @@ export class ViewUpdater {
         }
     };
 
-
     private updateDomExpression(expMarkers: Comment[], values: IterableIterator<Text | HTMLElement>) {
         let first!: Node;
         for (const v of values) {
