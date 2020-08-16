@@ -7,7 +7,7 @@ export class CompiledParent extends Component {
     }
     public preRender(): VirtualElement<any> {
         const { $props: props } = this.stores;
-        const state = store({ counter: 0 }, this, 'state');
+        const state = store(this, 'state', { counter: 0 });
 
         state.counter++;
         if (props.a < 0) {
@@ -24,15 +24,14 @@ export class CompiledParent extends Component {
 // tslint:disable:max-classes-per-file
 export class ParentFrag0 extends Fragment {
     public updateView(): void {
-        const { $props } = this.stores;
+        const { $rt: { updater }, stores: { $props } } = this;
         const { $bits } = $props;
-        const { $rt } = this;
         const mod = this.modified.get($props) || 0;
 
         if (mod & $bits['props.a']) {
-            $rt.updateExpression(this.ctx.expressions[0], $props['props.a']);
+            updater.updateExpression(this.ctx.expressions[0], $props['props.a']);
         }
-        $rt.getUpdatedInstance(this.$comp0);
+        updater.getUpdatedInstance(this.$comp0);
     }
 
     get $comp0() {
@@ -49,11 +48,12 @@ export class ParentFrag0 extends Fragment {
     }
 
     public toString(): string {
-        const { $props } = this.stores;
+        const { stores: { $props }, $rt: { renderer: { toString } } } = this;
+
         const r = this.unique(`<span><!--C-->${
-            this.$rt.toString(this.$comp0)
+            toString(this.$comp0)
             }<!--C--><!--X-->${
-            this.$rt.toString($props['props.a'])
+            toString($props['props.a'])
             }<!--X--></span>`);
         return r;
     }
@@ -68,16 +68,15 @@ export class CompiledChild extends Component {
 
 export class ChildFrag0 extends Fragment {
     public updateView(): void {
-        const { $props } = this.stores;
+        const { $rt: { updater: { updateExpression } }, stores: { $props } } = this;
         const { $bits } = $props;
-        const { $rt } = this;
         const mod = this.modified.get($props) || 0;
 
         if (mod & $bits['props.ca']) {
-            $rt.updateExpression(this.ctx.expressions[0], $props['props.ca']);
+            updateExpression(this.ctx.expressions[0], $props['props.ca']);
         }
         if (mod & $bits['props.cb']) {
-            $rt.updateExpression(this.ctx.expressions[1], $props['props.cb']);
+            updateExpression(this.ctx.expressions[1], $props['props.cb']);
         }
     }
 
@@ -88,10 +87,10 @@ export class ChildFrag0 extends Fragment {
     }
 
     public toString(): string {
-        const { $props } = this.stores;
+        const { $rt: { renderer: { toString } }, stores: { $props } } = this;
         const r = this.unique(`<div><!--X-->${
-            this.$rt.toString($props['props.ca'])}<!--X--> <!--X-->${
-            this.$rt.toString($props['props.cb'])}<!--X--></div>`);
+            toString($props['props.ca'])}<!--X--> <!--X-->${
+            toString($props['props.cb'])}<!--X--></div>`);
         return r;
     }
 }

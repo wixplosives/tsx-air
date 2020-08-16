@@ -1,8 +1,7 @@
-import { CompDefinition, asAst, cGet, JsxComponent, isJsxExpression } from '@tsx-air/compiler-utils';
+import { CompDefinition, asAst, cGet, JsxComponent, isJsxExpression, getNodeSrc } from '@tsx-air/compiler-utils';
 import { FragmentData } from './jsx.fragment';
 import ts from 'typescript';
 import { setupClosure } from '../helpers';
-import { findJsxComp } from '../function';
 import {  prop, propsFromInstance } from './common';
 
 export const generateVirtualComponents = (fragment: FragmentData, componentMode: boolean) =>
@@ -14,6 +13,19 @@ export const getVComp = (comp: CompDefinition, jsxComp: JsxComponent) => {
         name: `$${jsxComp.name}${index}`,
         index
     };
+};
+
+export const findJsxComp = (comp: CompDefinition, node: ts.Node): [-1, null] | [number, JsxComponent] => {
+    let compIndex = 0;
+    for (const root of comp.jsxRoots) {
+        for (const c of root.components) {
+            if (c.sourceAstNode === getNodeSrc(node)) {
+                return [compIndex, c];
+            }
+            compIndex++;
+        }
+    }
+    return [-1, null];
 };
 
 const generateVCMethod = (comp: CompDefinition, componentMode: boolean) =>

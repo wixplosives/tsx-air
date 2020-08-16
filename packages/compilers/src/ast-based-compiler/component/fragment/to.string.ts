@@ -1,6 +1,6 @@
 import { cMethod, astTemplate, cloneDeep, asCode, asAst, Modifier, getNodeSrc, setNodeSrc } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { swapVirtualElements } from '../function';
+import { swapVirtualElements } from '../functions';
 import { FragmentData } from './jsx.fragment';
 import last from 'lodash/last';
 import { isComponentTag } from '@tsx-air/utils';
@@ -13,7 +13,7 @@ export const generateToString = (fragment: FragmentData) => {
     const template =
         jsxToStringTemplate(root.sourceAstNode, [
             n => n !== root.sourceAstNode
-                ? swapVirtualElements(comp, fragments, n, true)
+                ? swapVirtualElements({ comp, fragments }, n, true)
                 : undefined,
             (n: ts.Node) => {
                 if (ts.isJsxAttributes(n) && n.properties.some(
@@ -21,7 +21,9 @@ export const generateToString = (fragment: FragmentData) => {
                         && a.initializer && ts.isJsxExpression(a.initializer))) {
                     return ts.createJsxAttributes(n.properties.map(p =>
                         ts.isJsxAttribute(p) && p.initializer &&
-                            ts.isJsxExpression(p.initializer) && p.initializer.expression && ts.isLiteralExpression(p.initializer.expression)
+                            ts.isJsxExpression(p.initializer) &&
+                            p.initializer.expression &&
+                            ts.isLiteralExpression(p.initializer.expression)
                             ? ts.createJsxAttribute(p.name, ts.createStringLiteral(
                                 JSON.parse(asCode(p.initializer.expression))))
                             : cloneDeep(p)),
@@ -73,50 +75,39 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
             const tag = asCode(src.tagName);
             if (isComponentTag(tag)) {
                 add('<!--C-->');
-                const exp = setNodeSrc(asAst(`$rt.toString(${asCode(n)})`), src) as ts.Expression;
+                const exp = setNodeSrc(asAst(`$rn.toString(${asCode(n)})`), src) as ts.Expression;
                 add({ exp });
                 add('<!--C-->');
                 return ts.createTrue();
             } else {
-                if (true) {
-                    const nn = n as ts.JsxOpeningElement;
-                    add(`<${asCode(nn.tagName)}`);
-                    nn.attributes.properties.forEach((attr: ts.JsxAttributeLike) => {
-                        if (!ts.isJsxAttribute(attr)) { throw new Error('Invalid attribute'); }
-                        const { name, initializer } = attr;
-                        const attrName = asCode(name);
-                        if (!/on[A-Z].*|ref/.test(attrName)) {
-                            add(` ${attrName === 'className' ? 'class' : attrName}`);
+                const nn = n as ts.JsxOpeningElement;
+                add(`<${asCode(nn.tagName)}`);
+                nn.attributes.properties.forEach((attr: ts.JsxAttributeLike) => {
+                    if (!ts.isJsxAttribute(attr)) { throw new Error('Invalid attribute'); }
+                    const { name, initializer } = attr;
+                    let attrName = asCode(name);
+                    attrName = attrName === 'className' ? 'class' : attrName;
+                    if (!/on[A-Z].*|ref|key/.test(attrName)) {
+                        if (initializer && ts.isJsxExpression(initializer)) {
+                            add(' ');
+                            add({exp: asAst(`$rn.attr("${attrName}",  ${prop(initializer.expression!)})`) as ts.Expression});
+                        } else {
+                            add(` ${attrName}`);
                             if (initializer) {
-                                if (ts.isJsxExpression(initializer)) {
-                                    add('="');
-                                    if (initializer.expression) {
-                                        if (attrName === 'style') {
-                                            add({ exp: asAst(`$rt.spreadStyle(${prop(initializer.expression)})`) as any as ts.Expression });
-                                        } else {
-                                            add({ exp: asAst(prop(initializer.expression)) as ts.Expression });
-                                        }
-                                    }
-                                    add('"');
-                                } else {
-                                    add(`=${asCode(initializer)}`);
-                                }
+                                add(`=${asCode(initializer)}`);
                             }
                         }
-                        if (attrName === 'style' && initializer && ts.isJsxExpression(initializer)) {
-                            add(``);
-                        }
-                    });
-                    add(`>`);
-                    if (ts.isJsxSelfClosingElement(n)) {
-                        add(`</${tag}>`);
                     }
+                });
+                add(`>`);
+                if (ts.isJsxSelfClosingElement(n)) {
+                    add(`</${tag}>`);
                 }
             }
         }
         if (ts.isJsxExpression(n) && !ts.isJsxAttribute(n.parent) && n.expression) {
             add('<!--X-->');
-            add({ exp: asAst(`$rt.toString(${prop(getNodeSrc(n).expression!)})`) as ts.Expression });
+            add({ exp: asAst(`$rn.toString(${prop(getNodeSrc(n).expression!)})`) as ts.Expression });
             add('<!--X-->');
             return ts.createTrue();
         }

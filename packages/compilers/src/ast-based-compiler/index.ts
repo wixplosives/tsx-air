@@ -19,6 +19,7 @@ const compiler: Compiler = {
         feature('when', 'props', 'change', 'handler'),
         feature('dom', 'ref'),
         feature('high', 'framerate'),
+        feature('dynamic', 'children'),
     ]
 };
 

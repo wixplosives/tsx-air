@@ -1,6 +1,6 @@
 import { Component, VirtualElement, Displayable } from '.';
 import { Runtime } from '..';
-import { store } from '../store';
+import { store } from '../stores/store';
 
 type CommentPlaceholder = 'X' | 'E' | 'C';
 
@@ -22,7 +22,7 @@ export class Fragment extends Displayable {
             throw new Error('Invalid fragment: no owner component');
         }
         super(key, parent, runtime);
-        this.stores = {$props: store(parent.props, this, '$props')};
+        this.stores = { $props: store(this, '$props', parent.props) };
         this.stores.$props.$subscribe(this.storeChanged);
     }
 
@@ -32,13 +32,13 @@ export class Fragment extends Displayable {
         return this.hydrateInternals(values, target, 'X',
             (v: any, t: Comment) =>
                 this.ctx.expressions.push(
-                    this.$rt.hydrateExpression(v, t)));
+                    this.$rt.renderer.hydrateExpression(v, t)));
     }
 
     public hydrateComponents(virtualComps: VirtualElement[], target: HTMLElement) {
         this.hydrateInternals(virtualComps, target, 'C',
             (c: VirtualElement, t: Comment) =>
-                this.$rt.hydrate(c, t.nextElementSibling as HTMLElement));
+                this.$rt.renderer.hydrate(c, t.nextElementSibling as HTMLElement));
     }
 
     public hydrateElements(target: HTMLElement) {
@@ -59,7 +59,6 @@ export class Fragment extends Displayable {
                 '<!--X-->', (i: number) => this.comment(i, 'X')),
             '<!--C-->', (i: number) => this.comment(i, 'C'))
             .replace(/x-da="!"/g, `x-da="${this.fullKey}"`);
-
     }
 
     private hydrateInternals(values: any[], target: HTMLElement, type: CommentPlaceholder, hydrateFunc: (v: any, c: Comment) => void): void {

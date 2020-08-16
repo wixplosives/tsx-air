@@ -1,7 +1,7 @@
 import { Component } from './component';
 import { Fragment } from './fragment';
 import { Displayable, DisplayableData } from './displayable';
-import { StoreData } from '../store';
+import { StoreData } from '../stores';
 
 export class VirtualElement<T extends typeof Displayable = any, P extends Displayable = Displayable> implements DisplayableData {
     get fullKey(): string {
@@ -34,7 +34,11 @@ export class VirtualElement<T extends typeof Displayable = any, P extends Displa
         readonly props: any,
         readonly parent?: P,
         readonly key?: string,
-    ) { }
+    ) { 
+        if (props?.key) {
+            this.key = `${this.key}[${props.key}]`;
+        }
+    }
 
     withKey(key: string) {
         const { type, parent, props } = this;

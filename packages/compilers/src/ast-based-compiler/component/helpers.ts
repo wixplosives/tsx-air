@@ -8,11 +8,14 @@ import {
     findUsedVariables,
     UsedInScope,
     asAst,
+    JsxRoot,
+    JsxExpression,
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
 import { merge, chain, defaultsDeep, mergeWith, omit } from 'lodash';
 import isArray from 'lodash/isArray';
+import { FragmentData } from './fragment/jsx.fragment';
 
 export const compFuncByName = (comp: CompDefinition, name: string) => comp.functions.find(f => f.name === name);
 
@@ -32,7 +35,6 @@ export function getDirectDependencies(comp: CompDefinition, scope: UsedVariables
     comp.stores.map(c => c.name).filter(_usedInScope).forEach(
         name => add(used, { [name]: scope.accessed[name] }, 'stores')
     );
-
     return used;
 }
 type U<T> = UsedInScope<T> | UsedVariables<T> | RecursiveMap<T>;
@@ -111,19 +113,19 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
     return flat;
 }
 
-function* getClosureStores(comp: CompDefinition, used: UsedInScope, storesTarget:string) {
+function* getClosureStores(comp: CompDefinition, used: UsedInScope, storesTarget: string) {
     if (used.stores) {
         yield cConst(destructure(used.stores, { $props: comp.propsIdentifier })!, asAst(`${storesTarget}.stores`) as ts.PropertyAccessExpression);
     }
 }
 
-function* getClosureVolatile(used: UsedInScope, storesTarget:string) {
+function* getClosureVolatile(used: UsedInScope, storesTarget: string) {
     if (used.volatile) {
         yield cLet(destructure(used.volatile)!, asAst(`${storesTarget}.volatile`) as ts.PropertyAccessExpression);
     }
 }
 
-function* getClosureProps(comp: CompDefinition, used: UsedInScope, storesTarget:string) {
+function* getClosureProps(comp: CompDefinition, used: UsedInScope, storesTarget: string) {
     if (used?.stores?.$props) {
         if (comp.propsIdentifier) {
             yield cConst(comp.propsIdentifier, ts.createIdentifier(`${storesTarget}.stores.$props`));
@@ -133,26 +135,28 @@ function* getClosureProps(comp: CompDefinition, used: UsedInScope, storesTarget:
     }
 }
 
-export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, unpack = true, storesTarget='this') {
+export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, isPreRender = false, storesTarget = 'this') {
     const f = ((isArray(scope) ? scope : [scope]) as ts.Node[]).map(s =>
         // @ts-ignore: handle UsedVariables scope
         (s.read && s.accessed)
             ? s
             : findUsedVariables(s));
     const used = merge({ read: {}, accessed: {}, modified: {}, executed: {} }, ...f);
-    yield* addToClosure(comp, getDirectDependencies(comp, used, true), unpack, storesTarget);
-    yield* addToClosure(comp, Object.keys(used.executed).filter(
-        name => comp.functions.some(fn => fn.name === name)
-    ), unpack, storesTarget);
+    yield* addToClosure(comp, getDirectDependencies(comp, used, true), isPreRender, storesTarget);
+    if (!isPreRender) {
+        yield* addToClosure(comp, Object.keys(used.executed).filter(
+            name => comp.functions.some(fn => fn.name === name)
+        ), false, storesTarget);
+    }
 }
 
-export function* addToClosure(comp: CompDefinition, used: UsedInScope | string[], unpack: boolean, storesTarget:string) {
+export function* addToClosure(comp: CompDefinition, used: UsedInScope | string[], isPreRender: boolean, storesTarget: string) {
     if (isArray(used)) {
         if (used.length) {
             yield cConst(destructureNamed(used, {}), asAst('this.owner') as ts.Expression);
         }
     } else {
-        if (unpack) {
+        if (!isPreRender) {
             yield* getClosureStores(comp, used, storesTarget);
             yield* getClosureVolatile(used, storesTarget);
         } else {
@@ -187,3 +191,41 @@ export const readVars = (comp: CompDefinition) => {
     const stores = flatMap(comp.stores, store => readNsVars(comp, store.name));
     return [...props, ...stores];
 };
+
+export function getDirectExpressions(root: JsxRoot) {
+    const directExp = new Set<string>(root.expressions.map(e => e.expression));
+
+    const removeInner = (exp: JsxExpression) => {
+        exp.jsxRoots.forEach(r =>
+            r.expressions.forEach(ex => {
+                directExp.delete(ex.expression);
+                removeInner(ex);
+            })
+        );
+    };
+    root.expressions.forEach(removeInner);
+    return root.expressions.filter(e => directExp.has(e.expression));
+}
+
+export function getRecursiveMapPaths(map: RecursiveMap) {
+    const res: string[] = [];
+    const dfs = (r: RecursiveMap, prefix = '') => {
+        let count = 0;
+        for (const [key, value] of Object.entries(r)) {
+            if (key !== '$refs') {
+                count++;
+                dfs(value, prefix ? `${prefix}.${key}` : key);
+            }
+        }
+        if (count === 0 && prefix !== '') {
+            res.push(prefix);
+        }
+    };
+    dfs(map);
+    return res;
+}
+
+export const isAttribute = (exp: JsxExpression) => ts.isJsxAttribute(exp.sourceAstNode.parent);
+export const jsxExp = (fragment: FragmentData) => getDirectExpressions(fragment.root).filter(e => !isAttribute(e));
+export const dynamicAttributes = (fragment: FragmentData) => getDirectExpressions(fragment.root).filter(isAttribute);
+export const attrElement = (attr: JsxExpression) => attr.sourceAstNode.parent.parent.parent as ts.JsxOpeningLikeElement;

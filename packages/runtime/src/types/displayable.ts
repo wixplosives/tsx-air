@@ -1,6 +1,5 @@
-import { Store, Observable } from '../store';
 import { Component, Fragment } from '.';
-import { Runtime } from '..';
+import { Runtime, Store, Observable } from '..';
 
 export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
 
@@ -59,7 +58,6 @@ export class Displayable implements DisplayableData{
         parent: DisplayableData | undefined,
         readonly $rt: Runtime
     ) {
-        this.innerKey = this.$rt.getUniqueKey();
         while (parent && !Displayable.is(parent)) {
             parent = parent.parent;
         }
@@ -68,7 +66,7 @@ export class Displayable implements DisplayableData{
 
     storeChanged = (modifiedStore: Store, changed: number) => {
         this.modified.set(modifiedStore, (this.modified.get(modifiedStore) || 0) | changed);
-        this.$rt.invalidate(this);
+        this.$rt.updater.invalidate(this);
     };
     afterMount(_ref: Elm) {/** add event listeners */ }
     afterUnmount() {/** dispose of stuff */ }

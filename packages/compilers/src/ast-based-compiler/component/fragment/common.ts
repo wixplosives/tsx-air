@@ -2,7 +2,7 @@ import { asAst, asCode, JsxComponent } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { isString } from 'lodash';
 
-export const propsAndRtFromInstance = asAst(`const {$rt, stores:{$props}}=this;`) as ts.Statement;
+export const propsAndRtFromInstance = asAst(`const {$rt:{renderer:$rn, updater:$up}, stores:{$props}}=this;`) as ts.Statement;
 export const propsFromInstance = asAst(`const {stores:{$props}}=this;`) as ts.Statement;
 
 export const prop = (value: string | ts.Node) => {
@@ -12,7 +12,7 @@ export const prop = (value: string | ts.Node) => {
     return `$props[${toCanonicalString(value)}]`;
 };
 
-export const toCanonicalString = (str: string) => JSON.stringify(str.replace(/"/g, "'").replace(/\s+/g,' '));
+export const toCanonicalString = (str: string) => JSON.stringify(str.replace(/"/g, "'").replace(/\s+/g,''));
 
 export const usedProps = (exp: JsxComponent) => {
     const read = [];

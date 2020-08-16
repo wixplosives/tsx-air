@@ -1,9 +1,9 @@
 type ComponentFeatureAtoms = 'component' | 'static' | 'stateless' | 'stateful';
-type FrameWorkFeatureAtoms = 'imperative' | 'declarative' | 'update';
+type FrameWorkFeatureAtoms = 'imperative' | 'declarative' | 'update' | 'dynamic';
 type Quantities = 'single' | 'multiple' | 'high' | 'low';
 type ComponentInternalFeatures = 'store' | 'nested' | 'props' | 'ref';
 type Interactions = 'lambda' | 'event' | 'handler' | 'framerate'  | 'when' | 'change';
-type ViewElements = 'conditional' | 'dom';
+type ViewElements = 'conditional' | 'dom' | 'children';
 type FeatureElement = ComponentFeatureAtoms | FrameWorkFeatureAtoms
     | Quantities | ComponentInternalFeatures | Interactions | ViewElements;
 
