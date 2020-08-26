@@ -68,8 +68,19 @@ export class Displayable implements DisplayableData{
         this.modified.set(modifiedStore, (this.modified.get(modifiedStore) || 0) | changed);
         this.$rt.updater.invalidate(this);
     };
-    afterMount(_ref: Elm) {/** add event listeners */ }
-    afterUnmount() {/** dispose of stuff */ }
+
+    mounted() {
+        for (const child of Object.values(this.ctx.components)) {
+            child.mounted();
+        }
+    }
+
+    unmounted() {
+        for (const child of Object.values(this.ctx.components)) {
+            child.unmounted();
+        }
+    }
+
     dispose() {
         for (const comp of Object.values(this.ctx.components)) {
             comp.dispose();
@@ -78,7 +89,9 @@ export class Displayable implements DisplayableData{
             store.$unsubscribe(this.storeChanged);
         }
     }
+
     hydrate(_preRender: DisplayableData, _target: HTMLElement): void { throw new Error(`not implemented`); }
+    
     toString(): string { throw new Error(`not implemented`); }
 }
 

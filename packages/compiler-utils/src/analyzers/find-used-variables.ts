@@ -70,6 +70,9 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
                 }
                 const paths = accessToStringArr(n);
 
+                if (ts.isNewExpression(n)) {
+                    return;
+                }
                 addToAccessMap(paths.path, isModification, res, accessParent);
 
                 for (const path of paths.nestedAccess) {
@@ -178,7 +181,13 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
             nestedAccess: []
         };
     }
-    if (!ts.isIdentifier(n)) {
+    if (ts.isNewExpression(n)) {
+        return {
+            path,
+            nestedAccess
+        };
+    }
+    if (!(ts.isIdentifier(n) || ts.isNonNullExpression(n))) {
         throw new Error('unhandled input in accessToStringArr');
     }
     path.unshift(asCode(n));

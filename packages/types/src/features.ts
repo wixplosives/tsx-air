@@ -1,7 +1,7 @@
 type ComponentFeatureAtoms = 'component' | 'static' | 'stateless' | 'stateful';
-type FrameWorkFeatureAtoms = 'imperative' | 'declarative' | 'update' | 'dynamic';
+type FrameWorkFeatureAtoms = 'imperative' | 'declarative' | 'update' | 'dynamic' | 'api';
 type Quantities = 'single' | 'multiple' | 'high' | 'low';
-type ComponentInternalFeatures = 'store' | 'nested' | 'props' | 'ref';
+type ComponentInternalFeatures = 'store' | 'nested' | 'props' | 'ref' | 'lifeCycle';
 type Interactions = 'lambda' | 'event' | 'handler' | 'framerate'  | 'when' | 'change';
 type ViewElements = 'conditional' | 'dom' | 'children';
 type FeatureElement = ComponentFeatureAtoms | FrameWorkFeatureAtoms

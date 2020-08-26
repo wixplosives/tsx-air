@@ -64,20 +64,9 @@ export class ViewUpdater {
             this.pending = new Set<Component>();
             for (const instance of pending) {
                 const preRender = instance.preRender();
-                const nextRoot = this.getUpdatedInstance(preRender);
-                const root = instance.ctx.root as Displayable;
-                if (root !== nextRoot) {
-                    root.domRoot.parentNode?.insertBefore(nextRoot.domRoot, root.domRoot);
-                    root.domRoot.remove();
-                    instance.ctx.root = nextRoot as Fragment;
-                    if (!root.stores.$props.keepAlive) {
-                        instance.ctx.components[root.key].dispose();
-                        delete instance.ctx.components[root.key];
-                    }
-                    instance.ctx.components[nextRoot.key] = nextRoot;
-                }
-                instance.modified = new Map();
+                this.swapRoot(instance,this.getUpdatedInstance(preRender));
                 this.pending.delete(instance);
+                instance.updated();
             }
         } while (this.pending.size && depth < this.maxDepthPerUpdate);
 
@@ -86,6 +75,22 @@ export class ViewUpdater {
             this.triggerViewUpdate();
         }
     };
+
+    private swapRoot({ ctx }: Component, nextRoot: Displayable) {
+        const prevRoot = ctx.root as Displayable;
+        if (prevRoot !== nextRoot) {
+            prevRoot.domRoot.parentNode?.insertBefore(nextRoot.domRoot, prevRoot.domRoot);
+            prevRoot.domRoot.remove();
+            ctx.root = nextRoot as Fragment;
+            ctx.components[prevRoot.key].unmounted();
+            if (!prevRoot.stores.$props.keepAlive) {
+                ctx.components[prevRoot.key].dispose();
+                delete ctx.components[prevRoot.key];
+            }
+            ctx.components[nextRoot.key] = nextRoot;
+            nextRoot.mounted();            
+        }
+    }
 
     private updateDomExpression(expMarkers: Comment[], values: IterableIterator<Text | HTMLElement>) {
         let first!: Node;

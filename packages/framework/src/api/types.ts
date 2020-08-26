@@ -10,7 +10,7 @@ export type TsxAirChild<Props> = null | string | number | TsxAirNode<Props> | Co
 export interface CompCreator<Props> {
     (props: Props): TsxAirNode<Props>;
     key?: string | number | null;
-    render: (props:Props, target?:HTMLElement, add?:RenderTarget)=>ComponentApi<Props>;
+    render: (props: Props, target?: HTMLElement, add?: RenderTarget) => ComponentApi<Props>;
 }
 
 export const TSXAir = <Props>(t: (props: Props) => TsxAirChild<Props> | Promise<TsxAirChild<Props>>) =>

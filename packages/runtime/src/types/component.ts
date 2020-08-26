@@ -11,7 +11,7 @@ export class Component extends Displayable {
     static isType(x: any): x is typeof Component {
         return x && x.prototype instanceof Component;
     }
-    static _render<C extends typeof Component>(runtime:Runtime, component: C, props: any, target?: HTMLElement, add?: RenderTarget) {
+    static _render<C extends typeof Component>(runtime: Runtime, component: C, props: any, target?: HTMLElement, add?: RenderTarget) {
         if (!Component.isType(component)) {
             throw new Error(`Invalid component: not compiled as TSXAir`);
         }
@@ -33,7 +33,11 @@ export class Component extends Displayable {
         return new TsxComponentApi(comp as Component);
     }
 
-    constructor(readonly key: string, public parent: Displayable | undefined, props: object, runtime:Runtime) {
+    $afterMount: Array<(ref: HTMLElement) => void | (() => void)> = [];
+    $afterUnmount: Array<() => void> = [];
+    $afterDomUpdate: Array<() => void> = [];
+
+    constructor(readonly key: string, public parent: Displayable | undefined, props: object, runtime: Runtime) {
         super(key, parent, runtime);
         this.stores = { $props: store(this, '$props', props) };
         let depth = 0;
@@ -41,7 +45,7 @@ export class Component extends Displayable {
             depth++;
             parent = parent?.owner;
         }
-        const {renderer:{maxDepth}} = this.$rt;
+        const { renderer: { maxDepth } } = this.$rt;
         if (depth > maxDepth) {
             throw new Error(`Component tree too deep (over ${maxDepth})
     This is a component recursion protection - change runtime.renderer.maxDepth (or fix your code)`);
@@ -58,5 +62,21 @@ export class Component extends Displayable {
 
     hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {
         this.ctx.root = this.$rt.renderer.hydrate(preRendered, target);
+    }
+
+    updated() {
+        this.$afterDomUpdate.forEach(fn => fn());
+        this.$afterDomUpdate = [];
+        this.modified = new Map();
+    }
+
+    mounted() {
+        super.mounted();        
+    }
+
+    unmounted() {
+        super.unmounted();
+        this.$afterUnmount.forEach(fn => fn());
+        this.$afterUnmount = [];
     }
 }

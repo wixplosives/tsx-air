@@ -8,10 +8,15 @@ export class ComponentServices {
     constructor(readonly runtime: Runtime) { }
 
     when = (target: Component, id: number, action: () => void, predicate: any) =>
-        this.doIfPredicate(target, id,  action,predicate,  true);
+        this.doIfPredicate(target, id, action, predicate, true);
 
     memo = (target: Component, id: number, action: () => void, predicate: any) =>
-        this.doIfPredicate(target, id,  action,predicate,  false);
+        this.doIfPredicate(target, id, action, predicate, false);
+
+    afterDomUpdate = (target: Component, id: number, action: () => void, predicate:any) =>
+        this.doIfPredicate(target, id,
+            () => target.$afterDomUpdate.push(action)
+            , predicate, false);
 
     private doIfPredicate(target: Component, id: number, action: () => void, predicate: any, useUndo: boolean) {
         const previousTargetPredicates = this.previousPredicates.get(target) || {};
@@ -24,7 +29,9 @@ export class ComponentServices {
             previousTargetValue[id] = action();
         };
 
-        if (this.previousPredicates.has(target) && id in previousTargetPredicates) {
+        if (this.previousPredicates.has(target)
+            // Undefined predicate will always trigger the action 
+            && previousTargetPredicates[id] !== undefined) {
             const previous = previousTargetPredicates[id];
             if (previous === predicate) {
                 return ret();

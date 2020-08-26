@@ -308,6 +308,22 @@ describe('findUsedVariables', () => {
         });
     });
 
+    it('handles assignments of "new" keyword', () => {
+        const func = `()=>{
+            state.time = new Date().toTimeString();
+        }`;
+        const ast = parseValue(func);
+        const used = findUsedVariables(ast);
+        expect(used.modified).to.eql({
+            state: {
+                time: {
+                    $refs: [`state.time = new Date().toTimeString()`]
+                }
+            }
+        });
+        expect(used.read).to.eql({});
+    });
+
     xit('finds array-destructured vars', () => {
         const func = `(aParam)=>{
             const [a,b] = aParam.internalObject;

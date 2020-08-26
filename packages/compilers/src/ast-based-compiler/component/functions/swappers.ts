@@ -51,8 +51,8 @@ export function swapVirtualElements(ctx: SVElemCtx, n: ts.Node, allowNonFrags = 
 }
 
 export const enrichLifeCycleApiFunc = (ctx: CompScriptTransformCtx, node: ts.Node) => {
-    const lifeCycleFuncsWithFilter = new Set(['when', 'memo', 'afterDomUpdate']);
-    const lifeCycleFuncsWithoutFilter = new Set(['store', 'afterMount', 'beforeUnmount']);
+    const lifeCycleFuncsWithFilter = new Set(['when', 'memo']);
+    const lifeCycleFuncsWithoutFilter = new Set(['store', 'afterMount', 'afterDomUpdate']);
 
     if ((ts.isExpressionStatement(node) && ts.isCallExpression(node.expression))
         || (ts.isVariableDeclaration(node) && node.initializer && ts.isCallExpression(node.initializer))) {
