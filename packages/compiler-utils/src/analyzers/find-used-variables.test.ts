@@ -9,7 +9,7 @@ import { scan } from '../ast-utils/scanner';
 import { withCodeRefs } from '../dev-utils';
 import { omit } from 'lodash';
 
-describe('findUsedVariables', () => {
+describe.only('findUsedVariables', () => {
     // @ts-ignore
     const findUsedVariables = (...args: any[]) => withCodeRefs(fu(...args));
 
@@ -88,9 +88,9 @@ describe('findUsedVariables', () => {
         const expectedModified = omit(expectedAccessed, `aParam.internalObject`);
         const expectedRead = omit(expectedAccessed, `aParam.replacedProperty`);
 
-        expect(findUsedVariables(ast).modified).to.eql(expectedModified);
+        expect(findUsedVariables(ast).modified, 'modified', ).to.eql(expectedModified);
         expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql(expectedAccessed);
-        expect(findUsedVariables(ast).read).to.eql(expectedRead);
+        expect(findUsedVariables(ast).read, 'read').to.eql(expectedRead);
     });
 
     it('should ignore keys of assigned literals', () => {
@@ -184,9 +184,9 @@ describe('findUsedVariables', () => {
         const ast = parseValue(`(aParam)=>{
                 aParam.internalObject.methodProperty(aParam.internalObject.accessedProperty);
                 aParam.internalObject.methodProperty.name;
-            }
-            `);
-        expect(findUsedVariables(ast).executed, 'methods calls should be added to executed').to.eql({
+            }`);
+        expect(
+            findUsedVariables(ast).executed, 'methods calls should be added to executed').to.eql({
             aParam: {
                 internalObject: {
                     methodProperty: {
@@ -195,11 +195,10 @@ describe('findUsedVariables', () => {
                 }
             }
         });
-
         expect(
             findUsedVariables(ast).accessed.aParam.internalObject.methodProperty,
             'methods calls are considered as access'
-        ).not.to.be.undefined;
+        ).to.deep.include({$refs:['aParam.internalObject.methodProperty(aParam.internalObject.accessedProperty)']});
         expect(
             findUsedVariables(ast).accessed.aParam.internalObject.accessedProperty,
             'access in call arguments is found'
@@ -208,7 +207,9 @@ describe('findUsedVariables', () => {
             findUsedVariables(ast).accessed.aParam.internalObject.methodProperty.name,
             'methods can also have fields'
         ).not.to.be.undefined;
-        expect(findUsedVariables(ast).accessed).to.eql({
+        expect(findUsedVariables(ast).accessed,
+            'accessed'
+        ).to.eql({
             aParam: {
                 internalObject: {
                     accessedProperty: {
@@ -224,6 +225,7 @@ describe('findUsedVariables', () => {
             }
         });
     });
+    
     it('should mark reference by literal strings as access', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = aParam['object-with-kebab-case'].internalProperty;
