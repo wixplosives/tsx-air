@@ -37,9 +37,6 @@ describe('TSXAir component analyzer: functions', () => {
             read: {
                 props: {
                     message: {}
-                },
-                console: {
-                    log: {}
                 }
             },
             defined: {},

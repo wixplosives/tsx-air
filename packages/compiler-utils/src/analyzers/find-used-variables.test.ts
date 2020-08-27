@@ -9,7 +9,7 @@ import { scan } from '../ast-utils/scanner';
 import { withCodeRefs } from '../dev-utils';
 import { omit } from 'lodash';
 
-describe.only('findUsedVariables', () => {
+describe('findUsedVariables', () => {
     // @ts-ignore
     const findUsedVariables = (...args: any[]) => withCodeRefs(fu(...args));
 
@@ -225,7 +225,7 @@ describe.only('findUsedVariables', () => {
             }
         });
     });
-    
+
     it('should mark reference by literal strings as access', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = aParam['object-with-kebab-case'].internalProperty;
