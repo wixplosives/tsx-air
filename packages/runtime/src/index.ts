@@ -27,7 +27,7 @@ export const memo = (target: Component, id: number, action: () => any, predicate
     target.$rt.api.memo(target, id, action, predicate);
 export const invalidate = (target: Displayable) =>
     target.$rt.updater.invalidate(Component.is(target) ? target : target.owner!);
-export const afterMount = (target: Component, __: string, action: (rootRef: HTMLElement) => void) => {
+export const afterMount = (target: Component, __: string, action: (rootRef: HTMLElement|Text) => void) => {
     if (!target.$afterMount.includes(action)) {
         target.$afterMount.push(action);
     }

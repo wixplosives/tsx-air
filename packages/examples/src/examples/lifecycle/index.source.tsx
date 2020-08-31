@@ -5,7 +5,8 @@ export const Clock = TSXAir((props: { title: string }) => {
     const state = store({
         time: 'Not set',
         titleRef: {} as RefHolder<HTMLHRElement>,
-        area: 0
+        area: 0,
+        updatesCount:0
     });
 
     afterMount(ref => {
@@ -16,12 +17,14 @@ export const Clock = TSXAir((props: { title: string }) => {
 
     afterDomUpdate(props.title, () => {
         const { width, height } = state.titleRef.element!.getClientRects()[0];
+        state.updatesCount++;
         state.area = Math.round(width * height);
     });
 
     return <div>
-        <a><h1 ref={state.titleRef}>{props.title}</h1></a>
+        <a href="#"><h1 ref={state.titleRef}>{props.title}</h1></a>
         <h2>Title area: {state.area}px²</h2>
-        <div>{state.time}</div>
+        <h3>Title updated {state.updatesCount} times</h3>
+        <div className="time">{state.time}</div>
     </div>;
 });

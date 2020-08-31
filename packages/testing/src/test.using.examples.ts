@@ -42,6 +42,7 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                         before(async () => {
                             this.timeout(process.env.CI ? 15000 : 6000);
                             this.retries(0);
+                            
                             return safely(
                                 () => buildTestFiles(path, paths.temp, compiler),
                                 'Failed to compile'

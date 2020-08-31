@@ -70,7 +70,7 @@ const createCompScriptTransformCtx = (comp: CompDefinition, fragments: FragmentD
         parser: (s: ts.Node, skipArrow?: any) => {
             const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n =>
                 swapVarDeclarations(ctx, n) ||
-                swapLambdas(n) ||
+                swapLambdas(ctx, n) ||
                 enrichLifeCycleApiFunc(ctx, n) ||
                 handleArrowFunc(ctx, n, skipArrow) ||
                 swapVirtualElements(ctx, n)

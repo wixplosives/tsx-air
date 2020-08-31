@@ -43,9 +43,9 @@ export const Fader = TSXAir((props: { child: TsxAirChild<any> | undefined }) => 
 });
 
 // wrapped in component context
-const useMouseLocation = Hook(( /* ... componentInstance */) => {
-const useMouseLocation = (( /* ... componentInstance */) => {
-    const mouse = store({
+// const useMouseLocation = Hook(( /* ... componentInstance */) => {
+const useMouseLocation = (_self:any, _id:any, ) => {
+    const mouse = store(_self, _id, {
         x: -1, y: -1, pagex: -1, pagey: -1
     });
 
@@ -78,13 +78,19 @@ function usePhysicalLocation() {
 
 function useMouseAngle() {
     // syntax 
-    const mouse = use(mouseLocation());
-    const location = usePhysicalLocation();
+    // const mouse = use(mouseLocation());
+    // const location = usePhysicalLocation();
+    this.bla = 7;
     return mouse.x/location.x;
 }
 
+type Hook = () => void & {hook:true};
+declare function createHook(): Hook;
+const useX = createHook();
+
 export const Googly = TSXAir(() => {
     const angle = useMouseAngle();
+    const angle2 = useX();
     return <img src="eye.png" style={{rotate:angle + 'deg'}} />;
 })
 

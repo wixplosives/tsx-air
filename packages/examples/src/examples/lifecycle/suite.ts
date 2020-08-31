@@ -3,43 +3,43 @@ import { htmlMatch } from '@tsx-air/testing';
 
 export const features: Features = [
     feature('stateless', 'component'),
-    // feature('lifeCycle', 'api'),
+    feature('lifeCycle', 'api', 'afterDomUpdate'),
+    feature('lifeCycle', 'api', 'afterMount'),
 ];
 
 export function suite(api: ExampleSuiteApi) {
-    it('should create a parent component with the correct name', async () => {
+    it('calls the afterMounted callback', async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, {
-            cssQuery: '.parent',
-            pageInstances: 1,
+            cssQuery: '.time',
             textContent: {
-                contains: 'Parent: Test'
-            },
-            children: [{
-                cssQuery: '.child',
-                pageInstances: 1,
-                scopeInstances: 1,
-                textContent: 'Child: Test'
-            }]
+                contains: 'Not set'
+            }
+        });
+        await page.waitFor(150);
+        await htmlMatch(page, {
+            cssQuery: '.time',
+            textContent: {
+                doesNotContain: 'Not set',
+                contains: 'GMT'
+            }
         });
     });
-    
-    it('should update the view', async () => {
+
+    it('calls the afterDomUpdate callback', async () => {
         const page = await api.afterLoading;
-        await page.evaluate(() => (window as any).app.updateProps({ name: 'changed' }));
-        await page.waitFor(50);
         await htmlMatch(page, {
-            cssQuery: '.parent',
-            pageInstances: 1,
+            cssQuery: 'h3',
             textContent: {
-                contains: 'Parent: changed'
-            },
-            children: [{
-                cssQuery: '.child',
-                pageInstances: 1,
-                scopeInstances: 1,
-                textContent: 'Child: changed'
-            }]
+                contains: 'Title updated 1 times'
+            }
+        });
+        await page.evaluate(() => (window as any).app.updateProps({ title: 'changed' }));
+        await htmlMatch(page, {
+            cssQuery: 'h3',
+            textContent: {
+                contains: 'Title updated 2 times'
+            }
         });
     });
 }

@@ -43,7 +43,6 @@ export function compile(fileNames: string[], compiler: Compiler, outDir: string,
     return allDiagnostics;
 }
 
-
 export function compileAndEval(content: string, compiler: Compiler, importPath: string = '', executionContext = {}) {
     const out = ts.transpileModule(content, {
         compilerOptions: {

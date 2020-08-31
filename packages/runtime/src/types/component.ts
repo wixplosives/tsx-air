@@ -29,11 +29,12 @@ export class Component extends Displayable {
                     target.parentNode?.insertBefore(dom, target);
                     target.remove();
             }
+            comp.mounted();
         }
         return new TsxComponentApi(comp as Component);
     }
 
-    $afterMount: Array<(ref: HTMLElement) => void | (() => void)> = [];
+    $afterMount: Array<(ref: HTMLElement|Text) => void | (() => void)> = [];
     $afterUnmount: Array<() => void> = [];
     $afterDomUpdate: Array<() => void> = [];
 
@@ -72,6 +73,8 @@ export class Component extends Displayable {
 
     mounted() {
         super.mounted();        
+        this.$afterMount.forEach(i => i(this.domRoot));
+        this.updated();
     }
 
     unmounted() {

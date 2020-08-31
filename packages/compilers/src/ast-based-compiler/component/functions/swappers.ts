@@ -51,8 +51,8 @@ export function swapVirtualElements(ctx: SVElemCtx, n: ts.Node, allowNonFrags = 
 }
 
 export const enrichLifeCycleApiFunc = (ctx: CompScriptTransformCtx, node: ts.Node) => {
-    const lifeCycleFuncsWithFilter = new Set(['when', 'memo']);
-    const lifeCycleFuncsWithoutFilter = new Set(['store', 'afterMount', 'afterDomUpdate']);
+    const lifeCycleFuncsWithFilter = new Set(['when', 'memo', 'afterDomUpdate']);
+    const lifeCycleFuncsWithoutFilter = new Set(['store', 'afterMount']);
 
     if ((ts.isExpressionStatement(node) && ts.isCallExpression(node.expression))
         || (ts.isVariableDeclaration(node) && node.initializer && ts.isCallExpression(node.initializer))) {
@@ -128,16 +128,18 @@ const isFunc = (v: ts.VariableDeclaration) => (v.initializer && (
     ts.isArrowFunction(v.initializer) ||
     ts.isFunctionExpression(v.initializer)));
 
-export const swapLambdas = (n: ts.Node) => {
+export const swapLambdas = (_ctx: CompScriptTransformCtx, n: ts.Node) => {
     if (ts.isFunctionExpression(n) || ts.isArrowFunction(n)) {
-        return ts.createCall(
+        const name = readNodeFuncName(n);
+
+        return name ? ts.createCall(
             ts.createPropertyAccess(
                 ts.createThis(),
-                ts.createIdentifier(readNodeFuncName(n))
+                ts.createIdentifier(name)
             ),
             undefined,
             []
-        );
+        ) : n;
     }
     return undefined;
 };
