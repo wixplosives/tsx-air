@@ -1,5 +1,4 @@
-import { TSXAir, store, when, TsxAirChild, afterMount, afterDomUpdate } from '@tsx-air/framework';
-import { compact, hasIn } from 'lodash';
+import { TSXAir, store, when, TsxAirChild, afterMount } from '@tsx-air/framework';
 
 export const WithFactory = TSXAir((props: { factory: (name: string) => TsxAirChild<any> }) => {
     const state = store({ first: '1', second: '2' });
@@ -44,13 +43,13 @@ export const Fader = TSXAir((props: { child: TsxAirChild<any> | undefined }) => 
 
 // wrapped in component context
 // const useMouseLocation = Hook(( /* ... componentInstance */) => {
-const useMouseLocation = (_self:any, _id:any, ) => {
-    const mouse = store(_self, _id, {
+const useMouseLocation = () => {
+    const mouse = store({
         x: -1, y: -1, pagex: -1, pagey: -1
     });
 
     afterMount(() => {
-        const handler = e => {
+        const handler = (e:any) => {
             mouse.x = e.clientX;
         };
         window.addEventListener('mousemove', handler);
@@ -58,17 +57,18 @@ const useMouseLocation = (_self:any, _id:any, ) => {
     });
 
     return mouse;
-})
+};
 
-function usePhysicalLocation() {
+export function usePhysicalLocation() {
     const location = store({
         x: -1, y: -1, width: -1, height: -1
     });
 
     afterMount(ref => {
         const intId = setInterval(() => {
-            const rect = ref.getBoundingClientRect()[0];
-            location.x = rect.clientX;
+            const rect = ref.getBoundingClientRect();
+            location.x = rect.x;
+            location.y = rect.y;
         }, 50);
         return () => clearInterval(intId);
     });
@@ -79,8 +79,9 @@ function usePhysicalLocation() {
 function useMouseAngle() {
     // syntax 
     // const mouse = use(mouseLocation());
-    // const location = usePhysicalLocation();
-    this.bla = 7;
+    const mouse = useMouseLocation();
+    const location = usePhysicalLocation();
+    // this.bla = 7;
     return mouse.x/location.x;
 }
 
@@ -92,9 +93,9 @@ export const Googly = TSXAir(() => {
     const angle = useMouseAngle();
     const angle2 = useX();
     return <img src="eye.png" style={{rotate:angle + 'deg'}} />;
-})
+});
 
-function useState(value) {
-    const state = store({value});
-    return [value, v => state.value = v];
-}
+// function useState(value) {
+//     const state = store({value});
+//     return [value, v => state.value = v];
+// }
