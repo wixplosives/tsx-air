@@ -35,6 +35,7 @@ export function suite(api: ExampleSuiteApi) {
             }
         });
         await page.evaluate(() => (window as any).app.updateProps({ title: 'changed' }));
+        await page.waitFor(50);
         await htmlMatch(page, {
             cssQuery: 'h3',
             textContent: {
