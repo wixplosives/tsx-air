@@ -16,7 +16,7 @@ export function suite(api: ExampleSuiteApi) {
                 contains: 'Not set'
             }
         });
-        await page.waitFor(150);
+        await page.waitFor(200);
         await htmlMatch(page, {
             cssQuery: '.time',
             textContent: {
