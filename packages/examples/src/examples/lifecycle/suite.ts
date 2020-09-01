@@ -38,6 +38,14 @@ export function suite(api: ExampleSuiteApi) {
             }
         });
     });
+    
+    it('passes the dom root to afterMounted callback', async () => {
+        const page = await api.afterLoading;
+        await htmlMatch(page, {
+            cssQuery: 'a[href="#"]:focus',
+            scopeInstances: 1
+        });
+    });
 
     it('calls the afterDomUpdate callback with a filter', async () => {
         const page = await api.afterLoading;

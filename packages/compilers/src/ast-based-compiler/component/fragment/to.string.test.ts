@@ -18,6 +18,7 @@ describe('generateToString', () => {
         DynamicAttributes: typeof Component;
         DynamicAttributesSelfClosing: typeof Component;
         WithVolatile: typeof Component;
+        StaticAttributes: typeof Component;
     };
     before(() => {
         comps = compileAndEval(readFixture(`basic.patterns.tsx`), astBasedCompiler) as any;
@@ -39,5 +40,9 @@ describe('generateToString', () => {
 
     it(`removes event listeners`, () => {
         expect(toStringOf(comps.EventListener, {})).to.eql(`<div x-da="0"></div>`);
+    });
+    
+    it.only(`keep href`, () => {
+        expect(toStringOf(comps.StaticAttributes, {})).to.eql(`<div class="cls" dir="ltr"><a href="#"></a></div>`);
     });
 });
