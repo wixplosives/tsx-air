@@ -15,8 +15,6 @@ export interface DisplayableData {
     parent?: Displayable;
 }
 export class Displayable implements DisplayableData{
-    protected hasStoreChanges: boolean=false;
-
     get fullKey(): string {
         return this.parent ? `${this.parent.fullKey}${this.key}` : this.key;
     }
@@ -53,6 +51,8 @@ export class Displayable implements DisplayableData{
     stores!: Record<string, Store> & Record<'$props', Store>;
     volatile!: any;
     modified: Map<Store, number> = new Map();
+    
+    protected hasStoreChanges: boolean=false;
 
     constructor(
         readonly key: string,
