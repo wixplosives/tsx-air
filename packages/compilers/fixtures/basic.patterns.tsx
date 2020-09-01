@@ -24,9 +24,6 @@ export const EventListener = TSXAir(() => {
     return <div onClick={onclick} />;
 });
 
-export const StaticAttributes = TSXAir(() =>
-    <div className="cls" dir="ltr"><a href="#" /></div>);
-
 export const DynamicAttributes = TSXAir((props: { a: string }) =>
     <div dir={'ltr'} lang={props.a}><span /></div>);
 
@@ -41,3 +38,5 @@ export const WithVolatile = TSXAir((props: { a: number }) => {
     return <div>{d}</div>;
 });
 
+export const StaticAttributes = TSXAir(() =>
+    <div className="cls" dir="ltr"><a href="#" /></div>);
