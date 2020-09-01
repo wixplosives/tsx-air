@@ -10,6 +10,7 @@ export const features: Features = [
 
 export function suite(api: ExampleSuiteApi) {
     const updateDelay = process.env.CI ? 400 : 200;
+    const longDelay = updateDelay * (process.env.CI ? 3 : 2);
     const setClientTime = (page: Page, time: string) => {
         return page.evaluate((t: string) => {
             // @ts-ignore
@@ -59,7 +60,7 @@ export function suite(api: ExampleSuiteApi) {
     it('passes consecutiveChanges argument to afterDomUpdate callback', async () => {
         const page = await api.afterLoading;
         await setClientTime(page, 'MOCK TIME');
-        await page.waitFor(updateDelay * 2);
+        await page.waitFor(longDelay);
         await htmlMatch(page, {
             cssQuery: '.any-updated',
             textContent: {
@@ -67,7 +68,7 @@ export function suite(api: ExampleSuiteApi) {
             }
         });
         await setClientTime(page, 'NEW MOCK TIME');
-        await page.waitFor(updateDelay * 2);
+        await page.waitFor(longDelay);
         await htmlMatch(page, {
             cssQuery: '.any-updated',
             textContent: {
