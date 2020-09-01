@@ -6,7 +6,8 @@ export const Clock = TSXAir((props: { title: string }) => {
         time: 'Not set',
         titleRef: {} as RefHolder<HTMLHRElement>,
         area: 0,
-        updatesCount:0
+        updatesCount:0,
+        recursiveChanges: 0
     });
 
     afterMount(ref => {
@@ -21,10 +22,17 @@ export const Clock = TSXAir((props: { title: string }) => {
         state.area = Math.round(width * height);
     });
 
+    afterDomUpdate((consecutiveChanges:number) => {
+        if (consecutiveChanges < 100) {
+            state.recursiveChanges++;
+        }
+    });
+
     return <div>
         <a href="#"><h1 ref={state.titleRef}>{props.title}</h1></a>
         <h2>Title area: {state.area}px²</h2>
         <h3>Title updated {state.updatesCount} times</h3>
         <div className="time">{state.time}</div>
+        <div className="changes">{state.recursiveChanges}</div>        
     </div>;
 });

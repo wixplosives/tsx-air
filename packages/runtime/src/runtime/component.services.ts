@@ -1,8 +1,6 @@
 import { Component, Runtime } from '..';
-import isArray from 'lodash/isArray';
-
 export class ComponentServices {
-    private previousPredicates = new Map<Component, Record<number, any>>();
+    private previousPredicates = new Map<Component, Record<number, false|any[]>>();
     private previousValue = new Map<Component, Record<number, any>>();
 
     constructor(readonly runtime: Runtime) { }
@@ -13,12 +11,12 @@ export class ComponentServices {
     memo = (target: Component, id: number, action: () => void, predicate: any) =>
         this.doIfPredicate(target, id, action, predicate, false);
 
-    afterDomUpdate = (target: Component, id: number, action: () => void, predicate:any) =>
+    afterDomUpdate = (target: Component, id: number, action: () => void, predicate: any) =>
         this.doIfPredicate(target, id,
             () => target.$afterDomUpdate.push(action)
             , predicate, false);
 
-    private doIfPredicate(target: Component, id: number, action: () => void, predicate: any, useUndo: boolean) {
+    private doIfPredicate(target: Component, id: number, action: () => void, predicate: false|any[], useUndo: boolean) {
         const previousTargetPredicates = this.previousPredicates.get(target) || {};
         const previousTargetValue = this.previousValue.get(target) || {};
         const ret = () => useUndo ? void (0) : previousTargetValue[id];
@@ -29,18 +27,14 @@ export class ComponentServices {
             previousTargetValue[id] = action();
         };
 
-        if (this.previousPredicates.has(target)
+        if (predicate && this.previousPredicates.has(target)
             // Undefined predicate will always trigger the action 
             && previousTargetPredicates[id] !== undefined) {
             const previous = previousTargetPredicates[id];
-            if (previous === predicate) {
+
+            if (previous && previous.length === predicate.length &&
+                previous.every((v, i) => v === predicate[i])) {
                 return ret();
-            }
-            if (isArray(previous)) {
-                if (previous.length === predicate.length &&
-                    previous.every((v, i) => v === predicate[i])) {
-                    return ret();
-                }
             }
         }
         if (useUndo && previousTargetValue[id]) {

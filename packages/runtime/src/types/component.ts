@@ -34,9 +34,10 @@ export class Component extends Displayable {
         return new TsxComponentApi(comp as Component);
     }
 
-    $afterMount: Array<(ref: HTMLElement|Text) => void | (() => void)> = [];
+    $afterMount: Array<(ref: HTMLElement | Text) => void | (() => void)> = [];
     $afterUnmount: Array<() => void> = [];
-    $afterDomUpdate: Array<() => void> = [];
+    $afterDomUpdate: Array<(consecutiveChanges: number) => void> = [];
+    consecutiveChanges = new Map<(consecutiveChanges: number) => void, number>();
 
     constructor(readonly key: string, public parent: Displayable | undefined, props: object, runtime: Runtime) {
         super(key, parent, runtime);
@@ -66,13 +67,19 @@ export class Component extends Displayable {
     }
 
     updated() {
-        this.$afterDomUpdate.forEach(fn => fn());
+        this.$afterDomUpdate.forEach(fn => {
+            this.hasStoreChanges = false;
+            const consecutiveChanges = this.consecutiveChanges.get(fn) || 0;
+            fn(consecutiveChanges);
+            this.consecutiveChanges.set(fn,
+                this.hasStoreChanges ? consecutiveChanges + 1 : 0);
+        });
         this.$afterDomUpdate = [];
         this.modified = new Map();
     }
 
     mounted() {
-        super.mounted();        
+        super.mounted();
         this.$afterMount.forEach(i => i(this.domRoot));
         this.updated();
     }

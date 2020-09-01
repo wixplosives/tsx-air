@@ -8,6 +8,7 @@ export const features: Features = [
 ];
 
 export function suite(api: ExampleSuiteApi) {
+    const updateDelay = process.env.CI ? 400 : 100;
     it('calls the afterMounted callback', async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, {
@@ -16,12 +17,12 @@ export function suite(api: ExampleSuiteApi) {
                 contains: 'Not set'
             }
         });
-        await page.waitFor(process.env.CI ? 400 : 100);
+        await page.waitFor(updateDelay);
         await htmlMatch(page, {
             cssQuery: '.time',
             textContent: {
                 doesNotContain: 'Not set',
-                contains: 'GMT'
+                contains: 'GMT' // part of the ISO time string
             }
         });
     });
@@ -35,7 +36,7 @@ export function suite(api: ExampleSuiteApi) {
             }
         });
         await page.evaluate(() => (window as any).app.updateProps({ title: 'changed' }));
-        await page.waitFor(50);
+        await page.waitFor(updateDelay);
         await htmlMatch(page, {
             cssQuery: 'h3',
             textContent: {

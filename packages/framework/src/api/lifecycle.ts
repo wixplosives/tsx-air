@@ -10,6 +10,6 @@ export function invalidate():void {/* */ }
 
 export function afterMount(_cb: (rootRef: HTMLElement) => void|(()=>void)) {/* */ }
 
-export function afterDomUpdate(action: () => void):void;
-export function afterDomUpdate(predicate:any|any[], action: () => void):void;
-export function afterDomUpdate(_predicate: any , _cb?: () => void) {/* */ }
+export function afterDomUpdate(action: (consecutiveDomUpdates:number) => void):void;
+export function afterDomUpdate(predicate:any|any[], action: (consecutiveDomUpdates:number) => void):void;
+export function afterDomUpdate(_predicate: any , _cb?: (consecutiveDomUpdates:number) => void) {/* */ }

@@ -62,23 +62,13 @@ export const enrichLifeCycleApiFunc = (ctx: CompScriptTransformCtx, node: ts.Nod
             ctx.apiCalls++;
             const callId = ts.isVariableDeclaration(node) ? JSON.stringify(asCode(node.name)) : ctx.apiCalls;
             if (ctx.allowLifeCycleApiCalls) {
-                const actionIsFirstArg = !!readNodeFuncName(call.arguments[0]);
-                const actionName = readNodeFuncName(call.arguments[actionIsFirstArg ? 0 : 1]);
+                const isActionFirstArg = !!readNodeFuncName(call.arguments[0]);
+                const actionName = readNodeFuncName(call.arguments[isActionFirstArg ? 0 : 1]);
                 const params = [`this`, callId, actionName ? `this.${actionName}` : asCode(call.arguments[0]),];
                 if (lifeCycleFuncsWithFilter.has(apiCall)) {
-                    const dependencies = actionIsFirstArg
-                        ? `[${
-                        getRecursiveMapPaths(findUsedVariables(call.arguments[0]).read)
-                            .join(',')}]`
-                        : asCode(call.arguments[0]);
-                    params.push(dependencies);
+                    params.push(getDependencies(call, isActionFirstArg, apiCall !== 'afterDomUpdate'));
                 }
-                call.arguments.forEach((arg, index) => {
-                    // @ts-ignore
-                    if (index > (1 & !actionIsFirstArg)) {
-                        params.push(asCode(arg));
-                    }
-                });
+                params.push(...getOtherArgs(call, isActionFirstArg));
 
                 const enrichedApiCall = asAst(`${apiCall}(${params.join(',')})`) as ts.Expression;
                 return ts.isVariableDeclaration(node)
@@ -92,6 +82,27 @@ export const enrichLifeCycleApiFunc = (ctx: CompScriptTransformCtx, node: ts.Nod
     }
     return undefined;
 };
+
+function getDependencies(call: ts.CallExpression, isActionFirstArg: boolean, findVars: boolean) {
+    if (isActionFirstArg) {
+        if (!findVars) {
+            return 'false';
+        }
+        const vars = findUsedVariables(call.arguments[0]);
+        const read = getRecursiveMapPaths(vars.read);
+        const defined = getRecursiveMapPaths(vars.defined);
+        return `[${read.filter(r => !defined.includes(r)).join(',')}]`;
+    }
+    return ts.isArrayLiteralExpression(call.arguments[0])
+        ? asCode(call.arguments[0])
+        : `[${asCode(call.arguments[0])}]`;
+}
+
+const getOtherArgs = (call: ts.CallExpression, isActionFirstArg: boolean) =>
+    call.arguments.filter((_, index) =>
+        // @ts-ignore
+        index > (1 & !isActionFirstArg)).map(arg => 
+            asCode(arg));
 
 export function swapVarDeclarations(ctx: CompScriptTransformCtx, n: ts.Node) {
     const { comp, declaredVars } = ctx;

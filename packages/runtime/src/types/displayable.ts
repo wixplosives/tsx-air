@@ -15,6 +15,7 @@ export interface DisplayableData {
     parent?: Displayable;
 }
 export class Displayable implements DisplayableData{
+    protected hasStoreChanges: boolean=false;
 
     get fullKey(): string {
         return this.parent ? `${this.parent.fullKey}${this.key}` : this.key;
@@ -65,6 +66,7 @@ export class Displayable implements DisplayableData{
     }
 
     storeChanged = (modifiedStore: Store, changed: number) => {
+        this.hasStoreChanges = true;
         this.modified.set(modifiedStore, (this.modified.get(modifiedStore) || 0) | changed);
         this.$rt.updater.invalidate(this);
     };
