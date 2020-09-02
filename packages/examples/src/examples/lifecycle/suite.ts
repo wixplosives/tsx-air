@@ -10,7 +10,7 @@ export const features: Features = [
 
 export function suite(api: ExampleSuiteApi) {
     const updateDelay = process.env.CI ? 400 : 200;
-    const longDelay = updateDelay * (process.env.CI ? 3 : 2);
+    const longDelay = updateDelay * (process.env.CI ? 4 : 2);
     const setClientTime = (page: Page, time: string) => {
         return page.evaluate((t: string) => {
             // @ts-ignore
@@ -71,6 +71,7 @@ export function suite(api: ExampleSuiteApi) {
         await page.waitFor(longDelay);
         await htmlMatch(page, {
             cssQuery: '.any-updated',
+            name:'total updates',
             textContent: {
                 contains: 'Total updates: 20'
             }
