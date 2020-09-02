@@ -1,4 +1,4 @@
-import { AddEndPoint, Delay, Message } from './testserver.types';
+import { AddEndPoint, Delay, Message, Log } from './testserver.types';
 import { createServer } from 'http';
 import { TimeoutsPromise, delay } from '@tsx-air/utils';
 import { getType } from 'mime';
@@ -12,12 +12,16 @@ import { parentPort, workerData } from 'worker_threads';
 
     const app = createServer(async (req, res) => {
         const fail = () => {
+            parentPort?.postMessage({ type: 'log', result: 'fail', url: req.url! } as Log);
             res.writeHead(404, 'Missing endpoint');
             res.end();
         };
-        const success = () => res.writeHead(200, 'ok', {
-            'content-type': getType(req.url!)!
-        });
+        const success = () => {
+            parentPort?.postMessage({ type: 'log', result: 'success', url: req.url! } as Log);
+            res.writeHead(200, 'ok', {
+                'content-type': getType(req.url!)!
+            });
+        };
         const urlMatch = ({ url }: { url: string | RegExp }) =>
             url === req.url || (url instanceof RegExp && url.test(req.url!));
         const applyDelay = () => {

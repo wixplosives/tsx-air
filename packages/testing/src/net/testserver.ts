@@ -1,14 +1,19 @@
 import { Worker } from 'worker_threads';
-import { Message, Done } from './testserver.types';
+import { Message, Done, Log } from './testserver.types';
+import { omit } from 'lodash';
 
 export async function createTestServer(preferredPort = 12357): Promise<TestServer> {
+    const log:Array<Omit<Log, 'type'>> = [];
     const serverWorker = new Worker(
         `require(${JSON.stringify(require.resolve('./testserver.worker'))})`, 
         { workerData: { preferredPort }, 
         eval: true, 
         execArgv: ['-r', '@ts-tools/node/r', '-r', 'tsconfig-paths/register'] });
     const baseUrl: string = await new Promise((resolve, reject) => {
-        serverWorker.once('message', m => {
+        serverWorker.on('message', m => {
+            if (m.type === 'log') {
+                log.push(omit(m,'type'));
+            }
             if (m.type === 'ready') {
                 resolve(`http://localhost:${m.port}`);
             } else {
@@ -48,7 +53,8 @@ export async function createTestServer(preferredPort = 12357): Promise<TestServe
         setDelay: async (url: string | RegExp, delay: number) =>
             post({ type: 'delay', url, delay })
                 .then((originalId: number) => () => (post({ type: 'stopDelay', originalId }).then(() => void (0)))),
-        baseUrl
+        baseUrl,
+        log
     };
 }
 
@@ -60,6 +66,7 @@ export interface TestServer {
     reset: () => Promise<void>;
     close: () => Promise<void>;
     readonly baseUrl: string;
+    readonly log:Array<Omit<Log, 'type'>>;
 }
 
 type AddEndPointFn = (url: string | RegExp, content: string) => Promise<void>;

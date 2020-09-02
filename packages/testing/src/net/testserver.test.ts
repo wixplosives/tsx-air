@@ -152,6 +152,27 @@ describe('test server', function () {
         expect(result).to.eql('ok');
         expect(time, 'server responded BEFORE or AFTER main thread was blocked').to.be.within(start, end);
     });
+
+    it('should log client requests', async () => {
+        server = await createTestServer();
+        await server.addEndpoint('/got', 'ok');
+        await server.addStaticRoot(fixtures);
+        
+        await get(server.baseUrl + '/got');
+        await get(server.baseUrl + '/from.fs');
+        await get(server.baseUrl + '/should/fail').catch(()=>undefined);
+        expect(server.log).to.eql([{
+            result:'success',
+            url:'/got',
+        }, {
+            result:'success',
+            url:'/from.fs',
+        }, {
+            result:'fail',
+            url:'/should/fail'
+        }
+    ]);
+    });
 });
 
 async function shouldFail(url: string, message: string) {
