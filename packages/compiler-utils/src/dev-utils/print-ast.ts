@@ -13,6 +13,10 @@ export function printAst(n: ts.Node): string {
     return res;
 }
 
+export function asString(n:ts.Node):string {
+    return asCode(n).replace(/(^['"`]|['"`]$)/g,'');
+}
+
 export function asCode(n: ts.Node): string {
     if (!n) { return ''; }
     try {

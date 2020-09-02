@@ -38,3 +38,5 @@ export const WithVolatile = TSXAir((props: { a: number }) => {
     return <div>{d}</div>;
 });
 
+export const StaticAttributes = TSXAir(() =>
+    <div className="cls" dir="ltr"><a href="#" /></div>);

@@ -2,7 +2,7 @@ import ts from 'typescript';
 import { TsxFile, TsNodeToAirNode, AnalyzerResult } from '../../analyzers/types';
 import { analyze } from '../../analyzers';
 import { cObject, cAccess, cImport, ImportDefinition } from '.';
-import { asCode } from '../..';
+import { asCode, asString } from '../..';
 import { uniqBy } from 'lodash';
 
 
@@ -13,10 +13,10 @@ export interface FileTransformerAPI {
     ensureImport(importedName: string, fromModule: string): ts.Expression;
     ensureDefaultImport(localName: string, fromModule: string): ts.Expression;
     removeImport(fromModule: string): void;
+    swapImport(fromModule: string, toModule: string, remove: string[]): void;
     getAnalyzed(): TsxFile;
     tsNodeToAirNodes<T extends ts.Node>(node: T): Array<TsNodeToAirNode<T>> | undefined;
 }
-
 
 const varHolderIdentifier = '__private_tsx_air__';
 const contextMap: WeakMap<ts.SourceFile, FileTransformerAPI> = new WeakMap();
@@ -27,6 +27,7 @@ export const transformerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
         let prependedStatements: ts.Statement[] = [];
         const addedImports: Record<string, ImportDefinition> = {};
         const removedImports = new Set<string>();
+        const swapImports = new Map<string, { toModule: string, remove: string[] }>();
         let scanRes: AnalyzerResult<TsxFile>;
         const genCtx: FileTransformerAPI = {
             appendPrivateVar(wantedName, exp) {
@@ -91,6 +92,9 @@ export const transformerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
             },
             removeImport(fromModule) {
                 removedImports.add(fromModule);
+            },
+            swapImport(fromModule, toModule, remove = []) {
+                swapImports.set(fromModule, { toModule, remove });
             }
         };
         contextMap.set(node, genCtx);
@@ -98,10 +102,8 @@ export const transformerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
         // const fileRes = scanRes.tsxAir as TsxFile;
         // fileRes.imports[0].
         const res = ts.visitEachChild(node, gen(ctx), ctx);
-        let allStatements = res.statements as any as ts.Statement[];
-        allStatements = allStatements.filter(s => {
-            return !(ts.isImportDeclaration(s) && removedImports.has(asCode(s.moduleSpecifier).replace(/[\'\"\`]/g, '')));
-        });
+        let allStatements = (res.statements as any as ts.Statement[])
+            .map(s => swapImportStatement(s, swapImports, removedImports)).filter(i => !!i);
 
         if (Object.keys(addedPrivateVars).length !== 0) {
             const varHolder: ts.Statement = ts.createVariableStatement(undefined, [ts.createVariableDeclaration(varHolderIdentifier, undefined, cObject(addedPrivateVars))]);
@@ -122,6 +124,32 @@ export const transformerApiProvider: (gen: ts.TransformerFactory<ts.Node>) => ts
     };
 };
 
+const swapImportStatement = (s: ts.Statement, swapImports: Map<string, any>, removedImports:Set<string>) => {
+    if (ts.isImportDeclaration(s)) {
+        if (removedImports.has(asString(s.moduleSpecifier))) {
+            return null as any as ts.Statement;
+        }
+        const substitute = swapImports.get(asString(s.moduleSpecifier));
+        if (substitute) {
+            const bindings = s.importClause?.namedBindings && ts.isNamedImports(s.importClause?.namedBindings)
+                && s.importClause?.namedBindings.elements.filter(
+                    i => !substitute.remove.includes(asString(i.name))
+                );
+
+            if (bindings && bindings.length === 0) {
+                return null as any as ts.Statement;
+            }
+
+            const importClause = bindings
+                ? ts.createImportClause(s.importClause?.name, ts.createNamedImports(bindings))
+                : s.importClause;
+
+            return ts.createImportDeclaration(
+                s.decorators, s.modifiers, importClause, ts.createStringLiteral(substitute.toModule));
+        }
+    }
+    return s;
+};
 
 export const getFileTransformationAPI = (file: ts.SourceFile) => {
     const res = contextMap.get(file);

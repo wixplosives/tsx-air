@@ -17,75 +17,100 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
         executed: {},
     };
     const visitor = (n: ts.Node) => {
-        if (ignore && ignore(n)) {
+        if (ignore && ignore(n) || isType(n)) {
             return;
         }
-        if (isType(n)) {
-            return;
-        }
-        const accessParent = n.parent;
-        if (accessParent) {
-            if (isVariableLikeDeclaration(accessParent) && asCode(accessParent.name) === asCode(n)) {
-                if (ts.isVariableDeclaration(accessParent) && ts.isObjectBindingPattern(n)) {
-                    n.elements.forEach(e => {
-                        const name = asCode(e.name);
-                        res.defined[name] = withRef(accessParent);
-                        const init = asCode(accessParent.initializer!);
-                        addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
-                        addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
-                    });
-                    return;
-                }
-                if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
-                    const definedAs = asCode(n);
-                    res.defined[definedAs] = withRef(accessParent);
-                }
+        if (n.parent) {
+            if (handleVarDeclaration(n, res)
+                || handleCall(n, res, visitor)) {
                 return;
             }
-            if (ts.isCallExpression(n) && n.expression && asCode(n.expression)) {
-                set(res.executed, asCode(n.expression), withRef(n));
-            }
-
-            if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
-                if (ts.isVariableDeclaration(accessParent) && ts.isObjectBindingPattern(accessParent.name)) {
-                    return;
-                }
-                if (
-                    ts.isJsxSelfClosingElement(accessParent) ||
-                    ts.isJsxOpeningElement(accessParent) ||
-                    (ts.isJsxClosingElement(accessParent) && n === accessParent.tagName)
-                ) {
-                    return;
-                }
-                let isModification: 'self' | boolean = false;
-                if (ts.isBinaryExpression(accessParent) && asCode(accessParent.left) === asCode(n)) {
-                    if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
-                        isModification = true;
-                    }
-                    if (selfModifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
-                        isModification = 'self';
-                    }
-                } else if (ts.isPostfixUnaryExpression(accessParent) || ts.isPrefixUnaryExpression(accessParent)) {
-                    isModification = 'self';
-                }
-                const paths = accessToStringArr(n);
-
-                addToAccessMap(paths.path, isModification, res, accessParent);
-
-                for (const path of paths.nestedAccess) {
-                    addToAccessMap(path, isModification, res, accessParent);
-                }
-            } else {
+            if (!handlePropertyAccess(n, res)) {
                 ts.forEachChild(n, visitor);
             }
-            return;
         } else {
             ts.forEachChild(n, visitor);
-            return;
         }
     };
     ts.forEachChild(node, visitor);
     return res;
+}
+
+function handlePropertyAccess(n: ts.Node, res: UsedVariables) {
+    if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
+        const accessParent: ts.Node = n.parent;
+        if (ts.isVariableDeclaration(accessParent) && ts.isObjectBindingPattern(accessParent.name)) {
+            return true;
+        }
+        if (
+            ts.isJsxSelfClosingElement(accessParent) ||
+            ts.isJsxOpeningElement(accessParent) ||
+            (ts.isJsxClosingElement(accessParent) && n === accessParent.tagName)
+        ) {
+            return true;
+        }
+        const isModification = getModificationStatus(n);
+        const paths = accessToStringArr(n);
+
+        if (ts.isNewExpression(n)) {
+            return true;
+        }
+        addToAccessMap(paths.path, isModification, res, accessParent);
+
+        for (const path of paths.nestedAccess) {
+            addToAccessMap(path, isModification, res, accessParent);
+        }
+        return true;
+    }
+    return false;
+}
+
+function getModificationStatus(n: ts.Node) {
+    const accessParent: ts.Node = n.parent;
+    let isModification: 'self' | boolean = false;
+    if (ts.isBinaryExpression(accessParent) && asCode(accessParent.left) === asCode(n)) {
+        if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
+            isModification = true;
+        }
+        if (selfModifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
+            isModification = 'self';
+        }
+    } else if (ts.isPostfixUnaryExpression(accessParent) || ts.isPrefixUnaryExpression(accessParent)) {
+        isModification = 'self';
+    }
+    return isModification;
+}
+
+function handleVarDeclaration(n: ts.Node, res: UsedVariables) {
+    const accessParent: ts.Node = n.parent;
+    if (isVariableLikeDeclaration(accessParent) && asCode(accessParent.name) === asCode(n)) {
+        if (ts.isVariableDeclaration(accessParent) && ts.isObjectBindingPattern(n)) {
+            n.elements.forEach(e => {
+                const name = asCode(e.name);
+                res.defined[name] = withRef(accessParent);
+                const init = asCode(accessParent.initializer!);
+                addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
+                addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
+            });
+            return true;
+        }
+        if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
+            const definedAs = asCode(n);
+            res.defined[definedAs] = withRef(accessParent);
+        }
+        return true;
+    }
+    return false;
+}
+
+function handleCall(n: ts.Node, res: UsedVariables, visitor: (n: ts.Node) => void) {
+    if (ts.isCallExpression(n) && n.expression && asCode(n.expression)) {
+        set(res.executed, asCode(n.expression), withRef(n));
+        set(res.accessed, asCode(n.expression), withRef(n));
+        n.arguments.forEach(visitor);
+        return true;
+    }
+    return false;
 }
 
 export const modifyingOperators = [
@@ -178,7 +203,13 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
             nestedAccess: []
         };
     }
-    if (!ts.isIdentifier(n)) {
+    if (ts.isNewExpression(n)) {
+        return {
+            path,
+            nestedAccess
+        };
+    }
+    if (!(ts.isIdentifier(n) || ts.isNonNullExpression(n))) {
         throw new Error('unhandled input in accessToStringArr');
     }
     path.unshift(asCode(n));
@@ -193,7 +224,7 @@ function withRef(ref: ts.Node, target?: RecursiveMap) {
     target.$refs = target.$refs || [];
     if (!target.$refs.includes(ref)) {
         target.$refs.push(ref);
-    } 
+    }
     return target;
 }
 

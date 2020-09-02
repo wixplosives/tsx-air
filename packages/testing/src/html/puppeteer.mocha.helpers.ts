@@ -7,10 +7,11 @@ export function getNewPage(server: TestServer, browser: Browser, options: Preppe
     if (!browser.isConnected()) {
         throw new Error('Browser is disconnected');
     }
-    const page = browser.newPage();
+    const page = browser.pages().then(p => p[0]);
     const pageErrors: Error[] = [];
     const wasLoaded = new Promise(resolve =>
         page.then(p => {
+            p.removeAllListeners();
             p.on('pageerror', (e: Error) => pageErrors.push(e));
             p.once('load', () => resolve());
         }));
