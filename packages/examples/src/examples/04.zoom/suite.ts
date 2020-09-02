@@ -3,12 +3,11 @@ import { ExampleSuiteApi, ExamplePaths, feature } from '@tsx-air/types';
 import { htmlMatch, loadPngs, matchImagesArray, moveMouseAndTakeSnapshot } from '@tsx-air/testing';
 import { join } from 'path';
 
-
 export const features = [
     feature('stateful', 'component'),
     feature('single', 'store'),
     feature('event', 'handler'),
-    // feature('high', 'framerate'),
+    feature('high', 'framerate'),
     feature('dom', 'ref')
 ];
 

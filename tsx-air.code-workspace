@@ -5,10 +5,6 @@
 			"path": "."
 		},
 		{
-			"name": "browserify",
-			"path": "packages/browserify"
-		},
-		{
 			"name": "compiler-utils",
 			"path": "packages/compiler-utils"
 		},
@@ -42,6 +38,9 @@
 		},
 		{
 			"path": "packages/runtime"
+		},
+		{
+			"path": "packages/builder"
 		}
 	],
 	"settings": {
@@ -49,6 +48,7 @@
 		"cSpell.words": [
 			"Bitmask",
 			"ESNEXT",
+			"Mockpiler",
 			"Namepath",
 			"Preppeteer",
 			"Unmount",

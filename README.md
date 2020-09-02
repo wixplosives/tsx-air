@@ -26,9 +26,9 @@ export const ClickBait = TSXAir((p:{initial:number}) => {
 
 ## Wh Questions
 
-- [Why? (Background)](docs/background.md)
-- [What? (Goals)](docs/goals.md)
-- [Who? (Advisory board)](docs/advisory.board/advisory.board.md)
+- [Why (Background)](docs/background.md)
+- [What (Goals)](docs/goals.md)
+- [Who (Advisory board)](docs/advisory.board/advisory.board.md)
 - [Ha? (Original Proposal)](docs/original.proposal.md)
 - [How (Syntax)](docs/syntax.md)
 
@@ -37,7 +37,9 @@ export const ClickBait = TSXAir((p:{initial:number}) => {
 - Git
 - Yarn
 - NodeJs
+
 `git clone https://github.com/wixplosives/tsx-air.git`
+
 (for ssh lovers: `git@github.com:wixplosives/tsx-air.git`)
 
 ### Running Local Playground 
@@ -54,8 +56,8 @@ The examples available at the playground are used to test the compiler (i.e that
 The list of tested examples can be [here](packages/examples/src/examples/index.ts)
 
 ### CLI (under construction)
-in package `browserify` use `yarn compile`
+in package `builder` use `yarn compile`
 
 ## Project Structure
 - The project is organized in [packages as a monorepo](https://github.com/wixplosives/sample-monorepo)
-- Code execution is using NodeJs (12+) with [ts-tools](https://github.com/AviVahl/ts-tools)
+- Code execution is using NodeJs (12.18+) with [ts-tools](https://github.com/AviVahl/ts-tools)

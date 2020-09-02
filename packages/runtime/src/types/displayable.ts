@@ -1,6 +1,5 @@
-import { Store, Observable } from '../store';
 import { Component, Fragment } from '.';
-import { Runtime } from '..';
+import { Runtime, Store, Observable } from '..';
 
 export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
 
@@ -16,7 +15,6 @@ export interface DisplayableData {
     parent?: Displayable;
 }
 export class Displayable implements DisplayableData{
-
     get fullKey(): string {
         return this.parent ? `${this.parent.fullKey}${this.key}` : this.key;
     }
@@ -53,13 +51,14 @@ export class Displayable implements DisplayableData{
     stores!: Record<string, Store> & Record<'$props', Store>;
     volatile!: any;
     modified: Map<Store, number> = new Map();
+    
+    protected hasStoreChanges: boolean=false;
 
     constructor(
         readonly key: string,
         parent: DisplayableData | undefined,
         readonly $rt: Runtime
     ) {
-        this.innerKey = this.$rt.getUniqueKey();
         while (parent && !Displayable.is(parent)) {
             parent = parent.parent;
         }
@@ -67,11 +66,23 @@ export class Displayable implements DisplayableData{
     }
 
     storeChanged = (modifiedStore: Store, changed: number) => {
+        this.hasStoreChanges = true;
         this.modified.set(modifiedStore, (this.modified.get(modifiedStore) || 0) | changed);
-        this.$rt.invalidate(this);
+        this.$rt.updater.invalidate(this);
     };
-    afterMount(_ref: Elm) {/** add event listeners */ }
-    afterUnmount() {/** dispose of stuff */ }
+
+    mounted() {
+        for (const child of Object.values(this.ctx.components)) {
+            child.mounted();
+        }
+    }
+
+    unmounted() {
+        for (const child of Object.values(this.ctx.components)) {
+            child.unmounted();
+        }
+    }
+
     dispose() {
         for (const comp of Object.values(this.ctx.components)) {
             comp.dispose();
@@ -80,7 +91,9 @@ export class Displayable implements DisplayableData{
             store.$unsubscribe(this.storeChanged);
         }
     }
+
     hydrate(_preRender: DisplayableData, _target: HTMLElement): void { throw new Error(`not implemented`); }
+    
     toString(): string { throw new Error(`not implemented`); }
 }
 

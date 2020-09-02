@@ -1,6 +1,6 @@
-import { CompiledParent as Parent, CompiledChild as Child } from '../../fixtures/runtime.compiled';
 import { testRuntimeApi } from './runtime.test.suite';
+import { CompiledParent, CompiledChild } from '../../../runtime/fixtures/runtime.compiled';
 
 describe('runtime with manually compiled', () =>{
-    testRuntimeApi(() => [Parent, Child]);
+    testRuntimeApi(() => [CompiledParent, CompiledChild]);
 });

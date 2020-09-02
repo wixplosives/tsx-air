@@ -1,8 +1,8 @@
 import { VirtualElement } from './virtual.element';
 import { Displayable } from './displayable';
-import { store } from '../store';
-import { Runtime } from '../';
+import { store } from '../stores/store';
 import { RenderTarget, TsxComponentApi } from '../api/component';
+import { Runtime } from '..';
 
 export class Component extends Displayable {
     static is(x: any): x is Component {
@@ -11,11 +11,11 @@ export class Component extends Displayable {
     static isType(x: any): x is typeof Component {
         return x && x.prototype instanceof Component;
     }
-    static _render<C extends typeof Component>(runtime:Runtime, component: C, props: any, target?: HTMLElement, add?: RenderTarget) {
+    static _render<C extends typeof Component>(runtime: Runtime, component: C, props: any, target?: HTMLElement, add?: RenderTarget) {
         if (!Component.isType(component)) {
             throw new Error(`Invalid component: not compiled as TSXAir`);
         }
-        const comp = runtime.render(VirtualElement.root(component, props));
+        const comp = runtime.renderer.render(VirtualElement.root(component, props));
         if (target) {
             const dom = comp.domRoot;
             switch (add) {
@@ -29,26 +29,33 @@ export class Component extends Displayable {
                     target.parentNode?.insertBefore(dom, target);
                     target.remove();
             }
+            comp.mounted();
         }
         return new TsxComponentApi(comp as Component);
     }
 
-    constructor(readonly key: string, public parent: Displayable | undefined, props: object, runtime:Runtime) {
+    $afterMount: Array<(ref: HTMLElement | Text) => void | (() => void)> = [];
+    $afterUnmount: Array<() => void> = [];
+    $afterDomUpdate: Array<(consecutiveChanges: number) => void> = [];
+    consecutiveChanges = new Map<(consecutiveChanges: number) => void, number>();
+
+    constructor(readonly key: string, public parent: Displayable | undefined, props: object, runtime: Runtime) {
         super(key, parent, runtime);
-        this.stores = { $props: store(props, this, '$props') };
+        this.stores = { $props: store(this, '$props', props) };
         let depth = 0;
         while (parent) {
             depth++;
             parent = parent?.owner;
         }
-        if (depth > runtime.maxDepth) {
-            throw new Error(`Component tree too deep (over ${runtime.maxDepth})
-    This is a component recursion protection - change runtime.maxDepth (or fix your code)`);
+        const { renderer: { maxDepth } } = this.$rt;
+        if (depth > maxDepth) {
+            throw new Error(`Component tree too deep (over ${maxDepth})
+    This is a component recursion protection - change runtime.renderer.maxDepth (or fix your code)`);
         }
     }
 
     toString(): string {
-        return this.$rt.toString(this.preRender());
+        return this.$rt.renderer.toString(this.preRender());
     }
 
     preRender(): VirtualElement<any> {
@@ -56,6 +63,30 @@ export class Component extends Displayable {
     }
 
     hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {
-        this.ctx.root = this.$rt.hydrate(preRendered, target);
+        this.ctx.root = this.$rt.renderer.hydrate(preRendered, target);
+    }
+
+    updated() {
+        this.$afterDomUpdate.forEach(fn => {
+            this.hasStoreChanges = false;
+            const consecutiveChanges = this.consecutiveChanges.get(fn) || 0;
+            fn(consecutiveChanges);
+            this.consecutiveChanges.set(fn,
+                this.hasStoreChanges ? consecutiveChanges + 1 : 0);
+        });
+        this.$afterDomUpdate = [];
+        this.modified = new Map();
+    }
+
+    mounted() {
+        super.mounted();
+        this.$afterMount.forEach(i => i(this.domRoot));
+        this.updated();
+    }
+
+    unmounted() {
+        super.unmounted();
+        this.$afterUnmount.forEach(fn => fn());
+        this.$afterUnmount = [];
     }
 }

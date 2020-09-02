@@ -402,6 +402,7 @@ export interface HTMLAttributes<T extends HTMLElement> extends AriaAttributes, D
     contextMenu?: string;
     dir?: string;
     draggable?: boolean;
+    disabled?:boolean;
     hidden?: boolean;
     id?: string;
     lang?: string;
@@ -469,7 +470,7 @@ export interface InputHTMLAttributes extends HTMLAttributes<HTMLInputElement> {
 
 
 export interface IntrinsicElements {
-    a: HTMLAttributes<HTMLAnchorElement>;
+    a: HTMLAttributes<HTMLAnchorElement>&{href:string};
     abbr: HTMLAttributes<HTMLElement>;
     address: HTMLAttributes<HTMLElement>;
     area: HTMLAttributes<HTMLAreaElement>;

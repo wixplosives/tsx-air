@@ -1,10 +1,9 @@
+import { Component, Displayable } from './types';
 import { Runtime } from './runtime/runtime';
-import * as utils from './utils';
-import { Component } from './types';
-export { Runtime, utils };
 export * from './types';
-export * from './store';
+export * from './stores';
 export * from './api/component';
+export { Runtime };
 
 let runTimes: Record<string, Runtime> = {};
 export function getInstance(id = 'default') {
@@ -22,4 +21,17 @@ export function reset() {
     runTimes = {};
 }
 
-export const when = (predicate:any, action:()=>any, target:Component, id:number) => target.$rt.when(predicate, action, target, id);
+export const when = (target: Component, id: number, action: () => any, predicate: any[]) =>
+    target.$rt.api.when(target, id, action, predicate);
+export const memo = (target: Component, id: number, action: () => any, predicate: any[]) =>
+    target.$rt.api.memo(target, id, action, predicate);
+export const invalidate = (target: Displayable) =>
+    target.$rt.updater.invalidate(Component.is(target) ? target : target.owner!);
+export const afterMount = (target: Component, __: string, action: (rootRef: HTMLElement|Text) => void) => {
+    if (!target.$afterMount.includes(action)) {
+        target.$afterMount.push(action);
+    }
+};
+// export function beforeUnmount(action: (rootRef: HTMLElement) => void, target:Component) {/* */}
+export const afterDomUpdate = (target: Component, id: number, action: () => void, predicate: any[]) =>
+    target.$rt.api.afterDomUpdate(target, id, action, predicate);
