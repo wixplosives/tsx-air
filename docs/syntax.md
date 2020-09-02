@@ -178,12 +178,12 @@ const Clock = TSXAir(() => {
 ```tsx
 const InfiniteMeasure = TSXAir(() => {
     const state = store({ area: 0, ref: {} as RefHolder<HTMLDivElement> });
-    afterDomUpdate([], consecutiveUpdatedFrames => {
+    afterDomUpdate(consecutiveUpdatedFrames => {
         if (consecutiveUpdatedFrames < 10) {
             const { width, height } = state.ref.element!.getClientRects()[0];
-            state.area = width * height;
+            state.area = Math.round(width * height);
         }
     });
-    return <div ref={state.ref}>{state.area}</div>;
+    return <div ref={state.ref}>{/* the area will be updated up to 10 times */ state.area} px²</div>;
 });
 ```
