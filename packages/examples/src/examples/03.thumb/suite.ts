@@ -1,18 +1,20 @@
 import { ExampleSuiteApi, Features, feature } from '@tsx-air/types';
 import { htmlMatch } from '@tsx-air/testing';
 import { delay } from '@tsx-air/utils';
+import { expect } from 'chai';
 
 export const features: Features = [
     feature('stateful', 'component'),
     feature('single', 'store'),
     feature('event', 'handler'),
-    feature('when','props','change', 'handler'),
+    feature('when', 'props', 'change', 'handler'),
+    // feature('memo'),
     feature('lambda', 'handler'),
     feature('conditional', 'dom'),
 ];
 
-export function suite (api: ExampleSuiteApi) {
-    it('should start with a preloader, then show only the image', async () => {
+export function suite(api: ExampleSuiteApi) {
+    it('starts with a preloader, then show only the image', async () => {
         const { afterLoading, server } = api;
         const serveImages = await server.setDelay(/.*\.jpg/, 9999999);
         const page = await afterLoading;
@@ -29,13 +31,43 @@ export function suite (api: ExampleSuiteApi) {
         await page.waitForResponse(`${server.baseUrl}/images/pretty-boy.jpg`);
         // Now let's update the props
         const serveImages = await server.setDelay(/.*\.jpg/, 9999999);
-        await page.evaluate(() => (window as any).app.updateProps({ url: '/images/weird.jpg' }));
+        await page.evaluate(() => (window as any).app.setProp('imageId', 'weird'));
         await delay(50);
         await htmlMatch(page, onlyPreloader);
         serveImages();
-        await page.waitForResponse(`${server.baseUrl}/images/weird.jpg`);        await delay(50);
+        await page.waitForResponse(`${server.baseUrl}/images/weird.jpg`);
         await delay(50);
         await htmlMatch(page, onlyImage);
+    });
+
+    it('re-evaluate memo only when imageId changes', async () => {
+        const page = await api.beforeLoading;
+        await page.waitForResponse(`${api.server.baseUrl}/images/pretty-boy.jpg`);
+        await htmlMatch(page, {
+            name: 'title', cssQuery: '.title', textContent: 'pretty-boy', pageInstances: 1
+        });
+        await htmlMatch(page, {
+            name: 'image title', cssQuery: 'img[title="I love you dadio"]', pageInstances: 1
+        });
+        await page.evaluate(() => (window as any).app.setProp('resolution', 'low'));
+        await page.waitForResponse(`${api.server.baseUrl}/low-res/pretty-boy.jpg`);
+        await page.evaluate(() => (window as any).app.updateProps({ imageId: 'weird', resolution: 'high' }));
+        await page.waitForResponse(`${api.server.baseUrl}/images/weird.jpg`);
+        await page.waitFor(50);
+        await htmlMatch(page, {
+            name: 'updated image title', cssQuery: `img[title="I'm feeling much better now"]`, pageInstances: 1
+        });
+
+        const reqs = api.server.log
+            .map(({ url }) => url)
+            .filter(url => url.endsWith('.json') || url.endsWith('.jpg'));
+        expect(reqs, 'metadata memoized').to.eql([
+            '/meta/pretty-boy.json',
+            '/images/pretty-boy.jpg',
+            '/low-res/pretty-boy.jpg',
+            '/meta/weird.json',
+            '/images/weird.jpg',
+        ]);
     });
 }
 

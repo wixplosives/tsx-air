@@ -89,9 +89,10 @@ function getDependencies(call: ts.CallExpression, isActionFirstArg: boolean, fin
             return 'false';
         }
         const vars = findUsedVariables(call.arguments[0]);
+        Object.keys(vars.defined).forEach(k => delete vars.read[k]);
         const read = getRecursiveMapPaths(vars.read);
-        const defined = getRecursiveMapPaths(vars.defined);
-        return `[${read.filter(r => !defined.includes(r)).join(',')}]`;
+
+        return `[${read.join(',')}]`;
     }
     return ts.isArrayLiteralExpression(call.arguments[0])
         ? asCode(call.arguments[0])
@@ -101,7 +102,7 @@ function getDependencies(call: ts.CallExpression, isActionFirstArg: boolean, fin
 const getOtherArgs = (call: ts.CallExpression, isActionFirstArg: boolean) =>
     call.arguments.filter((_, index) =>
         // @ts-ignore
-        index > (1 & !isActionFirstArg)).map(arg => 
+        index > (1 & !isActionFirstArg)).map(arg =>
             asCode(arg));
 
 export function swapVarDeclarations(ctx: CompScriptTransformCtx, n: ts.Node) {

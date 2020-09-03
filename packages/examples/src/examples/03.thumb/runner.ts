@@ -1,7 +1,7 @@
 import { Thumb } from './index.source';
 
 export const runExample = (target: HTMLElement) => {
-    Thumb.render({ url: '/images/pretty-boy.jpg' }, target, 'append');
+    Thumb.render({ imageId: 'pretty-boy', resolution:'high' }, target, 'append');
 };
 
 export { Thumb as Component };

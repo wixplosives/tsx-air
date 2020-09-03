@@ -88,7 +88,7 @@ describe('findUsedVariables', () => {
         const expectedModified = omit(expectedAccessed, `aParam.internalObject`);
         const expectedRead = omit(expectedAccessed, `aParam.replacedProperty`);
 
-        expect(findUsedVariables(ast).modified, 'modified', ).to.eql(expectedModified);
+        expect(findUsedVariables(ast).modified, 'modified',).to.eql(expectedModified);
         expect(findUsedVariables(ast).accessed, 'modified members should also be considered as accessed').to.eql(expectedAccessed);
         expect(findUsedVariables(ast).read, 'read').to.eql(expectedRead);
     });
@@ -187,18 +187,18 @@ describe('findUsedVariables', () => {
             }`);
         expect(
             findUsedVariables(ast).executed, 'methods calls should be added to executed').to.eql({
-            aParam: {
-                internalObject: {
-                    methodProperty: {
-                        $refs: [`aParam.internalObject.methodProperty(aParam.internalObject.accessedProperty)`]
+                aParam: {
+                    internalObject: {
+                        methodProperty: {
+                            $refs: [`aParam.internalObject.methodProperty(aParam.internalObject.accessedProperty)`]
+                        }
                     }
                 }
-            }
-        });
+            });
         expect(
             findUsedVariables(ast).accessed.aParam.internalObject.methodProperty,
             'methods calls are considered as access'
-        ).to.deep.include({$refs:['aParam.internalObject.methodProperty(aParam.internalObject.accessedProperty)']});
+        ).to.deep.include({ $refs: ['aParam.internalObject.methodProperty(aParam.internalObject.accessedProperty)'] });
         expect(
             findUsedVariables(ast).accessed.aParam.internalObject.accessedProperty,
             'access in call arguments is found'
@@ -429,6 +429,49 @@ describe('findUsedVariables', () => {
             executed: {},
             defined: {},
             modified: {}
+        });
+    });
+    it(`find vars of internal functions`, () => {
+        const ast = parseValue(`() => memo(() => {
+            fetch(\`/meta/\${props.imageId}.json\`)
+                .then(r => r.json()).then(meta => state.metaData = meta.hover)
+                .catch(() => state.metaData = 'No metadata');
+        });`);
+        const used = findUsedVariables(ast);
+
+        expect(used).to.deep.include({
+            read: {
+                meta: {
+                    hover: {
+                        $refs: [
+                            'state.metaData = meta.hover'
+                        ]
+                    }
+                },
+                props: {
+                    imageId: {
+                        $refs: ['`/meta/\${props.imageId}.json`']
+                    }
+                }
+            },
+            defined: {
+                meta: {
+                    $refs:['meta']
+                },
+                r: {
+                    $refs:['r']
+                }
+            },
+            modified: {
+                state: {
+                    metaData: {
+                        $refs:[
+                            "state.metaData = 'No metadata'",
+                            'state.metaData = meta.hover'
+                        ]
+                    }
+                }
+            }
         });
     });
 });

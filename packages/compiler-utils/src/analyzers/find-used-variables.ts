@@ -37,7 +37,7 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
 }
 
 function handlePropertyAccess(n: ts.Node, res: UsedVariables) {
-    if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
+    if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {        
         const accessParent: ts.Node = n.parent;
         if (ts.isVariableDeclaration(accessParent) && ts.isObjectBindingPattern(accessParent.name)) {
             return true;
@@ -108,6 +108,11 @@ function handleCall(n: ts.Node, res: UsedVariables, visitor: (n: ts.Node) => voi
         set(res.executed, asCode(n.expression), withRef(n));
         set(res.accessed, asCode(n.expression), withRef(n));
         n.arguments.forEach(visitor);
+        if (ts.isPropertyAccessExpression(n.expression)) {
+            if (ts.isCallExpression(n.expression.expression)) {
+                visitor(n.expression.expression);
+            }
+        }
         return true;
     }
     return false;
@@ -210,7 +215,14 @@ export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAc
         };
     }
     if (!(ts.isIdentifier(n) || ts.isNonNullExpression(n))) {
-        throw new Error('unhandled input in accessToStringArr');
+        if (ts.isCallExpression(n)) {
+            
+            return {
+                path: [],
+                nestedAccess
+            };
+        }
+        throw new Error('Error finding used vars in:\n' + asCode(n));
     }
     path.unshift(asCode(n));
     return {

@@ -46,8 +46,10 @@ export async function createTestServer(preferredPort = 12357): Promise<TestServe
             post({ type: 'root', path }).then(() => void (0)),
         addEndpoint: async (url: string | RegExp, content: string) =>
             post({ type: 'set', url, content }).then(() => void (0)),
-        reset: () =>
-            post({ type: 'clear' }).then(() => void (0)),
+        reset: () =>{
+            log.length = 0;
+            return post({ type: 'clear' }).then(() => void (0));
+        },
         close:  () =>
             serverWorker.terminate().then(()=>void(0)),
         setDelay: async (url: string | RegExp, delay: number) =>

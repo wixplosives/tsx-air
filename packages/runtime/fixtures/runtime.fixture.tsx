@@ -17,3 +17,4 @@ export const Parent = TSXAir((props: { a: number }) => {
 
 export const Child = TSXAir((props: { ca: number, cb: number }) => 
     <div>{props.ca} {props.cb}</div>);
+
