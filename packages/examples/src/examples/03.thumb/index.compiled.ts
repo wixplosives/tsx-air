@@ -69,6 +69,7 @@ Thumb.render = (props: Props, target?: HTMLElement, add?: RenderTarget) => {
         }
     };
 
+    updateImgTitle();
     updateView();
 
     const setProp = (prop: string, value: any) => {
