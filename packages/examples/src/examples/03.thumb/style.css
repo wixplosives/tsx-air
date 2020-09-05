@@ -17,3 +17,10 @@
     border-radius: 50%;
     filter: blur(10px);
 }
+
+.title {
+    width: 100%;
+    text-align: center;
+    background: lightskyblue;
+    color: blue;
+}
