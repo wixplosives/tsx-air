@@ -16,7 +16,8 @@
     "test": "lerna run test --stream --concurrency 1",
     "tst": "lerna run test",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "push": "yarn pretest && git diff --exit-code --cached && git diff --exit-code && git pull && git clean -fdx && yarn && git diff --exit-code && yarn test && yarn build && git push"
+    "push": "yarn pretest && git diff --exit-code --cached && git diff --exit-code && git pull && git clean -fdx && yarn && git diff --exit-code && yarn test && yarn build && git push",
+    "licenses": "yarn legally --plain | grep \"[│├┌└]\" > licenses.txt"
   },
   "dependencies": {
     "lodash": "^4.17.15",
@@ -47,6 +48,7 @@
     "css-loader": "^3.2.0",
     "html-webpack-plugin": "^4.0.0-beta.11",
     "jsdom": "^16.2.2",
+    "legally": "^3.5.8",
     "lerna": "^3.18.3",
     "mocha": "7.0.0",
     "mocha-loader": "^4.0.0",
