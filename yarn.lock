@@ -5114,6 +5114,11 @@ lcid@^2.0.0:
   dependencies:
     invert-kv "^2.0.0"
 
+legally@^3.5.8:
+  version "3.5.8"
+  resolved "https://registry.yarnpkg.com/legally/-/legally-3.5.8.tgz#5f1a3f5e589f8998269fdc3edb52f375fd319ea1"
+  integrity sha512-B/nyfg9Tm3zkXZ+ggbQQ0AcdnEf/kEQ7U4dhTF/ESbbE6S7ecnStERT6zX8fhp5wNKmgU4n+y4LidR0Dm50O9Q==
+
 lerna@^3.18.3:
   version "3.21.0"
   resolved "https://registry.yarnpkg.com/lerna/-/lerna-3.21.0.tgz#c81a0f8df45c6b7c9d3fc9fdcd0f846aca2375c6"
