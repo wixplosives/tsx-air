@@ -1,49 +1,93 @@
 import { CompCreator } from '@tsx-air/framework/src/api/types';
-import { RenderTarget, ComponentApi } from '@tsx-air/framework/src';
+import { RenderTarget, ComponentApi } from '@tsx-air/framework';
 
 interface Props {
-    url: string;
+    imageId: string;
+    resolution: 'high' | 'low';
 }
+
 export const Thumb: CompCreator<Props> = (props: Props) => ({
     props
 });
+
 Thumb.render = (props: Props, target?: HTMLElement, add?: RenderTarget) => {
     if (!target || add !== 'append') {
         throw new Error('Now supported in this example');
     }
 
     const state = {
-        imageLoaded: false
+        imageLoaded: false,
+        metaData: 'Loading metadata'
     };
-    target.innerHTML = `<div class="thumb"></div>`;
+
+
+    target.innerHTML = `<div class="thumb"><div class="title"></div></div>`;
     const root = target.children[0];
-    const preloader = document.createElement('div');    
+    const title = root.childNodes[0];
+    const setTitle = () =>
+        title.textContent = `${props.imageId.replace(/^.*\//g, '').replace(/\.\w{0,3}$/, '')}`;
+    setTitle();
+
+    const preloader = document.createElement('div');
     preloader.classList.add('preloader');
+    root.appendChild(preloader);
+
     const img = document.createElement('img');
-    img.setAttribute('src', props.url);
-    img.addEventListener('load', ()=> {
+    root.appendChild(img);
+    img.addEventListener('load', () => {
         state.imageLoaded = true;
         updateView();
     });
-    root.append(img);
+
+    const setImage = () => {
+        state.imageLoaded = false;
+        const imgUrl = `${
+            props.resolution === 'high' ? '/images' : '/low-res'
+            }/${props.imageId}.jpg`;
+        img.setAttribute('src', imgUrl);
+    };
+    setImage();
+
+    const updateImgTitle = () => {
+        state.metaData = 'Loading metadata';
+        fetch(`/meta/${props.imageId}.json`)
+            .then(r => r.json()).then(meta => {
+                state.metaData = meta.hover;
+                img.setAttribute('title', state.metaData);
+            })
+            .catch(() => state.metaData = 'No metadata');
+    };
+    root.append(preloader);
 
     const updateView = () => {
         if (state.imageLoaded) {
             root.removeChild(preloader);
             img.setAttribute('style', 'display:block');
         } else {
-            root.prepend(preloader);
+            root.insertBefore(preloader, img);
             img.setAttribute('style', 'display:none');
         }
     };
 
+    updateImgTitle();
     updateView();
 
-    return {
-        updateProps: (p: Props) => {
-            img.setAttribute('src', p.url);
-            state.imageLoaded = false;
-            updateView();
-        },
-    } as ComponentApi<Props>;
+    const setProp = (prop: string, value: any) => {
+        updateProps({...props, [prop]:value});
+    };
+    const updateProps = (p: Props) => {
+        if (p.imageId === props.imageId && p.resolution === props.resolution) {
+            return;
+        }         
+        if (p.imageId !== props.imageId) {
+            props = p;
+            updateImgTitle();
+        }
+        props = p;
+        setTitle();
+        setImage();
+        updateView();
+    };
+
+    return { setProp, updateProps } as ComponentApi<Props>;
 };
