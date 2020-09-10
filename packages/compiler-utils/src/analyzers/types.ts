@@ -7,7 +7,7 @@ export interface AnalyzerResult<T extends AnalyzedNode> {
 
 export type Analyzer<T extends AnalyzedNode> = (node: ts.Node) => AnalyzerResult<T>;
 
-export type AnalyzedNodeType = 'CompDefinition' | 'JsxFragment' |
+export type AnalyzedNodeType = 'CompDefinition' | 'JsxFragment' | 'HookDefinition' |
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
     'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' |
     'exportSpecifier' | 'reExport' | 'funcDefinition' | 'storeDefinition' |
@@ -90,6 +90,16 @@ export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     kind: 'CompDefinition';
     name: string;
     propsIdentifier?: string;
+    jsxRoots: JsxRoot[];
+    functions: FuncDefinition[];
+    stores: StoreDefinition[];
+    volatileVariables: string[];
+    returns: Return[];
+}
+
+export interface HookDefinition extends NodeWithVariables<ts.CallExpression> {
+    kind: 'HookDefinition';
+    name: string;
     jsxRoots: JsxRoot[];
     functions: FuncDefinition[];
     stores: StoreDefinition[];

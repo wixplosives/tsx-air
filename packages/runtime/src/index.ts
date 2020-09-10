@@ -2,8 +2,8 @@ import { Runtime } from './runtime/runtime';
 export * from './types';
 export * from './stores';
 export * from './api/component.external';
-export { Runtime };
 export * from './api/component.lifecycle';
+export { Runtime };
 
 let runTimes: Record<string, Runtime> = {};
 export function getInstance(id = 'default') {

@@ -17,6 +17,7 @@ export class ComponentServices {
         this.doIfPredicate(target, id,
             () => target.$afterDomUpdate.push(action)
             , predicate, false);
+    
 
     private doIfPredicate(target: Component, id: callId, action: () => void, predicate: false | any[], useUndo: boolean) {
         const previousTargetPredicates = this.previousPredicates.get(target) || {};

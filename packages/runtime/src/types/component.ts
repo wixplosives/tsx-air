@@ -1,7 +1,7 @@
 import { VirtualElement } from './virtual.element';
 import { Displayable } from './displayable';
 import { store } from '../stores/store';
-import { RenderTarget, TsxComponentApi } from '../api/component';
+import { RenderTarget, TsxComponentApi } from '../api/component.external';
 import { Runtime } from '..';
 
 export class Component extends Displayable {
