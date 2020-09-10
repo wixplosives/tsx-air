@@ -1,8 +1,7 @@
 import { Runtime } from './runtime/runtime';
-export * from './types';
-export * from './stores';
 export * from './api/component.external';
 export * from './api/component.lifecycle';
+export * from './reactive';
 export { Runtime };
 
 let runTimes: Record<string, Runtime> = {};

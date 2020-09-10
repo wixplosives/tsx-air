@@ -1,7 +1,5 @@
-import { VirtualElement, Displayable, Runtime, ExpressionDom, Component, Fragment } from '..';
+import { VirtualElement, Displayable, Runtime, ExpressionDom, Component, Fragment, Reactive, Hook } from '..';
 import isArray from 'lodash/isArray';
-import { Reactive } from '../types/reactive';
-import { Hook } from '../types/hook';
 
 export class ViewUpdater {
     maxDepthPerUpdate = 50;

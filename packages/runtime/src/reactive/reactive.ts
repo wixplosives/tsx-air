@@ -14,8 +14,8 @@ export class Reactive {
     }
 
     parent: Reactive | undefined;
-    stores!: Record<string, Store>;
-    hooks!: Record<string, Hook>;
+    stores: Record<string, Store> = {};
+    hooks: Record<string, Hook> = {};
     modified: Map<Store, number> = new Map();
 
     protected hasStoreChanges: boolean = false;

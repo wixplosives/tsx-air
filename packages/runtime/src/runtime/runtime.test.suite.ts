@@ -2,7 +2,7 @@ import { setInstance, Runtime } from '..';
 import { JSDOM } from 'jsdom';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { Component, Displayable, VirtualElement } from '../types';
+import { Component, Displayable, VirtualElement } from '..';
 
 export function testRuntimeApi<P extends typeof Component, C extends typeof Component>(getCompiled: () => [any, any]) {
     describe('interacting with framework runtime (internal API)', () => {

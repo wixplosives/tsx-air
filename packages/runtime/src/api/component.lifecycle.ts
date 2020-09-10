@@ -1,4 +1,4 @@
-import { Component, Displayable } from '../types';
+import { Component, Displayable } from '..';
 
 export const when = (target: Component, id: string, action: () => any, predicate: any[]) =>
     target.$rt.api.when(target, id, action, predicate);

@@ -1,6 +1,6 @@
 import { VirtualElement } from './virtual.element';
 import { Displayable } from './displayable';
-import { store } from '../stores/store';
+import { store } from './store';
 import { RenderTarget, TsxComponentApi } from '../api/component.external';
 import { Runtime } from '..';
 
@@ -41,7 +41,7 @@ export class Component extends Displayable {
 
     constructor(readonly key: string, public parent: Displayable | undefined, props: object, runtime: Runtime) {
         super(key, parent, runtime);
-        this.stores = { $props: store(this, '$props', props) };
+        store(this, '$props', props);
         let depth = 0;
         while (parent) {
             depth++;

@@ -1,4 +1,4 @@
-import { Component, Displayable, VirtualElement, ExpressionDom } from '../types';
+import { Component, Displayable, VirtualElement, ExpressionDom } from '../reactive';
 import { Runtime } from '..';
 import isArray from 'lodash/isArray';
 
