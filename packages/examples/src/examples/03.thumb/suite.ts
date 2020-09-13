@@ -9,7 +9,7 @@ export const features: Features = [
     feature('single', 'store'),
     feature('event', 'handler'),
     feature('when', 'props', 'change', 'handler'),
-    // feature('memo'),
+    feature('memo'),
     feature('lambda', 'handler'),
     feature('conditional', 'dom'),
 ];
