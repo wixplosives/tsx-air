@@ -177,13 +177,55 @@ const Clock = TSXAir(() => {
 
 ```tsx
 const InfiniteMeasure = TSXAir(() => {
-    const state = store({ area: 0, ref: {} as RefHolder<HTMLDivElement> });
-    afterDomUpdate(consecutiveUpdatedFrames => {
+    const state = store({ area: 0 });
+    afterDomUpdate((consecutiveUpdatedFrames, domElement) => {
         if (consecutiveUpdatedFrames < 10) {
-            const { width, height } = state.ref.element!.getClientRects()[0];
+            const { width, height } = domElement.getClientRects()[0];
             state.area = Math.round(width * height);
         }
     });
     return <div ref={state.ref}>{/* the area will be updated up to 10 times */ state.area} px²</div>;
+});
+```
+
+## Hooks
+
+Hooks can be viewed as a viewless component, it can define `store`s, will trigger a render when updated, as well as define `afterMount`, `when` etc.
+Hooks are used to create reusable component code such as connecting to a data source, logging, measuring etc. It is possible to create high order hooks (i.e. hooks that use other hooks) as seen in the following example:
+
+```tsx
+const mouseLocation = Hook(() => {
+    const mouse = store({
+        x: -1,
+        y: -1
+    });
+
+    afterMount(() => {
+        const handler = (e: Mou) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        };
+        window.addEventListener('mousemove', handler);
+        return () => window.removeEventListener('mousemove', handler);
+    });
+
+    return mouse;
+});
+
+const mouseAngle = Hook(() => {
+    const mouse = use(mouseLocation);
+    const state = store({ angle: 0 });
+
+    afterDomUpdate((_, domElement) => {
+        const { left, right, top, bottom } = domElement.getClientRects()[0];
+        const center = [(left + right) / 2, (top + bottom) / 2];
+        state.angle = center[0] == 0 ? Math.PI / 2 : Math.atan(center[1] / center[0]);
+    });
+    return state;
+});
+
+export const GooglyEye = TSXAir(() => {
+    const mouse = use(mouseAngle);
+    return <img src="eye.png" style={{ rotate: mouse.angle + 'rad' }} />;
 });
 ```
