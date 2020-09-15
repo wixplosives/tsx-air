@@ -4,6 +4,10 @@ import { store } from './store';
 import { RenderTarget, TsxComponentApi } from '../api/component.external';
 import { Runtime } from '..';
 
+export type AfterUnmountCb = () => void;
+export type AfterMountCb = (dom: HTMLElement|Text) => AfterUnmountCb | void;
+export type AfterUpdateCb = (dom: HTMLElement|Text, consecutiveDomUpdates: number) => void;
+
 export class Component extends Displayable {
     static is(x: any): x is Component {
         return x && x instanceof Component;
@@ -34,10 +38,10 @@ export class Component extends Displayable {
         return new TsxComponentApi(comp as Component);
     }
 
-    $afterMount: Array<(ref: HTMLElement | Text) => void | (() => void)> = [];
-    $afterUnmount: Array<() => void> = [];
-    $afterDomUpdate: Array<(consecutiveChanges: number) => void> = [];
-    consecutiveChanges = new Map<(consecutiveChanges: number) => void, number>();
+    $afterMount: AfterMountCb[] = [];
+    $afterUnmount: AfterUnmountCb[] = [];
+    $afterDomUpdate: AfterUpdateCb[] = [];
+    consecutiveChanges = new Map<AfterUpdateCb, number>();
 
     constructor(readonly key: string, public parent: Displayable | undefined, props: object, runtime: Runtime) {
         super(key, parent, runtime);
@@ -70,7 +74,7 @@ export class Component extends Displayable {
         this.$afterDomUpdate.forEach(fn => {
             this.hasStoreChanges = false;
             const consecutiveChanges = this.consecutiveChanges.get(fn) || 0;
-            fn(consecutiveChanges);
+            fn(this.domRoot, consecutiveChanges);
             this.consecutiveChanges.set(fn,
                 this.hasStoreChanges ? consecutiveChanges + 1 : 0);
         });

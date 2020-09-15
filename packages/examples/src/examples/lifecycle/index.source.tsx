@@ -12,7 +12,7 @@ export const Clock = TSXAir((props: { title: string }) => {
 
     afterMount(ref => {
         const intervalId = window.setInterval(() => (state.time = new Date().toTimeString()), 200);
-        ref.querySelector('a')?.focus();
+        (ref as HTMLElement).querySelector('a')?.focus();
         return () => clearInterval(intervalId);
     });
 
@@ -22,7 +22,7 @@ export const Clock = TSXAir((props: { title: string }) => {
         state.area = Math.round(width * height);
     });
 
-    afterDomUpdate((consecutiveChanges: number) => {
+    afterDomUpdate((_ref, consecutiveChanges) => {
         if (consecutiveChanges < 10) {
             state.recursiveChanges++;
         }
