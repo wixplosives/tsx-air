@@ -310,6 +310,25 @@ describe('findUsedVariables', () => {
         });
     });
 
+    it('finds implicit (shorthand/computed) property keys', () => {
+        const func = `(aParam)=>{
+            const shorthand = 'shorthand';
+            const a = { shorthand };
+            const b = { [aParam.key]:true };            
+        }`;
+        const ast = parseValue(func);
+        expect(findUsedVariables(ast).read).to.eql({
+            shorthand: {
+                $refs: [`a = { shorthand }`],
+            },
+            aParam: {
+                key: {
+                    $refs: [`b = { [aParam.key]:true }`],
+                }
+            }
+        });
+    });
+
     it('handles assignments of "new" keyword', () => {
         const func = `()=>{
             state.time = new Date().toTimeString();
@@ -456,16 +475,16 @@ describe('findUsedVariables', () => {
             },
             defined: {
                 meta: {
-                    $refs:['meta']
+                    $refs: ['meta']
                 },
                 r: {
-                    $refs:['r']
+                    $refs: ['r']
                 }
             },
             modified: {
                 state: {
                     metaData: {
-                        $refs:[
+                        $refs: [
                             "state.metaData = 'No metadata'",
                             'state.metaData = meta.hover'
                         ]
