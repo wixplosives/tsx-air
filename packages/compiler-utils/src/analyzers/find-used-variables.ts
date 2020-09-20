@@ -85,19 +85,23 @@ function handleVarDeclaration(n: ts.Node, res: UsedVariables) {
     const accessParent: ts.Node = n.parent;
     if (isVariableLikeDeclaration(accessParent) && asCode(accessParent.name) === asCode(n)) {
         if (ts.isVariableDeclaration(accessParent)) {
-            if (ts.isObjectBindingPattern(n)) {
+            if (ts.isObjectBindingPattern(n) || ts.isArrayBindingPattern(n)) {
                 n.elements.forEach(e => {
-                    const name = asCode(e.name);
-                    res.defined[name] = withRef(accessParent);
-                    const init = asCode(accessParent.initializer!);
-                    addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
-                    addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
+                    const name = asCode((e as any).name);
+                    if (name) {
+                        res.defined[name] = withRef(accessParent);
+                        if (ts.isObjectBindingPattern(n)) {
+                            const init = asCode(accessParent.initializer!);
+                            addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
+                        } else {
+                            addInitializer(accessParent, res);
+                        }
+                        // addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
+                    }
                 });
                 return true;
-            } else {
-                addInitializer(accessParent, res);
             }
-
+            addInitializer(accessParent, res);
         }
         if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
             const definedAs = asCode(n);
