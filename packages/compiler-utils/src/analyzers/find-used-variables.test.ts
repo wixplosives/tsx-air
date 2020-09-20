@@ -345,28 +345,23 @@ describe('findUsedVariables', () => {
         expect(used.read).to.eql({});
     });
 
-    xit('finds array-destructured vars', () => {
+    it('finds array-destructured vars', () => {
         const func = `(aParam)=>{
             const [a,b] = aParam.internalObject;
-            const c = [aParam]
         }`;
         const ast = parseValue(func);
         const $refs = [`[a,b] = aParam.internalObject`];
-        expect(findUsedVariables(ast).read).to.eql({
+        expect(findUsedVariables(ast).read, 'read').to.eql({
             aParam: {
-                $refs: [`const c = [aParam]`],
                 internalObject: {
-                    $refs,
-                    a: { $refs },
-                    b: { $refs }
+                    $refs: ['aParam.internalObject']
                 }
             }
         });
-        expect(findUsedVariables(ast).defined).to.eql({
+        expect(findUsedVariables(ast).defined, 'defined').to.eql({
             aParam: { $refs: ['aParam'] },
             a: { $refs },
-            b: { $refs },
-            c: { $refs: [`const c = [aParam]`] }
+            b: { $refs }
         });
     });
 
