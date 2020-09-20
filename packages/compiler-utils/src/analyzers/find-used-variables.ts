@@ -96,7 +96,6 @@ function handleVarDeclaration(n: ts.Node, res: UsedVariables) {
                         } else {
                             addInitializer(accessParent, res);
                         }
-                        // addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
                     }
                 });
                 return true;
