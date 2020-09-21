@@ -1,8 +1,15 @@
 import ts from 'typescript';
-import { UsedVariables, RecursiveMap } from './types';
-import { update, merge, set, isString } from 'lodash';
+import { UsedVariables } from './types';
+import { set } from 'lodash';
 import { asCode } from '..';
-import { isType, modifyingOperators, selfModifyingOperators, isVariableLikeDeclaration, AccessNodes, isAccessNode, isVariableDeclaration } from './find-used-variables.helpers';
+import { isType, modifyingOperators, selfModifyingOperators, isVariableLikeDeclaration, isAccessNode, accessToStringArr, addToAccessMap, withRef } from './find-used-variables.helpers';
+export { mergeUsedVariables } from './find-used-variables.helpers';
+
+interface Visitor {
+    (n: ts.Node | undefined, root?: boolean | number): void;
+    postFix: string[];
+    res: UsedVariables;
+}
 
 /**
  *
@@ -10,30 +17,38 @@ import { isType, modifyingOperators, selfModifyingOperators, isVariableLikeDecla
  * @param ignore return true to ignore a node and its children
  */
 export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boolean): UsedVariables {
-    const res: UsedVariables = {
+    const visitor: Visitor = (n?: ts.Node, root = false) => {
+        if (!n || isType(n)) {
+            return;
+        }
+        if (!root && ignore && ignore(n)) {
+            return;
+        }
+
+        if ((!root && handleVarDeclaration(n, visitor))
+            || handleCall(n, visitor)
+            || handlePropertyAccess(n, visitor)
+            || handleLiteralObject(n, visitor)
+        ) {
+            return;
+        }
+        ts.forEachChild(n, visitor);
+    };
+    visitor.postFix = [];
+    visitor.res = {
         accessed: {},
         modified: {},
         defined: {},
         read: {},
         executed: {},
     };
-    const visitor = (n: ts.Node) => {
-        if (!n || (ignore && ignore(n)) || isType(n)) {
-            return;
-        }
-        if (handleVarDeclaration(n, res, visitor)
-            || handleCall(n, res, visitor)
-            || handlePropertyAccess(n, res)) {
-            return;
-        }
-        ts.forEachChild(n, visitor);
-    };
 
-    ts.forEachChild(node, visitor);
-    return res;
+    visitor(node, true);
+    return visitor.res;
 }
 
-function handlePropertyAccess(n: ts.Node, res: UsedVariables) {
+function handlePropertyAccess(n: ts.Node, visitor: Visitor) {
+    const { res } = visitor;
     if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
         const accessParent: ts.Node = n.parent;
         if (
@@ -52,10 +67,10 @@ function handlePropertyAccess(n: ts.Node, res: UsedVariables) {
         if (ts.isNewExpression(n)) {
             return true;
         }
-        addToAccessMap(paths.path, isModification, res, accessParent);
+        addToAccessMap(visitor.postFix, paths.path, isModification, res, accessParent);
 
         for (const path of paths.nestedAccess) {
-            addToAccessMap(path, isModification, res, accessParent);
+            addToAccessMap(visitor.postFix, path, isModification, res, accessParent);
         }
         return true;
     }
@@ -78,7 +93,8 @@ function getModificationStatus(n: ts.Node) {
     return isModification;
 }
 
-function handleVarDeclaration(n: ts.Node, res: UsedVariables, visitor: (n: ts.Node) => void) {
+function handleVarDeclaration(n: ts.Node, visitor: Visitor) {
+    const { res, postFix } = visitor;
     if (isVariableLikeDeclaration(n)) {
         if (ts.isVariableDeclaration(n)) {
             if (ts.isObjectBindingPattern(n.name) || ts.isArrayBindingPattern(n.name)) {
@@ -86,22 +102,20 @@ function handleVarDeclaration(n: ts.Node, res: UsedVariables, visitor: (n: ts.No
                     const name = asCode((e as any).name);
                     if (name) {
                         res.defined[name] = withRef(n);
-                        if (ts.isObjectBindingPattern(n.name)) {
-                            const { initializer } = n;
-                            if (initializer) {
-                                postFix.push(name);
-                                addInitializer(n, res, visitor);
-                                postFix.pop();
-                            }
+                        // tslint:disable: no-unused-expression
+                        if (ts.isObjectBindingPattern(n.name) && isAccessNode(n.initializer)) {
+                            postFix.push(name);
+                            handleLiteralObject(n.initializer, visitor) || visitor(n.initializer);
+                            postFix.pop();
                         } else {
-                            addInitializer(n, res, visitor);
+                            handleLiteralObject(n.initializer, visitor) || visitor(n.initializer);
                         }
                     }
                 });
                 return true;
             }
             res.defined[asCode(n.name)] = withRef(n);
-            addInitializer(n, res, visitor);
+            handleLiteralObject(n.initializer, visitor) || visitor(n.initializer);
             return true;
         }
         if (ts.isFunctionDeclaration(n) && n.name) {
@@ -112,36 +126,35 @@ function handleVarDeclaration(n: ts.Node, res: UsedVariables, visitor: (n: ts.No
             res.defined[asCode(n.name)] = withRef(n);
             return true;
         }
-
         return false;
     }
     return false;
 }
 
-function addInitializer(n: ts.VariableDeclaration, res: UsedVariables, visitor: (n: ts.Node) => void) {
-    const { initializer: init } = n;
-
+function handleLiteralObject(init: ts.Node | undefined, visitor: Visitor) {
+    const { res } = visitor;
     if (init) {
         if (ts.isObjectLiteralExpression(init)) {
             init.properties.forEach(
                 p => {
                     if (ts.isShorthandPropertyAssignment(p)) {
-                        addToAccessMap(asCode(p.name), false, res, n, true);
+                        addToAccessMap(visitor.postFix, asCode(p.name), false, res, init.parent, true);
                     }
                     if (ts.isPropertyAssignment(p) && ts.isComputedPropertyName(p.name)) {
-                        addToAccessMap(asCode(p.name.expression), false, res, n, true);
+                        addToAccessMap(visitor.postFix, asCode(p.name.expression), false, res, init.parent, true);
                     }
                     // @ts-ignore
                     visitor(p.initializer);
                 }
             );
-        } else {
-            visitor(init);
+            return true;
         }
     }
+    return false;
 }
 
-function handleCall(n: ts.Node, res: UsedVariables, visitor: (n: ts.Node) => void) {
+function handleCall(n: ts.Node, visitor: Visitor) {
+    const { res } = visitor;
     if (ts.isCallExpression(n) && n.expression && asCode(n.expression)) {
         set(res.executed, asCode(n.expression), withRef(n));
         set(res.accessed, asCode(n.expression), withRef(n));
@@ -155,110 +168,3 @@ function handleCall(n: ts.Node, res: UsedVariables, visitor: (n: ts.Node) => voi
     }
     return false;
 }
-
-export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAccess: string[][] } {
-    let n: ts.LeftHandSideExpression = node;
-    let path: string[] = [];
-    const nestedAccess: string[][] = [];
-    while (ts.isPropertyAccessExpression(n) || ts.isElementAccessExpression(n)) {
-        if (ts.isElementAccessExpression(n)) {
-            if (ts.isStringLiteral(n.argumentExpression)) {
-                path.unshift(n.argumentExpression.text);
-            } else if (ts.isNumericLiteral(n.argumentExpression)) {
-                path = [];
-            } else if (isAccessNode(n.argumentExpression)) {
-                const innerAccess = accessToStringArr(n.argumentExpression);
-                nestedAccess.push(innerAccess.path, ...innerAccess.nestedAccess);
-                path = [];
-            } else {
-                throw new Error('unhandled input in accessToStringArr');
-            }
-            n = n.expression;
-        } else {
-            path.unshift(asCode(n.name));
-            n = n.expression;
-        }
-    }
-
-    if (asCode(n).startsWith('this.') || asCode(n.parent).startsWith('this.')) {
-        return {
-            path: [],
-            nestedAccess: []
-        };
-    }
-    if (ts.isNewExpression(n)) {
-        return {
-            path,
-            nestedAccess
-        };
-    }
-    if (!(ts.isIdentifier(n) || ts.isNonNullExpression(n))) {
-        if (ts.isCallExpression(n)) {
-
-            return {
-                path: [],
-                nestedAccess
-            };
-        }
-        throw new Error('Error finding used vars in:\n' + asCode(n));
-    }
-    path.unshift(asCode(n));
-    return {
-        path,
-        nestedAccess
-    };
-}
-
-function withRef(ref: ts.Node, target?: RecursiveMap) {
-    target = target || {};
-    target.$refs = target.$refs || [];
-    if (!target.$refs.includes(ref)) {
-        target.$refs.push(ref);
-    }
-    return target;
-}
-
-const postFix: string[] = [];
-
-function addToAccessMap(path: string | string[], isModification: 'self' | boolean, map: UsedVariables, ref: ts.Node, ignoreRefInitializer = false) {
-    if (path.length === 0) {
-        return;
-    }
-    ref = (!ignoreRefInitializer && !isModification
-        && (ref as ts.VariableDeclaration).initializer)
-        ? (ref as ts.VariableDeclaration).initializer!
-        : ref;
-
-    while (isAccessNode(ref) && isAccessNode(ref.parent)) {
-        ref = ref.parent;
-    }
-    if (ts.isTemplateSpan(ref) || isAccessNode(ref)) {
-        ref = ref.parent;
-    }
-    /////////
-    if (postFix.length) {
-        if (isString(path)) {
-            path = path + '.' + postFix.join('.');
-        } else {
-            path.push(...postFix);
-        }
-    }
-
-    update(map.accessed, path, i => withRef(ref, i));
-    if (isModification) {
-        update(map.modified, path, i => withRef(ref, i));
-        if (isModification === 'self') {
-            update(map.read, path, i => withRef(ref, i));
-        }
-    } else {
-        update(map.read, path, i => withRef(ref, i));
-    }
-}
-
-export const mergeUsedVariables = (variables: UsedVariables[]): UsedVariables =>
-    variables.reduce((acc: UsedVariables, map: UsedVariables) => merge(acc, map), {
-        accessed: {},
-        modified: {},
-        defined: {},
-        read: {}
-    } as UsedVariables);

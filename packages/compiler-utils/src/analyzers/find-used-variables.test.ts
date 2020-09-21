@@ -9,7 +9,7 @@ import { scan } from '../ast-utils/scanner';
 import { withCodeRefs } from '../dev-utils';
 import { omit } from 'lodash';
 
-describe.only('findUsedVariables', () => {
+describe('findUsedVariables', () => {
     // @ts-ignore
     const findUsedVariables = (...args: any[]) => withCodeRefs(fu(...args));
 
@@ -291,24 +291,23 @@ describe.only('findUsedVariables', () => {
         const func = `(aParam)=>{
             const {a,b} = aParam.internalObject;
             const {internalObject} = aParam;
-            // const {c,d} = {c:aParam, d:aParam.other}
+            const {c,d} = {c:aParam, d:aParam.other}
         }`;
         const ast = parseValue(func);
         const $refs = [`{a,b} = aParam.internalObject`];
         expect(findUsedVariables(ast).read, 'read').to.eql({
             aParam: {
-                // $refs: [
-                //     'aParam',
-                //     '{c,d} = {c:aParam, d:aParam.other}'
-                // ],
+                $refs: [
+                    'c:aParam'
+                ],
                 internalObject: {
                     $refs: [`{internalObject} = aParam`],
                     a: { $refs },
                     b: { $refs }
                 },
-                // other: {
-                //     $refs: ['{c,d} = {c:aParam, d:aParam.other}']
-                // }
+                other: {
+                    $refs: ['d:aParam.other']
+                }
             }
         });
         expect(findUsedVariables(ast).defined, 'defined').to.eql({
@@ -316,8 +315,8 @@ describe.only('findUsedVariables', () => {
             internalObject: { $refs: [`{internalObject} = aParam`] },
             a: { $refs },
             b: { $refs },
-            // c: { $refs: ['{c,d} = {c:aParam, d:aParam.other}'] },
-            // d: { $refs: ['{c,d} = {c:aParam, d:aParam.other}'] }
+            c: { $refs: ['{c,d} = {c:aParam, d:aParam.other}'] },
+            d: { $refs: ['{c,d} = {c:aParam, d:aParam.other}'] }
         });
     });
 
