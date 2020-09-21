@@ -1,7 +1,8 @@
 import ts from 'typescript';
 import { UsedVariables, RecursiveMap } from './types';
-import { update, merge, set } from 'lodash';
+import { update, merge, set, isString } from 'lodash';
 import { asCode } from '..';
+import { isType, modifyingOperators, selfModifyingOperators, isVariableLikeDeclaration, AccessNodes, isAccessNode, isVariableDeclaration } from './find-used-variables.helpers';
 
 /**
  *
@@ -17,21 +18,17 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
         executed: {},
     };
     const visitor = (n: ts.Node) => {
-        if (ignore && ignore(n) || isType(n)) {
+        if (!n || (ignore && ignore(n)) || isType(n)) {
             return;
         }
-        if (n.parent) {
-            if (handleVarDeclaration(n, res)
-                || handleCall(n, res, visitor)) {
-                return;
-            }
-            if (!handlePropertyAccess(n, res)) {
-                ts.forEachChild(n, visitor);
-            }
-        } else {
-            ts.forEachChild(n, visitor);
+        if (handleVarDeclaration(n, res, visitor)
+            || handleCall(n, res, visitor)
+            || handlePropertyAccess(n, res)) {
+            return;
         }
+        ts.forEachChild(n, visitor);
     };
+
     ts.forEachChild(node, visitor);
     return res;
 }
@@ -39,14 +36,14 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
 function handlePropertyAccess(n: ts.Node, res: UsedVariables) {
     if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
         const accessParent: ts.Node = n.parent;
-        if (ts.isVariableDeclaration(accessParent) && ts.isObjectBindingPattern(accessParent.name)) {
-            return true;
-        }
         if (
             ts.isJsxSelfClosingElement(accessParent) ||
             ts.isJsxOpeningElement(accessParent) ||
             (ts.isJsxClosingElement(accessParent) && n === accessParent.tagName)
         ) {
+            return true;
+        }
+        if (ts.isJsxAttribute(accessParent) && n === accessParent.name) {
             return true;
         }
         const isModification = getModificationStatus(n);
@@ -81,48 +78,66 @@ function getModificationStatus(n: ts.Node) {
     return isModification;
 }
 
-function handleVarDeclaration(n: ts.Node, res: UsedVariables) {
-    const accessParent: ts.Node = n.parent;
-    if (isVariableLikeDeclaration(accessParent) && asCode(accessParent.name) === asCode(n)) {
-        if (ts.isVariableDeclaration(accessParent)) {
-            if (ts.isObjectBindingPattern(n) || ts.isArrayBindingPattern(n)) {
-                n.elements.forEach(e => {
+function handleVarDeclaration(n: ts.Node, res: UsedVariables, visitor: (n: ts.Node) => void) {
+    if (isVariableLikeDeclaration(n)) {
+        if (ts.isVariableDeclaration(n)) {
+            if (ts.isObjectBindingPattern(n.name) || ts.isArrayBindingPattern(n.name)) {
+                n.name.elements.forEach(e => {
                     const name = asCode((e as any).name);
                     if (name) {
-                        res.defined[name] = withRef(accessParent);
-                        if (ts.isObjectBindingPattern(n)) {
-                            const init = asCode(accessParent.initializer!);
-                            addToAccessMap(`${init}.${name}`, false, res, accessParent, true);
+                        res.defined[name] = withRef(n);
+                        if (ts.isObjectBindingPattern(n.name)) {
+                            const { initializer } = n;
+                            if (initializer) {
+                                postFix.push(name);
+                                addInitializer(n, res, visitor);
+                                postFix.pop();
+                            }
                         } else {
-                            addInitializer(accessParent, res);
+                            addInitializer(n, res, visitor);
                         }
                     }
                 });
                 return true;
             }
-            addInitializer(accessParent, res);
+            res.defined[asCode(n.name)] = withRef(n);
+            addInitializer(n, res, visitor);
+            return true;
         }
-        if (isVariableDeclaration(accessParent) || ts.isFunctionDeclaration(accessParent)) {
-            const definedAs = asCode(n);
-            res.defined[definedAs] = withRef(accessParent);
+        if (ts.isFunctionDeclaration(n) && n.name) {
+            res.defined[asCode(n.name)] = withRef(n);
+            return false;
         }
-        return true;
+        if (ts.isParameter(n)) {
+            res.defined[asCode(n.name)] = withRef(n);
+            return true;
+        }
+
+        return false;
     }
     return false;
 }
 
-function addInitializer(n: ts.VariableDeclaration, res: UsedVariables) {
-    if (n.initializer && ts.isObjectLiteralExpression(n.initializer)) {
-        n.initializer.properties.forEach(
-            p => {
-                if (ts.isShorthandPropertyAssignment(p)) {
-                    addToAccessMap(asCode(p.name), false, res, n, true);
+function addInitializer(n: ts.VariableDeclaration, res: UsedVariables, visitor: (n: ts.Node) => void) {
+    const { initializer: init } = n;
+
+    if (init) {
+        if (ts.isObjectLiteralExpression(init)) {
+            init.properties.forEach(
+                p => {
+                    if (ts.isShorthandPropertyAssignment(p)) {
+                        addToAccessMap(asCode(p.name), false, res, n, true);
+                    }
+                    if (ts.isPropertyAssignment(p) && ts.isComputedPropertyName(p.name)) {
+                        addToAccessMap(asCode(p.name.expression), false, res, n, true);
+                    }
+                    // @ts-ignore
+                    visitor(p.initializer);
                 }
-                if (ts.isPropertyAssignment(p) && ts.isComputedPropertyName(p.name)) {
-                    addToAccessMap(asCode(p.name.expression), false, res, n, true);
-                }
-            }
-        );
+            );
+        } else {
+            visitor(init);
+        }
     }
 }
 
@@ -139,66 +154,6 @@ function handleCall(n: ts.Node, res: UsedVariables, visitor: (n: ts.Node) => voi
         return true;
     }
     return false;
-}
-
-export const modifyingOperators = [
-    ts.SyntaxKind.EqualsToken,
-    ts.SyntaxKind.PlusEqualsToken,
-    ts.SyntaxKind.MinusEqualsToken,
-    ts.SyntaxKind.AsteriskEqualsToken,
-    ts.SyntaxKind.AsteriskAsteriskEqualsToken,
-    ts.SyntaxKind.SlashEqualsToken,
-    ts.SyntaxKind.PercentEqualsToken,
-    ts.SyntaxKind.LessThanLessThanEqualsToken,
-    ts.SyntaxKind.GreaterThanGreaterThanEqualsToken,
-    ts.SyntaxKind.GreaterThanGreaterThanGreaterThanEqualsToken,
-    ts.SyntaxKind.AmpersandEqualsToken,
-    ts.SyntaxKind.BarEqualsToken
-];
-
-
-export const selfModifyingOperators = [
-    ts.SyntaxKind.PlusPlusToken,
-    ts.SyntaxKind.PlusEqualsToken,
-    ts.SyntaxKind.MinusEqualsToken,
-    ts.SyntaxKind.AsteriskEqualsToken,
-    ts.SyntaxKind.AsteriskAsteriskEqualsToken,
-    ts.SyntaxKind.SlashEqualsToken,
-    ts.SyntaxKind.PercentEqualsToken,
-    ts.SyntaxKind.AmpersandEqualsToken,
-    ts.SyntaxKind.BarEqualsToken
-];
-
-export const isType = (node: ts.Node) =>
-    ts.isInterfaceDeclaration(node) ||
-    ts.isTypeNode(node) ||
-    ts.isTypeReferenceNode(node) ||
-    ts.isTypeAliasDeclaration(node);
-
-export function isVariableLikeDeclaration(node: ts.Node): node is ts.VariableLikeDeclaration {
-    return (
-        ts.isVariableDeclaration(node) ||
-        ts.isParameter(node) ||
-        ts.isBindingElement(node) ||
-        ts.isPropertyDeclaration(node) ||
-        ts.isPropertyAssignment(node) ||
-        ts.isPropertySignature(node) ||
-        ts.isJsxAttribute(node) ||
-        ts.isShorthandPropertyAssignment(node) ||
-        ts.isEnumMember(node) ||
-        ts.isJSDocPropertyTag(node) ||
-        ts.isJSDocParameterTag(node) ||
-        ts.isFunctionDeclaration(node)
-    );
-}
-
-export function isVariableDeclaration(node: ts.Node): node is ts.VariableDeclaration | ts.ParameterDeclaration {
-    return ts.isVariableDeclaration(node) || ts.isParameter(node);
-}
-
-export type AccessNodes = ts.Identifier | ts.PropertyAccessExpression | ts.ElementAccessExpression;
-export function isAccessNode(node: ts.Node): node is AccessNodes {
-    return ts.isIdentifier(node) || ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node);
 }
 
 export function accessToStringArr(node: AccessNodes): { path: string[]; nestedAccess: string[][] } {
@@ -263,6 +218,8 @@ function withRef(ref: ts.Node, target?: RecursiveMap) {
     return target;
 }
 
+const postFix: string[] = [];
+
 function addToAccessMap(path: string | string[], isModification: 'self' | boolean, map: UsedVariables, ref: ts.Node, ignoreRefInitializer = false) {
     if (path.length === 0) {
         return;
@@ -271,8 +228,20 @@ function addToAccessMap(path: string | string[], isModification: 'self' | boolea
         && (ref as ts.VariableDeclaration).initializer)
         ? (ref as ts.VariableDeclaration).initializer!
         : ref;
-    if (ts.isTemplateSpan(ref)) {
+
+    while (isAccessNode(ref) && isAccessNode(ref.parent)) {
         ref = ref.parent;
+    }
+    if (ts.isTemplateSpan(ref) || isAccessNode(ref)) {
+        ref = ref.parent;
+    }
+    /////////
+    if (postFix.length) {
+        if (isString(path)) {
+            path = path + '.' + postFix.join('.');
+        } else {
+            path.push(...postFix);
+        }
     }
 
     update(map.accessed, path, i => withRef(ref, i));
