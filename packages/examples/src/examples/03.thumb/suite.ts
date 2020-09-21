@@ -85,6 +85,7 @@ const onlyPreloader = {
 };
 
 const onlyImage = {
+    name: 'Image only',
     cssQuery: '.thumb',
     pageInstances: 1,
     children: [{
