@@ -141,7 +141,11 @@ export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVaria
         (s.read && s.accessed)
             ? s
             : findUsedVariables(s));
-    const used = merge({ read: {}, accessed: {}, modified: {}, executed: {} }, ...f);
+    const used = merge({ read: {}, accessed: {}, modified: {}, executed: {}, defined: {} }, ...f);
+    Object.keys(used.defined).forEach(k => {
+        delete used.read[k];
+        delete used.accessed[k];
+    });
     yield* addToClosure(comp, getDirectDependencies(comp, used, true), isPreRender, storesTarget);
     if (!isPreRender) {
         yield* addToClosure(comp, Object.keys(used.executed).filter(
