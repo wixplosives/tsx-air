@@ -18,21 +18,28 @@ interface Visitor {
  */
 export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boolean): UsedVariables {
     const visitor: Visitor = (n?: ts.Node, root = false) => {
-        if (!n || isType(n)) {
-            return;
-        }
-        if (!root && ignore && ignore(n)) {
-            return;
-        }
+        try {
+            if (!n || isType(n)) {
+                return;
+            }
+            if (!root && ignore && ignore(n)) {
+                return;
+            }
 
-        if ((!root && handleVarDeclaration(n, visitor))
-            || handleCall(n, visitor)
-            || handlePropertyAccess(n, visitor)
-            || handleLiteralObject(n, visitor)
-        ) {
-            return;
+            if ((!root && handleVarDeclaration(n, visitor))
+                || handleCall(n, visitor)
+                || handlePropertyAccess(n, visitor)
+                || handleLiteralObject(n, visitor)
+            ) {
+                return;
+            }
+            ts.forEachChild(n, visitor);
+        } catch (e) {
+            e.original = e.original || e.message || '';
+            e.message = `Error in: ${asCode(n!)}${e.src ? '\nCause: ' + e.original + ' in ' + e.src : ''}`;
+            e.src = e.src || asCode(n!);
+            throw e;
         }
-        ts.forEachChild(n, visitor);
     };
     visitor.postFix = [];
     visitor.res = {
@@ -50,7 +57,7 @@ export function findUsedVariables(node: ts.Node, ignore?: (node: ts.Node) => boo
 function handlePropertyAccess(n: ts.Node, visitor: Visitor) {
     const { res } = visitor;
     if (ts.isPropertyAccessExpression(n) || ts.isIdentifier(n) || ts.isElementAccessExpression(n)) {
-        const accessParent: ts.Node = n.parent;
+        const accessParent: ts.Node = n.parent || n;
         if (
             ts.isJsxSelfClosingElement(accessParent) ||
             ts.isJsxOpeningElement(accessParent) ||
@@ -78,7 +85,7 @@ function handlePropertyAccess(n: ts.Node, visitor: Visitor) {
 }
 
 function getModificationStatus(n: ts.Node) {
-    const accessParent: ts.Node = n.parent;
+    const accessParent: ts.Node = n.parent || n;
     let isModification: 'self' | boolean = false;
     if (ts.isBinaryExpression(accessParent) && asCode(accessParent.left) === asCode(n)) {
         if (modifyingOperators.find(item => item === accessParent.operatorToken.kind)) {
