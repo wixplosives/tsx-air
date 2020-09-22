@@ -24,4 +24,3 @@ export const generateComponentClass = (comp: CompDefinition, api: FileTransforme
     api.appendStatements(...generateFragments(comp, api, fragments));
     return compClass;
 };
-

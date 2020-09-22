@@ -1,5 +1,5 @@
 import { Reactive } from './reactive';
-import { Runtime } from '..';
+import { Runtime, AfterMountCb, AfterUnmountCb, AfterUpdateCb } from '..';
 
 export interface HookFn {
     (...args: any[]): any;
@@ -29,17 +29,16 @@ export class Hook extends Reactive {
     static is(x: any): x is Hook {
         return x && x instanceof Hook;
     }
-
-    $afterMount: Array<(ref: HTMLElement | Text) => void | (() => void)> = [];
-    $afterUnmount: Array<() => void> = [];
-    $afterDomUpdate: Array<(consecutiveChanges: number) => void> = [];
-    consecutiveChanges = new Map<(consecutiveChanges: number) => void, number>();
+    $afterMount: AfterMountCb[] = [];
+    $afterUnmount: AfterUnmountCb[] = [];
+    $afterDomUpdate: AfterUpdateCb[] = [];
+    consecutiveChanges = new Map<AfterUpdateCb, number>();
 
     updated() {
         this.$afterDomUpdate.forEach(fn => {
             this.hasStoreChanges = false;
             const consecutiveChanges = this.consecutiveChanges.get(fn) || 0;
-            fn(consecutiveChanges);
+            fn(this.owner!.domRoot, consecutiveChanges);
             this.consecutiveChanges.set(fn,
                 this.hasStoreChanges ? consecutiveChanges + 1 : 0);
         });

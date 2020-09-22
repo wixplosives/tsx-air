@@ -194,6 +194,7 @@ Hooks can be viewed as a viewless component, it can define `store`s, will trigge
 Hooks are used to create reusable component code such as connecting to a data source, logging, measuring etc. It is possible to create high order hooks (i.e. hooks that use other hooks) as seen in the following example:
 
 ```tsx
+
 const mouseLocation = Hook(() => {
     const mouse = store({
         x: -1,
@@ -201,7 +202,7 @@ const mouseLocation = Hook(() => {
     });
 
     afterMount(() => {
-        const handler = (e: Mou) => {
+        const handler = (e: MouseEvent) => {
             mouse.x = e.clientX;
             mouse.y = e.clientY;
         };
@@ -212,20 +213,32 @@ const mouseLocation = Hook(() => {
     return mouse;
 });
 
-const mouseAngle = Hook(() => {
-    const mouse = use(mouseLocation);
-    const state = store({ angle: 0 });
+const mouseOffset = Hook((threshold: number = 5) => {
+    const mouse = use(mouseLocation());
+    const state = store({ x: 0, y: 0 });
 
-    afterDomUpdate((_, domElement) => {
-        const { left, right, top, bottom } = domElement.getClientRects()[0];
-        const center = [(left + right) / 2, (top + bottom) / 2];
-        state.angle = center[0] == 0 ? Math.PI / 2 : Math.atan(center[1] / center[0]);
+    afterDomUpdate(domElement => {
+        const { left, right, top, bottom, width, height } = (domElement as HTMLElement).getClientRects()[0];
+        const offsetX = (left + right) / 2 - mouse.x;
+        const offsetY = (top + bottom) / 2 - mouse.y;
+
+        const lengthSqr = offsetX ** 2 + offsetY ** 2;
+        const maxLengthSqr = width ** 2 + height ** 2;
+        if (length < threshold) {
+            state.x = state.y = 0;
+        } else {
+            const shrinkRatio = lengthSqr > maxLengthSqr
+                ? Math.sqrt(maxLengthSqr / lengthSqr)
+                : 1;
+            state.x = offsetX * shrinkRatio;
+            state.y = offsetY * shrinkRatio;
+        }
     });
     return state;
 });
 
 export const GooglyEye = TSXAir(() => {
-    const mouse = use(mouseAngle);
-    return <img src="eye.png" style={{ rotate: mouse.angle + 'rad' }} />;
+    const offset = use(mouseOffset(5));
+    return <div className="eye"><div style={{ transform: `translate(${offset.x}px, ${offset.y}px)`}} /></div>;
 });
 ```
