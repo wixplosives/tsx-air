@@ -42,12 +42,13 @@ const mouseOffset = Hook((threshold: number = 5) => {
     return state;
 });
 
-export const GooglyEye = TSXAir(() => {
-    const offset = use(mouseOffset(5));
-    return <div className="eye"><div style={{ transform: `translate(${offset.x}px, ${offset.y}px)`}} /></div>;
+const Eye = TSXAir(() => {
+    // const offset = use(mouseOffset(5));
+    const offset = {x:0, y:0};
+    return <div className="eye"><div style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }} /></div>;
 });
 
 export const GooglyEyes = TSXAir(() => <div className="face">
-    <GooglyEye /><GooglyEye />
+    <Eye /><Eye />
     <div className="smile" />
 </div>);
