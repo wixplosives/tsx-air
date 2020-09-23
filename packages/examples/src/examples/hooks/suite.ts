@@ -11,7 +11,7 @@ export function suite(api: ExampleSuiteApi) {
     const getEyeBallsTranslation = async (page: Page) => {
         await waitAnimationFrame(page);
         const styles = await page.$$eval('.eye > div', eyeBalls => eyeBalls.map(e => e.getAttribute('style')));
-        const eyes = styles.map(s => s!.match(/-?\d+\.?\d+/g)?.map(i => parseInt(i))) as number[][];
+        const eyes = styles.map(s => s!.match(/-?\d+/g)?.map(i => parseInt(i))) as number[][];
         if (!eyes || eyes.length === 0 || eyes[0].length === 0) {
             return {
                 left: { x: 0, y: 0 },
@@ -30,15 +30,15 @@ export function suite(api: ExampleSuiteApi) {
         const face = JSON.parse(await page.$eval('.face', el => JSON.stringify((el as any).getBoundingClientRect())));
         await page.mouse.move(face.left, face.top);
         let eyes = await getEyeBallsTranslation(page);
-        expect(eyes.right.x).to.be.approximately(-21, 2);
-        expect(eyes.right.y).to.be.approximately(-7, 2);
-        expect(eyes.left.x).to.be.approximately(-10, 2);
-        expect(eyes.left.y).to.be.approximately(-11, 2);
+        expect(eyes.right.x).to.be.approximately(-18, 2);
+        expect(eyes.right.y).to.be.approximately(-6, 2);
+        expect(eyes.left.x).to.be.approximately(-9, 2);
+        expect(eyes.left.y).to.be.approximately(-10, 2);
         await page.mouse.move(face.right, face.bottom);
         eyes = await getEyeBallsTranslation(page);
-        expect(eyes.right.x).to.be.approximately(5, 2);
-        expect(eyes.right.y).to.be.approximately(21, 2);
-        expect(eyes.left.x).to.be.approximately(10, 2);
-        expect(eyes.left.y).to.be.approximately(12, 2);
+        expect(eyes.right.x).to.be.approximately(4, 2);
+        expect(eyes.right.y).to.be.approximately(18, 2);
+        expect(eyes.left.x).to.be.approximately(8, 2);
+        expect(eyes.left.y).to.be.approximately(10, 2);
     });
 }

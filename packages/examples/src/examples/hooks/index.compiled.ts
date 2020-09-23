@@ -32,23 +32,19 @@ GooglyEyes.render = (_: {}, target?: HTMLElement, add?: RenderTarget) => {
     };
     const getEyeState = (eye: HTMLDivElement) => {
         const state = { x: 0, y: 0 };
-        const threshold = 5;
+        const radiusFactor = 6;
 
-        const { left, right, top, bottom, width, height } = eye.getClientRects()[0];
+        const { left, right, top, bottom, width, height } = (eye as HTMLElement).getClientRects()[0];
         const offsetX = mouse.x - (left + right) / 2;
         const offsetY = mouse.y - (top + bottom) / 2;
 
         const lengthSqr = Math.sqrt(offsetX ** 2 + offsetY ** 2);
-        const maxLengthSqr = Math.sqrt((width/5) ** 2 + (height/5) ** 2);
-        if (lengthSqr < threshold) {
-            state.x = state.y = 0;
-        } else {
-            const shrinkRatio = lengthSqr > maxLengthSqr
-                ? (maxLengthSqr / lengthSqr)
-                : 1;
-            state.x = offsetX * shrinkRatio;
-            state.y = offsetY * shrinkRatio;
-        }
+        const maxLengthSqr = Math.sqrt((width / radiusFactor) ** 2 + (height / radiusFactor) ** 2);
+        const shrinkRatio = lengthSqr > maxLengthSqr
+            ? (maxLengthSqr / lengthSqr)
+            : 1;
+        state.x = Math.round(offsetX * shrinkRatio);
+        state.y = Math.round(offsetY * shrinkRatio);
         return state;
     };
 

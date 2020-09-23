@@ -18,33 +18,29 @@ const mouseLocation = Hook(() => {
     return mouse;
 });
 
-const mouseOffset = Hook((threshold: number = 5) => {
+const mouseOffset = Hook((radiusFactor=6) => {
     const mouse = use(mouseLocation());
     const state = store({ x: 0, y: 0 });
 
-    afterDomUpdate(domElement => {
-        const { left, right, top, bottom, width, height } = (domElement as HTMLElement).getClientRects()[0];
-        const offsetX = (left + right) / 2 - mouse.x;
-        const offsetY = (top + bottom) / 2 - mouse.y;
+    afterDomUpdate(eye => {
+        const { left, right, top, bottom, width, height } = (eye as HTMLElement).getClientRects()[0];
+        const offsetX = mouse.x - (left + right) / 2;
+        const offsetY = mouse.y - (top + bottom) / 2;
 
-        const lengthSqr = offsetX ** 2 + offsetY ** 2;
-        const maxLengthSqr = width ** 2 + height ** 2;
-        if (length < threshold) {
-            state.x = state.y = 0;
-        } else {
-            const shrinkRatio = lengthSqr > maxLengthSqr
-                ? Math.sqrt(maxLengthSqr / lengthSqr)
-                : 1;
-            state.x = offsetX * shrinkRatio;
-            state.y = offsetY * shrinkRatio;
-        }
+        const lengthSqr = Math.sqrt(offsetX ** 2 + offsetY ** 2);
+        const maxLengthSqr = Math.sqrt((width / radiusFactor) ** 2 + (height / radiusFactor) ** 2);
+        const shrinkRatio = lengthSqr > maxLengthSqr
+            ? (maxLengthSqr / lengthSqr)
+            : 1;
+        state.x = Math.round(offsetX * shrinkRatio);
+        state.y = Math.round(offsetY * shrinkRatio);
+        return state;
     });
     return state;
 });
 
 const Eye = TSXAir(() => {
-    // const offset = use(mouseOffset(5));
-    const offset = {x:0, y:0};
+    const offset = use(mouseOffset(5));
     return <div className="eye"><div style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }} /></div>;
 });
 
