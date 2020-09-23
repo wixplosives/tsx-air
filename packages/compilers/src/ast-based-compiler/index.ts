@@ -1,11 +1,12 @@
 import { transformerApiProvider as transformerApiProvider } from '@tsx-air/compiler-utils';
 import { Compiler, feature, featureWith } from '@tsx-air/types';
-import { componentTransformer } from './transformer';
+import { componentTransformer, hookTransformer, tsxAirValidator } from './transformer';
 
 const compiler: Compiler = {
     label: 'AST Based compiler',
     transformers: {
-        before: [transformerApiProvider(componentTransformer)]
+        before: transformerApiProvider([componentTransformer, hookTransformer]),
+        after: [tsxAirValidator]
     },
     features: [
         ...featureWith(feature('component'), 'static', 'stateless', 'stateful'),

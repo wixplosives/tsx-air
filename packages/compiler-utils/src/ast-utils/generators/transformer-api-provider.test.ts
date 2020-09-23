@@ -58,23 +58,6 @@ describe('transformerApiProvider', () => {
         `);
     });
 
-    it('should allow appending private vars', () => {
-        const ast = asAst(`console.log('hello')`, true).getSourceFile();
-        const res = ts.transform(ast, [transformerApiProvider((_ctx: ts.TransformationContext) => {
-
-            return (node: ts.Node) => {
-                const api = getFileTransformationAPI(node.getSourceFile());
-                const refToVar = api.appendPrivateVar('myStr', cLiteralAst('gaga'));
-                return cCall(['console', 'log'], [refToVar]);
-            };
-        })]);
-        expect(res.diagnostics!.length).to.equal(0);
-        expect(res.transformed[0]).to.have.astLike(`var __private_tsx_air__ = {
-                myStr0: 'gaga'
-            };
-            console.log(__private_tsx_air__.myStr0)`);
-    });
-
     describe('ensure import', () => {
         it('should allow adding imports', () => {
             const ast = asAst(`console.log('hello')`, true).getSourceFile();
