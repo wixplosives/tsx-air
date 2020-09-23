@@ -39,13 +39,13 @@ describe('findUsedVariables', () => {
 
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
-                field: { $refs: [`aParam.field`] },
+                field: { $refs: [`val: aParam.field`] },
                 internalObj: {
                     property: {
-                        $refs: [`aParam.internalObj.property`]
+                        $refs: [`a = aParam.internalObj.property`]
                     },
                     anotherProperty: {
-                        $refs: [`aParam.internalObj.anotherProperty`]
+                        $refs: [`b = aParam.internalObj.anotherProperty`]
                     }
                 }
             }
@@ -115,7 +115,7 @@ describe('findUsedVariables', () => {
 
     it('should find vars in jsx', () => {
         const ast = asSourceFile(`
-            export const aJSXRoot = () => <div onClick={onClickHandler}/>
+            export const aJSXRoot = <div onClick={onClickHandler}/>
             `);
         const expected: UsedVariables<string> = {
             read: {
@@ -131,7 +131,7 @@ describe('findUsedVariables', () => {
             executed: {},
             defined: {
                 aJSXRoot: {
-                    $refs: [`aJSXRoot = () => <div onClick={onClickHandler}/>`]
+                    $refs: [`aJSXRoot = <div onClick={onClickHandler}/>`]
                 } as RecursiveMap<string>
             },
             modified: {}
@@ -236,17 +236,18 @@ describe('findUsedVariables', () => {
             aParam: {
                 ['object-with-kebab-case']: {
                     internalProperty: {
-                        $refs: [`aParam['object-with-kebab-case'].internalProperty`]
+                        $refs: [`a = aParam['object-with-kebab-case'].internalProperty`]
                     }
                 },
                 internalObject: {
                     ['property-with-kebab-case']: {
-                        $refs: [`aParam.internalObject['property-with-kebab-case']`]
+                        $refs: [`b = aParam.internalObject['property-with-kebab-case']`]
                     }
                 }
             }
         });
     });
+
     it('finds access to arrays (not including the index)', () => {
         const ast = parseValue(`(aParam)=>{
                 const a = aParam.inner[0];
@@ -257,13 +258,13 @@ describe('findUsedVariables', () => {
         expect(findUsedVariables(ast).accessed).to.eql({
             aParam: {
                 inner: {
-                    $refs: [`aParam.inner[0]`,
-                        `aParam.inner[0].c`,
-                        `aParam.inner[aParam.index]`
+                    $refs: [`a = aParam.inner[0]`,
+                        `b = aParam.inner[0].c`,
+                        `c = aParam.inner[aParam.index]`
                     ]
                 },
                 index: {
-                    $refs: [`aParam.inner[aParam.index]`]
+                    $refs: [`c = aParam.inner[aParam.index]`]
                 }
             }
         });
@@ -274,13 +275,13 @@ describe('findUsedVariables', () => {
                 // 'shouldBeIgnored' is ignored because it comes after a dynamic path access 
                 const a = aParam.internalObject[aParam.aKey].shouldBeIgnored;
             }`);
-        expect(findUsedVariables(ast).accessed).to.eql({
+        expect(findUsedVariables(ast).accessed, 'accessed').to.eql({
             aParam: {
                 internalObject: {
-                    $refs: [`aParam.internalObject[aParam.aKey].shouldBeIgnored`]
+                    $refs: [`a = aParam.internalObject[aParam.aKey].shouldBeIgnored`]
                 },
                 aKey: {
-                    $refs: [`aParam.internalObject[aParam.aKey].shouldBeIgnored`]
+                    $refs: [`a = aParam.internalObject[aParam.aKey].shouldBeIgnored`]
                 }
             }
         });
@@ -290,23 +291,51 @@ describe('findUsedVariables', () => {
         const func = `(aParam)=>{
             const {a,b} = aParam.internalObject;
             const {internalObject} = aParam;
+            const {c,d} = {c:aParam, d:aParam.other}
         }`;
         const ast = parseValue(func);
         const $refs = [`{a,b} = aParam.internalObject`];
-        expect(findUsedVariables(ast).read).to.eql({
+        expect(findUsedVariables(ast).read, 'read').to.eql({
             aParam: {
+                $refs: [
+                    'c:aParam'
+                ],
                 internalObject: {
                     $refs: [`{internalObject} = aParam`],
                     a: { $refs },
                     b: { $refs }
+                },
+                other: {
+                    $refs: ['d:aParam.other']
                 }
             }
         });
-        expect(findUsedVariables(ast).defined).to.eql({
+        expect(findUsedVariables(ast).defined, 'defined').to.eql({
             aParam: { $refs: ['aParam'] },
             internalObject: { $refs: [`{internalObject} = aParam`] },
             a: { $refs },
-            b: { $refs }
+            b: { $refs },
+            c: { $refs: ['{c,d} = {c:aParam, d:aParam.other}'] },
+            d: { $refs: ['{c,d} = {c:aParam, d:aParam.other}'] }
+        });
+    });
+
+    it('finds implicit (shorthand/computed) property keys', () => {
+        const func = `(aParam)=>{
+            const shorthand = 'shorthand';
+            const a = { shorthand };
+            const b = { [aParam.key]:true };            
+        }`;
+        const ast = parseValue(func);
+        expect(findUsedVariables(ast).read).to.eql({
+            shorthand: {
+                $refs: [`a = { shorthand }`],
+            },
+            aParam: {
+                key: {
+                    $refs: [`b = { [aParam.key]:true }`],
+                }
+            }
         });
     });
 
@@ -326,28 +355,24 @@ describe('findUsedVariables', () => {
         expect(used.read).to.eql({});
     });
 
-    xit('finds array-destructured vars', () => {
+    it('finds array-destructured vars', () => {
         const func = `(aParam)=>{
-            const [a,b] = aParam.internalObject;
-            const c = [aParam]
+            const [a,b] = [aParam.internalObject, aParam];
         }`;
         const ast = parseValue(func);
-        const $refs = [`[a,b] = aParam.internalObject`];
-        expect(findUsedVariables(ast).read).to.eql({
+        const $refs = [`[a,b] = [aParam.internalObject, aParam]`];
+        expect(findUsedVariables(ast).read, 'read').to.eql({
             aParam: {
-                $refs: [`const c = [aParam]`],
+                $refs: ['[aParam.internalObject, aParam]'],
                 internalObject: {
-                    $refs,
-                    a: { $refs },
-                    b: { $refs }
+                    $refs: ['[aParam.internalObject, aParam]']
                 }
             }
         });
-        expect(findUsedVariables(ast).defined).to.eql({
+        expect(findUsedVariables(ast).defined, 'defined').to.eql({
             aParam: { $refs: ['aParam'] },
             a: { $refs },
-            b: { $refs },
-            c: { $refs: [`const c = [aParam]`] }
+            b: { $refs }
         });
     });
 
@@ -377,14 +402,14 @@ describe('findUsedVariables', () => {
             read: {
                 externalMethodsParam: {
                     aProp: {
-                        $refs: [`externalMethodsParam.aProp`]
+                        $refs: [`definedInInnerScope = externalMethodsParam.aProp`]
                     }
                 }
             },
             accessed: {
                 externalMethodsParam: {
                     aProp: {
-                        $refs: [`externalMethodsParam.aProp`]
+                        $refs: [`definedInInnerScope = externalMethodsParam.aProp`]
                     }
                 }
             },
@@ -406,6 +431,7 @@ describe('findUsedVariables', () => {
             modified: {}
         });
     });
+
     it(`finds string template variables`, () => {
         const ast = parseValue('() => `<div dir="${"ltr"}" lang="${props.a}"><span></span></div>`');
         const template = scan(ast, ts.isTemplateExpression)[0].node;
@@ -456,16 +482,16 @@ describe('findUsedVariables', () => {
             },
             defined: {
                 meta: {
-                    $refs:['meta']
+                    $refs: ['meta']
                 },
                 r: {
-                    $refs:['r']
+                    $refs: ['r']
                 }
             },
             modified: {
                 state: {
                     metaData: {
-                        $refs:[
+                        $refs: [
                             "state.metaData = 'No metadata'",
                             'state.metaData = meta.hover'
                         ]

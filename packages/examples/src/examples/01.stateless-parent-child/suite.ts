@@ -25,11 +25,12 @@ export function suite(api: ExampleSuiteApi) {
             }]
         });
     });
-    
+
     it('should update the view', async () => {
         const page = await api.afterLoading;
-        await page.evaluate(() => (window as any).app.updateProps({ name: 'changed' }));
-        await page.waitFor(50);
+        await page.waitForFunction(
+            () => ((window as any).app.updateProps({ name: 'changed' }), true),
+            { polling: 'mutation', timeout: 300 });
         await htmlMatch(page, {
             cssQuery: '.parent',
             pageInstances: 1,

@@ -4,7 +4,7 @@ type Quantities = 'single' | 'multiple' | 'high' | 'low';
 type ComponentInternalFeatures = 'store' | 'nested' | 'props' | 'ref' | 'lifeCycle';
 type Interactions = 'lambda' | 'event' | 'handler' | 'framerate'  | 'when' | 'change';
 type ViewElements = 'conditional' | 'dom' | 'children';
-type CompLifecycle = 'afterMount' | 'afterDomUpdate' | 'memo';
+type CompLifecycle = 'afterMount' | 'afterDomUpdate' | 'memo' | 'hook';
 type FeatureElement = ComponentFeatureAtoms | FrameWorkFeatureAtoms
     | Quantities | ComponentInternalFeatures | Interactions | ViewElements
     | CompLifecycle

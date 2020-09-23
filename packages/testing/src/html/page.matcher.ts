@@ -11,7 +11,20 @@ export interface Check extends Promise<void> {
     checkerId: number;
 }
 
-export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMatcher, isExternal = true): Promise<Check[]> {
+export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMatcher, timeout = 1000): Promise<Check[]> {
+    const startTime = Date.now();
+    let err:any;
+    while (Date.now() - startTime < timeout) {
+        try {
+            return await _htmlMatch(page, matcher, true);
+        } catch (e) {
+            err = e;
+        }
+    }
+    throw err;
+}
+
+export async function _htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMatcher, isExternal:boolean): Promise<Check[]> {
     const pending: Array<Promise<void>> = [];
     const checks: Check[] = [];
 
@@ -19,7 +32,7 @@ export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMa
         if (isHTMLMatcher(args[0])) {
             pending.push(new Promise(async added => {
                 try {
-                    const htmlChecks = await htmlMatch(page, args[0], false);
+                    const htmlChecks = await _htmlMatch(page, args[0], false);
                     checks.push(...htmlChecks);
                 } catch (e) {
                     if (e.check) {
