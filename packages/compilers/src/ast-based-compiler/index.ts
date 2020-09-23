@@ -22,6 +22,7 @@ const compiler: Compiler = {
         feature('high', 'framerate'),
         feature('dynamic', 'children'),
         feature('lifeCycle', 'api', 'afterMount', 'afterDomUpdate'),
+        feature('memo'),
     ]
 };
 

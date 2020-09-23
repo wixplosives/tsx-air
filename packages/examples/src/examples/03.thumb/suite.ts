@@ -1,8 +1,7 @@
 import { ExampleSuiteApi, Features, feature } from '@tsx-air/types';
-import { htmlMatch } from '@tsx-air/testing';
-import { delay } from '@tsx-air/utils';
+import { htmlMatch, waitMutation } from '@tsx-air/testing';
 import { expect } from 'chai';
-import {  takeRight } from 'lodash';
+import { takeRight } from 'lodash';
 
 export const features: Features = [
     feature('stateful', 'component'),
@@ -21,8 +20,10 @@ export function suite(api: ExampleSuiteApi) {
         const page = await afterLoading;
         await htmlMatch(page, onlyPreloader);
         serveImages();
-        await page.waitForResponse(`${server.baseUrl}/images/pretty-boy.jpg`);
-        await delay(50);
+        await Promise.all([
+            page.waitForResponse(`${server.baseUrl}/images/pretty-boy.jpg`),
+            waitMutation(page, 2),
+        ]);
         await htmlMatch(page, onlyImage);
     });
 
@@ -32,22 +33,25 @@ export function suite(api: ExampleSuiteApi) {
         await page.waitForResponse(`${server.baseUrl}/images/pretty-boy.jpg`);
         // Now let's update the props
         const serveImages = await server.setDelay(/.*\.jpg/, 9999999);
-        await page.evaluate(() => (window as any).app.setProp('imageId', 'weird'));
-        await delay(50);
+        await page.waitForFunction(
+            () => ((window as any).app.setProp('imageId', 'weird'), true),
+            { polling: 'mutation', timeout: 1000 }
+        );
         await htmlMatch(page, onlyPreloader);
         serveImages();
-        await page.waitForResponse(`${server.baseUrl}/images/weird.jpg`);
-        await delay(50);
+        await Promise.all([
+            page.waitForResponse(`${server.baseUrl}/images/weird.jpg`),
+            waitMutation(page)
+        ]);
         await htmlMatch(page, onlyImage);
     });
 
     it('re-evaluate memo only when imageId changes', async () => {
-        const page = await api.beforeLoading;        
+        const page = await api.beforeLoading;
         await Promise.all([
             page.waitForResponse(`${api.server.baseUrl}/meta/pretty-boy.json`),
             page.waitForResponse(`${api.server.baseUrl}/images/pretty-boy.jpg`),
         ]);
-        await page.waitFor(50);
         await htmlMatch(page, {
             name: 'title', cssQuery: '.title', textContent: 'pretty-boy', pageInstances: 1
         });
@@ -55,18 +59,17 @@ export function suite(api: ExampleSuiteApi) {
             name: 'image title', cssQuery: 'img[title="I love you dadio"]', pageInstances: 1
         });
         const lastLogged = api.server.log.length;
-        await page.evaluate(() => (window as any).app.setProp('resolution', 'low'));
-        await page.waitForResponse(`${api.server.baseUrl}/low-res/pretty-boy.jpg`);
-        await page.waitFor(50);
-        const newEntries = takeRight(api.server.log, api.server.log.length - lastLogged);
-        expect(newEntries.filter(r => r.url.includes('json')), 'metadata to be memoized').to.have.length(0);        
-        await page.evaluate(() => (window as any).app.updateProps({ imageId: 'weird', resolution: 'high' }));
-        
         await Promise.all([
+            page.waitForFunction(() => ((window as any).app.setProp('resolution', 'low'), true), { polling: 'mutation' }),
+            page.waitForResponse(`${api.server.baseUrl}/low-res/pretty-boy.jpg`)
+        ]);
+        const newEntries = takeRight(api.server.log, api.server.log.length - lastLogged);
+        expect(newEntries.filter(r => r.url.includes('json')), 'metadata to be memoized').to.have.length(0);
+        await Promise.all([
+            page.waitForFunction(() => ((window as any).app.updateProps({ imageId: 'weird', resolution: 'high' }), true)),
             page.waitForResponse(`${api.server.baseUrl}/meta/weird.json`),
             page.waitForResponse(`${api.server.baseUrl}/images/weird.jpg`),
         ]);
-        await page.waitFor(50);
         await htmlMatch(page, {
             name: 'updated image title', cssQuery: `img[title="I'm feeling much better now"]`, pageInstances: 1
         });

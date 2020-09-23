@@ -1,5 +1,5 @@
 import { ExampleSuiteApi, feature, Features } from '@tsx-air/types';
-import { htmlMatch } from '@tsx-air/testing';
+import { htmlMatch, waitAnimationFrame } from '@tsx-air/testing';
 
 export const features: Features = [
     feature('stateful', 'component'),
@@ -31,7 +31,7 @@ export function suite(api: ExampleSuiteApi) {
             for (let i = 0; i < clickB; i++) {
                 await buttonB.click();
             }
-            await page.waitFor(50);
+            await waitAnimationFrame(page);
             await htmlMatch(buttonA, {
                 textContent: `Button A (${clickA})`
             });
