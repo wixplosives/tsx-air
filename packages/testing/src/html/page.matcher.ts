@@ -24,7 +24,7 @@ export async function htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMa
     throw err;
 }
 
-export async function _htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMatcher, isExternal): Promise<Check[]> {
+export async function _htmlMatch(page: ElementHandle | FrameBase, matcher: HTMLMatcher, isExternal:boolean): Promise<Check[]> {
     const pending: Array<Promise<void>> = [];
     const checks: Check[] = [];
 

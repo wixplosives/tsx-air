@@ -9,8 +9,7 @@ let editor!: IStandaloneCodeEditor;
 let editorModel!: ITextModel;
 export async function showSourceCode({ dom, currentExample, getSelectedSource }: Model,
     onEdit: (newSource: string) => Promise<void>) {
-
-    onEdit = debounce(onEdit, 300);
+    onEdit = debounce(onEdit, 300) as any;
     const path = getSelectedSource();
     const source = getSource(await currentExample.build, path);
     if (!editor) {
