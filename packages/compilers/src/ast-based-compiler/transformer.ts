@@ -3,7 +3,7 @@ import { FileTransformerAPI } from '@tsx-air/compiler-utils';
 import { generateComponentClass } from './component/component.class';
 import { generateHookClass } from './component/hook.class';
 
-export type TransformerFactoryWithApi = (api: ()=>FileTransformerAPI) => ts.TransformerFactory<ts.SourceFile>;
+export type TransformerFactoryWithApi = (api: () => FileTransformerAPI) => ts.TransformerFactory<ts.SourceFile>;
 
 export const tsxAirValidator: TransformerFactory<ts.SourceFile> =
     ctx => {
@@ -28,6 +28,15 @@ export const componentTransformer: TransformerFactoryWithApi =
                     return generateComponentClass(comp, api());
                 }
             }
+            // if (ts.isVariableStatement(node)) {
+            //     const { hooks } = api().getAnalyzed();
+
+            //     const hookNode = node.declarationList.declarations[0].initializer!;
+            //     const hook = hooks.find(c => c.sourceAstNode === hookNode);
+            //     if (hook) {
+            //         return generateHookClass(hook, api());
+            //     }
+            // }
             return ts.visitEachChild(node, visitor, ctx);
         };
         return visitor as ts.Transformer<ts.SourceFile>;
@@ -37,12 +46,12 @@ export const hookTransformer: TransformerFactoryWithApi =
     api => ctx => {
         const visitor = (node: ts.Node): any => {
             if (ts.isVariableStatement(node)) {
-                const comps = api().getAnalyzed().compDefinitions;
+                const { hooks } = api().getAnalyzed();
 
-                const compNode = node.declarationList.declarations[0].initializer!;
-                const comp = comps.find(c => c.sourceAstNode === compNode);
-                if (comp) {
-                    return generateHookClass(comp, api());
+                const hookNode = node.declarationList.declarations[0].initializer!;
+                const hook = hooks.find(c => (c.sourceAstNode.src || c.sourceAstNode) === hookNode);
+                if (hook) {
+                    return generateHookClass(hook, api());
                 }
             }
             return ts.visitEachChild(node, visitor, ctx);

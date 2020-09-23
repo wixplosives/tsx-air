@@ -4,6 +4,7 @@ import isArray from 'lodash/isArray';
 import flatten from 'lodash/flatten';
 import { NodeMetaData } from '../ast-utils/scanner';
 import { hasError, isNotNull, isTsxAirNode } from './types.is.type';
+
 export function errorNode<T extends AnalyzedNode>(sourceAstNode: ts.Node, message: string, type: TsxErrorType = 'code'): AnalyzerResult<T> {
     const tsxAir: AnalysisError = {
         kind: 'error',
@@ -25,6 +26,7 @@ export function asAnalyzerResult<T extends AnalyzedNode>(analyzedNode: T): Analy
 
 
 export type NodesMap = Map<ts.Node, AnalyzedNode[]>;
+
 export function addToNodesMap(target: NodesMap, added: NodesMap | AnalyzedNode) {
     if (isTsxAirNode(added)) {
         addNodeToMap(target, added);

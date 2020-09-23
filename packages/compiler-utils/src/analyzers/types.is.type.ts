@@ -31,6 +31,10 @@ export function isCompDefinition(node: any): node is analyzed.CompDefinition {
     return node?.kind === 'CompDefinition';
 }
 
+export function isHookDef(node: any): node is analyzed.HookDefinition {
+    return node?.kind === 'HookDefinition';
+}
+
 export function isTsxFile(node: any): node is analyzed.TsxFile {
     return node?.kind === 'file';
 }

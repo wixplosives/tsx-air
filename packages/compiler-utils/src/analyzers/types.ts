@@ -40,6 +40,7 @@ export interface NodeWithVariables<T extends ts.Node = ts.Node> extends Analyzed
 export interface TsxFile extends NodeWithVariables<ts.SourceFile> {
     kind: 'file';
     compDefinitions: CompDefinition[];
+    hooks: HookDefinition[];
     imports: Import[];
     reExports: ReExport[];
 }
