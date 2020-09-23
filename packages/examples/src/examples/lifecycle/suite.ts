@@ -9,15 +9,14 @@ export const features: Features = [
 ];
 
 export function suite(api: ExampleSuiteApi) {
-    const updateDelay = process.env.CI ? 400 : 200;
-    const longDelay = updateDelay * (process.env.CI ? 4 : 2);
     const setClientTime = (page: Page, time: string) => {
-        return page.evaluate((t: string) => {
+        return page.waitForFunction((t: string) => {
             // @ts-ignore
             globalThis.Date = class {
                 toTimeString = () => t;
             };
-        }, time);
+            return true;
+        }, { polling: 'mutation', timeout: 1000 }, time);
     };
 
     it('calls the afterMounted callback', async () => {
@@ -29,7 +28,6 @@ export function suite(api: ExampleSuiteApi) {
             }
         });
         await setClientTime(page, 'MOCK TIME');
-        await page.waitFor(updateDelay);
         await htmlMatch(page, {
             cssQuery: '.time',
             textContent: {
@@ -38,7 +36,7 @@ export function suite(api: ExampleSuiteApi) {
             }
         });
     });
-    
+
     it('passes the dom root to afterMounted callback', async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, {
@@ -55,8 +53,7 @@ export function suite(api: ExampleSuiteApi) {
                 contains: 'Title updated 1 times'
             }
         });
-        await page.evaluate(() => (window as any).app.updateProps({ title: 'changed' }));
-        await page.waitFor(updateDelay);
+        await page.waitForFunction(() => ((window as any).app.updateProps({ title: 'changed' }), true), { polling: 'mutation', timeout: 1000 });
         await htmlMatch(page, {
             cssQuery: 'h3',
             textContent: {
@@ -68,16 +65,14 @@ export function suite(api: ExampleSuiteApi) {
     it('passes consecutiveChanges argument to afterDomUpdate callback', async () => {
         const page = await api.afterLoading;
         await setClientTime(page, 'MOCK TIME');
-        await page.waitFor(longDelay);
         await htmlMatch(page, {
             cssQuery: '.any-updated',
-            name:'total updates',
+            name: 'total updates',
             textContent: {
                 contains: 'Total updates: 20'
             }
         });
         await setClientTime(page, 'NEW MOCK TIME');
-        await page.waitFor(longDelay);
         await htmlMatch(page, {
             cssQuery: '.any-updated',
             textContent: {

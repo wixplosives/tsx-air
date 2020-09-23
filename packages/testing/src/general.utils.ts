@@ -48,7 +48,6 @@ const waitOnce = (page: Page, polling: 'raf' | 'mutation', count: number, timeou
         if (!--(window as any)[id]) {
             delete (window as any)[id];
         }
-        console.log(!window[id]);
         return !(window as any)[id];
     },
         { polling, timeout },
