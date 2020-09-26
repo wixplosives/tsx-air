@@ -1,9 +1,7 @@
+import { TransformerFactoryWithApi } from '@tsx-air/compiler-utils';
 import ts, { TransformerFactory } from 'typescript';
-import { FileTransformerAPI } from '@tsx-air/compiler-utils';
 import { generateComponentClass } from './component/component.class';
 import { generateHookClass } from './component/hook.class';
-
-export type TransformerFactoryWithApi = (api: () => FileTransformerAPI) => ts.TransformerFactory<ts.SourceFile>;
 
 export const tsxAirValidator: TransformerFactory<ts.SourceFile> =
     ctx => {
@@ -28,15 +26,6 @@ export const componentTransformer: TransformerFactoryWithApi =
                     return generateComponentClass(comp, api());
                 }
             }
-            // if (ts.isVariableStatement(node)) {
-            //     const { hooks } = api().getAnalyzed();
-
-            //     const hookNode = node.declarationList.declarations[0].initializer!;
-            //     const hook = hooks.find(c => c.sourceAstNode === hookNode);
-            //     if (hook) {
-            //         return generateHookClass(hook, api());
-            //     }
-            // }
             return ts.visitEachChild(node, visitor, ctx);
         };
         return visitor as ts.Transformer<ts.SourceFile>;
@@ -49,7 +38,7 @@ export const hookTransformer: TransformerFactoryWithApi =
                 const { hooks } = api().getAnalyzed();
 
                 const hookNode = node.declarationList.declarations[0].initializer!;
-                const hook = hooks.find(c => (c.sourceAstNode.src || c.sourceAstNode) === hookNode);
+                const hook = hooks.find(c => c.sourceAstNode === hookNode);
                 if (hook) {
                     return generateHookClass(hook, api());
                 }

@@ -4,7 +4,6 @@ import { analyze } from '../../analyzers';
 import { cAccess, cImport, ImportDefinition } from '.';
 import { asCode, asString } from '../..';
 import { uniqBy } from 'lodash';
-import { TransformerFactoryWithApi } from 'packages/compilers/src/ast-based-compiler/transformer';
 
 export interface FileTransformerAPI {
     prependStatements(...statements: ts.Statement[]): void;
@@ -17,6 +16,9 @@ export interface FileTransformerAPI {
     tsNodeToAirNodes<T extends ts.Node>(node: T): Array<TsNodeToAirNode<T>> | undefined;
     apply(src: ts.SourceFile): ts.SourceFile;
 }
+
+
+export type TransformerFactoryWithApi = (api: () => FileTransformerAPI) => ts.TransformerFactory<ts.SourceFile>;
 
 export const transformerApiProvider: (transformers: TransformerFactoryWithApi[]) =>
     Array<ts.TransformerFactory<ts.SourceFile>> = t => {
