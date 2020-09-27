@@ -1,20 +1,16 @@
 import ts from 'typescript';
-import { isJsxExpression, asCode, getNodeSrc, asAst, setNodeSrc, cloneDeep, findUsedVariables, JsxExpression, CompDefinition } from '@tsx-air/compiler-utils';
+import { isJsxExpression, asCode, getNodeSrc, asAst, setNodeSrc, cloneDeep, JsxExpression } from '@tsx-air/compiler-utils';
 import { safely } from '@tsx-air/utils';
-import { getDirectExpressions, getRecursiveMapPaths } from '../helpers';
+import { getDirectExpressions } from '../helpers';
 import { toCanonicalString } from '../fragment/common';
 import { findJsxComp } from '../fragment/virtual.comp';
 import { readNodeFuncName } from './names';
 import { CompScriptTransformCtx } from '.';
-import { FragmentData } from '../fragment/jsx.fragment';
 import { chain } from 'lodash';
+export { enrichLifeCycleApiFunc } from './lifecycle.api';
 
-interface SVElemCtx {
-    comp: CompDefinition;
-    fragments: FragmentData[];
-}
-export function swapVirtualElements(ctx: SVElemCtx, n: ts.Node, allowNonFrags = false): ts.Expression | undefined {
-    const { comp, fragments } = ctx;
+export function swapVirtualElements(ctx: CompScriptTransformCtx, n: ts.Node, allowNonFrags = false): ts.Expression | undefined {
+    const { code: comp, fragments } = ctx;
     if (ts.isParenthesizedExpression(n)) {
         return swapVirtualElements(ctx, n.expression);
     }
@@ -50,63 +46,8 @@ export function swapVirtualElements(ctx: SVElemCtx, n: ts.Node, allowNonFrags = 
     return undefined;
 }
 
-export const enrichLifeCycleApiFunc = (ctx: CompScriptTransformCtx, node: ts.Node) => {
-    const lifeCycleFuncsWithFilter = new Set(['when', 'memo', 'afterDomUpdate']);
-    const lifeCycleFuncsWithoutFilter = new Set(['store', 'afterMount', 'use']);
-
-    if ((ts.isExpressionStatement(node) && ts.isCallExpression(node.expression))
-        || (ts.isVariableDeclaration(node) && node.initializer && ts.isCallExpression(node.initializer))) {
-        const call = (ts.isExpressionStatement(node) ? node.expression : node.initializer) as ts.CallExpression;
-        const apiCall = asCode(call.expression);
-        if (lifeCycleFuncsWithFilter.has(apiCall) || lifeCycleFuncsWithoutFilter.has(apiCall)) {
-            ctx.apiCalls++;
-            const callId = ts.isVariableDeclaration(node) ? JSON.stringify(asCode(node.name)) : ctx.apiCalls;
-            if (ctx.allowLifeCycleApiCalls) {
-                const isActionFirstArg = !!readNodeFuncName(call.arguments[0]);
-                const actionName = readNodeFuncName(call.arguments[isActionFirstArg ? 0 : 1]);
-                const params = [`this`, callId, actionName ? `this.${actionName}` : asCode(call.arguments[0]),];
-                if (lifeCycleFuncsWithFilter.has(apiCall)) {
-                    params.push(getDependencies(call, isActionFirstArg, apiCall !== 'afterDomUpdate'));
-                }
-                params.push(...getOtherArgs(call, isActionFirstArg));
-
-                const enrichedApiCall = asAst(`${apiCall}(${params.join(',')})`) as ts.Expression;
-                return ts.isVariableDeclaration(node)
-                    ? ts.createVariableDeclaration(node.name, undefined, enrichedApiCall)
-                    : enrichedApiCall;
-
-            } else {
-                throw new Error(`Invalid ${apiCall} call: should only be used component body (i.e. not in functions)`);
-            }
-        }
-    }
-    return undefined;
-};
-
-function getDependencies(call: ts.CallExpression, isActionFirstArg: boolean, findVars: boolean) {
-    if (isActionFirstArg) {
-        if (!findVars) {
-            return 'false';
-        }
-        const vars = findUsedVariables(call.arguments[0]);
-        Object.keys(vars.defined).forEach(k => delete vars.read[k]);
-        const read = getRecursiveMapPaths(vars.read);
-
-        return `[${read.join(',')}]`;
-    }
-    return ts.isArrayLiteralExpression(call.arguments[0])
-        ? asCode(call.arguments[0])
-        : `[${asCode(call.arguments[0])}]`;
-}
-
-const getOtherArgs = (call: ts.CallExpression, isActionFirstArg: boolean) =>
-    call.arguments.filter((_, index) =>
-        // @ts-ignore
-        index > (1 & !isActionFirstArg)).map(arg =>
-            asCode(arg));
-
 export function swapVarDeclarations(ctx: CompScriptTransformCtx, n: ts.Node) {
-    const { comp, declaredVars } = ctx;
+    const { code: comp, declaredVars } = ctx;
     if (ts.isVariableStatement(n)) {
         const declarations = chain(n.declarationList.declarations)
             .filter(declaration => !isFunc(declaration))
@@ -156,7 +97,7 @@ export const swapLambdas = (_ctx: CompScriptTransformCtx, n: ts.Node) => {
     return undefined;
 };
 
-export const toFragSafe = (ctx: SVElemCtx, exp: JsxExpression): string =>
+export const toFragSafe = (ctx: CompScriptTransformCtx, exp: JsxExpression): string =>
     asCode(cloneDeep(exp.sourceAstNode.expression!, undefined, n => swapVirtualElements(ctx, n)) as ts.Expression);
 
 

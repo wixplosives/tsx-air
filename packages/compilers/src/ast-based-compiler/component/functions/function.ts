@@ -54,7 +54,7 @@ function generateMethodBind(func: FuncDefinition) {
 
 export interface CompScriptTransformCtx {
     apiCalls: number;
-    comp: CompDefinition;
+    code: CompDefinition;
     allowLifeCycleApiCalls: boolean;
     fragments: FragmentData[];
     declaredVars: Set<string>;
@@ -66,7 +66,7 @@ const createCompScriptTransformCtx = (comp: CompDefinition, fragments: FragmentD
     const ctx: CompScriptTransformCtx = {
         allowLifeCycleApiCalls,
         apiCalls: 0,
-        comp, fragments, declaredVars: declaredVars!,
+        code: comp, fragments, declaredVars: declaredVars!,
         parser: (s: ts.Node, skipArrow?: any) => {
             const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n =>
                 swapVarDeclarations(ctx, n) ||

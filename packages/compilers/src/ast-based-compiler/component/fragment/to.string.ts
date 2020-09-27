@@ -13,7 +13,7 @@ export const generateToString = (fragment: FragmentData) => {
     const template =
         jsxToStringTemplate(root.sourceAstNode, [
             n => n !== root.sourceAstNode
-                ? swapVirtualElements({ comp, fragments }, n, true)
+                ? swapVirtualElements({ code: comp, fragments }, n, true)
                 : undefined,
             (n: ts.Node) => {
                 if (ts.isJsxAttributes(n) && n.properties.some(
