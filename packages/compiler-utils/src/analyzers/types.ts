@@ -11,7 +11,8 @@ export type AnalyzedNodeType = 'CompDefinition' | 'JsxFragment' | 'HookDefinitio
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
     'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' |
     'exportSpecifier' | 'reExport' | 'funcDefinition' | 'storeDefinition' |
-    'Namespace' | 'UsedNamespaceProperty' | 'Return'
+    'Namespace' | 'UsedNamespaceProperty' | 'Return' |
+    'Parameter'
     ;
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
@@ -77,9 +78,15 @@ export interface ReExport extends AnalyzedNode<ts.ExportDeclaration> {
 export interface FuncDefinition extends NodeWithVariables<ts.FunctionExpression | ts.ArrowFunction> {
     kind: 'funcDefinition';
     name?: string;
-    arguments: string[];
+    parameters: Parameter[];
     jsxRoots: JsxRoot[];
     definedFunctions: FuncDefinition[];
+}
+
+export interface Parameter extends AnalyzedNode<ts.ParameterDeclaration> {
+    kind: 'Parameter';
+    name: string;
+    default?: string;
 }
 
 export interface StoreDefinition extends Namespace {
@@ -87,7 +94,15 @@ export interface StoreDefinition extends Namespace {
     keys: string[];
 }
 
-export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
+export interface UserCode extends NodeWithVariables<ts.CallExpression> {
+    name: string;
+    functions: FuncDefinition[];
+    stores: StoreDefinition[];
+    volatileVariables: string[];
+    returns: Return[];
+}
+
+export interface CompDefinition extends UserCode {
     kind: 'CompDefinition';
     name: string;
     propsIdentifier?: string;
@@ -98,8 +113,9 @@ export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
     returns: Return[];
 }
 
-export interface HookDefinition extends NodeWithVariables<ts.CallExpression> {
+export interface HookDefinition extends UserCode {
     kind: 'HookDefinition';
+    parameters: Parameter[];
     name: string;
     jsxRoots: JsxRoot[];
     functions: FuncDefinition[];
