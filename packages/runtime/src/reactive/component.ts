@@ -5,8 +5,8 @@ import { RenderTarget, TsxComponentApi } from '../api/component.external';
 import { Runtime, WithUserCode } from '..';
 
 export type AfterUnmountCb = () => void;
-export type AfterMountCb = (dom: HTMLElement|Text) => AfterUnmountCb | void;
-export type AfterUpdateCb = (dom: HTMLElement|Text, consecutiveDomUpdates: number) => void;
+export type AfterMountCb = (dom: HTMLElement | Text) => AfterUnmountCb | void;
+export type AfterUpdateCb = (dom: HTMLElement | Text, consecutiveDomUpdates: number) => void;
 
 export class Component extends Displayable implements WithUserCode<VirtualElement> {
     static is(x: any): x is Component {
@@ -63,7 +63,7 @@ export class Component extends Displayable implements WithUserCode<VirtualElemen
     }
 
     userCode(): VirtualElement {
-        throw new Error(`not implemented`);
+        throw new Error(`component "userCode" not implemented: ` + this.constructor.name);
     }
 
     hydrate(preRendered: VirtualElement<any>, target: HTMLElement): void {

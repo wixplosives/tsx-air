@@ -46,7 +46,7 @@ export class Hook<T = any> extends Reactive implements WithUserCode<any> {
     }
 
     userCode(): T {
-        throw new Error(`not implemented`);
+        throw new Error(`hook "userCode" not implemented: ` + this.constructor.name);
     }
 
     mounted() {
