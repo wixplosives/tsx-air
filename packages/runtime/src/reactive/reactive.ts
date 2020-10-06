@@ -2,7 +2,9 @@ import { Component } from './component';
 import { Store, Runtime, Observable } from '..';
 import { Hook } from './hook';
 
-
+export interface WithUserCode<T> {
+    userCode(): T;
+}
 
 export class Reactive {
     get owner(): Component | undefined {

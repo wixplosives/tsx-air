@@ -1,11 +1,22 @@
 import * as ts from 'typescript';
-import { Analyzer, FuncDefinition } from './types';
+import { Analyzer, FuncDefinition, Parameter } from './types';
 import { errorNode, aggregateAstNodeMapping, addToNodesMap } from './types.helpers';
 import { findUsedVariables } from './find-used-variables';
 import { scan } from '../ast-utils/scanner';
 import { findFunction } from '../visitors/functions';
 import { jsxRoots } from './jsxroot';
 import { isTsFunction, isTsJsxRoot } from './types.is.type';
+import { asCode } from '..';
+
+export const funcParams = (func: ts.FunctionLikeDeclaration) =>
+    func.parameters.map<Parameter>(p => ({
+        kind: 'Parameter',
+        name: asCode(p.name),
+        sourceAstNode: p,
+        default: p.initializer
+            ? asCode(p.initializer)
+            : undefined
+    }));
 
 export const funcDefinition: Analyzer<FuncDefinition> = astNode => {
     if (!isTsFunction(astNode)) {
@@ -22,7 +33,7 @@ export const funcDefinition: Analyzer<FuncDefinition> = astNode => {
         variables,
         aggregatedVariables,
         definedFunctions: functions(astNode.body),
-        arguments: astNode.parameters.map(param => param.name.getText()),
+        parameters: funcParams(astNode),
         jsxRoots: jsxRoots(astNode)
     };
     const astToTsxAir = aggregateAstNodeMapping(funcDef.jsxRoots);
@@ -32,7 +43,6 @@ export const funcDefinition: Analyzer<FuncDefinition> = astNode => {
         astToTsxAir
     };
 };
-
 
 export const functions = (astNode: ts.Node) => {
     return scan(astNode, findFunction)

@@ -2,13 +2,13 @@ import { VirtualElement } from './virtual.element';
 import { Displayable } from './displayable';
 import { store } from './store';
 import { RenderTarget, TsxComponentApi } from '../api/component.external';
-import { Runtime } from '..';
+import { Runtime, WithUserCode } from '..';
 
 export type AfterUnmountCb = () => void;
 export type AfterMountCb = (dom: HTMLElement|Text) => AfterUnmountCb | void;
 export type AfterUpdateCb = (dom: HTMLElement|Text, consecutiveDomUpdates: number) => void;
 
-export class Component extends Displayable {
+export class Component extends Displayable implements WithUserCode<VirtualElement> {
     static is(x: any): x is Component {
         return x && x instanceof Component;
     }
@@ -59,10 +59,10 @@ export class Component extends Displayable {
     }
 
     toString(): string {
-        return this.$rt.renderer.toString(this.preRender());
+        return this.$rt.renderer.toString(this.userCode());
     }
 
-    preRender(): VirtualElement<any> {
+    userCode(): VirtualElement {
         throw new Error(`not implemented`);
     }
 

@@ -104,10 +104,10 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
                     instance.stores.$props.a = 0;
                     instance.stores.$props.a = 1;
                     expect(onNextFrame).to.have.length(1);
-                    sinon.spy(instance, 'preRender');
+                    sinon.spy(instance, 'userCode');
                     onNextFrame[0](0);
                     // @ts-ignore
-                    expect(instance.preRender.calledOnce).to.equal(true);
+                    expect(instance.userCode.calledOnce).to.equal(true);
                 });
             });
         });

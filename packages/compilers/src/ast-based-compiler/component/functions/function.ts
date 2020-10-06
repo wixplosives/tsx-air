@@ -9,9 +9,10 @@ import { swapVirtualElements, enrichLifeCycleApiFunc, swapLambdas, handleArrowFu
 export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]) {
     assignFunctionNames(comp);
     yield generateRender(comp);
-    yield generatePreRender(comp, fragments);
+    yield generateUserCode(comp, fragments);
     for (const func of comp.functions) {
-        yield generateMethod(comp, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.arguments);
+        // TODO replace with Parameter[]
+        yield generateMethod(comp, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.parameters.map(a => a.name));
         yield generateMethodBind(func);
     }
 }
@@ -21,14 +22,14 @@ function generateRender(comp: CompDefinition) {
         [asAst(`return Component._render(getInstance(), ${comp.name}, p, t, a);`, true) as ts.Statement], true);
 }
 
-function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
+function generateUserCode(comp: CompDefinition, fragments: FragmentData[]) {
     const body = get(comp.sourceAstNode.arguments[0], 'body');
     const statements = get(body, 'statements') || [body];
     const modified = [
         ...addNamedFunctions(comp),
         ...parseStatements(comp, statements, fragments, true)
     ];
-    return asMethod(comp, 'preRender', [], modified, true);
+    return asMethod(comp, 'userCode', [], modified, true);
 }
 
 function parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments: FragmentData[], isPreRender: boolean) {

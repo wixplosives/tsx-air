@@ -18,7 +18,7 @@ describe('TSXAir component analyzer: functions', () => {
 
         const aHandler = comp.functions[0];
         const aRepeater = comp.functions[1];
-        expect(aHandler.arguments).to.eql([]);
+        expect(aHandler.parameters).to.eql([]);
         expect(aHandler.jsxRoots).to.eql([]);
         expect(withNoRefs(aHandler.variables)).to.eql({
             accessed: {
@@ -42,7 +42,8 @@ describe('TSXAir component analyzer: functions', () => {
             defined: {},
             modified: {}
         });
-        expect(aRepeater.arguments).to.eql(['src']);
+        expect(aRepeater.parameters[0].name).to.eql('src');
+        expect(aRepeater.parameters).to.have.length(1);
         expect(aRepeater.jsxRoots.length).to.eql(1);
         expect(withNoRefs(aRepeater.variables)).to.eql({
             accessed: {},

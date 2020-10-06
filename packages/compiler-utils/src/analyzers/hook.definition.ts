@@ -4,7 +4,7 @@ import { addToNodesMap, aggregateAstNodeMapping, errorNode } from './types.helpe
 import { getStoresDefinitions } from './store-definition';
 import { asCode } from '..';
 import { jsxRoots } from './jsxroot';
-import { functions } from './func-definition';
+import { funcParams, functions } from './func-definition';
 import { findReturns } from './find.return';
 
 export const hookDefinition: Analyzer<HookDefinition> = (astNode: ts.Node) => {
@@ -12,17 +12,17 @@ export const hookDefinition: Analyzer<HookDefinition> = (astNode: ts.Node) => {
         return errorNode<HookDefinition>(astNode, 'Not a hook definition', 'internal');
     }
 
-    const compFunc = astNode.arguments[0];
+    const hookFunc = astNode.arguments[0];
     if (astNode.arguments.length !== 1 ||
-        !(isTsFunction(compFunc))
+        !(isTsFunction(hookFunc))
     ) {
         return errorNode<HookDefinition>(astNode, 'Hook must be called with a single (function) argument', 'code');
     }
     const name = asCode((astNode.parent as any).name);
-    const variables = findUsedVariables(compFunc, node => isTsJsxRoot(node) || isTsFunction(node));
-    const aggregatedVariables = findUsedVariables(compFunc);
-    const propsName = compFunc.parameters[0]?.name?.getText();
-    const stores = getStoresDefinitions(compFunc.body);
+    const variables = findUsedVariables(hookFunc, node => isTsJsxRoot(node) || isTsFunction(node));
+    const aggregatedVariables = findUsedVariables(hookFunc);
+    const propsName = hookFunc.parameters[0]?.name?.getText();
+    const stores = getStoresDefinitions(hookFunc.body);
     const propsIdentifier = aggregatedVariables.accessed[propsName]
         ? propsName : undefined;
     const volatileVariables = Object.keys(variables.defined).filter(ns =>
@@ -30,17 +30,18 @@ export const hookDefinition: Analyzer<HookDefinition> = (astNode: ts.Node) => {
         !stores.some(s => s.name === ns)
     );
 
-    const returns = findReturns(compFunc);
+    const returns = findReturns(hookFunc);
 
     const tsxAir: HookDefinition = {
         kind: 'HookDefinition',
         name,
+        parameters: funcParams(hookFunc),
         aggregatedVariables,
         variables,
         volatileVariables,
         sourceAstNode: astNode,
         jsxRoots: jsxRoots(astNode),
-        functions: functions(compFunc.body),
+        functions: functions(hookFunc.body),
         stores,
         returns
     };

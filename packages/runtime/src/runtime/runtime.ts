@@ -5,9 +5,6 @@ import { Component, Reactive, Hook, Store } from '../reactive';
 import { Registry } from '../internals/registry';
 
 export class Runtime {
-    get processing() {
-        return this.beingProcessed[0];
-    }
     readonly renderer = new Renderer(this);
     readonly api = new ComponentServices(this);
     readonly updater = new ViewUpdater(this);
@@ -26,8 +23,7 @@ export class Runtime {
     readonly HTMLElement: typeof HTMLElement;
     readonly Text: typeof Text;
     readonly Comment: typeof Comment;
-
-    private beingProcessed: Component[] = [];
+    private readonly hooksCache = new Map<Hook, any>();
 
     constructor(
         readonly window: Window = globalThis.window!,
@@ -44,9 +40,20 @@ export class Runtime {
     }
 
     preRender(comp: Component) {
-        this.beingProcessed.unshift(comp);
-        const result = comp.preRender();
-        this.beingProcessed.shift();
-        return result;
+        return comp.userCode();
+    }
+
+    getHookValue(hook: Hook) {
+        if (this.hooksCache.has(hook)) {
+            return this.hooksCache.get(hook);
+        } else {
+            const val = hook.userCode();
+            this.hooksCache.set(hook, val);
+            return val;
+        }
+    }
+
+    removeHookCache(hook: Hook) {
+        this.hooksCache.delete(hook);
     }
 }

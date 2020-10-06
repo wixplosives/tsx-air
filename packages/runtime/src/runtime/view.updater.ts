@@ -37,11 +37,10 @@ export class ViewUpdater {
         }
 
         if (Hook.is(instance)) {
+            this.runtime.removeHookCache(instance);
             this.invalidate(instance.owner!);
             return;
         }
-
-
     };
 
     validate = (instance: Component) => {

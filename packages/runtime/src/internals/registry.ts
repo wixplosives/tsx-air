@@ -5,7 +5,7 @@ export class Registry<T> {
     constructor(readonly afterRegister: (instance: any, id: string, item: T) => void) {
     }
 
-    get<D>(instance: any, id: string, defaultValue?:D): T | D {
+    get<D = T>(instance: any, id: string, defaultValue?: D): T | D {
         const instanceStores = this.items.get(instance);
         return (instanceStores && instanceStores[id]) || defaultValue as D;
     }

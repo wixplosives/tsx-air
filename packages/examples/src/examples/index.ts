@@ -7,7 +7,6 @@ export const shouldBeCompiled = [
     // '06.factory',
     'lifecycle',
     'hooks'
-
 ];
 
 export const base = __dirname;

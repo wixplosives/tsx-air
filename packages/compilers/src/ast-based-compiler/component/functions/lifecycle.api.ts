@@ -65,10 +65,10 @@ const use: Enricher = (_use, callId, call, node) => {
 const lifeCycleApiArgsManipulators: Record<LifeCycleApiFunctions, Enricher> = {
     'when': withOptionalFilter,
     'memo': withOptionalFilter,
-    'afterDomUpdate': afterDomUpdate,
+    afterDomUpdate,
     'store': noFilter,
     'afterMount': noFilter,
-    'use': use
+    use
 };
 
 function getDependencies(call: ts.CallExpression, isActionFirstArg: boolean, findVars: boolean) {
