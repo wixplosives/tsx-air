@@ -1,4 +1,4 @@
-import { CompDefinition, FuncDefinition, cloneDeep, cMethod, cProperty, asAst, cFunction } from '@tsx-air/compiler-utils';
+import { CompDefinition, FuncDefinition, cloneDeep, cMethod, cProperty, asAst, cFunction, UserCode, isCompDefinition } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { setupClosure } from '../helpers';
 import { FragmentData } from '../fragment/jsx.fragment';
@@ -6,13 +6,15 @@ import { get } from 'lodash';
 import { assignFunctionNames, readFuncName, addNamedFunctions, namedFuncs } from './names';
 import { swapVirtualElements, enrichLifeCycleApiFunc, swapLambdas, handleArrowFunc, swapVarDeclarations } from './swappers';
 
-export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]) {
-    assignFunctionNames(comp);
-    yield generateRender(comp);
-    yield generateUserCode(comp, fragments);
-    for (const func of comp.functions) {
+export function* generateMethods(code: UserCode, fragments: FragmentData[]) {
+    assignFunctionNames(code);
+    if (isCompDefinition(code)) {
+        yield generateRender(code);
+    }
+    yield generateUserCode(code, fragments);
+    for (const func of code.functions) {
         // TODO replace with Parameter[]
-        yield generateMethod(comp, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.parameters.map(a => a.name));
+        yield generateMethod(code, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.parameters.map(a => a.name));
         yield generateMethodBind(func);
     }
 }
@@ -22,24 +24,23 @@ function generateRender(comp: CompDefinition) {
         [asAst(`return Component._render(getInstance(), ${comp.name}, p, t, a);`, true) as ts.Statement], true);
 }
 
-function generateUserCode(comp: CompDefinition, fragments: FragmentData[]) {
-    const body = get(comp.sourceAstNode.arguments[0], 'body');
+function generateUserCode(code: UserCode, fragments: FragmentData[]) {
+    const body = get(code.sourceAstNode.arguments[0], 'body');
     const statements = get(body, 'statements') || [body];
     const modified = [
-        ...addNamedFunctions(comp),
-        ...parseStatements(comp, statements, fragments, true)
+        ...addNamedFunctions(code),
+        ...parseStatements(code, statements, fragments, true)
     ];
-    return asMethod(comp, 'userCode', [], modified, true);
+    return asMethod(code, 'userCode', [], modified, true);
 }
 
-function parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments: FragmentData[], isPreRender: boolean) {
+function parseStatements(code: UserCode, statements: ts.Statement[], fragments: FragmentData[], isPreRender: boolean) {
     const declaredVars = new Set<string>();
-    const { parser } = createCompScriptTransformCtx(comp, fragments, declaredVars, isPreRender);
+    const { parser } = createScriptTransformCtx(code, fragments, declaredVars, isPreRender);
     const parsed = statements.map(parser);
     if (isPreRender) {
         if (declaredVars.size) {
-            parsed.splice(-1, 0, asAst(`this.volatile={${
-                [...declaredVars, ...namedFuncs(comp)].join(',')
+            parsed.splice(-1, 0, asAst(`this.volatile={${[...declaredVars, ...namedFuncs(code)].join(',')
                 }}`) as ts.Statement);
         }
     }
@@ -55,19 +56,19 @@ function generateMethodBind(func: FuncDefinition) {
 
 export interface CompScriptTransformCtx {
     apiCalls: number;
-    code: CompDefinition;
+    code: UserCode;
     allowLifeCycleApiCalls: boolean;
     fragments: FragmentData[];
     declaredVars: Set<string>;
     parser: (s: ts.Node, skipArrow?: any) => ts.Statement;
 }
 
-const createCompScriptTransformCtx = (comp: CompDefinition, fragments: FragmentData[], declaredVars?: Set<string>, allowLifeCycleApiCalls: boolean = false) => {
+const createScriptTransformCtx = (code: UserCode, fragments: FragmentData[], declaredVars?: Set<string>, allowLifeCycleApiCalls: boolean = false) => {
     declaredVars = declaredVars || new Set<string>();
     const ctx: CompScriptTransformCtx = {
         allowLifeCycleApiCalls,
         apiCalls: 0,
-        code: comp, fragments, declaredVars: declaredVars!,
+        code, fragments, declaredVars: declaredVars!,
         parser: (s: ts.Node, skipArrow?: any) => {
             const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n =>
                 swapVarDeclarations(ctx, n) ||
@@ -82,14 +83,14 @@ const createCompScriptTransformCtx = (comp: CompDefinition, fragments: FragmentD
     return ctx;
 };
 
-function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragments: FragmentData[], args: string[]) {
+function generateMethod(code: UserCode, name: string, body: ts.Node, fragments: FragmentData[], args: string[]) {
     const statements = get(body, 'statements') || [body];
-    const modified = [...parseStatements(comp, statements, fragments, false)];
-    return asMethod(comp, name, args, modified);
+    const modified = [...parseStatements(code, statements, fragments, false)];
+    return asMethod(code, name, args, modified);
 }
 
-const asMethod = (comp: CompDefinition, name: string, args: string[], statements: ts.Statement[], isPreRender = false) => cMethod(name, args, [
-    ...setupClosure(comp, statements, isPreRender),
+const asMethod = (code: UserCode, name: string, args: string[], statements: ts.Statement[], isPreRender = false) => cMethod(name, args, [
+    ...setupClosure(code, statements, isPreRender),
     ...statements]);
 
 export const asFunction = (method: ts.MethodDeclaration) =>
