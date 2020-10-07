@@ -15,7 +15,7 @@ export function generateHydrate(fragment: FragmentData) {
     hydrateElements(bindings, fragment);
 
     return cMethod('hydrate', ['_', 't'], [
-        ...setupClosure(fragment.comp, bindings, false, 'this.owner'),
+        ...setupClosure(fragment.code, bindings, false, 'this.owner'),
         propsFromInstance,
         ...bindings,
         asAst('this.ctx.root=t') as ts.Statement

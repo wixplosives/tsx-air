@@ -3,7 +3,7 @@ import { Dispatcher } from '../internals/dispatcher';
 import { Runtime } from '..';
 
 export function store<T extends StoreData>(instance: { $rt: Runtime }, id: string, initialState: T): Store<T> {
-    const {$rt:{stores}} = instance;
+    const { $rt: { stores } } = instance;
     const existingStore = stores.get(instance, id);
     if (existingStore) {
         return existingStore;

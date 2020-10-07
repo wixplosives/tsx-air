@@ -38,7 +38,8 @@ export class ViewUpdater {
 
         if (Hook.is(instance)) {
             this.runtime.removeHookCache(instance);
-            this.invalidate(instance.owner!);
+            this.invalidate(instance.parent!);
+            // this.invalidate(instance.owner!);
             return;
         }
     };

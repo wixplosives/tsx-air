@@ -28,7 +28,7 @@ export function getDirectDependencies(code: UserCode, scope: UsedVariables, igno
     code.volatileVariables.filter(_usedInScope).forEach(v =>
         add(used, { [v]: scope.accessed[v] }, 'volatile'));
 
-    if (isCompDefinition(code) &&_usedInScope(code.propsIdentifier)) {
+    if (isCompDefinition(code) && _usedInScope(code.propsIdentifier)) {
         add(used, { $props: scope.read[code.propsIdentifier!] }, 'stores');
     }
 
@@ -151,6 +151,7 @@ export function* setupClosure(code: UserCode, scope: ts.Node[] | UsedVariables, 
         delete used.read[k];
         delete used.accessed[k];
     });
+    yield* destructureParams(code, used);
     yield* addToClosure(code, getDirectDependencies(code, used, true), isPreRender, storesTarget);
     if (!isPreRender) {
         yield* addToClosure(code, Object.keys(used.executed).filter(
@@ -170,6 +171,16 @@ export function* addToClosure(code: UserCode, used: UsedInScope | string[], isPr
             yield* getClosureVolatile(used, storesTarget);
         } else {
             yield* getClosureProps(code, used, storesTarget);
+        }
+    }
+}
+
+function* destructureParams(code: UserCode, used: UsedVariables) {
+    if (isHookDef(code)) {
+        const args = code.parameters.map(p => p.name);
+        if (args.length && args.some(a => 
+            used.accessed[a])) {
+            yield asAst(`const [${args.join(',')}] = this.stores.$props`) as ts.Statement;
         }
     }
 }

@@ -13,7 +13,7 @@ export const enrichLifeCycleApiFunc = (ctx: CompScriptTransformCtx, node: ts.Nod
         if (argsManipulator) {
             ctx.apiCalls++;
             const callId = ts.isVariableDeclaration(node) ? JSON.stringify(asCode(node.name)) : ctx.apiCalls;
-            if (ctx.allowLifeCycleApiCalls) {
+            if (ctx.isMainUserCode) {
                 return argsManipulator(apiCall, '' + callId, call, node);
             } else {
                 throw new Error(`Invalid ${apiCall} call: should only be used component body (i.e. not in functions)`);

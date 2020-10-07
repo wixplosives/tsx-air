@@ -14,7 +14,11 @@ export function use(instance: Reactive, id: string, HookType: new (p: Reactive) 
         hooks.register(instance, id, hook);
     }
     hook.stores.$props.$set(args);
-    return $rt.getHookValue(hook);
+    const ret = $rt.getHookValue(hook);
+    if (ret?.$subscribe) {
+        ret.$subscribe(instance.storeChanged);
+    }
+    return ret;
 }
 
 export class Hook<T = any> extends Reactive implements WithUserCode<any> {
@@ -31,7 +35,7 @@ export class Hook<T = any> extends Reactive implements WithUserCode<any> {
 
     constructor(parent: Reactive) {
         super(parent, parent.$rt);
-        this.stores.$props = store(this, '$props', {});
+        this.stores.$props = store(this, '$props', []);
     }
 
     updated() {

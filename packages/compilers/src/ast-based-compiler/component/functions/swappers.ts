@@ -50,7 +50,7 @@ export function swapVarDeclarations(ctx: CompScriptTransformCtx, n: ts.Node) {
     const { code: comp, declaredVars } = ctx;
     if (ts.isVariableStatement(n)) {
         const declarations = chain(n.declarationList.declarations)
-            .filter(declaration => !isFunc(declaration))
+            .filter(declaration => !ctx.isMainUserCode || !isFunc(declaration))
             .flatMap(declaration => {
                 if (ts.isObjectBindingPattern(declaration.name)) {
                     const usedVolatile = declaration.name.elements.filter(e => asCode(e.name) in comp.aggregatedVariables.accessed);

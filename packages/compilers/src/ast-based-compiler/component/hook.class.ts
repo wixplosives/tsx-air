@@ -8,15 +8,16 @@ import ts from 'typescript';
 export const generateHookClass = (hook: HookDefinition, api: FileTransformerAPI) => {
     api.swapImport('@tsx-air/framework', '@tsx-air/runtime', ['TSXAir', 'RefHolder']);
     api.ensureImport('getInstance, Component, Fragment, VirtualElement', '@tsx-air/runtime');
+    const fragments = [...parseFragments(hook)];
     const hookClass = cClass(
         hook.name!,
         asAst(`Hook`) as ts.Expression,
         undefined,
         true,
         [
-            // ...generateMethods(hook, fragments),
-            // ...fragments.filter(f => f.isComponent)
-            //     .map(c => generateVirtualComponents(c, true)[0]),
+            ...generateMethods(hook, fragments),
+            ...fragments.filter(f => f.isComponent)
+                .map(c => generateVirtualComponents(c, true)[0]),
         ]
     );
 

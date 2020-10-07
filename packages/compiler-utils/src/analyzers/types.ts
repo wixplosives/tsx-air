@@ -96,6 +96,7 @@ export interface StoreDefinition extends Namespace {
 
 export interface UserCode extends NodeWithVariables<ts.CallExpression> {
     name: string;
+    jsxRoots: JsxRoot[];
     functions: FuncDefinition[];
     stores: StoreDefinition[];
     volatileVariables: string[];
@@ -104,24 +105,12 @@ export interface UserCode extends NodeWithVariables<ts.CallExpression> {
 
 export interface CompDefinition extends UserCode {
     kind: 'CompDefinition';
-    name: string;
     propsIdentifier?: string;
-    jsxRoots: JsxRoot[];
-    functions: FuncDefinition[];
-    stores: StoreDefinition[];
-    volatileVariables: string[];
-    returns: Return[];
 }
 
 export interface HookDefinition extends UserCode {
     kind: 'HookDefinition';
     parameters: Parameter[];
-    name: string;
-    jsxRoots: JsxRoot[];
-    functions: FuncDefinition[];
-    stores: StoreDefinition[];
-    volatileVariables: string[];
-    returns: Return[];
 }
 
 export interface Return extends AnalyzedNode<ts.ReturnStatement|ts.Expression> {

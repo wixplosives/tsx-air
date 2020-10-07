@@ -8,7 +8,7 @@ import { propsAndRtFromInstance, prop } from './common';
 
 
 export const generateToString = (fragment: FragmentData) => {
-    const { comp, allFragments: fragments, root } = fragment;
+    const { code: comp, allFragments: fragments, root } = fragment;
 
     const template =
         jsxToStringTemplate(root.sourceAstNode, [

@@ -26,7 +26,7 @@ function generateRender(comp: CompDefinition) {
 
 function generateUserCode(code: UserCode, fragments: FragmentData[]) {
     const body = get(code.sourceAstNode.arguments[0], 'body');
-    const statements = get(body, 'statements') || [body];
+    const statements = get(body, 'statements') || [body];    
     const modified = [
         ...addNamedFunctions(code),
         ...parseStatements(code, statements, fragments, true)
@@ -34,11 +34,11 @@ function generateUserCode(code: UserCode, fragments: FragmentData[]) {
     return asMethod(code, 'userCode', [], modified, true);
 }
 
-function parseStatements(code: UserCode, statements: ts.Statement[], fragments: FragmentData[], isPreRender: boolean) {
+function parseStatements(code: UserCode, statements: ts.Statement[], fragments: FragmentData[], isUserCode: boolean) {
     const declaredVars = new Set<string>();
-    const { parser } = createScriptTransformCtx(code, fragments, declaredVars, isPreRender);
+    const { parser } = createScriptTransformCtx(code, fragments, declaredVars, isUserCode);
     const parsed = statements.map(parser);
-    if (isPreRender) {
+    if (isUserCode) {
         if (declaredVars.size) {
             parsed.splice(-1, 0, asAst(`this.volatile={${[...declaredVars, ...namedFuncs(code)].join(',')
                 }}`) as ts.Statement);
@@ -57,16 +57,16 @@ function generateMethodBind(func: FuncDefinition) {
 export interface CompScriptTransformCtx {
     apiCalls: number;
     code: UserCode;
-    allowLifeCycleApiCalls: boolean;
+    isMainUserCode: boolean;
     fragments: FragmentData[];
     declaredVars: Set<string>;
     parser: (s: ts.Node, skipArrow?: any) => ts.Statement;
 }
 
-const createScriptTransformCtx = (code: UserCode, fragments: FragmentData[], declaredVars?: Set<string>, allowLifeCycleApiCalls: boolean = false) => {
+const createScriptTransformCtx = (code: UserCode, fragments: FragmentData[], declaredVars?: Set<string>, isMainUserCode: boolean = false) => {
     declaredVars = declaredVars || new Set<string>();
     const ctx: CompScriptTransformCtx = {
-        allowLifeCycleApiCalls,
+        isMainUserCode,
         apiCalls: 0,
         code, fragments, declaredVars: declaredVars!,
         parser: (s: ts.Node, skipArrow?: any) => {
