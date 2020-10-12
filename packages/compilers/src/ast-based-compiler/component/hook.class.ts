@@ -1,6 +1,5 @@
-import { cClass, FileTransformerAPI, CompDefinition, asAst, HookDefinition } from '@tsx-air/compiler-utils';
+import { cClass, FileTransformerAPI, asAst, HookDefinition } from '@tsx-air/compiler-utils';
 import { generateMethods } from './functions/function';
-import { generateFragments } from './fragment';
 import { parseFragments } from './fragment/jsx.fragment';
 import { generateVirtualComponents } from './fragment/virtual.comp';
 import ts from 'typescript';

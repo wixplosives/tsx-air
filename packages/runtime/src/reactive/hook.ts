@@ -32,6 +32,7 @@ export class Hook<T = any> extends Reactive implements WithUserCode<any> {
     $afterUnmount: AfterUnmountCb[] = [];
     $afterDomUpdate: AfterUpdateCb[] = [];
     consecutiveChanges = new Map<AfterUpdateCb, number>();
+    volatile:any;
 
     constructor(parent: Reactive) {
         super(parent, parent.$rt);

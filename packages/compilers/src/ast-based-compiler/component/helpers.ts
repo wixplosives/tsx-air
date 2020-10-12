@@ -9,7 +9,7 @@ import {
     UsedInScope,
     asAst,
     JsxRoot,
-    JsxExpression, UserCode, isCompDefinition, isHookDef, asCode
+    JsxExpression, UserCode, isCompDefinition, isHookDef
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
