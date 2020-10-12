@@ -4,7 +4,6 @@ import { packagePath } from '@tsx-air/utils/packages';
 import { readFileSync } from 'fs';
 import { testRuntimeApi } from '@tsx-air/runtime/src/runtime/runtime.test.suite';
 import { compileAndEval } from '@tsx-air/builder';
-import { buildTestFiles } from '@tsx-air/testing';
 
 describe('compilers', () => {
     it('each compiler should have a unique name', () => {
@@ -20,21 +19,31 @@ describe('compilers', () => {
         describe(`${compiler.label}`, () => {
             let Parent: any;
             let Child: any;
-            before(async () => {
-                buildTestFiles(
-                    packagePath('@tsx-air/runtime', 'fixtures'),
-                    packagePath('@tsx-air/compilers', 'tmp'),
-                    compiler,
-                    'runtime.fixture.tsx',
-                    'out.js',
-                );
+            before(() => {
+                // if (process.env.DEBUG) {
+                //     buildTestFiles(
+                //         packagePath('@tsx-air/runtime', 'fixtures'),
+                //         packagePath('@tsx-air/compilers', 'tmp'),
+                //         compiler,
+                //         'runtime.fixture.tsx',
+                //         'out.js',
+                //     );
+                // }
 
-                const exports = compileAndEval(
-                    readFileSync(packagePath('@tsx-air/runtime', 'fixtures', 'runtime.fixture.tsx'), { encoding: 'utf8' }),
-                    compiler
-                );
-                Parent = exports.Parent;
-                Child = exports.Child;
+                try {
+                    const exports = compileAndEval(
+                        readFileSync(packagePath('@tsx-air/runtime', 'fixtures', 'runtime.fixture.tsx'), { encoding: 'utf8' }),
+                        compiler
+                    );
+                    Parent = exports.Parent;
+                    Child = exports.Child;
+                } catch (e) {
+                    // tslint:disable-next-line: no-console
+                    console.error(e.message);
+                    // tslint:disable-next-line: no-console
+                    console.log(`In: ${e.$rawJs}`);
+                    throw e;
+                }
             });
             testRuntimeApi(() => [Parent, Child]);
         });

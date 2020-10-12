@@ -1,4 +1,4 @@
-import { VirtualElement, Displayable, Runtime, ExpressionDom, Component, Fragment } from '..';
+import { VirtualElement, Displayable, Runtime, ExpressionDom, Component, Fragment, Reactive, Hook } from '..';
 import isArray from 'lodash/isArray';
 
 export class ViewUpdater {
@@ -9,27 +9,38 @@ export class ViewUpdater {
     constructor(readonly runtime: Runtime) { }
 
     getUpdatedInstance = (vElm: VirtualElement<any>): Displayable => {
-        const { key, parent, owner } = vElm;
+         const { key, parent, owner } = vElm;
         const { runtime: { renderer: { render } } } = this;
         if (!key || !owner || !parent) {
             throw new Error(`Invalid VirtualElement for getInstance: no key was assigned`);
         }
-        if (parent.ctx.components[key]) {
-            parent.ctx.components[key].stores.$props.$set(vElm.props);
+        if (parent.ctx.displayables[key]) {
+            parent.ctx.displayables[key].stores.$props.$set(vElm.props);
         }
-        return parent.ctx.components[key] || render(vElm);
+        return parent.ctx.displayables[key] || render(vElm);
     };
 
     updateExpression = (exp: ExpressionDom, value: any) =>
         this.updateDomExpression([exp.start as Comment, exp.end as Comment], this.asDomNodes(value));
 
-    invalidate = (instance: Displayable) => {
+    invalidate = (instance: Reactive) => {
         if (Component.is(instance)) {
             this.pending.add(instance);
             this.triggerViewUpdate();
-        } else {
-            (instance as Fragment).updateView();
+            return;
+        } 
+        
+        if(Fragment.is(instance))  {
+            instance.updateView();
             instance.modified = new Map();
+            return;
+        }
+
+        if (Hook.is(instance)) {
+            this.runtime.removeHookCache(instance);
+            this.invalidate(instance.parent!);
+            // this.invalidate(instance.owner!);
+            return;
         }
     };
 
@@ -63,7 +74,7 @@ export class ViewUpdater {
             const { pending } = this;
             this.pending = new Set<Component>();
             for (const instance of pending) {
-                const preRender = instance.preRender();
+                const preRender = this.runtime.preRender(instance);
                 this.swapRoot(instance,this.getUpdatedInstance(preRender));
                 this.pending.delete(instance);
                 instance.updated();
@@ -82,12 +93,12 @@ export class ViewUpdater {
             prevRoot.domRoot.parentNode?.insertBefore(nextRoot.domRoot, prevRoot.domRoot);
             prevRoot.domRoot.remove();
             ctx.root = nextRoot as Fragment;
-            ctx.components[prevRoot.key].unmounted();
+            ctx.displayables[prevRoot.key].unmounted();
             if (!prevRoot.stores.$props.keepAlive) {
-                ctx.components[prevRoot.key].dispose();
-                delete ctx.components[prevRoot.key];
+                ctx.displayables[prevRoot.key].dispose();
+                delete ctx.displayables[prevRoot.key];
             }
-            ctx.components[nextRoot.key] = nextRoot;
+            ctx.displayables[nextRoot.key] = nextRoot;
             nextRoot.mounted();            
         }
     }

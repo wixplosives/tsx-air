@@ -2,7 +2,7 @@ import { setInstance, Runtime } from '..';
 import { JSDOM } from 'jsdom';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { Component, Displayable, VirtualElement } from '../types';
+import { Component, Displayable, VirtualElement } from '..';
 
 export function testRuntimeApi<P extends typeof Component, C extends typeof Component>(getCompiled: () => [any, any]) {
     describe('interacting with framework runtime (internal API)', () => {
@@ -18,6 +18,9 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
             runtime = new Runtime(window, (fn: FrameRequestCallback) => (onNextFrame.push(fn), onNextFrame.length));
             setInstance('default', runtime);
             [Parent, Child] = getCompiled();
+            if (!Parent || !Child) {
+                throw new Error('Compilation error');
+            }
         });
 
         describe('render', () => {
@@ -104,10 +107,10 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
                     instance.stores.$props.a = 0;
                     instance.stores.$props.a = 1;
                     expect(onNextFrame).to.have.length(1);
-                    sinon.spy(instance, 'preRender');
+                    sinon.spy(instance, 'userCode');
                     onNextFrame[0](0);
                     // @ts-ignore
-                    expect(instance.preRender.calledOnce).to.equal(true);
+                    expect(instance.userCode.calledOnce).to.equal(true);
                 });
             });
         });

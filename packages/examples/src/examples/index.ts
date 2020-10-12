@@ -5,8 +5,8 @@ export const shouldBeCompiled = [
     '04.zoom',
     '05.dynamic.gallery',
     // '06.factory',
-    'lifecycle'
-
+    'lifecycle',
+    'hooks'
 ];
 
 export const base = __dirname;

@@ -5,6 +5,7 @@ import { importStatement } from './imports';
 import { sourceFile } from './sourcefile';
 import { exportStatement } from './re.export';
 import { isTsxAirNode, hasError } from './types.is.type';
+import { hookDefinition } from './hook.definition';
 
 export const analyze: Analyzer<AnalyzedNode> = node => {
     if (!node) {
@@ -14,7 +15,8 @@ export const analyze: Analyzer<AnalyzedNode> = node => {
         sourceFile,
         importStatement,
         exportStatement,
-        compDefinition
+        compDefinition, 
+        hookDefinition,
     ];
 
     for (const tryToAnalyze of prioritizedAnalyzers) {

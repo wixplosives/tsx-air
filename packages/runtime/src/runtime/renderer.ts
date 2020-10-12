@@ -1,4 +1,4 @@
-import { Component, Displayable, VirtualElement, ExpressionDom } from '../types';
+import { Component, Displayable, VirtualElement, ExpressionDom } from '../reactive';
 import { Runtime } from '..';
 import isArray from 'lodash/isArray';
 
@@ -73,7 +73,7 @@ export class Renderer {
         if (Component.isType(type)) {
             const comp = this.hydrateComponent(key!, parent, dom, type, props);
             if (vElm.parent && key) {
-                vElm.parent.ctx.components[key] = comp;
+                vElm.parent.ctx.displayables[key] = comp;
             }
             return comp;
         }
@@ -84,7 +84,7 @@ export class Renderer {
         }
         instance.hydrate(vElm, dom);
         if (vElm.parent && key) {
-            vElm.parent.ctx.components[key] = instance;
+            vElm.parent.ctx.displayables[key] = instance;
         }
         return instance;
     }
@@ -97,8 +97,8 @@ export class Renderer {
         props: any
     ): Comp {
         this.hydrating++;
-        const instance = (parent?.ctx.components[key] || new type(key, parent, props, this.runtime)) as Comp;
-        const preRender = instance.preRender();
+        const instance = (parent?.ctx.displayables[key] || new type(key, parent, props, this.runtime)) as Comp;        
+        const preRender = this.runtime.preRender(instance);
         // prerender already expressed in view ny toString
         this.runtime.updater.validate(instance);
         instance.ctx.root = this.renderOrHydrate(preRender, domNode);

@@ -1,4 +1,4 @@
-import { Observable, Listener } from './types';
+import { Observable, Listener } from '../reactive/store.types';
 
 export class Dispatcher implements Observable {
     $listeners = new Set<Listener>();

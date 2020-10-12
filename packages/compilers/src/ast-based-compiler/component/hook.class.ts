@@ -1,26 +1,25 @@
-import { cClass, FileTransformerAPI, CompDefinition, asAst } from '@tsx-air/compiler-utils';
+import { cClass, FileTransformerAPI, asAst, HookDefinition } from '@tsx-air/compiler-utils';
 import { generateMethods } from './functions/function';
-import { generateFragments } from './fragment';
 import { parseFragments } from './fragment/jsx.fragment';
 import { generateVirtualComponents } from './fragment/virtual.comp';
 import ts from 'typescript';
 
-export const generateComponentClass = (comp: CompDefinition, api: FileTransformerAPI) => {
+export const generateHookClass = (hook: HookDefinition, api: FileTransformerAPI) => {
     api.swapImport('@tsx-air/framework', '@tsx-air/runtime', ['TSXAir', 'RefHolder']);
     api.ensureImport('getInstance, Component, Fragment, VirtualElement', '@tsx-air/runtime');
-    const fragments = [...parseFragments(comp)];
-    const compClass = cClass(
-        comp.name!,
-        asAst(`Component`) as ts.Expression,
+    const fragments = [...parseFragments(hook)];
+    const hookClass = cClass(
+        hook.name!,
+        asAst(`Hook`) as ts.Expression,
         undefined,
         true,
         [
-            ...generateMethods(comp, fragments),
+            ...generateMethods(hook, fragments),
             ...fragments.filter(f => f.isComponent)
                 .map(c => generateVirtualComponents(c, true)[0]),
         ]
     );
 
-    api.appendStatements(...generateFragments(comp, api, fragments));
-    return compClass;
+    // api.appendStatements(...generateFragments(hook, api, fragments));
+    return hookClass;
 };

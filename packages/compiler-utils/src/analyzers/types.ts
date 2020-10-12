@@ -7,11 +7,12 @@ export interface AnalyzerResult<T extends AnalyzedNode> {
 
 export type Analyzer<T extends AnalyzedNode> = (node: ts.Node) => AnalyzerResult<T>;
 
-export type AnalyzedNodeType = 'CompDefinition' | 'JsxFragment' |
+export type AnalyzedNodeType = 'CompDefinition' | 'JsxFragment' | 'HookDefinition' |
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
     'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' |
     'exportSpecifier' | 'reExport' | 'funcDefinition' | 'storeDefinition' |
-    'Namespace' | 'UsedNamespaceProperty' | 'Return'
+    'Namespace' | 'UsedNamespaceProperty' | 'Return' |
+    'Parameter'
     ;
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
@@ -40,6 +41,7 @@ export interface NodeWithVariables<T extends ts.Node = ts.Node> extends Analyzed
 export interface TsxFile extends NodeWithVariables<ts.SourceFile> {
     kind: 'file';
     compDefinitions: CompDefinition[];
+    hooks: HookDefinition[];
     imports: Import[];
     reExports: ReExport[];
 }
@@ -76,9 +78,15 @@ export interface ReExport extends AnalyzedNode<ts.ExportDeclaration> {
 export interface FuncDefinition extends NodeWithVariables<ts.FunctionExpression | ts.ArrowFunction> {
     kind: 'funcDefinition';
     name?: string;
-    arguments: string[];
+    parameters: Parameter[];
     jsxRoots: JsxRoot[];
     definedFunctions: FuncDefinition[];
+}
+
+export interface Parameter extends AnalyzedNode<ts.ParameterDeclaration> {
+    kind: 'Parameter';
+    name: string;
+    default?: string;
 }
 
 export interface StoreDefinition extends Namespace {
@@ -86,15 +94,23 @@ export interface StoreDefinition extends Namespace {
     keys: string[];
 }
 
-export interface CompDefinition extends NodeWithVariables<ts.CallExpression> {
-    kind: 'CompDefinition';
+export interface UserCode extends NodeWithVariables<ts.CallExpression> {
     name: string;
-    propsIdentifier?: string;
     jsxRoots: JsxRoot[];
     functions: FuncDefinition[];
     stores: StoreDefinition[];
     volatileVariables: string[];
     returns: Return[];
+}
+
+export interface CompDefinition extends UserCode {
+    kind: 'CompDefinition';
+    propsIdentifier?: string;
+}
+
+export interface HookDefinition extends UserCode {
+    kind: 'HookDefinition';
+    parameters: Parameter[];
 }
 
 export interface Return extends AnalyzedNode<ts.ReturnStatement|ts.Expression> {

@@ -20,7 +20,7 @@ export function* generateUpdateView(fragment: FragmentData) {
 }
 
 function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) {
-    const { comp } = fragment;
+    const { code: comp } = fragment;
     const addUpdate = (exp: JsxExpression | JsxComponent, setStatement: string) => {
         if (!isJsxComponent(exp)) {
             statements.push(

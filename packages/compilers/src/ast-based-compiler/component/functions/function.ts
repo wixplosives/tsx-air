@@ -1,17 +1,20 @@
-import { CompDefinition, FuncDefinition, cloneDeep, cMethod, cProperty, asAst, cFunction } from '@tsx-air/compiler-utils';
-import ts from 'typescript';
+import { CompDefinition, FuncDefinition, cloneDeep, cMethod, cProperty, asAst, cFunction, UserCode, isCompDefinition } from '@tsx-air/compiler-utils';
+import ts, { NodeArray } from 'typescript';
 import { setupClosure } from '../helpers';
 import { FragmentData } from '../fragment/jsx.fragment';
 import { get } from 'lodash';
-import { assignFunctionNames, readFuncName, addNamedFunctions, namedFuncs } from './names';
-import { swapVirtualElements, enrichLifeCycleApiFunc, swapLambdas, handleArrowFunc, swapVarDeclarations } from './swappers';
+import { assignFunctionNames, readFuncName, addNamedFunctions } from './names';
+import { swapVirtualElements, enrichLifeCycleApiFunc, swapLambdas, handleArrowFunc, swapVarDeclarations, Swapper } from './swappers';
 
-export function* generateMethods(comp: CompDefinition, fragments: FragmentData[]) {
-    assignFunctionNames(comp);
-    yield generateRender(comp);
-    yield generatePreRender(comp, fragments);
-    for (const func of comp.functions) {
-        yield generateMethod(comp, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.arguments);
+export function* generateMethods(code: UserCode, fragments: FragmentData[]) {
+    assignFunctionNames(code);
+    if (isCompDefinition(code)) {
+        yield generateRender(code);
+    }
+    yield generateUserCode(code, fragments);
+    for (const func of code.functions) {
+        // TODO replace with Parameter[]
+        yield generateMethod(code, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.parameters.map(a => a.name));
         yield generateMethodBind(func);
     }
 }
@@ -21,76 +24,106 @@ function generateRender(comp: CompDefinition) {
         [asAst(`return Component._render(getInstance(), ${comp.name}, p, t, a);`, true) as ts.Statement], true);
 }
 
-function generatePreRender(comp: CompDefinition, fragments: FragmentData[]) {
-    const body = get(comp.sourceAstNode.arguments[0], 'body');
+function generateUserCode(code: UserCode, fragments: FragmentData[]) {
+    const body = get(code.sourceAstNode.arguments[0], 'body');
     const statements = get(body, 'statements') || [body];
     const modified = [
-        ...addNamedFunctions(comp),
-        ...parseStatements(comp, statements, fragments, true)
-    ];
-    return asMethod(comp, 'preRender', [], modified, true);
+        ...addNamedFunctions(code),
+        ...parseStatements(code, statements, fragments, true)
+    ] as ts.Statement[];
+    return asMethod(code, 'userCode', [], modified, true);
 }
 
-function parseStatements(comp: CompDefinition, statements: ts.Statement[], fragments: FragmentData[], isPreRender: boolean) {
+function parseStatements(code: UserCode, statements: ts.Statement[], fragments: FragmentData[], isUserCode: boolean) {
     const declaredVars = new Set<string>();
-    const { parser } = createCompScriptTransformCtx(comp, fragments, declaredVars, isPreRender);
-    const parsed = statements.map(parser);
-    if (isPreRender) {
-        if (declaredVars.size) {
-            parsed.splice(-1, 0, asAst(`this.volatile={${
-                [...declaredVars, ...namedFuncs(comp)].join(',')
-                }}`) as ts.Statement);
-        }
-    }
-    return parsed.filter(s => !ts.isEmptyStatement(s));
+    const { parser } = createScriptTransformCtx(code, fragments, declaredVars, isUserCode);
+    const parsed = [...flatGen(statements, parser)];
+
+    // if (isUserCode) {
+    //     if (declaredVars.size) {
+    //         parsed.splice(-1, 0, asAst(`this.volatile={${[...declaredVars, ...namedFuncs(code)].join(',')
+    //             }}`) as ts.Statement);
+    //     }
+    // }
+    return parsed;
 }
 
 function generateMethodBind(func: FuncDefinition) {
-    const name = readFuncName(func);
+    const name = readFuncName(func)!;
     return cProperty(name,
-        asAst(`(...args)=>this._${name}(...args)`) as ts.Expression
+        asAst(`this.volatile.${name}=(...args)=>this._${name}(...args);`) as ts.Expression
     );
 }
 
 export interface CompScriptTransformCtx {
     apiCalls: number;
-    comp: CompDefinition;
-    allowLifeCycleApiCalls: boolean;
+    code: UserCode;
+    isMainUserCode: boolean;
     fragments: FragmentData[];
     declaredVars: Set<string>;
-    parser: (s: ts.Node, skipArrow?: any) => ts.Statement;
+    parser: (s: ts.Node, skipArrow?: any) => Generator<ts.Node>;
 }
 
-const createCompScriptTransformCtx = (comp: CompDefinition, fragments: FragmentData[], declaredVars?: Set<string>, allowLifeCycleApiCalls: boolean = false) => {
+export const createScriptTransformCtx = (code: UserCode, fragments: FragmentData[], declaredVars?: Set<string>, isMainUserCode: boolean = false) => {
     declaredVars = declaredVars || new Set<string>();
     const ctx: CompScriptTransformCtx = {
-        allowLifeCycleApiCalls,
+        isMainUserCode,
         apiCalls: 0,
-        comp, fragments, declaredVars: declaredVars!,
-        parser: (s: ts.Node, skipArrow?: any) => {
-            const ret = cloneDeep<ts.Node, ts.Node>(s, undefined, n =>
-                swapVarDeclarations(ctx, n) ||
-                swapLambdas(ctx, n) ||
-                enrichLifeCycleApiFunc(ctx, n) ||
-                handleArrowFunc(ctx, n, skipArrow) ||
-                swapVirtualElements(ctx, n)
-            ) as ts.Statement;
-            return ret;
+        code, fragments, declaredVars: declaredVars!,
+        *parser(s: ts.Node, skipArrow?: any) {
+            const swappers: Swapper[] = [
+                swapVarDeclarations,
+                swapLambdas,
+                enrichLifeCycleApiFunc,
+                handleArrowFunc,
+                swapVirtualElements
+            ];
+
+            let rest!: Generator<ts.Node>;
+            yield cloneDeep(s, undefined, n => {
+                if (ts.isBlock(n)) {
+                    return ts.createBlock([...flatGen(n.statements, ctx.parser)]
+                        .filter(parsed => !ts.isEmptyStatement((parsed))) as ts.Statement[]);
+                }
+                for (const swapper of swappers) {
+                    const result = swapper(n, ctx, skipArrow, isMainUserCode);
+                    const next = result.next();
+                    if (!next.done) {
+                        rest = result;
+                        return next.value as ts.Statement;
+                    }
+                    if (next.value) {
+                        return ts.createEmptyStatement();
+                    }
+                }
+                return;
+            }) as ts.Statement;
+            if (rest) {
+                yield* rest;
+            }
         }
     };
     return ctx;
 };
 
-function generateMethod(comp: CompDefinition, name: string, body: ts.Node, fragments: FragmentData[], args: string[]) {
+function generateMethod(code: UserCode, name: string, body: ts.Node, fragments: FragmentData[], args: string[]) {
     const statements = get(body, 'statements') || [body];
-    const modified = [...parseStatements(comp, statements, fragments, false)];
-    return asMethod(comp, name, args, modified);
+    const modified = [...parseStatements(code, statements, fragments, false)] as ts.Statement[];
+    return asMethod(code, name, args, modified);
 }
 
-const asMethod = (comp: CompDefinition, name: string, args: string[], statements: ts.Statement[], isPreRender = false) => cMethod(name, args, [
-    ...setupClosure(comp, statements, isPreRender),
-    ...statements]);
+const asMethod = (code: UserCode, name: string, args: string[], statements: ts.Statement[], isUserCode = false) => cMethod(name, args, [
+    ...setupClosure(code, statements, isUserCode),
+    ...statements
+]);
+
+
 
 export const asFunction = (method: ts.MethodDeclaration) =>
     cFunction(method.parameters.map(i => i), method.body!);
 
+function* flatGen<T extends ts.Node>(arr: T[] | NodeArray<T>, fn: (item: T) => Generator<T>) {
+    for (const item of arr) {
+        yield* fn(item);
+    }
+}

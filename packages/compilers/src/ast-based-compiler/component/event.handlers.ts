@@ -9,7 +9,7 @@ export const tagHandlersUsed = (fragment:FragmentData) => {
 
     const handlersToUses = new Map<FuncDefinition, JsxExpression[]>();
     const missingHandlers = new Set(expressionsWithHandlers);
-    fragment.comp.functions.forEach(f => {
+    fragment.code.functions.forEach(f => {
         const uses = expressionsWithHandlers.filter(({ expression, sourceAstNode }) =>
             expression.indexOf(f.name!) >= 0
             || sourceAstNode.expression === f.sourceAstNode

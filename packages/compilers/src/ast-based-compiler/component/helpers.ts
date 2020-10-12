@@ -9,34 +9,44 @@ import {
     UsedInScope,
     asAst,
     JsxRoot,
-    JsxExpression,
+    JsxExpression, UserCode, isCompDefinition, isHookDef
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
 import { merge, chain, defaultsDeep, mergeWith, omit } from 'lodash';
 import isArray from 'lodash/isArray';
 import { FragmentData } from './fragment/jsx.fragment';
+import { readNodeFuncName } from './functions/names';
+import { STORES, VOLATILE } from '../consts';
 
-export const compFuncByName = (comp: CompDefinition, name: string) => comp.functions.find(f => f.name === name);
+export const codeFuncByName = (code: UserCode, name: string) => code.functions.find(f => f.name === name);
 
-export function getDirectDependencies(comp: CompDefinition, scope: UsedVariables, ignoreFuncReferences: boolean): UsedInScope {
+export function getDirectDependencies(code: UserCode, scope: UsedVariables, ignoreFuncReferences: boolean): UsedInScope {
     const used: UsedInScope = {};
     const _usedInScope = (name?: string) =>
-        name && (name in scope.accessed)
-        && !(ignoreFuncReferences && comp.functions.some(f => f.name === name));
+        (name && (name in scope.accessed || name in scope.executed)
+            && !(ignoreFuncReferences && code.functions.some(f => f.name === name)));
 
-    comp.volatileVariables.filter(_usedInScope).forEach(v =>
-        add(used, { [v]: scope.accessed[v] }, 'volatile'));
+    code.volatileVariables.filter(_usedInScope).forEach(v =>
+        add(used, { [v]: scope.accessed[v] }, VOLATILE));
 
-    if (_usedInScope(comp.propsIdentifier)) {
-        add(used, { $props: scope.read[comp.propsIdentifier!] }, 'stores');
+    if (isCompDefinition(code) && _usedInScope(code.propsIdentifier)) {
+        add(used, { $props: scope.read[code.propsIdentifier!] }, STORES);
     }
 
-    comp.stores.map(c => c.name).filter(_usedInScope).forEach(
-        name => add(used, { [name]: scope.accessed[name] }, 'stores')
+    code.stores.map(c => c.name).filter(_usedInScope).forEach(
+        name => add(used, { [name]: scope.accessed[name] }, STORES)
     );
+
+    scope.executed.$refs?.forEach(ref => {
+        const name = readNodeFuncName(ref);
+        if (name) {
+            add(used, { [name]: {} }, VOLATILE);
+        }
+    });
     return used;
 }
+
 type U<T> = UsedInScope<T> | UsedVariables<T> | RecursiveMap<T>;
 export function mergeRefMap<T, R extends U<T>>(obj: R, ...newUsed: R[]): R {
     newUsed.forEach(added => mergeWith(obj, added, (a, b) => {
@@ -113,29 +123,40 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
     return flat;
 }
 
-function* getClosureStores(comp: CompDefinition, used: UsedInScope, storesTarget: string) {
-    if (used.stores) {
-        yield cConst(destructure(used.stores, { $props: comp.propsIdentifier })!, asAst(`${storesTarget}.stores`) as ts.PropertyAccessExpression);
+function* getClosureVolatile(code: UserCode, used: UsedInScope, storesTarget: string) {
+    const res = merge({}, used.stores, used.volatile);
+    if (used.props) {
+        res.$props = {};
+    }
+    // if ()
+    // if (used.stores) {
+    //     yield cConst(destructure(used.stores,
+    //         isCompDefinition(code) ? { $props: code.propsIdentifier } : {})!,
+    //         asAst(`${storesTarget}.volatile`) as ts.PropertyAccessExpression);
+    // }
+    if (used.stores || used.volatile || used.props) {
+        yield cLet(destructure(res,
+            isCompDefinition(code)
+                ? { $props: code.propsIdentifier }
+                : {})!,
+            asAst(`${storesTarget}.volatile`) as ts.PropertyAccessExpression);
     }
 }
 
-function* getClosureVolatile(used: UsedInScope, storesTarget: string) {
-    if (used.volatile) {
-        yield cLet(destructure(used.volatile)!, asAst(`${storesTarget}.volatile`) as ts.PropertyAccessExpression);
-    }
-}
-
-function* getClosureProps(comp: CompDefinition, used: UsedInScope, storesTarget: string) {
-    if (used?.stores?.$props) {
-        if (comp.propsIdentifier) {
-            yield cConst(comp.propsIdentifier, ts.createIdentifier(`${storesTarget}.stores.$props`));
-        } else {
-            throw new Error(`Invalid props usage: props identifier not found`);
+function* getClosureProps(code: UserCode, used: UsedInScope, storesTarget: string) {
+    if (isCompDefinition(code)) {
+        if (used?.stores?.$props) {
+            if (code.propsIdentifier) {
+                yield cConst(code.propsIdentifier, ts.createIdentifier(`${storesTarget}.stores.$props`));
+            } else {
+                throw new Error(`Invalid props usage: props identifier not found`);
+            }
         }
     }
+    // if( isHookDef())
 }
 
-export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVariables, isPreRender = false, storesTarget = 'this') {
+export function* setupClosure(code: UserCode, scope: ts.Node[] | UsedVariables, isUserCode = false, storesTarget = 'this') {
     const f = ((isArray(scope) ? scope : [scope]) as ts.Node[]).map(s =>
         // @ts-ignore: handle UsedVariables scope
         (s.read && s.accessed)
@@ -146,25 +167,30 @@ export function* setupClosure(comp: CompDefinition, scope: ts.Node[] | UsedVaria
         delete used.read[k];
         delete used.accessed[k];
     });
-    yield* addToClosure(comp, getDirectDependencies(comp, used, true), isPreRender, storesTarget);
-    if (!isPreRender) {
-        yield* addToClosure(comp, Object.keys(used.executed).filter(
-            name => comp.functions.some(fn => fn.name === name)
-        ), false, storesTarget);
+    yield* destructureParams(code, used);
+
+    yield* addToClosure(code, getDirectDependencies(code, used, false), isUserCode, storesTarget);
+    // if (!isUserCode) {
+    //     yield* addToClosure(code, Object.keys(used.executed).filter(
+    //         name => code.functions.some(fn => fn.name === name)
+    //     ), false, storesTarget);
+    // }
+}
+
+export function* addToClosure(code: UserCode, used: UsedInScope, isUserCode: boolean, storesTarget: string) {
+    if (!isUserCode) {
+        yield* getClosureVolatile(code, used, storesTarget);
+    } else {
+        yield* getClosureProps(code, used, storesTarget);
     }
 }
 
-export function* addToClosure(comp: CompDefinition, used: UsedInScope | string[], isPreRender: boolean, storesTarget: string) {
-    if (isArray(used)) {
-        if (used.length) {
-            yield cConst(destructureNamed(used, {}), asAst('this.owner') as ts.Expression);
-        }
-    } else {
-        if (!isPreRender) {
-            yield* getClosureStores(comp, used, storesTarget);
-            yield* getClosureVolatile(used, storesTarget);
-        } else {
-            yield* getClosureProps(comp, used, storesTarget);
+function* destructureParams(code: UserCode, used: UsedVariables) {
+    if (isHookDef(code)) {
+        const args = code.parameters.map(p => p.name);
+        if (args.length && args.some(a =>
+            used.accessed[a])) {
+            yield asAst(`const [${args.join(',')}] = this.stores.$props`) as ts.Statement;
         }
     }
 }

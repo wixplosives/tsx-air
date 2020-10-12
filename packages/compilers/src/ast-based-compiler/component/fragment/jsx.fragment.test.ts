@@ -17,37 +17,36 @@ describe('fragments', () => {
 
             const allFragments = [...parseFragments(comp)];
             expect(allFragments).to.have.length(3);
-            expect(allFragments[0]).to.eql({
+            expect(allFragments[0]).to.deep.include({
                 root: comp.jsxRoots[0],
                 hasInnerFragments: false,
                 id: 'div0',
                 index: 0,
                 src: statements[1],
                 isComponent: false,
-                allFragments,comp
+                code:comp
             });
-            expect(allFragments[1]).to.eql({
+            expect(allFragments[1]).deep.include({
                 root: comp.jsxRoots[1].expressions[0].jsxRoots[0],
                 hasInnerFragments: false,
                 id: 'InnerComp1',
                 index: 1,
                 src: statements[2],
                 isComponent: true,
-                allFragments,comp
+                allFragments,code:comp
             });
-            expect(allFragments[2]).to.eql({
+            expect(allFragments[2]).deep.include({
                 root: comp.jsxRoots[1],
                 hasInnerFragments: true,
                 id: 'div2',
                 index: 2,
                 src: statements[2],
                 isComponent: false,
-                allFragments,comp
+                allFragments,code:comp
             });
         });
     });
 
-   
     describe('internals', () => {
         describe(`getAstStatementJsxRoots`, () => {
             it(`finds analyzed roots of an ast node`, () => {
@@ -65,6 +64,5 @@ describe('fragments', () => {
                 expect([..._getJsxRoots(comp, statements[3])]).to.eql([comp.jsxRoots[2].expressions[0].jsxRoots[0], comp.jsxRoots[2]]);
             });
         });
-
     });
 });

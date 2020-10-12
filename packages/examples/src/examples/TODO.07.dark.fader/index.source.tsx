@@ -78,7 +78,7 @@ function usePhysicalLocation() {
 
 function useMouseAngle() {
     // syntax 
-    const mouse = use(mouseLocation());
+    const mouse = use(mouseLocation);
     const location = usePhysicalLocation();
     return mouse.x/location.x;
 }

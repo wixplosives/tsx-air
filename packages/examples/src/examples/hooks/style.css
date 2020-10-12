@@ -1,0 +1,96 @@
+* {
+    font-family: sans-serif;
+}
+.eye {
+    border: #000 solid 0.1em;
+    margin: 5%;
+    border-radius: 50%;
+    background-color: white;
+    display: flex;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.eye > div {
+    border-radius: 50%;
+    height: 50%;
+    width: 50%;
+    background-color: black;
+    transform-origin: 50% 50%;
+    position: relative;
+    overflow: hidden;
+}
+.eye > div::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform: rotate(313deg) translate(91% ,10%)scale(1,0.2) rotate(45deg);
+    background-color: white;
+}
+
+.eye:first-child {
+    height: 70%;
+    width: 70%;
+}
+
+.face {
+    place-items: center center;
+    background-color: yellow;
+    border-radius: 50%;
+    border: black solid 0.1em;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 10%;
+    grid-template-rows: 1fr 1fr;
+    width: 10em;
+    height: 12em;
+    margin: 0;
+    padding: 0;
+}
+
+.smile:hover {
+    transform: translate(7%, -19%) rotate(-65deg);
+}
+.smile {
+    position: relative;
+    grid-column: span 2;
+    place-self: center center;
+    width: 5em;
+    height: 5em;
+    border-radius: 50%;
+    /* border-bottom-left-radius: 100%; */
+    border: solid 1em red;
+    transform: translate(-5%, -19%) rotate(-19deg);
+    border-right: transparent solid 1em;
+    border-top: transparent solid 1em;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.215, 0.610, 0.355, 1);
+}
+
+.smile::before {
+    content: '';
+    bottom: 0;
+    top: 50%;
+    width: 110%;
+    left: 50%;
+    background-color: white;
+    transform: rotate(45deg) translate(-50%, 92%);
+    display: block;
+    z-index: -2;
+    position: absolute;
+}
+
+.smile::after {
+    content: '\2502\2502\2502\2502\2502';
+    transform: rotate(45deg) translate(17%, 106%);
+    font-size: 200%;
+    color: black;
+    display: block;
+    z-index: -1;
+    position: absolute;
+    border-top: solid black;
+}

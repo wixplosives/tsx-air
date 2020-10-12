@@ -1,5 +1,6 @@
 import { Component, Fragment } from '.';
-import { Runtime, Store, Observable } from '..';
+import { Runtime, Store } from '..';
+import { Reactive } from './reactive';
 
 export type Elm = HTMLElement | Text | Displayable | Component | Fragment;
 
@@ -7,21 +8,18 @@ interface Ctx {
     root: Elm | null;
     expressions: ExpressionDom[];
     elements: HTMLElement[];
-    components: Record<string, Displayable>;
+    displayables: Record<string, Displayable>;
 }
 
 export interface DisplayableData {
     props: any;
     parent?: Displayable;
 }
-export class Displayable implements DisplayableData{
+export class Displayable extends Reactive implements DisplayableData {
     get fullKey(): string {
         return this.parent ? `${this.parent.fullKey}${this.key}` : this.key;
     }
-    get owner(): Component | undefined {
-        return Component.is(this.parent) ? this.parent : this.parent?.owner;
-    }
-
+ 
     get domRoot(): HTMLElement | Text {
         const { root } = this.ctx;
         if (Displayable.is(root)) {
@@ -33,6 +31,7 @@ export class Displayable implements DisplayableData{
         }
         throw new Error(`Invalid Displayable: root is not a Displayable/HTMLElement`);
     }
+
     get props(){
         return this.stores.$props;
     }
@@ -40,17 +39,18 @@ export class Displayable implements DisplayableData{
     static is(x: any): x is Displayable {
         return x && x instanceof Displayable;
     }
+
     readonly innerKey!: string;
     readonly ctx: Ctx = {
         root: null,
         expressions: [],
         elements: [],
-        components: {}
+        displayables: {}
     };
+
     parent: Displayable | undefined;
     stores!: Record<string, Store> & Record<'$props', Store>;
     volatile!: any;
-    modified: Map<Store, number> = new Map();
     
     protected hasStoreChanges: boolean=false;
 
@@ -59,37 +59,28 @@ export class Displayable implements DisplayableData{
         parent: DisplayableData | undefined,
         readonly $rt: Runtime
     ) {
-        while (parent && !Displayable.is(parent)) {
-            parent = parent.parent;
-        }
-        this.parent = parent;
+        super(parent as any, $rt);        
     }
 
-    storeChanged = (modifiedStore: Store, changed: number) => {
-        this.hasStoreChanges = true;
-        this.modified.set(modifiedStore, (this.modified.get(modifiedStore) || 0) | changed);
-        this.$rt.updater.invalidate(this);
-    };
-
     mounted() {
-        for (const child of Object.values(this.ctx.components)) {
+        for (const child of Object.values(this.ctx.displayables)) {
             child.mounted();
         }
+        super.mounted();
     }
 
     unmounted() {
-        for (const child of Object.values(this.ctx.components)) {
+        for (const child of Object.values(this.ctx.displayables)) {
             child.unmounted();
         }
+        super.unmounted();
     }
 
     dispose() {
-        for (const comp of Object.values(this.ctx.components)) {
+        for (const comp of Object.values(this.ctx.displayables)) {
             comp.dispose();
         }
-        for (const store of Object.values(this.stores) as Observable[]) {
-            store.$unsubscribe(this.storeChanged);
-        }
+        super.dispose();
     }
 
     hydrate(_preRender: DisplayableData, _target: HTMLElement): void { throw new Error(`not implemented`); }

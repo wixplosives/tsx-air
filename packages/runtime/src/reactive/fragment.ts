@@ -1,6 +1,6 @@
 import { Component, VirtualElement, Displayable } from '.';
 import { Runtime } from '..';
-import { store } from '../stores/store';
+import { store } from './store';
 
 type CommentPlaceholder = 'X' | 'E' | 'C';
 
@@ -22,8 +22,7 @@ export class Fragment extends Displayable {
             throw new Error('Invalid fragment: no owner component');
         }
         super(key, parent, runtime);
-        this.stores = { $props: store(this, '$props', parent.props) };
-        this.stores.$props.$subscribe(this.storeChanged);
+        store(this, '$props', parent.props);
     }
 
     public updateView(): void {/* */ }

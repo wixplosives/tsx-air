@@ -32,17 +32,15 @@ export function shouldCompileExamples(compiler: Compiler, examplePaths: string[]
                 const unsupported = getUnsupported(features, compiler);
                 if (unsupported.length) {
                     describe(exampleName, () => {
-                        it.skip(`Unsupported features\n${
-                            unsupported.map(f => '\t\t' + [...f.values()].join(' ')).join('\n')}`, () => {
-                                /* */
-                            });
+                        it.skip(`Unsupported features\n${unsupported.map(f => '\t\t' + [...f.values()].join(' ')).join('\n')}`, () => {
+                            /* */
+                        });
                     });
                 } else {
                     describe(exampleName, () => {
                         before(async () => {
-                            this.timeout(process.env.CI ? 15000 : 6000);
+                            this.timeout(debug ? 9999999999 : process.env.CI ? 15000 : 6000);
                             this.retries(0);
-                            
                             return safely(
                                 () => buildTestFiles(path, paths.temp, compiler),
                                 'Failed to compile'
