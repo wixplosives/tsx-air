@@ -29,7 +29,7 @@ export function suite(api: ExampleSuiteApi) {
         await htmlMatch(page, { cssQuery: '.eye', pageInstances: 2 });
         const face = JSON.parse(await page.$eval('.face', el => JSON.stringify((el as any).getBoundingClientRect())));
         await page.mouse.move(face.left, face.top);
-        await waitAnimationFrame(page, 10);
+        await page.waitForFunction(()=>true, {polling:'mutation'});
         let eyes = await getEyeBallsTranslation(page);
         expect(eyes.right.x).to.be.approximately(-18, 2);
         expect(eyes.right.y).to.be.approximately(-6, 2);
