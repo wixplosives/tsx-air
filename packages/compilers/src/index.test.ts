@@ -4,7 +4,6 @@ import { packagePath } from '@tsx-air/utils/packages';
 import { readFileSync } from 'fs';
 import { testRuntimeApi } from '@tsx-air/runtime/src/runtime/runtime.test.suite';
 import { compileAndEval } from '@tsx-air/builder';
-import { buildTestFiles } from '@tsx-air/testing';
 
 describe('compilers', () => {
     it('each compiler should have a unique name', () => {
@@ -39,8 +38,10 @@ describe('compilers', () => {
                     Parent = exports.Parent;
                     Child = exports.Child;
                 } catch (e) {
+                    // tslint:disable-next-line: no-console
                     console.error(e.message);
-                    console.log(e.$rawJs);
+                    // tslint:disable-next-line: no-console
+                    console.log(`In: ${e.$rawJs}`);
                     throw e;
                 }
             });

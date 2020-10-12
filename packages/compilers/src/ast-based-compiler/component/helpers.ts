@@ -42,8 +42,6 @@ export function getDirectDependencies(code: UserCode, scope: UsedVariables, igno
         const name = readNodeFuncName(ref);
         if (name) {
             add(used, { [name]: {} }, VOLATILE);
-        } else {
-            console.log(asCode(ref));
         }
     });
     return used;
