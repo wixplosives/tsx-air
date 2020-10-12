@@ -2,8 +2,8 @@ import { FuncDefinition, asAst, UserCode } from '@tsx-air/compiler-utils';
 import { postAnalysisData } from '../../../common/post.analysis.data';
 import ts from 'typescript';
 
-export const readFuncName = (func: FuncDefinition) => postAnalysisData.read(func, 'name')!;
-export const readNodeFuncName = (func: ts.Node) => postAnalysisData.readByAst(func, 'name')!;
+export const readFuncName = (func: FuncDefinition) => postAnalysisData.read(func, 'name')! as string|undefined;
+export const readNodeFuncName = (func: ts.Node) => postAnalysisData.readByAst(func, 'name')! as string|undefined;
 export const writeFuncName = (func: FuncDefinition, name: string) =>
     postAnalysisData.write(func, 'name', name);
 

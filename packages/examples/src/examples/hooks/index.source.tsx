@@ -18,7 +18,7 @@ const mouseLocation = Hook(() => {
     return mouse;
 });
 
-const mouseOffset = Hook((radiusFactor = 6) => {
+const mouseOffset = Hook((radiusFactor:number) => {
     const mouse = use(mouseLocation());
     const state = store({ x: 0, y: 0 });
     const view = store({ eye: null as HTMLElement | Text | null });
@@ -28,8 +28,6 @@ const mouseOffset = Hook((radiusFactor = 6) => {
             const { left, right, top, bottom, width, height } = eye.getClientRects()[0];
             const offsetX = mouse.x - (left + right) / 2;
             const offsetY = mouse.y - (top + bottom) / 2;
-            console.log(offsetX, offsetY);
-
             const lengthSqr = Math.sqrt(offsetX ** 2 + offsetY ** 2);
             const maxLengthSqr = Math.sqrt((width / radiusFactor) ** 2 + (height / radiusFactor) ** 2);
             const shrinkRatio = lengthSqr > maxLengthSqr
@@ -48,7 +46,7 @@ const mouseOffset = Hook((radiusFactor = 6) => {
 });
 
 const Eye = TSXAir(() => {
-    const offset = use(mouseOffset(5));
+    const offset = use(mouseOffset(6));
     return <div className="eye"><div style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }} /></div>;
 });
 

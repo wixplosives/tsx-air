@@ -3,6 +3,7 @@ import { Store, Runtime, Observable } from '..';
 import { Hook } from './hook';
 
 export interface WithUserCode<T> {
+    volatile: Record<string,any>;
     userCode(): T;
 }
 

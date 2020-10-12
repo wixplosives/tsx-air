@@ -36,6 +36,7 @@ export class Hook<T = any> extends Reactive implements WithUserCode<any> {
     constructor(parent: Reactive) {
         super(parent, parent.$rt);
         this.stores.$props = store(this, '$props', []);
+        this.volatile = { $props: this.stores.$props };
     }
 
     updated() {

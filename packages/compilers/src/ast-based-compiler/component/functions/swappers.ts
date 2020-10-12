@@ -9,20 +9,22 @@ import { CompScriptTransformCtx } from '.';
 import { chain } from 'lodash';
 export { enrichLifeCycleApiFunc } from './lifecycle.api';
 
-export function swapVirtualElements(ctx: CompScriptTransformCtx, n: ts.Node, allowNonFrags = false): ts.Expression | undefined {
-    const { code: comp, fragments } = ctx;
+export type Swapper = (n: ts.Node, ctx: CompScriptTransformCtx, skip?: ts.Node, allowJsx?: boolean) => Generator<ts.Node, void | true>;
+
+export const swapVirtualElements: Swapper = function* (n, ctx, _, allowNonFrags = false) {
+    const { code, fragments } = ctx;
     if (ts.isParenthesizedExpression(n)) {
-        return swapVirtualElements(ctx, n.expression);
+        yield* swapVirtualElements(n.expression, ctx);
     }
     if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) {
         const frag = safely(
             () => fragments.find(f => f.root.sourceAstNode === getNodeSrc(n)),
             `Unidentified Fragment Instance`, f => allowNonFrags || f)!;
         if (!frag || frag.isComponent) {
-            const [i, c] = findJsxComp(comp, n);
+            const [i, c] = findJsxComp(code, n);
             if (c) {
                 const ret = asAst(`this.$${c.name}${i}`) as ts.Expression;
-                return setNodeSrc(ret, n);
+                yield setNodeSrc(ret, n);
             }
         } else {
             const propsMap = new Map<string, string>();
@@ -39,53 +41,69 @@ export function swapVirtualElements(ctx: CompScriptTransformCtx, n: ts.Node, all
                 `${toCanonicalString(k)}:${v}`
             ).join(',')}}`;
 
-            const ret = asAst(`VirtualElement.fragment('${frag.index}', ${comp.name}.${frag.id}, this, ${p})`) as ts.Expression;
-            return setNodeSrc(ret, n);
+            const ret = asAst(`VirtualElement.fragment('${frag.index}', ${code.name}.${frag.id}, this, ${p})`) as ts.Expression;
+            yield setNodeSrc(ret, n);
         }
     }
-    return undefined;
-}
+};
 
-export function swapVarDeclarations(ctx: CompScriptTransformCtx, n: ts.Node) {
-    const { code: comp, declaredVars } = ctx;
+const addToVolatile = ({ name }: any) =>
+    name && ts.isIdentifier(name)
+        ? asAst(`this.volatile['${asCode(name)}'] = ${asCode(name)}`)
+        : ts.createEmptyStatement();
+
+export const swapVarDeclarations: Swapper = function* (n, ctx) {
+    const { code, declaredVars } = ctx;
     if (ts.isVariableStatement(n)) {
         const declarations = chain(n.declarationList.declarations)
             .filter(declaration => !ctx.isMainUserCode || !isFunc(declaration))
             .flatMap(declaration => {
                 if (ts.isObjectBindingPattern(declaration.name)) {
-                    const usedVolatile = declaration.name.elements.filter(e => asCode(e.name) in comp.aggregatedVariables.accessed);
+                    const usedVolatile = declaration.name.elements.filter(e => asCode(e.name) in code.aggregatedVariables.accessed);
                     usedVolatile.forEach(b => declaredVars.add(asCode(b.name)));
                     return usedVolatile.length
                         ? ts.createVariableDeclaration(
                             ts.createObjectBindingPattern(usedVolatile), undefined,
                             declaration.initializer
-                                ? ctx.parser(declaration.initializer) as any
+                                ? ctx.parser(declaration.initializer).next().value as any
                                 : undefined
                         )
                         : [];
-                } else if (asCode(declaration.name) in comp.aggregatedVariables.accessed) {
+                } else if (asCode(declaration.name) in code.aggregatedVariables.accessed) {
                     declaredVars.add(asCode(declaration.name));
-                    return ctx.parser(declaration) as any as ts.VariableDeclaration;
+                    return ctx.parser(declaration).next().value as any as ts.VariableDeclaration;
                 }
                 return [];
             }).value();
-        return declarations.length
-            ? ts.createVariableStatement(undefined, ts.createVariableDeclarationList(
-                declarations, n.declarationList.flags))
-            : ts.createEmptyStatement();
+        if (declarations.length) {
+            yield ts.createVariableStatement(undefined, ts.createVariableDeclarationList(
+                declarations, n.declarationList.flags));
+            if (ctx.isMainUserCode) {
+                for (const dec of declarations) {
+                    if (ts.isIdentifier(dec.name)) {
+                        yield addToVolatile(dec);
+                    } else {
+                        for (const element of dec.name.elements) {
+                            yield addToVolatile(element);
+                        }
+                    }
+                }
+            }
+        } else {
+            return true;
+        }
     }
-    return undefined;
-}
+    return;
+};
 
 const isFunc = (v: ts.VariableDeclaration) => (v.initializer && (
     ts.isArrowFunction(v.initializer) ||
     ts.isFunctionExpression(v.initializer)));
 
-export const swapLambdas = (_ctx: CompScriptTransformCtx, n: ts.Node) => {
+export const swapLambdas: Swapper = function* (n) {
     if (ts.isFunctionExpression(n) || ts.isArrowFunction(n)) {
         const name = readNodeFuncName(n);
-
-        return name ? ts.createCall(
+        yield name ? ts.createCall(
             ts.createPropertyAccess(
                 ts.createThis(),
                 ts.createIdentifier(name)
@@ -94,18 +112,19 @@ export const swapLambdas = (_ctx: CompScriptTransformCtx, n: ts.Node) => {
             []
         ) : n;
     }
-    return undefined;
+    return;
 };
 
 export const toFragSafe = (ctx: CompScriptTransformCtx, exp: JsxExpression): string =>
-    asCode(cloneDeep(exp.sourceAstNode.expression!, undefined, n => swapVirtualElements(ctx, n)) as ts.Expression);
+    asCode(cloneDeep(exp.sourceAstNode.expression!, undefined, n =>
+        swapVirtualElements(n, ctx).next().value as ts.Node
+    ) as ts.Expression);
 
-
-export function handleArrowFunc({ parser }: CompScriptTransformCtx, n: ts.Node, skipArrow?: ts.Node) {
+export const handleArrowFunc: Swapper = function* (n, { parser }, skipArrow?: ts.Node) {
     if (n !== skipArrow && n.parent && ts.isArrowFunction(n.parent)) {
-        return ts.createReturn(
-            parser(n, n) as any
+        yield ts.createReturn(
+            parser(n, n).next().value
         );
     }
-    return undefined;
-}
+    return;
+};

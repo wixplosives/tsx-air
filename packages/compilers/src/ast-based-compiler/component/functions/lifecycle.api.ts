@@ -1,10 +1,10 @@
 import { asAst, asCode, findUsedVariables } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { CompScriptTransformCtx } from '.';
 import { getRecursiveMapPaths } from '../helpers';
 import { readNodeFuncName } from './names';
+import { Swapper } from './swappers';
 
-export const enrichLifeCycleApiFunc = (ctx: CompScriptTransformCtx, node: ts.Node) => {
+export const enrichLifeCycleApiFunc: Swapper = function* (node, ctx) {
     if ((ts.isExpressionStatement(node) && ts.isCallExpression(node.expression))
         || (ts.isVariableDeclaration(node) && node.initializer && ts.isCallExpression(node.initializer))) {
         const call = (ts.isExpressionStatement(node) ? node.expression : node.initializer) as ts.CallExpression;
@@ -14,13 +14,14 @@ export const enrichLifeCycleApiFunc = (ctx: CompScriptTransformCtx, node: ts.Nod
             ctx.apiCalls++;
             const callId = ts.isVariableDeclaration(node) ? JSON.stringify(asCode(node.name)) : ctx.apiCalls;
             if (ctx.isMainUserCode) {
-                return argsManipulator(apiCall, '' + callId, call, node);
+                yield argsManipulator(apiCall, '' + callId, call, node);
+                return;
             } else {
                 throw new Error(`Invalid ${apiCall} call: should only be used component body (i.e. not in functions)`);
             }
         }
     }
-    return undefined;
+    return;
 };
 
 type LifeCycleApiFunctions = 'when' | 'memo' | 'afterDomUpdate' | 'store' | 'afterMount' | 'use';

@@ -20,21 +20,29 @@ describe('compilers', () => {
         describe(`${compiler.label}`, () => {
             let Parent: any;
             let Child: any;
-            before(async () => {
-                buildTestFiles(
-                    packagePath('@tsx-air/runtime', 'fixtures'),
-                    packagePath('@tsx-air/compilers', 'tmp'),
-                    compiler,
-                    'runtime.fixture.tsx',
-                    'out.js',
-                );
+            before(() => {
+                // if (process.env.DEBUG) {
+                //     buildTestFiles(
+                //         packagePath('@tsx-air/runtime', 'fixtures'),
+                //         packagePath('@tsx-air/compilers', 'tmp'),
+                //         compiler,
+                //         'runtime.fixture.tsx',
+                //         'out.js',
+                //     );
+                // }
 
-                const exports = compileAndEval(
-                    readFileSync(packagePath('@tsx-air/runtime', 'fixtures', 'runtime.fixture.tsx'), { encoding: 'utf8' }),
-                    compiler
-                );
-                Parent = exports.Parent;
-                Child = exports.Child;
+                try {
+                    const exports = compileAndEval(
+                        readFileSync(packagePath('@tsx-air/runtime', 'fixtures', 'runtime.fixture.tsx'), { encoding: 'utf8' }),
+                        compiler
+                    );
+                    Parent = exports.Parent;
+                    Child = exports.Child;
+                } catch (e) {
+                    console.error(e.message);
+                    console.log(e.$rawJs);
+                    throw e;
+                }
             });
             testRuntimeApi(() => [Parent, Child]);
         });

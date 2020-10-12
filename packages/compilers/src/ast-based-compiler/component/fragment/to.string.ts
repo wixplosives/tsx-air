@@ -1,19 +1,19 @@
 import { cMethod, astTemplate, cloneDeep, asCode, asAst, Modifier, getNodeSrc, setNodeSrc } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
-import { swapVirtualElements } from '../functions';
+import { createScriptTransformCtx, swapVirtualElements } from '../functions';
 import { FragmentData } from './jsx.fragment';
 import last from 'lodash/last';
 import { isComponentTag } from '@tsx-air/utils';
-import { propsAndRtFromInstance, prop } from './common';
+import { prop, propsAndRtFromInstance } from './common';
 
 
 export const generateToString = (fragment: FragmentData) => {
-    const { code: comp, allFragments: fragments, root } = fragment;
-
+    const { code, allFragments: fragments, root } = fragment;
+    const ctx = createScriptTransformCtx(code, fragments);
     const template =
         jsxToStringTemplate(root.sourceAstNode, [
             n => n !== root.sourceAstNode
-                ? swapVirtualElements({ code: comp, fragments }, n, true)
+                ? swapVirtualElements(n, ctx, undefined, true).next().value
                 : undefined,
             (n: ts.Node) => {
                 if (ts.isJsxAttributes(n) && n.properties.some(
@@ -90,7 +90,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
                     if (!/on[A-Z].*|[^h]ref|key/.test(attrName)) {
                         if (initializer && ts.isJsxExpression(initializer)) {
                             add(' ');
-                            add({exp: asAst(`$rn.attr("${attrName}",  ${prop(initializer.expression!)})`) as ts.Expression});
+                            add({ exp: asAst(`$rn.attr("${attrName}",  ${prop(initializer.expression!)})`) as ts.Expression });
                         } else {
                             add(` ${attrName}`);
                             if (initializer) {

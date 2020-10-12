@@ -6,10 +6,11 @@ import { generateHookClass } from './component/hook.class';
 export const tsxAirValidator: TransformerFactory<ts.SourceFile> =
     ctx => {
         const visitor = (node: ts.Node): any => {
-            if (ts.isJsxOpeningLikeElement(node)) {
-                throw new Error('Sorry, no JSX outside of TSXAir and Hook');
-            }
-            return ts.visitEachChild(node, visitor, ctx);
+            // if (ts.isJsxOpeningLikeElement(node)) {
+            //     throw new Error('Sorry, no JSX outside of TSXAir and Hook');
+            // }
+            // return ts.visitEachChild(node, visitor, ctx);
+            return node;
         };
         return visitor as ts.Transformer<ts.SourceFile>;
     };

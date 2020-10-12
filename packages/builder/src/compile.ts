@@ -44,7 +44,7 @@ export function compile(fileNames: string[], compiler: Compiler, outDir: string,
 }
 
 export function compileAndEval(content: string, compiler: Compiler, importPath: string = '', executionContext = {}) {
-    const out = ts.transpileModule(content, {
+    const $rawJs = ts.transpileModule(content, {
         compilerOptions: {
             ...compilerOptions,
             module: ts.ModuleKind.CommonJS
@@ -53,7 +53,7 @@ export function compileAndEval(content: string, compiler: Compiler, importPath: 
         fileName: 'compiled.jsx'
     }).outputText;
 
-    const exports = {};
+    const exports = { $rawJs };
     const _require = (path: string) => {
         switch (path) {
             case '@tsx-air/runtime':
@@ -62,8 +62,13 @@ export function compileAndEval(content: string, compiler: Compiler, importPath: 
                 return require(join(importPath, path));
         }
     };
-    const script = new Script(out);
-    const context = { ...runtime, require: _require, exports, ...executionContext };
-    script.runInNewContext(context);
-    return exports as Record<string, any>;
+    try {
+        const script = new Script($rawJs);
+        const context = { ...runtime, require: _require, exports, ...executionContext };
+        script.runInNewContext(context);
+        return exports as Record<string, any>;
+    } catch(e) {
+        e.$rawJs = $rawJs;
+        throw e;
+    }
 }

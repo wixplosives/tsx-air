@@ -1,3 +1,6 @@
+* {
+    font-family: sans-serif;
+}
 .eye {
     border: #000 solid 0.1em;
     margin: 5%;
@@ -82,7 +85,7 @@
 }
 
 .smile::after {
-    content: '│││││';
+    content: '\2502\2502\2502\2502\2502';
     transform: rotate(45deg) translate(17%, 106%);
     font-size: 200%;
     color: black;

@@ -18,6 +18,9 @@ export function testRuntimeApi<P extends typeof Component, C extends typeof Comp
             runtime = new Runtime(window, (fn: FrameRequestCallback) => (onNextFrame.push(fn), onNextFrame.length));
             setInstance('default', runtime);
             [Parent, Child] = getCompiled();
+            if (!Parent || !Child) {
+                throw new Error('Compilation error');
+            }
         });
 
         describe('render', () => {

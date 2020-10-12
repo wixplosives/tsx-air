@@ -42,10 +42,11 @@ export class Component extends Displayable implements WithUserCode<VirtualElemen
     $afterUnmount: AfterUnmountCb[] = [];
     $afterDomUpdate: AfterUpdateCb[] = [];
     consecutiveChanges = new Map<AfterUpdateCb, number>();
+    volatile!: any;
 
     constructor(readonly key: string, public parent: Displayable | undefined, props: object, runtime: Runtime) {
         super(key, parent, runtime);
-        store(this, '$props', props);
+        this.volatile = { '$props': store(this, '$props', props) };
         let depth = 0;
         while (parent) {
             depth++;

@@ -9,34 +9,46 @@ import {
     UsedInScope,
     asAst,
     JsxRoot,
-    JsxExpression, UserCode, isCompDefinition, isHookDef
+    JsxExpression, UserCode, isCompDefinition, isHookDef, asCode
 } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import flatMap from 'lodash/flatMap';
 import { merge, chain, defaultsDeep, mergeWith, omit } from 'lodash';
 import isArray from 'lodash/isArray';
 import { FragmentData } from './fragment/jsx.fragment';
+import { readNodeFuncName } from './functions/names';
+import { STORES, VOLATILE } from '../consts';
 
 export const codeFuncByName = (code: UserCode, name: string) => code.functions.find(f => f.name === name);
 
 export function getDirectDependencies(code: UserCode, scope: UsedVariables, ignoreFuncReferences: boolean): UsedInScope {
     const used: UsedInScope = {};
     const _usedInScope = (name?: string) =>
-        name && (name in scope.accessed)
-        && !(ignoreFuncReferences && code.functions.some(f => f.name === name));
+        (name && (name in scope.accessed || name in scope.executed)
+            && !(ignoreFuncReferences && code.functions.some(f => f.name === name)));
 
     code.volatileVariables.filter(_usedInScope).forEach(v =>
-        add(used, { [v]: scope.accessed[v] }, 'volatile'));
+        add(used, { [v]: scope.accessed[v] }, VOLATILE));
 
     if (isCompDefinition(code) && _usedInScope(code.propsIdentifier)) {
-        add(used, { $props: scope.read[code.propsIdentifier!] }, 'stores');
+        add(used, { $props: scope.read[code.propsIdentifier!] }, STORES);
     }
 
     code.stores.map(c => c.name).filter(_usedInScope).forEach(
-        name => add(used, { [name]: scope.accessed[name] }, 'stores')
+        name => add(used, { [name]: scope.accessed[name] }, STORES)
     );
+
+    scope.executed.$refs?.forEach(ref => {
+        const name = readNodeFuncName(ref);
+        if (name) {
+            add(used, { [name]: {} }, VOLATILE);
+        } else {
+            console.log(asCode(ref));
+        }
+    });
     return used;
 }
+
 type U<T> = UsedInScope<T> | UsedVariables<T> | RecursiveMap<T>;
 export function mergeRefMap<T, R extends U<T>>(obj: R, ...newUsed: R[]): R {
     newUsed.forEach(added => mergeWith(obj, added, (a, b) => {
@@ -113,17 +125,23 @@ export function dependantOnVars(comp: CompDefinition, scope: UsedVariables, igno
     return flat;
 }
 
-function* getClosureStores(code: UserCode, used: UsedInScope, storesTarget: string) {
-    if (used.stores) {
-        yield cConst(destructure(used.stores,
-            isCompDefinition(code) ? { $props: code.propsIdentifier } : {})!,
-            asAst(`${storesTarget}.stores`) as ts.PropertyAccessExpression);
+function* getClosureVolatile(code: UserCode, used: UsedInScope, storesTarget: string) {
+    const res = merge({}, used.stores, used.volatile);
+    if (used.props) {
+        res.$props = {};
     }
-}
-
-function* getClosureVolatile(used: UsedInScope, storesTarget: string) {
-    if (used.volatile) {
-        yield cLet(destructure(used.volatile)!, asAst(`${storesTarget}.volatile`) as ts.PropertyAccessExpression);
+    // if ()
+    // if (used.stores) {
+    //     yield cConst(destructure(used.stores,
+    //         isCompDefinition(code) ? { $props: code.propsIdentifier } : {})!,
+    //         asAst(`${storesTarget}.volatile`) as ts.PropertyAccessExpression);
+    // }
+    if (used.stores || used.volatile || used.props) {
+        yield cLet(destructure(res,
+            isCompDefinition(code)
+                ? { $props: code.propsIdentifier }
+                : {})!,
+            asAst(`${storesTarget}.volatile`) as ts.PropertyAccessExpression);
     }
 }
 
@@ -140,7 +158,7 @@ function* getClosureProps(code: UserCode, used: UsedInScope, storesTarget: strin
     // if( isHookDef())
 }
 
-export function* setupClosure(code: UserCode, scope: ts.Node[] | UsedVariables, isPreRender = false, storesTarget = 'this') {
+export function* setupClosure(code: UserCode, scope: ts.Node[] | UsedVariables, isUserCode = false, storesTarget = 'this') {
     const f = ((isArray(scope) ? scope : [scope]) as ts.Node[]).map(s =>
         // @ts-ignore: handle UsedVariables scope
         (s.read && s.accessed)
@@ -152,33 +170,27 @@ export function* setupClosure(code: UserCode, scope: ts.Node[] | UsedVariables, 
         delete used.accessed[k];
     });
     yield* destructureParams(code, used);
-    yield* addToClosure(code, getDirectDependencies(code, used, true), isPreRender, storesTarget);
-    if (!isPreRender) {
-        yield* addToClosure(code, Object.keys(used.executed).filter(
-            name => code.functions.some(fn => fn.name === name)
-        ), false, storesTarget);
-    }
+
+    yield* addToClosure(code, getDirectDependencies(code, used, false), isUserCode, storesTarget);
+    // if (!isUserCode) {
+    //     yield* addToClosure(code, Object.keys(used.executed).filter(
+    //         name => code.functions.some(fn => fn.name === name)
+    //     ), false, storesTarget);
+    // }
 }
 
-export function* addToClosure(code: UserCode, used: UsedInScope | string[], isPreRender: boolean, storesTarget: string) {
-    if (isArray(used)) {
-        if (used.length) {
-            yield cConst(destructureNamed(used, {}), asAst('this.owner') as ts.Expression);
-        }
+export function* addToClosure(code: UserCode, used: UsedInScope, isUserCode: boolean, storesTarget: string) {
+    if (!isUserCode) {
+        yield* getClosureVolatile(code, used, storesTarget);
     } else {
-        if (!isPreRender) {
-            yield* getClosureStores(code, used, storesTarget);
-            yield* getClosureVolatile(used, storesTarget);
-        } else {
-            yield* getClosureProps(code, used, storesTarget);
-        }
+        yield* getClosureProps(code, used, storesTarget);
     }
 }
 
 function* destructureParams(code: UserCode, used: UsedVariables) {
     if (isHookDef(code)) {
         const args = code.parameters.map(p => p.name);
-        if (args.length && args.some(a => 
+        if (args.length && args.some(a =>
             used.accessed[a])) {
             yield asAst(`const [${args.join(',')}] = this.stores.$props`) as ts.Statement;
         }

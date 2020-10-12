@@ -42,7 +42,7 @@ export function getNewPage(server: TestServer, browser: Browser, options: Preppe
     };
 }
 
-export const getBrowser = (debug: boolean) => launch({ headless: !debug, devtools: debug });
+export const getBrowser = (debug: boolean) => launch({ headless: !debug, devtools: debug, timeout: debug ? 0 : 30000 });
 export const killBrowser = async (browser: Browser) => {
     if (browser.isConnected()) {
         const res = await Promise.race([
@@ -111,7 +111,7 @@ export function assertNoPageErrors(api: PreppeteerSuiteApi) {
         if (this.currentTest && api.pageErrors.length > 0) {
             api.pageErrors.forEach(e => {
                 e.message = `Test page contains the following errors
-${process.env.DEBUG?'':'    Tip: use "DEBUG=true yarn test" to debug in browser\n'}${e.message}`;
+${process.env.DEBUG ? '' : '    Tip: use "DEBUG=true yarn test" to debug in browser\n'}${e.message}`;
                 this.currentTest!.emit('error', e);
             });
         }
