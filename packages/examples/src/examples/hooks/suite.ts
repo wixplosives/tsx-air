@@ -29,14 +29,14 @@ export function suite(api: ExampleSuiteApi) {
         await htmlMatch(page, { cssQuery: '.eye', pageInstances: 2 });
         const face = JSON.parse(await page.$eval('.face', el => JSON.stringify((el as any).getBoundingClientRect())));
         await page.mouse.move(face.left, face.top);
-        await page.waitForFunction(()=>true, {polling:'mutation'});
+        await page.waitForFunction(()=>true, {polling:'raf'});
         let eyes = await getEyeBallsTranslation(page);
         expect(eyes.right.x).to.be.approximately(-18, 2);
         expect(eyes.right.y).to.be.approximately(-6, 2);
         expect(eyes.left.x).to.be.approximately(-9, 2);
         expect(eyes.left.y).to.be.approximately(-10, 2);
         await page.mouse.move(face.right, face.bottom);
-        await page.waitForFunction(()=>true, {polling:'mutation'});
+        await page.waitForFunction(()=>true, {polling:'raf'});
         eyes = await getEyeBallsTranslation(page);
         expect(eyes.right.x).to.be.approximately(4, 2);
         expect(eyes.right.y).to.be.approximately(18, 2);
