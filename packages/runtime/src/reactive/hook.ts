@@ -13,7 +13,7 @@ export function use(instance: Reactive, id: string, HookType: new (p: Reactive) 
         hook = new HookType(instance);
         hooks.register(instance, id, hook);
     }
-    hook.stores.$props.$set(args);
+    hook.stores.$args.$set(args);
     const ret = $rt.getHookValue(hook);
     if (ret?.$subscribe) {
         ret.$subscribe(instance.storeChanged);

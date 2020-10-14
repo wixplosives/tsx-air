@@ -168,13 +168,7 @@ export function* setupClosure(code: UserCode, scope: ts.Node[] | UsedVariables, 
         delete used.accessed[k];
     });
     yield* destructureParams(code, used);
-
     yield* addToClosure(code, getDirectDependencies(code, used, false), isUserCode, storesTarget);
-    // if (!isUserCode) {
-    //     yield* addToClosure(code, Object.keys(used.executed).filter(
-    //         name => code.functions.some(fn => fn.name === name)
-    //     ), false, storesTarget);
-    // }
 }
 
 export function* addToClosure(code: UserCode, used: UsedInScope, isUserCode: boolean, storesTarget: string) {
@@ -190,7 +184,7 @@ function* destructureParams(code: UserCode, used: UsedVariables) {
         const args = code.parameters.map(p => p.name);
         if (args.length && args.some(a =>
             used.accessed[a])) {
-            yield asAst(`const [${args.join(',')}] = this.stores.$props`) as ts.Statement;
+            yield asAst(`const [${args.join(',')}] = this.stores.$args`) as ts.Statement;
         }
     }
 }

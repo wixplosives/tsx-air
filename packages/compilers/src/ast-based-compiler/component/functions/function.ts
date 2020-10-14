@@ -37,8 +37,7 @@ function generateUserCode(code: UserCode, fragments: FragmentData[]) {
 function parseStatements(code: UserCode, statements: ts.Statement[], fragments: FragmentData[], isUserCode: boolean) {
     const declaredVars = new Set<string>();
     const { parser } = createScriptTransformCtx(code, fragments, declaredVars, isUserCode);
-    const parsed = [...flatGen(statements, parser)];
-    return parsed;
+    return [...flatGen(statements, parser)];
 }
 
 function generateMethodBind(func: FuncDefinition) {
