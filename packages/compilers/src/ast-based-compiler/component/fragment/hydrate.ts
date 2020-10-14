@@ -1,11 +1,10 @@
-import { cMethod, asAst, asCode } from '@tsx-air/compiler-utils';
+import { cMethod, asAst, asCode, isFuncDef } from '@tsx-air/compiler-utils';
 import { FragmentData } from './jsx.fragment';
 import ts from 'typescript';
 import { setupClosure, jsxExp, dynamicAttributes, attrElement } from '../helpers';
-import { uniqBy } from 'lodash';
-import { tagHandlersUsed } from '../event.handlers';
+import { isString, uniqBy } from 'lodash';
 import { prop, propsFromInstance } from './common';
-import { readFuncName } from '../functions/names';
+import { readFuncName, readNodeFuncName } from '../functions/names';
 
 export function generateHydrate(fragment: FragmentData) {
     const bindings: ts.Statement[] = [];
@@ -61,14 +60,12 @@ function processRefs(bindings: ts.Statement[], elementsInCtx: ts.JsxOpeningLikeE
 }
 
 function processHandlers(bindings: ts.Statement[], fragment: FragmentData, elementsInCtx: ts.JsxOpeningLikeElement[], jsxElm: any) {
-    for (const [func, attrs] of tagHandlersUsed(fragment)) {
-        const handlerName = func.name || readFuncName(func);
-        for (const handler of attrs) {
-            const elm = elementsInCtx.indexOf(jsxElm(handler));
-            if (elm < 0) { throw new Error(`Binding error: missing HTMLElement while adding event listener`); }
-            const name = asCode((handler.sourceAstNode.parent as ts.JsxAttribute).name);
-            const event = name.replace(/^on/, '').toLowerCase();
-            bindings.push(asAst(`this.ctx.elements[${elm}].addEventListener('${event}', this.owner.${handlerName})`) as ts.Statement);
+    for (const { handler, sourceAstNode, event } of fragment.root.handlers) {
+        const elm = elementsInCtx.indexOf(sourceAstNode.parent.parent);
+        const name = isString(handler) ? handler : readFuncName(handler);
+        if (elm < 0) {
+            throw new Error(`Binding error: missing HTMLElement while adding event listener`);
         }
+        bindings.push(asAst(`this.ctx.elements[${elm}].addEventListener('${event}', this.owner.${name})`) as ts.Statement);
     }
 }

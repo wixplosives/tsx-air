@@ -1,10 +1,10 @@
 import { asCode } from '..';
-import { CompDefinition, Analyzer, AnalyzerResult } from './types';
+import { CompDefinition, Analyzer, AnalyzerResult, JsxRoot, FuncDefinition } from './types';
 import ts from 'typescript';
-import { jsxRoots } from './jsxroot';
+import { jsxRoots as roots } from './jsxroot';
 import { errorNode, aggregateAstNodeMapping, addToNodesMap } from './types.helpers';
 import { findUsedVariables } from './find-used-variables';
-import { functions } from './func-definition';
+import { functions as funcs } from './func-definition';
 import { getStoresDefinitions } from './store-definition';
 import { isTsFunction, isTsJsxRoot } from './types.is.type';
 import { safely } from '@tsx-air/utils';
@@ -45,6 +45,20 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
     );
     const returns = findReturns(compFunc);
 
+    const functions = funcs(compFunc.body, []);
+    const jsxRoots = roots(astNode, functions);
+    const addToFuncs = (c: { jsxRoots?: JsxRoot[], functions?: FuncDefinition[] }) => {
+        if (c.functions) {
+            for (const fn of c.functions) {
+                if (!functions.includes(fn)) {
+                    functions.push(fn);
+                }
+            }
+        }
+        c?.jsxRoots?.forEach(addToFuncs);
+    };
+    addToFuncs({ jsxRoots });
+
     const tsxAir: CompDefinition = {
         kind: 'CompDefinition',
         name,
@@ -53,8 +67,8 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
         variables,
         volatileVariables,
         sourceAstNode: astNode,
-        jsxRoots: jsxRoots(astNode),
-        functions: functions(compFunc.body),
+        jsxRoots,
+        functions,
         stores,
         returns
     };

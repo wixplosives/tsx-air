@@ -10,9 +10,9 @@ export type Analyzer<T extends AnalyzedNode> = (node: ts.Node) => AnalyzerResult
 export type AnalyzedNodeType = 'CompDefinition' | 'JsxFragment' | 'HookDefinition' |
     'JsxRoot' | 'JsxExpression' | 'file' | 'import' |
     'JsxComponent' | 'JsxAttribute' | 'CompProps' | 'error' | 'importSpecifier' |
-    'exportSpecifier' | 'reExport' | 'funcDefinition' | 'storeDefinition' |
+    'exportSpecifier' | 'reExport' | 'FuncDefinition' | 'storeDefinition' |
     'Namespace' | 'UsedNamespaceProperty' | 'Return' |
-    'Parameter'
+    'Parameter' | 'JsxEventHandler'
     ;
 export type JsxElm = ts.JsxElement | ts.JsxSelfClosingElement;
 export type TsxErrorType = 'internal' | 'code' | 'unsupported' | 'not supported yet';
@@ -76,11 +76,11 @@ export interface ReExport extends AnalyzedNode<ts.ExportDeclaration> {
 }
 
 export interface FuncDefinition extends NodeWithVariables<ts.FunctionExpression | ts.ArrowFunction> {
-    kind: 'funcDefinition';
+    kind: 'FuncDefinition';
     name?: string;
     parameters: Parameter[];
     jsxRoots: JsxRoot[];
-    definedFunctions: FuncDefinition[];
+    functions: FuncDefinition[];
 }
 
 export interface Parameter extends AnalyzedNode<ts.ParameterDeclaration> {
@@ -127,6 +127,14 @@ export interface JsxRoot extends NodeWithVariables<JsxElm> {
     kind: 'JsxRoot';
     expressions: JsxExpression[];
     components: JsxComponent[];
+    functions: FuncDefinition[]; 
+    handlers: JsxEventHandler[];   
+}
+
+export interface JsxEventHandler extends AnalyzedNode<ts.JsxAttribute> {
+    kind: 'JsxEventHandler';
+    event: string;
+    handler: FuncDefinition|string;
 }
 
 export interface JsxFragment extends NodeWithVariables<ts.JsxFragment> {

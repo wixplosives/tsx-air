@@ -7,6 +7,10 @@ export function isAnalyzed(node: any): node is analyzed.JsxAttribute {
     return typeof node.kind === 'string' && isNumber(node.sourceAstNode?.kind) && isNumber(node.sourceAstNode?.flags);
 }
 
+export function isFuncDef(node:any): node is analyzed.FuncDefinition {
+    return  node.kind === 'FuncDefinition';
+}
+
 export function isJsxAttribute(node: any): node is analyzed.JsxAttribute {
     return node.kind === 'JsxAttribute';
 }

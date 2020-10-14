@@ -25,7 +25,7 @@ export function suite(api: ExampleSuiteApi) {
         ]);
     });
 
-    xit(`each button removes an image`, async () => {
+    it.only(`each button removes an image`, async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, {
             cssQuery: 'button',

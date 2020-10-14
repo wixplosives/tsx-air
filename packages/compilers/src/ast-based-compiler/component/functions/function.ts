@@ -38,13 +38,6 @@ function parseStatements(code: UserCode, statements: ts.Statement[], fragments: 
     const declaredVars = new Set<string>();
     const { parser } = createScriptTransformCtx(code, fragments, declaredVars, isUserCode);
     const parsed = [...flatGen(statements, parser)];
-
-    // if (isUserCode) {
-    //     if (declaredVars.size) {
-    //         parsed.splice(-1, 0, asAst(`this.volatile={${[...declaredVars, ...namedFuncs(code)].join(',')
-    //             }}`) as ts.Statement);
-    //     }
-    // }
     return parsed;
 }
 

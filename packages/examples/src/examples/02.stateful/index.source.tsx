@@ -1,6 +1,9 @@
 import { TSXAir, store } from '@tsx-air/framework';
 
 export const StatefulComp = TSXAir((props: { initialState: string }) => {
+    // Using store means: 
+    // 1. the data is persistent. 
+    // 2. changing the data will trigger a render
     const state = store({
         a: props.initialState + 'A',
         b: props.initialState + 'B',
@@ -8,6 +11,7 @@ export const StatefulComp = TSXAir((props: { initialState: string }) => {
         bCounter: 0,
         changeCount: 0
     });
+    // no persistency
     let volatile = 0;
 
     const onClickA = () => state.a = `${props.initialState} A (${++state.aCounter})`;

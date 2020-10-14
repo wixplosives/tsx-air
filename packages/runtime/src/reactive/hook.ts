@@ -25,7 +25,7 @@ export class Hook<T = any> extends Reactive implements WithUserCode<any> {
     static is(x: any): x is Hook {
         return x && x instanceof Hook;
     }
-    static isType(x: any): x is Hook {
+    static isType(x: any): x is typeof Hook {
         return x && x.prototype && x.prototype instanceof Hook;
     }
     $afterMount: AfterMountCb[] = [];
@@ -36,8 +36,8 @@ export class Hook<T = any> extends Reactive implements WithUserCode<any> {
 
     constructor(parent: Reactive) {
         super(parent, parent.$rt);
-        this.stores.$props = store(this, '$props', []);
-        this.volatile = { $props: this.stores.$props };
+        this.stores.$args = store(this, '$args', []);
+        this.volatile = { $args: this.stores.$args };
     }
 
     updated() {
