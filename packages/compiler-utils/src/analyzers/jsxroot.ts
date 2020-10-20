@@ -1,7 +1,7 @@
 import flatMap from 'lodash/flatMap';
 import { findJsxRoot, findJsxExpression, getComponentTag } from './../visitors/jsx';
 import { scan, ScannerApi } from '../ast-utils/scanner';
-import { JsxRoot, JsxElm, JsxComponent, JsxAttribute, FuncDefinition, JsxEventHandler } from './types';
+import { JsxRoot, JsxElm, JsxComponent, JsxAttribute, JsxEventHandler } from './types';
 import ts from 'typescript';
 import { findUsedVariables, mergeUsedVariables } from './find-used-variables';
 import { parseExpression } from './jsx.expression';
@@ -10,15 +10,15 @@ import { functions as funcs } from './func-definition';
 import { asCode } from '../dev-utils';
 import { camelCase } from 'lodash';
 
-export function jsxRoots(astNode: ts.Node, knownFunctions: FuncDefinition[]): JsxRoot[] {
+export function jsxRoots(astNode: ts.Node): JsxRoot[] {
     return scan(astNode, findJsxRoot)
         .map(({ node }) => jsxRoot(node as JsxElm));
 
 
     function jsxRoot(sourceAstNode: JsxElm) {
-        const expressions = scan(sourceAstNode, findJsxExpression).map(({ node }) => parseExpression(node, knownFunctions));
+        const expressions = scan(sourceAstNode, findJsxExpression).map(({ node }) => parseExpression(node));
         const components = scan(sourceAstNode, findJsxComponent).map<JsxComponent>(i => i.metadata);
-        const functions = funcs(sourceAstNode, knownFunctions);
+        const functions = funcs(sourceAstNode, false);
         const handlers = expressions.map(exp => exp.sourceAstNode.parent)
             .filter(ts.isJsxAttribute).filter(attr => asCode(attr.name).startsWith('on'))
             .filter(attr => attr.initializer && ts.isJsxExpression(attr.initializer))
@@ -60,7 +60,7 @@ export function jsxRoots(astNode: ts.Node, knownFunctions: FuncDefinition[]): Js
                             const value = !initializer ? true :
                                 ts.isStringLiteral(initializer!)
                                     ? initializer.text
-                                    : parseExpression(initializer!, knownFunctions);
+                                    : parseExpression(initializer!);
                             acc.push(
                                 {
                                     kind: 'JsxAttribute',

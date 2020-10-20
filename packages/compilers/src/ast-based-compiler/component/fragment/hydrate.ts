@@ -1,10 +1,10 @@
-import { cMethod, asAst, asCode, isFuncDef } from '@tsx-air/compiler-utils';
+import { cMethod, asAst, asCode } from '@tsx-air/compiler-utils';
 import { FragmentData } from './jsx.fragment';
 import ts from 'typescript';
 import { setupClosure, jsxExp, dynamicAttributes, attrElement } from '../helpers';
 import { isString, uniqBy } from 'lodash';
 import { prop, propsFromInstance } from './common';
-import { readFuncName, readNodeFuncName } from '../functions/names';
+import { readFuncName } from '../functions/names';
 
 export function generateHydrate(fragment: FragmentData) {
     const bindings: ts.Statement[] = [];
@@ -44,7 +44,7 @@ function hydrateElements(bindings: ts.Statement[], fragment: FragmentData) {
         const elementsInCtx = uniqBy(attrs, attrElement).map(attrElement);
 
         processRefs(bindings, elementsInCtx);
-        processHandlers(bindings, fragment, elementsInCtx, attrElement);
+        processHandlers(bindings, fragment, elementsInCtx);
     }
 }
 
@@ -59,13 +59,14 @@ function processRefs(bindings: ts.Statement[], elementsInCtx: ts.JsxOpeningLikeE
     });
 }
 
-function processHandlers(bindings: ts.Statement[], fragment: FragmentData, elementsInCtx: ts.JsxOpeningLikeElement[], jsxElm: any) {
+function processHandlers(bindings: ts.Statement[], fragment: FragmentData, elementsInCtx: ts.JsxOpeningLikeElement[]) {
     for (const { handler, sourceAstNode, event } of fragment.root.handlers) {
         const elm = elementsInCtx.indexOf(sourceAstNode.parent.parent);
         const name = isString(handler) ? handler : readFuncName(handler);
         if (elm < 0) {
-            throw new Error(`Binding error: missing HTMLElement while adding event listener`);
+           throw new Error(`Binding error: missing HTMLElement while adding event listener`);
+        } else {
+            bindings.push(asAst(`this.ctx.elements[${elm}].addEventListener('${event.toLowerCase()}', this.owner.${name})`) as ts.Statement);
         }
-        bindings.push(asAst(`this.ctx.elements[${elm}].addEventListener('${event}', this.owner.${name})`) as ts.Statement);
     }
 }

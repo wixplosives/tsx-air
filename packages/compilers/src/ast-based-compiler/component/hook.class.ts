@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 export const generateHookClass = (hook: HookDefinition, api: FileTransformerAPI) => {
     api.swapImport('@tsx-air/framework', '@tsx-air/runtime', ['TSXAir', 'RefHolder']);
-    api.ensureImport('getInstance, Component, Fragment, VirtualElement', '@tsx-air/runtime');
+    api.ensureImport('Fragment, VirtualElement', '@tsx-air/runtime');
     const fragments = [...parseFragments(hook)];
     const hookClass = cClass(
         hook.name!,

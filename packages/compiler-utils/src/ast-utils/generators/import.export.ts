@@ -1,7 +1,7 @@
 import { cLiteralAst } from '.';
 import ts from 'typescript';
 
-interface ImportSpecifierDef {
+export interface ImportSpecifierDef {
     localName?: string;
     importedName: string;
 }
@@ -12,10 +12,9 @@ export interface ImportDefinition {
     defaultLocalName?: string;
 }
 
-export const cImport = (info: ImportDefinition) => {
+export const cImport = (module: string, imports: ImportSpecifierDef[]) => {
     return ts.createImportDeclaration(undefined, undefined,
-        ts.createImportClause(
-            info.defaultLocalName ? ts.createIdentifier(info.defaultLocalName) : undefined,
-            info.exports.length ? ts.createNamedImports(info.exports.map(exp => ts.createImportSpecifier(exp.localName ? ts.createIdentifier(exp.importedName) : undefined, exp.localName ? ts.createIdentifier(exp.localName) : ts.createIdentifier(exp.importedName)))) : undefined
-        ), cLiteralAst(info.modulePath));
+        ts.createImportClause(undefined,
+            ts.createNamedImports(imports.map(exp => ts.createImportSpecifier(exp.localName ? ts.createIdentifier(exp.importedName) : undefined, exp.localName ? ts.createIdentifier(exp.localName) : ts.createIdentifier(exp.importedName))))
+        ), cLiteralAst(module));
 };

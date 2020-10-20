@@ -1,4 +1,4 @@
-import { cClass, FileTransformerAPI, asAst } from '@tsx-air/compiler-utils';
+import { cClass, FileTransformerAPI, asAst, UserCode } from '@tsx-air/compiler-utils';
 import { generateUpdateView } from '../update.view';
 import { FragmentData } from './jsx.fragment';
 import { generateVirtualComponents } from './virtual.comp';
@@ -18,3 +18,13 @@ export const generateFragmentClass = (fragment: FragmentData, _api: FileTransfor
     ]);
     return frag;
 };
+
+export function* generateFragments(code: UserCode, fragments: FragmentData[], api: FileTransformerAPI) {
+    for (const fragment of fragments) {
+        if (!fragment.isComponent) {
+            api.ensureImport('Fragment, VirtualElement', '@tsx-air/runtime');
+            yield generateFragmentClass(fragment, api);
+            yield asAst(`${code.name}.${fragment.id}=${fragment.id}`) as ts.Statement;
+        }
+    }
+}

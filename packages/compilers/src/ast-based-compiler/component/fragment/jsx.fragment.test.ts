@@ -3,8 +3,7 @@ import get from 'lodash/get';
 import ts from 'typescript';
 import { getCompDef } from '@tsx-air/compiler-utils/src/analyzers/test.helpers';
 import { expect } from 'chai';
-
-
+ 
 describe('fragments', () => {
     describe(`parseFragments`, () => {
         it(`creates a fragment for every JSX root`, () => {
@@ -13,7 +12,6 @@ describe('fragments', () => {
                     const simpleFragment = <div />;
                     return <div>{<InnerComp />}</div>;
                 })`);
-            const statements = get(comp.sourceAstNode.arguments[0], 'body.statements') as ts.Statement[];
 
             const allFragments = [...parseFragments(comp)];
             expect(allFragments).to.have.length(3);
@@ -22,7 +20,6 @@ describe('fragments', () => {
                 hasInnerFragments: false,
                 id: 'div0',
                 index: 0,
-                src: statements[1],
                 isComponent: false,
                 code:comp
             });
@@ -31,7 +28,6 @@ describe('fragments', () => {
                 hasInnerFragments: false,
                 id: 'InnerComp1',
                 index: 1,
-                src: statements[2],
                 isComponent: true,
                 allFragments,code:comp
             });
@@ -40,7 +36,6 @@ describe('fragments', () => {
                 hasInnerFragments: true,
                 id: 'div2',
                 index: 2,
-                src: statements[2],
                 isComponent: false,
                 allFragments,code:comp
             });

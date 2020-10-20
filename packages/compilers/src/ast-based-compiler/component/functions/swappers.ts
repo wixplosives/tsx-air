@@ -103,13 +103,10 @@ const isFunc = (v: ts.VariableDeclaration) => (v.initializer && (
 export const swapLambdas: Swapper = function* (n) {
     if (ts.isFunctionExpression(n) || ts.isArrowFunction(n)) {
         const name = readNodeFuncName(n);
-        yield name ? ts.createCall(
-            ts.createPropertyAccess(
-                ts.createThis(),
-                ts.createIdentifier(name)
-            ),
-            undefined,
-            []
+
+        yield name ? ts.createPropertyAccess(
+            ts.createThis(),
+            ts.createIdentifier(name)
         ) : n;
     }
     return;

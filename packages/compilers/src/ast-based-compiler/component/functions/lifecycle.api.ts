@@ -1,14 +1,24 @@
 import { asAst, asCode, findUsedVariables } from '@tsx-air/compiler-utils';
 import ts from 'typescript';
 import { getRecursiveMapPaths } from '../helpers';
-import { readNodeFuncName } from './names';
+import { isInlineComp } from './inline.class';
+import { readFuncName, readNodeFuncName } from './names';
 import { Swapper } from './swappers';
 
 export const enrichLifeCycleApiFunc: Swapper = function* (node, ctx) {
     if ((ts.isExpressionStatement(node) && ts.isCallExpression(node.expression))
         || (ts.isVariableDeclaration(node) && node.initializer && ts.isCallExpression(node.initializer))) {
         const call = (ts.isExpressionStatement(node) ? node.expression : node.initializer) as ts.CallExpression;
-        const apiCall = asCode(call.expression) as LifeCycleApiFunctions;
+        let apiCall: LifeCycleApiFunctions = asCode(call.expression) as LifeCycleApiFunctions;
+        if (ctx.code.functions.filter(isInlineComp).find(fn => readFuncName(fn) === apiCall)) {
+            apiCall = 'inline';
+            lifeCycleApiArgsManipulators.inline = (_, callId, inlineCall, n) => {
+                const inlineComp = asCode(inlineCall.expression);
+                const hooksArgs = inlineCall.arguments.map(a => asCode(a)).join(',');
+                return enrichedApiCall('inline', [`this`, callId, `${ctx.code.name}.${inlineComp}`, `[${hooksArgs}]`], n);
+            };
+
+        }
         const argsManipulator = lifeCycleApiArgsManipulators[apiCall];
         if (argsManipulator) {
             ctx.apiCalls++;
@@ -24,7 +34,7 @@ export const enrichLifeCycleApiFunc: Swapper = function* (node, ctx) {
     return;
 };
 
-type LifeCycleApiFunctions = 'when' | 'memo' | 'afterDomUpdate' | 'store' | 'afterMount' | 'use';
+type LifeCycleApiFunctions = 'when' | 'memo' | 'afterDomUpdate' | 'store' | 'afterMount' | 'use' | 'inline';
 type Enricher = (apiCall: LifeCycleApiFunctions, callId: string, call: ts.CallExpression, node: ts.Node) => ts.Expression | ts.VariableDeclaration;
 
 const enrichedApiCall = (apiCall: LifeCycleApiFunctions, params: string[], node: ts.Node) => {
@@ -69,7 +79,8 @@ const lifeCycleApiArgsManipulators: Record<LifeCycleApiFunctions, Enricher> = {
     afterDomUpdate,
     'store': noFilter,
     'afterMount': noFilter,
-    use
+    use,
+    'inline': null as any as Enricher
 };
 
 function getDependencies(call: ts.CallExpression, isActionFirstArg: boolean, findVars: boolean) {

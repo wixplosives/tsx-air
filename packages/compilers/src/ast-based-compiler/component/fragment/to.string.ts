@@ -87,7 +87,7 @@ export const jsxToStringTemplate = (jsx: ts.JsxElement | ts.JsxSelfClosingElemen
                     const { name, initializer } = attr;
                     let attrName = asCode(name);
                     attrName = attrName === 'className' ? 'class' : attrName;
-                    if (!/on[A-Z].*|[^h]ref|key/.test(attrName)) {
+                    if (!/on[A-Z].*|^ref$|^key$/.test(attrName)) {
                         if (initializer && ts.isJsxExpression(initializer)) {
                             add(' ');
                             add({ exp: asAst(`$rn.attr("${attrName}",  ${prop(initializer.expression!)})`) as ts.Expression });

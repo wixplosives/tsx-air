@@ -17,15 +17,18 @@ export const Gallery = TSXAir((props: { baseUrl: string }) => {
     //     } disabled={state.images.length < 2}>Remove</button>;
     // };
 
+    // tslint:disable: no-console
     return <div className="gallery"
         onClick={() => console.log('clicked')}
     >
         {state.images.map((img, i) => <div key={img.dataId + ''}>
             <img src={`/${props.baseUrl}/${img.src}`}
                 title={`image ${i + 1}/${state.images.length}`}
-                onClick={() => console.log(img.src)}
+                onClick={                              
+                    () => console.log(img.src)}
             />
             {/* {deleteButton(img.src)} */}
         </div>)}
+        {}
     </div>;
 });

@@ -3,6 +3,7 @@ import { ComponentServices } from './component.services';
 import { ViewUpdater } from './view.updater';
 import { Component, Reactive, Hook, Store } from '../reactive';
 import { Registry } from '../internals/registry';
+import { Inline } from '../reactive/inline';
 
 export class Runtime {
     readonly renderer = new Renderer(this);
@@ -17,6 +18,7 @@ export class Runtime {
     readonly hooks = new Registry<Hook>((instance: Reactive, id: string, hook: Hook) => {
         instance.hooks[id] = hook;
     });
+    readonly inline = new Registry<Inline>();
 
     readonly document: Document;
     readonly mockDom: HTMLElement;

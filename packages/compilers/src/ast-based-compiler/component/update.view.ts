@@ -33,13 +33,12 @@ function generateExpUpdates(statements: ts.Statement[], fragment: FragmentData) 
         addUpdate(exp, `$up.updateExpression(this.ctx.expressions[${i}], ${prop(exp.expression)})`)
     );
     fragment.root.components.forEach(childComp =>
-        statements.push(asAst(`$up.getUpdatedInstance(this.${
-            getVComp(comp, childComp).name})`) as ts.Statement)
+        statements.push(asAst(`$up.getUpdatedInstance(this.${getVComp(comp, childComp).name})`) as ts.Statement)
     );
     for (const [exp, elmIndex] of elementsWithDynamicAttr(fragment)) {
         const attr = exp.sourceAstNode.parent as ts.JsxAttribute;
         const name = asCode(attr.name);
-        if (!name.startsWith('on')) {
+        if (!(name.startsWith('on') || name === 'ref' || name === 'key')) {
             let attrValue = prop(exp.expression);
             if (name === 'style') {
                 attrValue = `$rn.spreadStyle(${attrValue})`;

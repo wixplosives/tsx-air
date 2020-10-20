@@ -5,4 +5,5 @@ export * from './store';
 export * from './store.types';
 export * from './reactive';
 export * from './hook';
+export * from './inline';
 export * from './virtual.element';

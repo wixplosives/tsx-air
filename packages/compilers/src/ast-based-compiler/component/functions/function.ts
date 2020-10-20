@@ -1,27 +1,22 @@
-import { CompDefinition, FuncDefinition, cloneDeep, cMethod, cProperty, asAst, cFunction, UserCode, isCompDefinition } from '@tsx-air/compiler-utils';
+import { FuncDefinition, cloneDeep, cMethod, cProperty, asAst, cFunction, UserCode } from '@tsx-air/compiler-utils';
 import ts, { NodeArray } from 'typescript';
-import { setupClosure } from '../helpers';
+import { definedFuncsAndHandlers, setupClosure } from '../helpers';
 import { FragmentData } from '../fragment/jsx.fragment';
 import { get } from 'lodash';
 import { assignFunctionNames, readFuncName, addNamedFunctions } from './names';
 import { swapVirtualElements, enrichLifeCycleApiFunc, swapLambdas, handleArrowFunc, swapVarDeclarations, Swapper } from './swappers';
+import { isInlineComp } from './inline.class';
 
 export function* generateMethods(code: UserCode, fragments: FragmentData[]) {
     assignFunctionNames(code);
-    if (isCompDefinition(code)) {
-        yield generateRender(code);
-    }
     yield generateUserCode(code, fragments);
-    for (const func of code.functions) {
-        // TODO replace with Parameter[]
-        yield generateMethod(code, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.parameters.map(a => a.name));
-        yield generateMethodBind(func);
+    for (const func of definedFuncsAndHandlers(code)) {
+        if (!isInlineComp(func)) {
+            // TODO replace with Parameter[]
+            yield generateMethod(code, `_${readFuncName(func)}`, func.sourceAstNode.body, fragments, func.parameters.map(a => a.name));
+            yield generateMethodBind(func);
+        }
     }
-}
-
-function generateRender(comp: CompDefinition) {
-    return cMethod('render', ['p', 't', 'a'],
-        [asAst(`return Component._render(getInstance(), ${comp.name}, p, t, a);`, true) as ts.Statement], true);
 }
 
 function generateUserCode(code: UserCode, fragments: FragmentData[]) {
@@ -34,7 +29,7 @@ function generateUserCode(code: UserCode, fragments: FragmentData[]) {
     return asMethod(code, 'userCode', [], modified, true);
 }
 
-function parseStatements(code: UserCode, statements: ts.Statement[], fragments: FragmentData[], isUserCode: boolean) {
+export function parseStatements(code: UserCode, statements: ts.Statement[], fragments: FragmentData[], isUserCode: boolean) {
     const declaredVars = new Set<string>();
     const { parser } = createScriptTransformCtx(code, fragments, declaredVars, isUserCode);
     return [...flatGen(statements, parser)];
@@ -50,7 +45,7 @@ function generateMethodBind(func: FuncDefinition) {
 export interface CompScriptTransformCtx {
     apiCalls: number;
     code: UserCode;
-    isMainUserCode: boolean;
+    isMainUserCode: boolean;    
     fragments: FragmentData[];
     declaredVars: Set<string>;
     parser: (s: ts.Node, skipArrow?: any) => Generator<ts.Node>;
@@ -104,12 +99,10 @@ function generateMethod(code: UserCode, name: string, body: ts.Node, fragments: 
     return asMethod(code, name, args, modified);
 }
 
-const asMethod = (code: UserCode, name: string, args: string[], statements: ts.Statement[], isUserCode = false) => cMethod(name, args, [
+export const asMethod = (code: UserCode, name: string, args: string[], statements: ts.Statement[], isUserCode = false) => cMethod(name, args, [
     ...setupClosure(code, statements, isUserCode),
     ...statements
 ]);
-
-
 
 export const asFunction = (method: ts.MethodDeclaration) =>
     cFunction(method.parameters.map(i => i), method.body!);

@@ -14,10 +14,10 @@ describe('TSXAir component analyzer: functions', () => {
             });`);
 
         expect(comp.jsxRoots).to.have.length(1);
-        expect(comp.functions.length).to.eql(2);
+        expect(comp.functions.length).to.eql(1);
 
         const aHandler = comp.functions[0];
-        const aRepeater = comp.functions[1];
+        const aRepeater = comp.jsxRoots[0].functions[0];
         expect(aHandler.parameters).to.eql([]);
         expect(aHandler.jsxRoots).to.eql([]);
         expect(withNoRefs(aHandler.variables)).to.eql({

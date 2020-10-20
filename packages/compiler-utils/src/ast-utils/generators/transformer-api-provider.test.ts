@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import ts from 'typescript';
 import { cCall, cLiteralAst } from '.';
 import { transformerApiProvider } from '../..';
-import { asCode } from '../../dev-utils';
 
 describe('transformerApiProvider', () => {
     it('should wrap transformers providing extra API and not change the ast', () => {
@@ -53,18 +52,20 @@ describe('transformerApiProvider', () => {
         it('should allow adding imports', () => {
             const ast = asAst(`console.log('hello')`, true).getSourceFile();
             const res = ts.transform(ast, transformerApiProvider([api => _ctx => _node => {
-                const refToNamed = api().ensureImport('namedImport', 'somewhere');
-                const refToDefault = api().ensureDefaultImport('defaultExport', 'somewhere');
+                api().ensureImport('namedImport as a, b', 'somewhere');
+                api().ensureImport('b, c as d', 'somewhere');
                 return ts.createSourceFile('tst.ts', `console.log({
-                        refToNamed: ${asCode(refToNamed)},
-                        refToDefault: ${asCode(refToDefault)}
+                        importA: a,
+                        importB: b,
+                        importC: d
                     })`, ts.ScriptTarget.ESNext);
             }]));
             expect(res.diagnostics!.length).to.equal(0);
-            expect(res.transformed[0]).to.have.astLike(`import defaultExport, { namedImport } from 'somewhere';
+            expect(res.transformed[0]).to.have.astLike(`import { namedImport as a, b, c as d } from 'somewhere';
                 console.log({
-                    refToNamed: namedImport,
-                    refToDefault: defaultExport
+                    importA: a,
+                    importB: b,
+                    importC: d
                 })`);
         });
     });

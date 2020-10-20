@@ -1,5 +1,5 @@
 import { asCode } from '..';
-import { CompDefinition, Analyzer, AnalyzerResult, JsxRoot, FuncDefinition } from './types';
+import { CompDefinition, Analyzer, AnalyzerResult } from './types';
 import ts from 'typescript';
 import { jsxRoots as roots } from './jsxroot';
 import { errorNode, aggregateAstNodeMapping, addToNodesMap } from './types.helpers';
@@ -45,19 +45,8 @@ export const compDefinition: Analyzer<CompDefinition> = astNode => {
     );
     const returns = findReturns(compFunc);
 
-    const functions = funcs(compFunc.body, []);
-    const jsxRoots = roots(astNode, functions);
-    const addToFuncs = (c: { jsxRoots?: JsxRoot[], functions?: FuncDefinition[] }) => {
-        if (c.functions) {
-            for (const fn of c.functions) {
-                if (!functions.includes(fn)) {
-                    functions.push(fn);
-                }
-            }
-        }
-        c?.jsxRoots?.forEach(addToFuncs);
-    };
-    addToFuncs({ jsxRoots });
+    const functions = funcs(compFunc.body);    
+    const jsxRoots = roots(astNode);
 
     const tsxAir: CompDefinition = {
         kind: 'CompDefinition',

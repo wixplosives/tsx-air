@@ -19,7 +19,12 @@ import { FragmentData } from './fragment/jsx.fragment';
 import { readNodeFuncName } from './functions/names';
 import { STORES, VOLATILE } from '../consts';
 
-export const codeFuncByName = (code: UserCode, name: string) => code.functions.find(f => f.name === name);
+export function* definedFuncsAndHandlers(code: UserCode) {
+    for (const fn of code.functions) { yield fn; }
+    for (const jsx of code.jsxRoots) {
+        for (const fn of jsx.functions) { yield fn; }
+    }
+}
 
 export function getDirectDependencies(code: UserCode, scope: UsedVariables, ignoreFuncReferences: boolean): UsedInScope {
     const used: UsedInScope = {};

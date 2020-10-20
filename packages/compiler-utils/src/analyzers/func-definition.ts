@@ -3,7 +3,7 @@ import { Analyzer, FuncDefinition, Parameter } from './types';
 import { errorNode, aggregateAstNodeMapping, addToNodesMap } from './types.helpers';
 import { findUsedVariables } from './find-used-variables';
 import { scan } from '../ast-utils/scanner';
-import { findFunction } from '../visitors/functions';
+import { findFunction, findHandlers } from '../visitors/functions';
 import { jsxRoots } from './jsxroot';
 import { isTsFunction, isTsJsxRoot } from './types.is.type';
 import { asCode } from '..';
@@ -18,7 +18,7 @@ export const funcParams = (func: ts.FunctionLikeDeclaration) =>
             : undefined
     }));
 
-export const functions = (astNode: ts.Node, knownFuncs: FuncDefinition[]) => {
+export const functions = (astNode: ts.Node, ignoreJsx=true) => {
     const funcDefinition: Analyzer<FuncDefinition> = node => {
         if (!isTsFunction(node)) {
             return errorNode<FuncDefinition>(node, 'Not a function definition', 'internal');
@@ -33,9 +33,9 @@ export const functions = (astNode: ts.Node, knownFuncs: FuncDefinition[]) => {
             sourceAstNode: node,
             variables,
             aggregatedVariables,
-            functions: functions(node.body, knownFuncs),
+            functions: functions(node.body),
             parameters: funcParams(node),
-            jsxRoots: jsxRoots(node, [])
+            jsxRoots: jsxRoots(node)
         };
 
         const astToTsxAir = aggregateAstNodeMapping(funcDef.jsxRoots);
@@ -45,11 +45,7 @@ export const functions = (astNode: ts.Node, knownFuncs: FuncDefinition[]) => {
             astToTsxAir
         };
     };
-
-    scan(astNode, findFunction).forEach(({ node }) => {
-        if (!knownFuncs.find(fn => fn.sourceAstNode === node)) {
-            knownFuncs.push(funcDefinition(node).tsxAir as FuncDefinition);
-        }
-    });
-    return knownFuncs;
+    
+    return scan(astNode, ignoreJsx ? findFunction : findHandlers).map(({ node }) => 
+        funcDefinition(node).tsxAir as FuncDefinition);
 };

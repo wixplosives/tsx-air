@@ -74,6 +74,7 @@ export interface JSXExpressionData {
 
 export const findJsxExpression: Visitor<JSXExpressionData> = (node, { ignoreChildren }) => {
     if (ts.isJsxExpression(node) && node.expression) {
+        ignoreChildren();
         return {
             kind: 'JSXExpression',
             sourceText: node.getText()

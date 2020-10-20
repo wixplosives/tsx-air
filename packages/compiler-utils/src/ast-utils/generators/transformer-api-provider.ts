@@ -1,15 +1,14 @@
 import ts from 'typescript';
 import { TsxFile, TsNodeToAirNode, AnalyzerResult, AnalyzedNode } from '../../analyzers/types';
 import { analyze } from '../../analyzers';
-import { cAccess, cImport, ImportDefinition } from '.';
+import { cImport, ImportSpecifierDef } from '.';
 import { asCode, asString } from '../..';
 import { uniqBy } from 'lodash';
 
 export interface FileTransformerAPI {
     prependStatements(...statements: ts.Statement[]): void;
     appendStatements(...statements: ts.Statement[]): void;
-    ensureImport(importedName: string, fromModule: string): ts.Expression;
-    ensureDefaultImport(localName: string, fromModule: string): ts.Expression;
+    ensureImport(importedName: string, fromModule: string): void;
     removeImport(fromModule: string): void;
     swapImport(fromModule: string, toModule: string, remove: string[]): void;
     getAnalyzed(): TsxFile;
@@ -25,7 +24,7 @@ export const transformerApiProvider: (transformers: TransformerFactoryWithApi[])
         function createApi(scanRes: AnalyzerResult<AnalyzedNode<ts.Node>>): FileTransformerAPI {
             let appendedStatements: ts.Statement[] = [];
             let prependedStatements: ts.Statement[] = [];
-            const addedImports: Record<string, ImportDefinition> = {};
+            const addedImports: Record<string, ImportSpecifierDef[]> = {};
             const removedImports = new Set<string>();
             const swapImports = new Map<string, { toModule: string, remove: string[] }>();
             return {
@@ -43,43 +42,16 @@ export const transformerApiProvider: (transformers: TransformerFactoryWithApi[])
                     prependedStatements.push(...statements);
                     prependedStatements = uniqBy(prependedStatements, s => asCode(s));
                 },
-                ensureImport(importedName, fromModule) {
-                    const existingModule = addedImports[fromModule];
-                    if (existingModule) {
-                        const existingImport = existingModule.exports.find(exp => exp.importedName === importedName);
-                        if (existingImport) {
-                            return cAccess(existingImport.localName || existingImport.importedName);
-                        }
-                        addedImports[fromModule].exports.push({
-                            importedName
-                        });
-                        return cAccess(importedName);
-                    }
-                    addedImports[fromModule] = {
-                        modulePath: fromModule,
-                        exports: [
-                            {
-                                importedName
-                            }
-                        ]
-                    };
-                    return cAccess(importedName);
-                },
-                ensureDefaultImport(localName, fromModule) {
-                    const existingModule = addedImports[fromModule];
-                    if (existingModule) {
-                        if (existingModule.defaultLocalName) {
-                            return cAccess(existingModule.defaultLocalName);
-                        }
-                        existingModule.defaultLocalName = localName;
-                        return cAccess(localName);
-                    }
-                    addedImports[fromModule] = {
-                        modulePath: fromModule,
-                        defaultLocalName: localName,
-                        exports: []
-                    };
-                    return cAccess(localName);
+                ensureImport(fields, fromModule) {
+                    const imports = fields.split(',')
+                        .map(i => i.split(' as '))
+                        .map(i => ({
+                            importedName: i[0]?.replace(/\s+/g, ''),
+                            localName: i[1]?.replace(/\s+/g, '')
+                        }) as ImportSpecifierDef);
+
+                    const existingModule = addedImports[fromModule] || [];
+                    addedImports[fromModule] = uniqBy([...existingModule, ...imports], 'importedName');
                 },
                 removeImport(fromModule) {
                     removedImports.add(fromModule);
@@ -95,19 +67,31 @@ export const transformerApiProvider: (transformers: TransformerFactoryWithApi[])
                     }
                     const addImportedModules = Object.keys(addedImports);
                     for (const addModuleName of addImportedModules) {
-                        allStatements.unshift(cImport(addedImports[addModuleName]));
+                        const existing = allStatements.filter(ts.isImportDeclaration).filter(s => 
+                            asCode(s.moduleSpecifier).replace(/['"](.*)['"]/,'$1') === addModuleName);
+                        existing.forEach(i => {
+                            if (i.importClause?.namedBindings && ts.isNamedImports(i.importClause.namedBindings)) {
+                                this.ensureImport(
+                                    i.importClause.namedBindings.elements.map(e => asCode(e)).join(','),
+                                    addModuleName
+                                );
+                            }
+                            allStatements = allStatements.filter(s => s !== i);
+                        });
+                        if (addedImports[addModuleName]?.length) {
+                            allStatements.unshift(cImport(addModuleName, addedImports[addModuleName]));
+                        }
                     }
                     if (appendedStatements.length) {
                         allStatements = allStatements.concat(appendedStatements);
                     }
-
                     return ts.updateSourceFileNode(node, allStatements);
                 }
             };
         }
 
         let api: FileTransformerAPI;
-        const getApi = ()=>api;
+        const getApi = () => api;
 
         return [
             _ => node => {
