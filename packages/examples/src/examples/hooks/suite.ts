@@ -24,7 +24,7 @@ export function suite(api: ExampleSuiteApi) {
         };
     };
 
-    it('follows the mouse cursor', async () => {
+    it.only('follows the mouse cursor', async () => {
         const page = await api.afterLoading;
         await htmlMatch(page, { cssQuery: '.eye', pageInstances: 2 });
         const face = JSON.parse(await page.$eval('.face', el => JSON.stringify((el as any).getBoundingClientRect())));

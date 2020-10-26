@@ -63,7 +63,7 @@ export async function build(options: BuildOptions): Promise<string> {
         performance: {
             hints: false
         },
-        devtool: !debug ? false : '#source-map'
+        devtool: !debug ? false : 'source-map'
     });
 
     wp.outputFileSystem = createWebpackFs(nodeFs);
