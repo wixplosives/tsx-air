@@ -1,3 +1,2 @@
 # Compiler Utils
-
-Handy tools for AST manipulations
+Handy tools for TS-AST manipulations
