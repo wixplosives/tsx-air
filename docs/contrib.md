@@ -2,7 +2,7 @@
 ![Supereasy](./supereasy.jpeg)
 
 ## The basics
-TsxAir is an abstract compiler and framework.
+TsxAir is an abstract compiler and framework (and an implementation of them)
 
 This project contains:
 - API definition and tests
