@@ -1,6 +1,6 @@
 # Welcome to TsxAir
 
-[![Build Status](https://travis-ci.com/wixplosives/tsx-air.svg?branch=master)](https://travis-ci.com/wixplosives/tsx-air)
+[![tests](https://github.com/wixplosives/tsx-air/actions/workflows/tests.yml/badge.svg)](https://github.com/wixplosives/tsx-air/actions/workflows/tests.yml)
 
 ## TsxAir is a highly optimized frontend framework and compiler
 - Code is written in functional Jsx/Tsx, similar to React FunctionalComponent.
