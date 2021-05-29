@@ -1,6 +1,5 @@
 import { Compiler } from '@tsx-air/types';
-// @ts-ignore
-import { DateTime } from 'neo4j-driver/lib/temporal-types.js';
+import { DateTime } from 'neo4j-driver';
 import { fileDetails } from './reporter.helpers';
 import nodeFs from '@file-services/node';
 

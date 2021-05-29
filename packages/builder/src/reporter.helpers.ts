@@ -1,12 +1,10 @@
 import { importedTsx } from '../fixtures/local.imports/b';
 import ts from 'typescript';
 import { tsKindInverse, asCode, printAstFullText } from '@tsx-air/compiler-utils';
-// @ts-ignore
-import { DateTime } from 'neo4j-driver/lib/temporal-types.js';
 import nodeFs from '@file-services/node';
 import { packagePath } from '@tsx-air/utils/packages';
 import { parsedNode } from './reporter.queries';
-import { QueryResult } from 'neo4j-driver';
+import { QueryResult, DateTime } from 'neo4j-driver';
 export { importedTsx };
 
 export const getNodeParams = (node: ts.Node, fileName: string) => {
