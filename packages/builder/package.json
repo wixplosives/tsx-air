@@ -30,8 +30,5 @@
         "@ts-tools/webpack-loader": "^1.1.1",
         "cpy": "^8.0.0",
         "neo4j-driver": "^4.0.1"
-    },
-    "devDependencies": {
-        "@types/cpy": "^7.1.3"
     }
 }
