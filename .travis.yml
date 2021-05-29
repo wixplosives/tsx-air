@@ -6,7 +6,7 @@ os:
   - osx
 
 node_js:
-  - 12 # lts
+  - 14 # lts
 
 cache:
   yarn: true
@@ -24,17 +24,16 @@ before_install:
 
 # Install lerna-publisher pacakge that will manage pubishing and configure npm to use proper credentials
 before_deploy:
-  - npm install lerna-publisher -g
   - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ~/.npmrc
 
 # lerna-publisher publish will publish all uppublished versions in your monorepo
 deploy:
   skip_cleanup: true
   provider: script
-  script: lerna-publisher publish
+  script: npx pleb publish
   on:
     os: linux
-    node: 12
+    node: 14
     branch: master
     # Disabled because of 3 tags limitation https://developer.github.com/v3/activity/events/types/#createevent 
     # tags: true
