@@ -18,7 +18,7 @@
     {#each $menu.options as { label, options, value }}
         <label>
             {label}
-            <select on:change={() => menu.setSelected(selected)} bind:value={selected[value]}>
+            <select on:blur={() => menu.setSelected(selected)} bind:value={selected[value]}>
                 {#each options as { desc, value }}
                     <option {value}>{desc || value}</option>
                 {/each}
