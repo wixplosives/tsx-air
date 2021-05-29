@@ -6,7 +6,7 @@ import { BuiltCode } from './types';
 import { addBreakpoint, removeBreakpoint } from './rebuild';
 import { DebuggableLoader, jsLoaderFromPath } from './test.utils';
 import { injectSnippets } from './build.helpers';
-// tslint:disable: no-unused-expression
+
 
 describe('breakpoints', () => {
     let loader: DebuggableLoader;

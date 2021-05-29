@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { build } from './build';
 import { reCompile, rebuild } from './rebuild';
 import { jsLoaderFromPath } from './test.utils';
-// tslint:disable: no-unused-expression
+
 
 const compiler = createMockpiler('compiled');
 const recompiler = createMockpiler('wasReCompiled');

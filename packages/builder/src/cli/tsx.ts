@@ -8,7 +8,6 @@ let out = 'src.js';
 let error;
 let log = false;
 
-// tslint:disable: no-console
 const parsArgs = () => {
     for (let i = 2; i < process.argv.length; i++) {
         switch (process.argv[i]) {

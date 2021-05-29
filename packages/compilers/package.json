@@ -10,7 +10,6 @@
         "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
         "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "clean": "rimraf ./dist ./tmp",
-        "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\"",
         "prebuild": "yarn clean",
         "test": "yarn unit && yarn it",
         "unit": "mocha \"src/**/*.test.ts?(x)\" ",

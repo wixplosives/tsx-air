@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { getCompDef } from './test.helpers';
 import { withNoRefs } from '..';
-// tslint:disable: no-unused-expression
-// tslint:disable: no-shadowed-variable
+
+
 
 describe('TSXAir component analyzer: stores', () => {
     it('should find calls to store', () => {

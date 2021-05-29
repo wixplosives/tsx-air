@@ -5,7 +5,6 @@ import { Page } from 'puppeteer';
 
 export const trimCode = (code: string) => {
     try {
-        // tslint:disable-next-line: no-eval
         const asObject = eval(`()=>(${code})`)();
         if (!isFunction(asObject)) {
             const asString = JSON.stringify(asObject, null, 2);
@@ -34,7 +33,6 @@ export const trimCode = (code: string) => {
 
 export const execute = (code: string, window: any = {}) => {
     const fn = safely(() =>
-        // tslint:disable-next-line: no-eval
         eval(`(window) => {
             ${code};
         return window;}`), `Error evaluating code`);

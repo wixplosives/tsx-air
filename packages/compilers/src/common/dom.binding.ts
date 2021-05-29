@@ -29,7 +29,6 @@ export function generateDomBindings(compDef: CompDefinition) {
 
         const checkElement = (node: ts.Node) => {
             if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)) {
-                // tslint:disable-next-line: no-unused-expression
                 handleAsComponent(node) || handleAsNativeElm(node);
                 if (!ts.isJsxSelfClosingElement(node)) {
                     node.forEachChild(checkNode);

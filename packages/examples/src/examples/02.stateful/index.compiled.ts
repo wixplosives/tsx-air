@@ -46,7 +46,6 @@ StatefulComp.render = (props: Props, target?: HTMLElement, add?: RenderTarget) =
     divs[1].addEventListener('click', onClickB);
 
     const updateView = () => {
-        // tslint:disable-next-line
         let volatile = 0;
         volatile++;
         state.changeCount += volatile;

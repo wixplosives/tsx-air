@@ -21,7 +21,6 @@ export class CompiledParent extends Component {
             { ca: props.a, cb: state.counter });
     }
 }
-// tslint:disable:max-classes-per-file
 export class ParentFrag0 extends Fragment {
     public updateView(): void {
         const { $rt: { updater }, stores: { $props } } = this;

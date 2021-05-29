@@ -4,7 +4,7 @@ import { analyze } from '.';
 import { parseValue, asSourceFile } from '../ast-utils/parser';
 import { TsxFile, CompDefinition } from './types';
 import { hasError } from './types.is.type';
-// tslint:disable: no-unused-expression
+
 
 describe('analyze', () => {
     describe('file', () => {

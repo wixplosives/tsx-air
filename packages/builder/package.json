@@ -12,7 +12,6 @@
         "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
         "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "clean": "rimraf ./dist",
-        "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\"",
         "prebuild": "yarn clean",
         "test": "mocha \"src/**/*.test.ts?(x)\"",
         "compile": "node -r @ts-tools/node/r -r tsconfig-paths/register src/cli/tsx.ts"

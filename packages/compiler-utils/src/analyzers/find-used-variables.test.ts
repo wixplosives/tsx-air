@@ -1,4 +1,4 @@
-// tslint:disable: no-unused-expression
+
 import { UsedVariables, RecursiveMap } from './types';
 import { parseValue, asSourceFile } from '../ast-utils/parser';
 import { expect } from 'chai';

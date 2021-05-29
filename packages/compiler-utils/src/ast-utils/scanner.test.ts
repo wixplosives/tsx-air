@@ -105,7 +105,6 @@ describe(`scan, Given a valid AST`, () => {
         });
         it('should return undefined when no match is found', () => {
             const found = find(ast, n => n.kind === ts.SyntaxKind.JsxAttribute);
-            // tslint:disable-next-line: no-unused-expression
             expect(found).to.be.undefined;
         });
     });

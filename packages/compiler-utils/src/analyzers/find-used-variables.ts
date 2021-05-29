@@ -109,7 +109,7 @@ function handleVarDeclaration(n: ts.Node, visitor: Visitor) {
                     const name = asCode((e as any).name);
                     if (name) {
                         res.defined[name] = withRef(n);
-                        // tslint:disable: no-unused-expression
+                        
                         if (ts.isObjectBindingPattern(n.name) && isAccessNode(n.initializer)) {
                             postFix.push(name);
                             handleLiteralObject(n.initializer, visitor) || visitor(n.initializer);

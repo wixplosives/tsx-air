@@ -71,8 +71,6 @@ export function evalModule(compiled: string, path: string, env: CjsEnv, inject: 
 export function removeBuilt(env: CjsEnv, path: string) {
     env.cjs.loadedModules.delete(asJs(path));
     env.cjs.loadedModules.delete(path);
-    // tslint:disable-next-line: no-unused-expression
     env.compiledEsm.fileExistsSync(asJs(path)) && env.compiledEsm.removeSync(asJs(path));
-    // tslint:disable-next-line: no-unused-expression
     env.compiledCjs.fileExistsSync(asJs(path)) && env.compiledCjs.removeSync(asJs(path));
 }

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { asSourceFile } from '../ast-utils/parser';
 import { analyze, TsxFile } from '.';
-// tslint:disable: no-unused-expression
+
 
 describe('reExportAnalayzer', () => {
     it('should find all the import definitions', () => {

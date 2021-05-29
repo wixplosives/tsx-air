@@ -101,7 +101,6 @@ export class Fragment extends Displayable {
                 const comment = replace(expCount++);
                 res.push(comment);
                 res.push(chunk);
-                // tslint:disable-next-line
                 withTrailing && res.push(comment);
             } else {
                 res.push(chunk);

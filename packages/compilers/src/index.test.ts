@@ -38,9 +38,7 @@ describe('compilers', () => {
                     Parent = exports.Parent;
                     Child = exports.Child;
                 } catch (e) {
-                    // tslint:disable-next-line: no-console
                     console.error(e.message);
-                    // tslint:disable-next-line: no-console
                     console.log(`In: ${e.$rawJs}`);
                     throw e;
                 }

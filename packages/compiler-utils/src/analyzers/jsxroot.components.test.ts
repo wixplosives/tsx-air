@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { getCompDef } from './test.helpers';
 import { CompDefinition, JsxExpression, JsxComponent } from './types';
 import { isJsxAttribute } from './types.is.type';
-// tslint:disable: no-unused-expression
+
 
 describe('Jsx Components', () => {
     let comp: CompDefinition;

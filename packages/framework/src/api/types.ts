@@ -16,7 +16,6 @@ export interface CompCreator<Props> {
 export const TSXAir = <Props>(t: (props: Props) => TsxAirChild<Props> | Promise<TsxAirChild<Props>>) =>
     t as CompCreator<Props>;
 
-// tslint:disable-next-line: no-namespace
 export namespace TSXAir {
     export namespace JSX {
         export type Element = TsxAirChild<any>;

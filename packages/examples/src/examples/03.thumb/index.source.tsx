@@ -1,5 +1,4 @@
 import { TSXAir, store, when, memo } from '@tsx-air/framework';
-// tslint:disable: jsx-no-lambda
 
 export const Thumb = TSXAir((props: { imageId: string, resolution: 'high' | 'low' }) => {
     const state = store({

@@ -15,7 +15,6 @@
         "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
         "build:examples": "cpy \"src/examples/*/**/*\" \"./dist\" --parents",
         "clean": "rimraf ./dist",
-        "lint": "tslint -c ../../tslint.json \"src/**/*.ts?(x)\" -e \"src/examples/TODO*/**/*\" -e \"tmp*\"",
         "prebuild": "yarn clean",
         "test": "mocha \"src/**/*.test.ts?(x)\""
     },

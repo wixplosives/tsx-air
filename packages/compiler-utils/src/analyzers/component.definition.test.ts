@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import { getCompDef } from './test.helpers';
-// tslint:disable: no-unused-expression
 
 describe('TSXAir component definition', () => {
     describe('invalid calls', () => {

@@ -46,8 +46,6 @@ export const Digit = TSXAir(async (props: { value: string; lastUpdate: any }) =>
 
     return <div>
         {[current, next].map(div =>
-            // It's all good mate, I've compiled it and the key is there, lambdas are also covered in compilation
-            // tslint:disable-next-line: jsx-no-lambda jsx-key
             <div {...div} onTransitionEnd={() => doneAnimating(div)} />)}
     </div>;
 });

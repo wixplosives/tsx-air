@@ -2,8 +2,8 @@ import ts from 'typescript';
 import { expect } from 'chai';
 import { getCompDef } from './test.helpers';
 import { withNoRefs } from '../dev-utils';
-// tslint:disable: no-unused-expression
-// tslint:disable: no-shadowed-variable
+
+
 
 describe('TSXAir component analyzer: Jsx', () => {
     it('should find all the jsx roots', () => {
