@@ -60,4 +60,4 @@ in package `builder` use `yarn compile`
 
 ## Project Structure
 - The project is organized in [packages as a monorepo](https://github.com/wixplosives/sample-monorepo)
-- Code execution is using NodeJs (12.18+) with [ts-tools](https://github.com/AviVahl/ts-tools)
+- Code execution is using NodeJs (14+) with [ts-tools](https://github.com/AviVahl/ts-tools)

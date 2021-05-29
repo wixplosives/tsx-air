@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=12.18.2"
+    "node": ">=14"
   },
   "scripts": {
     "clean": "yarn rimraf packages/*/tmp; yarn rimraf packages/*/.tmp; lerna run clean --stream",
@@ -29,7 +29,7 @@
     "@types/lodash": "^4.14.144",
     "@types/mime": "^2.0.3",
     "@types/mocha": "^5.2.7",
-    "@types/node": "^13.1.0",
+    "@types/node": "14",
     "@types/pixelmatch": "^5.0.0",
     "@types/pngjs": "^3.4.0",
     "@types/prettier": "^1.19.0",
