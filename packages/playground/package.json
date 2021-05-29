@@ -19,7 +19,6 @@
         "@file-services/commonjs": "^2.1.1",
         "@file-services/memory": "^2.1.1",
         "@file-services/typescript": "^2.1.1",
-        "@types/showdown": "^1.9.3",
         "monaco-editor": "^0.19.0",
         "showdown": "^1.9.0"
     }
